@@ -1,4 +1,4 @@
-import React, { useState, memo } from "react";
+import { useState, memo } from "react";
 import {
   useHabitData,
   useResizableColumns,
@@ -7,7 +7,7 @@ import {
   MatrixTableView,
   GalleryView,
   ProfessionalTableView,
-} from "./database/index.js";
+} from "../index.js";
 
 const DatabaseWidget = memo(
   ({

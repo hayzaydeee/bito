@@ -1,13 +1,34 @@
-import React, { useState, useRef, useCallback, useMemo, lazy, Suspense, useEffect } from "react";
+import React, {
+  useState,
+  useRef,
+  useCallback,
+  useMemo,
+  lazy,
+  Suspense,
+  useEffect,
+} from "react";
 import { Responsive, WidthProvider } from "react-grid-layout";
+import { Pencil1Icon, Cross2Icon, PlusIcon } from "@radix-ui/react-icons";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import "../widgets/widgets.css";
 
 // Lazy load widgets for better performance
-const ChartWidget = lazy(() => import("../widgets/ChartWidget").then(module => ({ default: module.ChartWidget })));
-const DatabaseWidget = lazy(() => import("../widgets/DatabaseWidget").then(module => ({ default: module.DatabaseWidget })));
-const QuickActionsWidget = lazy(() => import("../widgets/QuickActionsWidget").then(module => ({ default: module.QuickActionsWidget })));
+const ChartWidget = lazy(() =>
+  import("../widgets/ChartWidget").then((module) => ({
+    default: module.ChartWidget,
+  }))
+);
+const DatabaseWidget = lazy(() =>
+  import("../widgets/database/components/DatabaseWidget").then((module) => ({
+    default: module.DatabaseWidget,
+  }))
+);
+const QuickActionsWidget = lazy(() =>
+  import("../widgets/QuickActionsWidget").then((module) => ({
+    default: module.QuickActionsWidget,
+  }))
+);
 
 // Loading component for lazy widgets
 const WidgetSkeleton = ({ title }) => (
@@ -24,8 +45,45 @@ const WidgetSkeleton = ({ title }) => (
 // Performance optimized ResponsiveGridLayout
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
-// Storage key for layouts
+// Storage keys
 const LAYOUTS_STORAGE_KEY = "habitTracker_dashboardLayouts";
+const WIDGETS_STORAGE_KEY = "habitTracker_dashboardWidgets";
+
+// Available widget types for the picker
+const AVAILABLE_WIDGET_TYPES = {
+  "habits-overview": {
+    title: "Habits Overview",
+    icon: "📊",
+    description: "Daily habit completion chart",
+    defaultProps: { w: 6, h: 4 },
+  },
+  "weekly-progress": {
+    title: "Weekly Progress",
+    icon: "📈",
+    description: "Weekly habit trend analysis",
+    defaultProps: { w: 8, h: 6 },
+  },
+  "habit-list": {
+    title: "Habits List",
+    icon: "📋",
+    description: "Manage your daily habits",
+    defaultProps: { w: 4, h: 6 },
+  },
+  "quick-actions": {
+    title: "Quick Actions",
+    icon: "⚡",
+    description: "Fast habit logging buttons",
+    defaultProps: { w: 6, h: 4 },
+  },
+};
+
+// Default active widgets
+const getDefaultActiveWidgets = () => [
+  "habits-overview",
+  "quick-actions",
+  "weekly-progress",
+  "habit-list",
+];
 
 // Default layouts configuration
 const getDefaultLayouts = () => ({
@@ -61,16 +119,20 @@ const getDefaultLayouts = () => ({
   ],
 });
 
-
-
 // Utility functions for localStorage
 const saveLayoutsToStorage = (layouts) => {
   try {
     localStorage.setItem(LAYOUTS_STORAGE_KEY, JSON.stringify(layouts));
-    // Optional: Show a brief notification that layouts were saved
-    console.log("Dashboard layout saved");
   } catch (error) {
     console.warn("Failed to save layouts to localStorage:", error);
+  }
+};
+
+const saveActiveWidgetsToStorage = (widgets) => {
+  try {
+    localStorage.setItem(WIDGETS_STORAGE_KEY, JSON.stringify(widgets));
+  } catch (error) {
+    console.warn("Failed to save active widgets to localStorage:", error);
   }
 };
 
@@ -82,23 +144,39 @@ const loadLayoutsFromStorage = () => {
       // Validate that the saved layouts have the expected structure
       const defaultLayouts = getDefaultLayouts();
       const validatedLayouts = {};
-      
-      Object.keys(defaultLayouts).forEach(breakpoint => {
-        if (parsedLayouts[breakpoint] && Array.isArray(parsedLayouts[breakpoint])) {
+
+      Object.keys(defaultLayouts).forEach((breakpoint) => {
+        if (
+          parsedLayouts[breakpoint] &&
+          Array.isArray(parsedLayouts[breakpoint])
+        ) {
           validatedLayouts[breakpoint] = parsedLayouts[breakpoint];
         } else {
           validatedLayouts[breakpoint] = defaultLayouts[breakpoint];
         }
       });
-      
-      console.log("Dashboard layout loaded from storage");
+
       return validatedLayouts;
     }
   } catch (error) {
     console.warn("Failed to load layouts from localStorage:", error);
   }
-  console.log("Using default dashboard layout");
   return getDefaultLayouts();
+};
+
+const loadActiveWidgetsFromStorage = () => {
+  try {
+    const saved = localStorage.getItem(WIDGETS_STORAGE_KEY);
+    if (saved) {
+      const parsedWidgets = JSON.parse(saved);
+      if (Array.isArray(parsedWidgets)) {
+        return parsedWidgets;
+      }
+    }
+  } catch (error) {
+    console.warn("Failed to load active widgets from localStorage:", error);
+  }
+  return getDefaultActiveWidgets();
 };
 
 // Clear stored layouts (useful for development/debugging)
@@ -114,28 +192,127 @@ const clearStoredLayouts = () => {
 // Throttle function for performance optimization
 const throttle = (func, limit) => {
   let inThrottle;
-  return function() {
+  return function () {
     const args = arguments;
     const context = this;
     if (!inThrottle) {
       func.apply(context, args);
       inThrottle = true;
-      setTimeout(() => inThrottle = false, limit);
+      setTimeout(() => (inThrottle = false), limit);
     }
-  }
+  };
 };
 
 const ContentGrid = () => {
   const gridRef = useRef(null);
   // Initialize layouts from localStorage or use defaults
   const [layouts, setLayouts] = useState(() => loadLayoutsFromStorage());
+  const [activeWidgets, setActiveWidgets] = useState(() =>
+    loadActiveWidgetsFromStorage()
+  );
   const [currentBreakpoint, setCurrentBreakpoint] = useState("lg");
-  const [isEditMode, setIsEditMode] = useState(false);
+  const [globalEditMode, setGlobalEditMode] = useState(false);
+  const [widgetEditStates, setWidgetEditStates] = useState({});
+  const [showWidgetPicker, setShowWidgetPicker] = useState(false);
 
-  // Auto-save layouts to localStorage whenever they change
+  // Auto-save layouts and widgets to localStorage
   useEffect(() => {
     saveLayoutsToStorage(layouts);
   }, [layouts]);
+  useEffect(() => {
+    saveActiveWidgetsToStorage(activeWidgets);
+  }, [activeWidgets]);
+
+  // Habit data state management
+  const [habits, setHabits] = useState([
+    {
+      id: 1,
+      name: "Morning Meditation",
+      color: "#6366f1",
+      icon: "🧘",
+    },
+    {
+      id: 2,
+      name: "Drink 8 glasses of water",
+      color: "#3b82f6",
+      icon: "💧",
+    },
+    {
+      id: 3,
+      name: "Read for 30 minutes",
+      color: "#10b981",
+      icon: "📚",
+    },
+    {
+      id: 4,
+      name: "Exercise",
+      color: "#f59e0b",
+      icon: "💪",
+    },
+    {
+      id: 5,
+      name: "Write in journal",
+      color: "#8b5cf6",
+      icon: "📝",
+    },
+  ]);
+
+  const [completions, setCompletions] = useState({
+    "Monday-1": true,
+    "Monday-4": true,
+    "Tuesday-1": true,
+    "Tuesday-2": true,
+    "Tuesday-3": true,
+    "Wednesday-1": true,
+    "Wednesday-2": true,
+    "Thursday-1": true,
+    "Thursday-2": true,
+    "Thursday-3": true,
+    "Thursday-4": true,
+    "Friday-1": true,
+    "Friday-5": true,
+    "Saturday-2": true,
+    "Saturday-3": true,
+    "Sunday-1": true,
+    "Sunday-2": true,
+    "Sunday-3": true,
+    "Sunday-4": true,
+    "Sunday-5": true,
+  });
+
+  // Habit event handlers
+  const handleToggleCompletion = useCallback((key, isCompleted) => {
+    console.log(`Toggling completion for ${key}: ${isCompleted}`);
+    setCompletions((prev) => ({
+      ...prev,
+      [key]: isCompleted,
+    }));
+  }, []);
+
+  const handleAddHabit = useCallback((habit) => {
+    console.log("Adding new habit:", habit);
+    setHabits((prev) => [...prev, habit]);
+  }, []);
+
+  const handleDeleteHabit = useCallback((habitId) => {
+    console.log("Deleting habit:", habitId);
+    setHabits((prev) => prev.filter((h) => h.id !== habitId));
+    // Also remove completions for this habit
+    setCompletions((prev) => {
+      const newCompletions = { ...prev };
+      Object.keys(newCompletions).forEach((key) => {
+        if (key.endsWith(`-${habitId}`)) {
+          delete newCompletions[key];
+        }
+      });
+      return newCompletions;
+    });
+  }, []);
+
+  const handleEditHabit = useCallback((habit) => {
+    console.log("Editing habit:", habit);
+    setHabits((prev) => prev.map((h) => (h.id === habit.id ? habit : h)));
+  }, []);
   // Throttled callbacks for better performance
   const handleLayoutChange = useCallback(
     throttle((layout, layouts) => {
@@ -150,13 +327,100 @@ const ContentGrid = () => {
     }, 100),
     []
   );
-
   // Reset layouts to defaults
   const resetLayouts = useCallback(() => {
     const defaultLayouts = getDefaultLayouts();
+    const defaultWidgets = getDefaultActiveWidgets();
     setLayouts(defaultLayouts);
-    // The useEffect will automatically save to localStorage
+    setActiveWidgets(defaultWidgets);
+    setWidgetEditStates({});
+  }, []); // Toggle individual widget edit mode
+  const toggleWidgetEditMode = useCallback((widgetId) => {
+    setWidgetEditStates((prev) => {
+      const newState = !prev[widgetId];
+      return {
+        ...prev,
+        [widgetId]: newState,
+      };
+    });
   }, []);
+
+  // Check if widget is in edit mode (either individual or global)
+  const isWidgetInEditMode = useCallback(
+    (widgetId) => {
+      return Boolean(globalEditMode || widgetEditStates[widgetId]);
+    },
+    [globalEditMode, widgetEditStates]
+  );
+  // Remove widget
+  const removeWidget = useCallback((widgetId) => {
+    setActiveWidgets((prev) => prev.filter((id) => id !== widgetId));
+
+    // Remove from layouts
+    setLayouts((prev) => {
+      const newLayouts = {};
+      Object.keys(prev).forEach((breakpoint) => {
+        newLayouts[breakpoint] = prev[breakpoint].filter(
+          (item) => item.i !== widgetId
+        );
+      });
+      return newLayouts;
+    });
+
+    // Remove from edit states
+    setWidgetEditStates((prev) => {
+      const newStates = { ...prev };
+      delete newStates[widgetId];
+      return newStates;
+    });
+  }, []);
+
+  // Add widget
+  const addWidget = useCallback(
+    (widgetType) => {
+      const typeConfig = AVAILABLE_WIDGET_TYPES[widgetType];
+
+      if (!typeConfig) return;
+
+      // Check if widget is already active
+      if (activeWidgets.includes(widgetType)) {
+        console.log(`Widget ${widgetType} is already active`);
+        setShowWidgetPicker(false);
+        return;
+      }
+
+      // Add to active widgets
+      setActiveWidgets((prev) => [...prev, widgetType]);
+
+      // Add to layouts
+      setLayouts((prev) => {
+        const newLayouts = {};
+        Object.keys(prev).forEach((breakpoint) => {
+          const currentLayout = prev[breakpoint];
+
+          // Find a good position for the new widget
+          let newY = 0;
+          if (currentLayout.length > 0) {
+            newY = Math.max(...currentLayout.map((item) => item.y + item.h));
+          }
+
+          const newItem = {
+            i: widgetType,
+            x: 0,
+            y: newY,
+            w: typeConfig.defaultProps.w,
+            h: typeConfig.defaultProps.h,
+          };
+
+          newLayouts[breakpoint] = [...currentLayout, newItem];
+        });
+        return newLayouts;
+      });
+
+      setShowWidgetPicker(false);
+    },
+    [activeWidgets]
+  );
 
   // Calculate responsive props based on breakpoint and widget size
   const getWidgetProps = useCallback(
@@ -189,162 +453,172 @@ const ContentGrid = () => {
   );
 
   // Memoized widget data to prevent unnecessary re-renders
-  const widgetData = useMemo(() => ({
-    "habits-overview": {
-      title: "Daily Habits Completion",
-      type: "bar",
-      data: [
-        { name: "Mon", value: 85 },
-        { name: "Tue", value: 92 },
-        { name: "Wed", value: 78 },
-        { name: "Thu", value: 88 },
-        { name: "Fri", value: 94 },
-        { name: "Sat", value: 76 },
-        { name: "Sun", value: 89 },
-      ]
-    },
-    "weekly-progress": {
-      title: "Weekly Progress Trend", 
-      type: "area",
-      data: [
-        { name: "Week 1", value: 75 },
-        { name: "Week 2", value: 82 },
-        { name: "Week 3", value: 78 },
-        { name: "Week 4", value: 85 },
-        { name: "Week 5", value: 89 },
-        { name: "Week 6", value: 92 },
-      ]
-    },
-    "habit-list": [
-      { id: 1, name: "Morning Exercise", completed: true, streak: 15 },
-      { id: 2, name: "Read 30 minutes", completed: true, streak: 8 },
-      { id: 3, name: "Meditate", completed: false, streak: 5 },
-      { id: 4, name: "Drink water", completed: true, streak: 22 },
-      { id: 5, name: "Learn coding", completed: false, streak: 3 },
-    ]
-  }), []);
+  const widgetData = useMemo(
+    () => ({
+      "habits-overview": {
+        title: "Daily Habits Completion",
+        type: "bar",
+        data: [
+          { name: "Mon", value: 85 },
+          { name: "Tue", value: 92 },
+          { name: "Wed", value: 78 },
+          { name: "Thu", value: 88 },
+          { name: "Fri", value: 94 },
+          { name: "Sat", value: 76 },
+          { name: "Sun", value: 89 },
+        ],
+      },
+      "weekly-progress": {
+        title: "Weekly Progress Trend",
+        type: "area",
+        data: [
+          { name: "Week 1", value: 75 },
+          { name: "Week 2", value: 82 },
+          { name: "Week 3", value: 78 },
+          { name: "Week 4", value: 85 },
+          { name: "Week 5", value: 89 },
+          { name: "Week 6", value: 92 },
+        ],
+      },
+      "habit-list": [
+        { id: 1, name: "Morning Exercise", completed: true, streak: 15 },
+        { id: 2, name: "Read 30 minutes", completed: true, streak: 8 },
+        { id: 3, name: "Meditate", completed: false, streak: 5 },
+        { id: 4, name: "Drink water", completed: true, streak: 22 },
+        { id: 5, name: "Learn coding", completed: false, streak: 3 },
+      ],
+    }),
+    []
+  );
   // Memoized widgets configuration for performance
-  const widgets = useMemo(() => ({
-    "habits-overview": {
-      title: "Habits Overview",
-      component: (layout) => {
-        const props = getWidgetProps("habits-overview", layout);
-        return (
-          <Suspense fallback={<WidgetSkeleton title="Daily Habits Completion" />}>
-            <ChartWidget
-              title="Daily Habits Completion"
-              type="bar"
-              data={widgetData["habits-overview"].data}
-              color="var(--color-brand-500)"
+  const widgets = useMemo(
+    () => ({
+      "habits-overview": {
+        title: "Habits Overview",
+        component: (layout) => {
+          const props = getWidgetProps("habits-overview", layout);
+          return (
+            <Suspense
+              fallback={<WidgetSkeleton title="Daily Habits Completion" />}
+            >
+              <ChartWidget
+                title="Daily Habits Completion"
+                type="bar"
+                data={widgetData["habits-overview"].data}
+                color="var(--color-brand-500)"
+                {...props}
+              />
+            </Suspense>
+          );
+        },
+      },
+      "quick-actions": {
+        title: "Quick Actions",
+        component: (layout) => {
+          const props = getWidgetProps("quick-actions", layout);
+          return (
+            <Suspense fallback={<WidgetSkeleton title="Quick Actions" />}>
+              <QuickActionsWidget {...props} />
+            </Suspense>
+          );
+        },
+      },
+      "weekly-progress": {
+        title: "Weekly Progress",
+        component: (layout) => {
+          const props = getWidgetProps("weekly-progress", layout);
+          return (
+            <Suspense fallback={<WidgetSkeleton title="Weekly Progress" />}>
+              <ChartWidget
+                title="Weekly Habit Streaks"
+                type="area"
+                data={widgetData["weekly-progress"].data}
+                color="var(--color-brand-400)"
+                {...props}
+              />
+            </Suspense>
+          );
+        },
+      },
+      "habit-list": {
+        title: "My Habits",
+        component: (layout) => {
+          const props = getWidgetProps("habit-list", layout);
+          return (
+            <DatabaseWidget
+              title="Today's Habits"
+              habits={habits}
+              completions={completions}
+              onToggleCompletion={handleToggleCompletion}
+              onAddHabit={handleAddHabit}
+              onDeleteHabit={handleDeleteHabit}
+              onEditHabit={handleEditHabit}
+              viewType="table"
               {...props}
             />
-          </Suspense>
-        );
+          );
+        },
       },
-    },
-    "quick-actions": {
-      title: "Quick Actions",
-      component: (layout) => {
-        const props = getWidgetProps("quick-actions", layout);
-        return (
-          <Suspense fallback={<WidgetSkeleton title="Quick Actions" />}>
-            <QuickActionsWidget {...props} />
-          </Suspense>
-        );
-      },
-    },
-    "weekly-progress": {
-      title: "Weekly Progress",
-      component: (layout) => {
-        const props = getWidgetProps("weekly-progress", layout);
-        return (
-          <Suspense fallback={<WidgetSkeleton title="Weekly Progress" />}>
-            <ChartWidget
-              title="Weekly Habit Streaks"
-              type="area"
-              data={widgetData["weekly-progress"].data}
-              color="var(--color-brand-400)"
-              {...props}
-            />
-          </Suspense>
-        );
-      },
-    },
-    "habit-list": {
-      title: "My Habits",
-      component: (layout) => {
-        const props = getWidgetProps("habit-list", layout);
-        return (
-          <DatabaseWidget
-            title="Today's Habits"
-            data={[
-              {
-                id: 1,
-                habit: "Morning Meditation",
-                status: "completed",
-                streak: 12,
-              },
-              {
-                id: 2,
-                habit: "Drink 8 glasses of water",
-                status: "in-progress",
-                streak: 8,
-              },
-              {
-                id: 3,
-                habit: "Read for 30 minutes",
-                status: "pending",
-                streak: 15,
-              },
-              { id: 4, habit: "Exercise", status: "completed", streak: 5 },
-              {
-                id: 5,
-                habit: "Write in journal",
-                status: "pending",
-                streak: 22,
-              },
-            ]}
-            viewType="table"
-            {...props}
-          />
-        );      },
-    },
-  }), [currentBreakpoint, getWidgetProps]);
-
+    }),
+    [
+      currentBreakpoint,
+      getWidgetProps,
+      habits,
+      completions,
+      handleToggleCompletion,
+      handleAddHabit,
+      handleDeleteHabit,
+      handleEditHabit,
+      widgetData,
+    ]
+  );
   return (
     <div className="w-full h-full">
-      {/* Edit Controls - More Compact and Theme-Consistent */}
-      <div className="mb-6 flex items-center justify-end gap-3">
-        {/* Breakpoint indicator */}
-        <div className="hidden sm:flex items-center gap-2 text-sm text-[var(--color-text-tertiary)] font-outfit">
-          <span>View:</span>
-          <span className="px-2 py-1 bg-[var(--color-brand-500)]/10 text-[var(--color-brand-400)] rounded-md text-xs font-medium border border-[var(--color-brand-500)]/20">
-            {currentBreakpoint.toUpperCase()}
-          </span>
+      {/* Enhanced Edit Controls */}
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {/* Breakpoint indicator */}
+          <div className="hidden sm:flex items-center gap-2 text-sm text-[var(--color-text-tertiary)] font-outfit">
+            <span>View:</span>
+            <span className="px-2 py-1 bg-[var(--color-brand-500)]/10 text-[var(--color-brand-400)] rounded-md text-xs font-medium border border-[var(--color-brand-500)]/20">
+              {currentBreakpoint.toUpperCase()}
+            </span>
+          </div>
         </div>
 
-        {/* Edit mode toggle */}
-        <label className="flex items-center gap-2 text-sm font-outfit text-[var(--color-text-secondary)]">
-          <input
-            type="checkbox"
-            checked={isEditMode}
-            onChange={(e) => setIsEditMode(e.target.checked)}
-            className="w-4 h-4 rounded border border-[var(--color-border-primary)] bg-[var(--color-surface-elevated)] text-[var(--color-brand-500)] focus:ring-[var(--color-brand-500)] focus:ring-2 focus:ring-opacity-50"
-          />
-          <span>Edit Layout</span>
-        </label>
+        <div className="flex items-center gap-3">
+          {/* Global edit mode toggle */}
+          <label className="flex items-center gap-2 text-sm font-outfit text-[var(--color-text-secondary)]">
+            <input
+              type="checkbox"
+              checked={globalEditMode}
+              onChange={(e) => setGlobalEditMode(e.target.checked)}
+              className="w-4 h-4 rounded border border-[var(--color-border-primary)] bg-[var(--color-surface-elevated)] text-[var(--color-brand-500)] focus:ring-[var(--color-brand-500)] focus:ring-2 focus:ring-opacity-50"
+            />
+            <span>Edit All</span>
+          </label>
 
-        {/* Reset layouts button */}
-        {isEditMode && (
+          {/* Add widget button */}
           <button
-            onClick={resetLayouts}
-            className="px-3 py-1.5 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] rounded-lg text-sm transition-all duration-200 font-outfit border border-[var(--color-border-primary)]"
+            onClick={() => setShowWidgetPicker(!showWidgetPicker)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg text-sm transition-all duration-200 font-outfit"
           >
-            Reset Layout
+            <PlusIcon className="w-4 h-4" />
+            Add Widget
           </button>
-        )}
-      </div>
 
+          {/* Reset layouts button */}
+          {(globalEditMode ||
+            Object.values(widgetEditStates).some(Boolean)) && (
+            <button
+              onClick={resetLayouts}
+              className="px-3 py-1.5 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] rounded-lg text-sm transition-all duration-200 font-outfit border border-[var(--color-border-primary)]"
+            >
+              Reset Layout
+            </button>
+          )}
+        </div>
+      </div>{" "}
       <ResponsiveGridLayout
         ref={gridRef}
         className="layout"
@@ -354,8 +628,12 @@ const ContentGrid = () => {
         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
         cols={{ lg: 12, md: 12, sm: 12, xs: 4, xxs: 2 }}
         rowHeight={60}
-        isDraggable={isEditMode}
-        isResizable={isEditMode}
+        isDraggable={
+          globalEditMode || Object.values(widgetEditStates).some(Boolean)
+        }
+        isResizable={
+          globalEditMode || Object.values(widgetEditStates).some(Boolean)
+        }
         margin={[20, 20]}
         containerPadding={[0, 0]}
         useCSSTransforms={true}
@@ -363,68 +641,212 @@ const ContentGrid = () => {
         autoSize={true}
         compactType="vertical"
       >
-        {Object.entries(widgets).map(([key, widget]) => {
-          const currentLayout = layouts[currentBreakpoint] || [];
+        {activeWidgets
+          .filter((widgetId) => widgets[widgetId])
+          .map((widgetId) => {
+            const widget = widgets[widgetId];
+            if (!widget) return null;
 
-          return (
-            <div
-              key={key}
-              className={`glass-card rounded-xl overflow-hidden transition-all duration-200 ${
-                isEditMode ? "hover:shadow-xl hover:border-[var(--color-brand-400)]/50" : ""
-              }`}
-            >
-              <div className="h-full flex flex-col">
-                {/* Widget header - responsive sizing */}                <div
-                  className={`px-4 py-3 bg-[var(--color-surface-elevated)]/50 backdrop-blur-sm border-b border-[var(--color-border-primary)]/30 ${
-                    isEditMode ? "cursor-move" : ""
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    {" "}                    <h3
-                      className={`font-semibold text-[var(--color-text-primary)] truncate font-dmSerif ${
-                        getWidgetProps(key, currentLayout).breakpoint === "xs"
-                          ? "text-sm"
-                          : "text-lg"
-                      }`}
-                    >
-                      {widget.title}
-                    </h3>
-                    {isEditMode && (                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-[var(--color-brand-400)] rounded-full opacity-60"></div>
-                        <div className="w-2 h-2 bg-[var(--color-success)] rounded-full opacity-60"></div>
-                        <div className="w-2 h-2 bg-[var(--color-warning)] rounded-full opacity-60"></div>
+            const currentLayout = layouts[currentBreakpoint] || [];
+            const isInEditMode = isWidgetInEditMode(widgetId);            return (
+              <div
+                key={widgetId}
+                data-edit-mode={isInEditMode}
+                className={`glass-card rounded-xl overflow-hidden transition-all duration-200 ${
+                  isInEditMode
+                    ? "hover:shadow-xl hover:border-[var(--color-brand-400)]/50 edit-mode"
+                    : ""
+                }`}
+              >
+                {" "}
+                <div className="h-full flex flex-col">
+                  {/* Widget header with controls */}
+                  <div
+                    className={`px-4 py-3 bg-[var(--color-surface-elevated)]/50 backdrop-blur-sm border-b border-[var(--color-border-primary)]/30 ${
+                      isInEditMode ? "cursor-move" : ""
+                    }`}
+                    onMouseDown={(e) => {
+                      // Allow dragging only if clicking on the title area, not on buttons
+                      const target = e.target;
+                      const isButton = target.closest("button");
+                      if (isButton) {
+                        e.stopPropagation();
+                      }
+                    }}
+                  >
+                    {" "}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        {/* Drag handle indicator for edit mode */}
+                        {isInEditMode && (
+                          <div className="flex flex-col gap-0.5 cursor-move opacity-60 hover:opacity-100 transition-opacity">
+                            <div className="w-1 h-1 bg-[var(--color-text-tertiary)] rounded-full"></div>
+                            <div className="w-1 h-1 bg-[var(--color-text-tertiary)] rounded-full"></div>
+                            <div className="w-1 h-1 bg-[var(--color-text-tertiary)] rounded-full"></div>
+                            <div className="w-1 h-1 bg-[var(--color-text-tertiary)] rounded-full"></div>
+                          </div>
+                        )}
+
+                        <h3
+                          className={`font-semibold text-[var(--color-text-primary)] truncate font-dmSerif ${
+                            getWidgetProps(widgetId, currentLayout)
+                              .breakpoint === "xs"
+                              ? "text-sm"
+                              : "text-lg"
+                          } ${isInEditMode ? "cursor-move" : ""}`}
+                        >
+                          {widget.title}
+                        </h3>
                       </div>
-                    )}
+                      <div
+                        className="flex items-center gap-2 relative z-10 widget-header-buttons"
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {/* Individual edit mode toggle */}
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleWidgetEditMode(widgetId);
+                          }}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                          className={`relative z-20 p-1.5 rounded-md transition-all duration-200 hover:bg-[var(--color-surface-hover)] ${
+                            widgetEditStates[widgetId]
+                              ? "text-[var(--color-brand-500)] bg-[var(--color-brand-500)]/10 border border-[var(--color-brand-500)]/30"
+                              : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+                          }`}
+                          style={{ pointerEvents: "auto" }}
+                          title={
+                            widgetEditStates[widgetId]
+                              ? "Exit edit mode"
+                              : "Edit this widget"
+                          }
+                        >
+                          <Pencil1Icon className="w-4 h-4" />
+                        </button>
+
+                        {/* Remove widget button - only show in edit mode */}
+                        {isInEditMode && (
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (
+                                window.confirm(
+                                  `Are you sure you want to remove the "${widget.title}" widget?`
+                                )
+                              ) {
+                                removeWidget(widgetId);
+                              }
+                            }}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }}
+                            className="relative z-20 p-1.5 rounded-md transition-all duration-200 hover:bg-red-100 text-red-500 hover:text-red-600 border border-red-200 hover:border-red-300"
+                            style={{ pointerEvents: "auto" }}
+                            title="Remove this widget"
+                          >
+                            <Cross2Icon className="w-4 h-4" />
+                          </button>
+                        )}
+                        {/* Edit mode indicators */}
+                        {isInEditMode && (
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs text-[var(--color-text-tertiary)] font-outfit">
+                              Drag to move • Resize from corner
+                            </span>
+                            <div className="flex space-x-1">
+                              <div className="w-2 h-2 bg-[var(--color-brand-400)] rounded-full opacity-60"></div>
+                              <div className="w-2 h-2 bg-[var(--color-success)] rounded-full opacity-60"></div>
+                              <div className="w-2 h-2 bg-[var(--color-warning)] rounded-full opacity-60"></div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Widget content */}
+                  <div className="flex-1 p-4 min-h-0 overflow-hidden">
+                    {widget.component(currentLayout)}
                   </div>
                 </div>
-
-                {/* Widget content */}
-                <div className="flex-1 p-4 min-h-0 overflow-hidden">
-                  {widget.component(currentLayout)}
-                </div>
               </div>
+            );
+          })}
+      </ResponsiveGridLayout>
+      {/* Enhanced Widget Picker */}
+      {showWidgetPicker && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={() => setShowWidgetPicker(false)}
+        >
+          <div
+            className="glass-card rounded-xl shadow-xl p-6 m-4 max-w-2xl w-full max-h-[80vh] overflow-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-[var(--color-text-primary)] font-dmSerif">
+                Add New Widget
+              </h3>
+              <button
+                onClick={() => setShowWidgetPicker(false)}
+                className="p-2 rounded-md hover:bg-[var(--color-surface-hover)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+              >
+                <Cross2Icon className="w-5 h-5" />
+              </button>
             </div>
-          );
-        })}
-      </ResponsiveGridLayout>      {/* Widget adding palette - shown in edit mode */}
-      {isEditMode && (
-        <div className="font-outfit fixed bottom-4 left-1/2 transform -translate-x-1/2 glass-card rounded-xl shadow-xl p-4 z-50">
-          <h3 className="text-sm font-medium mb-3 text-[var(--color-text-primary)] font-outfit">
-            Add Widgets
-          </h3>
-          <div className="flex space-x-2">
-            <button className="px-3 py-2 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg text-sm transition-all duration-200 font-outfit">
-              📊 Chart
-            </button>
-            <button className="px-3 py-2 bg-[var(--color-success)] hover:bg-[var(--color-success)]/80 text-white rounded-lg text-sm transition-all duration-200 font-outfit">
-              📋 Habits
-            </button>
-            <button className="px-3 py-2 bg-[var(--color-brand-700)] hover:bg-[var(--color-brand-800)] text-white rounded-lg text-sm transition-all duration-200 font-outfit">
-              ⚡ Actions
-            </button>
-            <button className="px-3 py-2 bg-[var(--color-warning)] hover:bg-[var(--color-warning)]/80 text-white rounded-lg text-sm transition-all duration-200 font-outfit">
-              📈 Analytics
-            </button>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {Object.entries(AVAILABLE_WIDGET_TYPES).map(([type, config]) => {
+                const isActive = activeWidgets.includes(type);
+                return (
+                  <button
+                    key={type}
+                    onClick={() => addWidget(type)}
+                    disabled={isActive}
+                    className={`p-4 text-left border rounded-lg transition-all duration-200 group ${
+                      isActive
+                        ? "border-[var(--color-success)] bg-[var(--color-success)]/10 cursor-not-allowed opacity-60"
+                        : "border-[var(--color-border-primary)] hover:border-[var(--color-brand-400)] hover:bg-[var(--color-surface-hover)]"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">{config.icon}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h4
+                            className={`font-medium transition-colors ${
+                              isActive
+                                ? "text-[var(--color-success)]"
+                                : "text-[var(--color-text-primary)] group-hover:text-[var(--color-brand-500)]"
+                            }`}
+                          >
+                            {config.title}
+                          </h4>
+                          {isActive && (
+                            <span className="text-xs bg-[var(--color-success)] text-white px-2 py-1 rounded-full">
+                              Active
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-[var(--color-text-tertiary)] mt-1">
+                          {config.description}
+                        </p>
+                        <p className="text-xs text-[var(--color-text-quaternary)] mt-2">
+                          Size: {config.defaultProps.w}×{config.defaultProps.h}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

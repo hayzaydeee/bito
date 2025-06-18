@@ -24,25 +24,67 @@
   transition-property: transform, width, height;
 }
 
+/* Enhanced resize handle for better visibility */
 .react-grid-item > .react-resizable-handle {
   position: absolute;
   width: 20px;
   height: 20px;
   bottom: 0;
   right: 0;
-  background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNiIgaGVpZ2h0PSI2IiB2aWV3Qm94PSIwIDAgNiA2IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxnIGZpbGw9IiM0QjVCRjciIGZpbGwtcnVsZT0iZXZlbm9kZCI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiLz48Y2lyY2xlIGN4PSI2IiBjeT0iNiIgcj0iMiIvPjwvZz48L3N2Zz4=') no-repeat;
-  background-position: bottom right;
-  padding: 0 3px 3px 0;
-  background-repeat: no-repeat;
-  background-origin: content-box;
+  background: var(--color-brand-400);
+  padding: 0;
   box-sizing: border-box;
   cursor: se-resize;
-  opacity: 0.6;
-  transition: opacity 0.2s;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  z-index: 10;
+  border-radius: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.react-grid-item:hover > .react-resizable-handle {
+/* Add resize dots pattern */
+.react-grid-item > .react-resizable-handle::after {
+  content: '';
+  width: 12px;
+  height: 12px;
+  background-image: 
+    radial-gradient(circle at 2px 2px, white 1px, transparent 1px),
+    radial-gradient(circle at 6px 6px, white 1px, transparent 1px),
+    radial-gradient(circle at 10px 10px, white 1px, transparent 1px),
+    radial-gradient(circle at 2px 6px, white 1px, transparent 1px),
+    radial-gradient(circle at 6px 10px, white 1px, transparent 1px),
+    radial-gradient(circle at 2px 10px, white 1px, transparent 1px);
+  background-size: 12px 12px;
+  background-repeat: no-repeat;
+}
+
+.react-grid-item:hover > .react-resizable-handle,
+.react-grid-item.react-draggable-dragging > .react-resizable-handle {
+  /* Hide by default, will be overridden by edit-mode styles */
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* Show resize handle only for widgets in edit mode */
+.react-grid-item[data-edit-mode="true"] > .react-resizable-handle,
+.react-grid-item.edit-mode > .react-resizable-handle {
+  opacity: 0.8;
+  visibility: visible;
+  background-color: var(--color-brand-500);
+  border: 2px solid var(--color-brand-600);
+  border-radius: 0 0 8px 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.react-grid-item[data-edit-mode="true"]:hover > .react-resizable-handle,
+.react-grid-item.edit-mode:hover > .react-resizable-handle {
   opacity: 1;
+  background-color: var(--color-brand-600);
+  transform: scale(1.15);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Widget-specific responsive styles */
@@ -223,4 +265,36 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Widget header button fixes */
+.widget-header-buttons {
+  position: relative;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.widget-header-buttons button {
+  position: relative;
+  z-index: 21;
+  pointer-events: auto;
+}
+
+/* Ensure drag handle doesn't interfere with buttons */
+.react-grid-item .widget-header-buttons {
+  pointer-events: auto;
+}
+
+.react-grid-item .widget-header-buttons button {
+  pointer-events: auto;
+}
+
+/* Prevent dragging on button areas */
+.widget-header-buttons button:hover {
+  cursor: pointer !important;
+}
+
+/* Ensure proper click areas */
+.react-grid-item:not(.react-draggable-dragging) .widget-header-buttons button {
+  pointer-events: auto;
 }
