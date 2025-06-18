@@ -1,7 +1,7 @@
 import React, { useRef, useMemo } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { Resizable } from 'react-resizable';
-import { useWidgetBreakpoints } from '../../hooks/useWidgetBreakpoints';
+import { useWidgetBreakpoints } from '../../globalHooks/useWidgetBreakpoints';
 import 'react-resizable/css/styles.css';
 
 const ResizableWidget = ({

@@ -1,53 +1,52 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, memo, useCallback } from 'react';
 import { PlusIcon, BarChartIcon, GearIcon, ResetIcon, CheckIcon, ActivityLogIcon } from '@radix-ui/react-icons';
 
-const QuickActionsWidget = ({
+const QuickActionsWidget = memo(({
   breakpoint = 'lg',
   availableColumns = 4,
   availableRows = 2,
   widgetConfig = {}
-}) => {
-  const defaultActions = [
+}) => {const defaultActions = [
     {
       id: 'add-habit',
       label: 'Add Habit',
       icon: <PlusIcon />,
-      color: 'bg-blue-500 hover:bg-blue-600',
+      color: 'bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)]',
       action: () => console.log('Add new habit')
     },
     {
       id: 'quick-complete',
       label: 'Mark Complete',
       icon: <CheckIcon />,
-      color: 'bg-green-500 hover:bg-green-600',
+      color: 'bg-[var(--color-success)] hover:bg-[var(--color-success)]/80',
       action: () => console.log('Quick complete habits')
     },
     {
       id: 'view-analytics',
       label: 'Analytics',
       icon: <BarChartIcon />,
-      color: 'bg-purple-500 hover:bg-purple-600',
+      color: 'bg-[var(--color-brand-700)] hover:bg-[var(--color-brand-800)]',
       action: () => console.log('View analytics')
     },
     {
       id: 'activity-log',
       label: 'Activity',
       icon: <ActivityLogIcon />,
-      color: 'bg-indigo-500 hover:bg-indigo-600',
+      color: 'bg-[var(--color-brand-400)] hover:bg-[var(--color-brand-500)]',
       action: () => console.log('View activity log')
     },
     {
       id: 'settings',
       label: 'Settings',
       icon: <GearIcon />,
-      color: 'bg-gray-500 hover:bg-gray-600',
+      color: 'bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-primary)]',
       action: () => console.log('Open settings')
     },
     {
       id: 'reset-day',
       label: 'Reset Day',
       icon: <ResetIcon />,
-      color: 'bg-orange-500 hover:bg-orange-600',
+      color: 'bg-[var(--color-warning)] hover:bg-[var(--color-warning)]/80',
       action: () => console.log('Reset day progress')
     }
   ];
@@ -94,15 +93,14 @@ const QuickActionsWidget = ({
 
   const maxButtons = buttonLayout.columns * buttonLayout.rows;
   const visibleActions = actions.slice(0, maxButtons);
-
   const getButtonClasses = (action) => {
     const baseClasses = `
       ${action.color} 
-      text-white rounded-lg 
+      text-white rounded-xl 
       flex items-center justify-center
       transition-all duration-200 transform hover:scale-105
-      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
-      shadow-md hover:shadow-lg
+      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-brand-500)]
+      shadow-lg hover:shadow-xl backdrop-blur-sm
     `;
 
     const sizeClasses = {
@@ -128,26 +126,24 @@ const QuickActionsWidget = ({
 
     const completed = 3; // This would come from actual data
     const total = 5;
-    const percentage = (completed / total) * 100;
-
-    return (
-      <div className={`mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 ${
+    const percentage = (completed / total) * 100;    return (
+      <div className={`mt-3 p-3 bg-[var(--color-brand-500)]/10 rounded-xl border border-[var(--color-brand-500)]/20 backdrop-blur-sm ${
         breakpoint === 'sm' ? 'text-xs' : 'text-sm'
       }`}>
-        <h5 className={`font-medium text-blue-900 dark:text-blue-100 mb-2 ${
+        <h5 className={`font-medium text-[var(--color-brand-400)] mb-2 font-dmSerif ${
           breakpoint === 'sm' ? 'text-xs' : 'text-sm'
         }`}>
           Today's Progress
         </h5>
-        <div className="flex items-center justify-between">
-          <span className="text-blue-700 dark:text-blue-300">Completed:</span>
-          <span className="font-semibold text-blue-900 dark:text-blue-100">
+        <div className="flex items-center justify-between font-outfit">
+          <span className="text-[var(--color-text-secondary)]">Completed:</span>
+          <span className="font-semibold text-[var(--color-text-primary)]">
             {completed}/{total} habits
           </span>
         </div>
-        <div className="mt-2 w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2">
+        <div className="mt-2 w-full bg-[var(--color-surface-secondary)] rounded-full h-2">
           <div 
-            className="bg-blue-600 dark:bg-blue-400 h-2 rounded-full transition-all duration-300" 
+            className="bg-gradient-to-r from-[var(--color-brand-400)] to-[var(--color-brand-500)] h-2 rounded-full transition-all duration-300" 
             style={{ width: `${percentage}%` }}
           />
         </div>
@@ -172,9 +168,8 @@ const QuickActionsWidget = ({
           >
             <div className="flex-shrink-0">
               {React.cloneElement(action.icon, { className: getIconSize() })}
-            </div>
-            {buttonLayout.showLabels && (
-              <span className={`font-medium text-center leading-tight ${
+            </div>            {buttonLayout.showLabels && (
+              <span className={`font-medium text-center leading-tight font-outfit ${
                 buttonLayout.buttonSize === 'large' ? 'text-sm' : 
                 buttonLayout.buttonSize === 'medium' ? 'text-xs' : 'text-xs'
               }`}>
@@ -186,8 +181,9 @@ const QuickActionsWidget = ({
       </div>
       
       {renderProgress()}
-    </div>
-  );
-};
+    </div>  );
+});
+
+QuickActionsWidget.displayName = 'QuickActionsWidget';
 
 export { QuickActionsWidget };

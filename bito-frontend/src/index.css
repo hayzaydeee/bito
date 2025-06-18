@@ -1,11 +1,13 @@
 @import "tailwindcss";
 
+@theme {
+  /* Font Imports */
+  --font-outfit: 'Outfit', sans-serif;
+  --font-dmSerif: 'DM Serif Text', serif;
+}
+
 /* CSS Custom Properties for Dark Indigo Theme */
 :root {
-  /* Fonts */
-  --font-dmSerif: "DM Serif Text", serif;
-  --font-outfit: "Outfit", sans-serif;
-  
   /* Dark Indigo Theme Colors */
   --color-brand-50: #eef2ff;
   --color-brand-100: #e0e7ff;
@@ -240,6 +242,23 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
+/* Glass Card Effect */
+.glass-card {
+  background: rgba(30, 30, 66, 0.4);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.glass-card:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
 /* Input Styles */
 .input {
   background: var(--color-surface-secondary);
@@ -333,6 +352,20 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
 /* Apply animations to components */
 .animate-in {
   animation: slideInUp 0.6s ease-out;
@@ -344,6 +377,10 @@ h1, h2, h3, h4, h5, h6 {
 
 .animate-in-right {
   animation: slideInRight 0.6s ease-out;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s ease-in-out infinite;
 }
 
 /* Enhanced hover effects for interactive elements */
@@ -408,4 +445,25 @@ textarea:focus-visible {
 ::-moz-selection {
   background: var(--color-brand-500);
   color: white;
+}
+
+/* Layout enhancements */
+.layout {
+  min-height: 400px;
+}
+
+/* Widget transitions */
+.react-grid-item {
+  transition: all 200ms ease;
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: rgba(99, 102, 241, 0.2) !important;
+  border-radius: 12px;
+  border: 2px dashed rgba(99, 102, 241, 0.4);
+}
+
+.react-grid-item > .react-resizable-handle::after {
+  border-right: 2px solid rgba(99, 102, 241, 0.6);
+  border-bottom: 2px solid rgba(99, 102, 241, 0.6);
 }
