@@ -1,21 +1,49 @@
 import React from "react";
-import {
-  CheckIcon,
-  DotsHorizontalIcon,
-  Pencil1Icon,
-  PlusIcon,
-} from "@radix-ui/react-icons";
+import { PlusIcon, CheckIcon } from "@radix-ui/react-icons";
 
 /**
- * Gallery View Component - Card-based view of habits
+ * Empty State Component for Gallery View
+ */
+const EmptyGalleryState = ({ onGetStarted }) => (
+  <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+    <div className="w-16 h-16 bg-[var(--color-surface-elevated)] rounded-full flex items-center justify-center mb-4 border-2 border-dashed border-[var(--color-border-primary)]">
+      <span className="text-2xl">📝</span>
+    </div>
+    
+    <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2 font-outfit">
+      Ready to build great habits?
+    </h3>
+    
+    <p className="text-sm text-[var(--color-text-secondary)] mb-6 max-w-xs font-outfit">
+      Start tracking your daily habits and build consistency. Add your first habit to get started!
+    </p>
+    
+    <button
+      onClick={onGetStarted}
+      className="flex items-center gap-2 px-4 py-2 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg transition-all duration-200 font-outfit text-sm"
+    >
+      <PlusIcon className="w-4 h-4" />
+      Add Your First Habit
+    </button>
+    
+    <div className="mt-8 text-xs text-[var(--color-text-tertiary)] space-y-1 font-outfit">
+      <p>💡 Try habits like "Drink 8 glasses of water" or "Read for 30 minutes"</p>
+    </div>
+  </div>
+);
+
+/**
+ * Gallery View Component - Card-based layout for habits
  */
 export const GalleryView = ({
-  displayHabits,
-  daysOfWeek,
+  daysOfWeek = [],
+  displayHabits = [],
+  displayCompletions = {},
+  getCurrentWeekDates,
   getCompletionStatus,
-  getHabitCompletion,
+  getDayCompletion,
   handleToggleCompletion,
-  displayCompletions,
+  weekStats,
   breakpoint,
   showAddForm,
   setShowAddForm,
@@ -23,188 +51,225 @@ export const GalleryView = ({
   setNewHabitName,
   handleAddHabit,
   handleCancelAdd,
-}) => (
-  <div
-    className="grid gap-4"
-    style={{
-      gridTemplateColumns:
-        breakpoint === "xs"
-          ? "1fr"
-          : breakpoint === "sm"
-          ? "repeat(2, 1fr)"
-          : "repeat(auto-fit, minmax(300px, 1fr))",
-    }}
-  >
-    {displayHabits.map((habit) => {
-      const habitCompletion = getHabitCompletion(habit.id);
-      const completedDays = daysOfWeek.filter((day) =>
-        getCompletionStatus(day, habit.id)
-      );
+}) => {
+  // Show empty state if no habits exist
+  if (!displayHabits || displayHabits.length === 0) {
+    return (
+      <EmptyGalleryState onGetStarted={() => setShowAddForm(true)} />
+    );
+  }
 
-      return (
-        <div
-          key={habit.id}
-          className="glass-card rounded-xl p-5 hover:shadow-lg transition-all duration-200 border border-[var(--color-border-primary)]"
-        >
-          {/* Habit Header */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
+  return (
+    <div className="p-4 space-y-4">
+      {/* Week Progress Overview */}
+      <div className="bg-[var(--color-surface-elevated)] rounded-lg p-4 border border-[var(--color-border-primary)]">
+        <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-3 font-outfit">
+          Week Overview
+        </h3>        <div className="grid grid-cols-7 gap-2">
+          {daysOfWeek.map((day) => {
+            const dayCompletion = getDayCompletion(day);
+            
+            // Find the actual date for this day and compare with today's date
+            const dayInfo = getCurrentWeekDates?.find((d) => d.day === day);
+            // Get today's date in local timezone (YYYY-MM-DD format)
+            const today = new Date();
+            const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            const isToday = dayInfo?.date === todayString;
+            
+            return (
               <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm"
-                style={{
-                  backgroundColor: `${habit.color}15`,
-                  border: `2px solid ${habit.color}30`,
-                }}
+                key={day}
+                className={`text-center p-2 rounded-lg transition-all duration-200 ${
+                  isToday
+                    ? "bg-[var(--color-brand-500)]/10 border border-[var(--color-brand-400)]/30"
+                    : "bg-[var(--color-surface-secondary)]/30"
+                }`}
               >
-                <span className="text-xl">{habit.icon}</span>
-              </div>
-              <div>
-                <h4 className="text-base font-bold text-[var(--color-text-primary)] font-dmSerif">
-                  {habit.name}
-                </h4>
-                <div className="text-sm text-[var(--color-text-tertiary)] font-outfit">
-                  {completedDays.length}/7 completed
+                <div
+                  className={`text-xs font-medium mb-1 font-outfit ${
+                    isToday
+                      ? "text-[var(--color-brand-400)]"
+                      : "text-[var(--color-text-secondary)]"
+                  }`}
+                >
+                  {day.slice(0, 3)}
+                </div>
+                <div
+                  className={`text-xs font-bold font-dmSerif ${
+                    dayCompletion === 100
+                      ? "text-[var(--color-success)]"
+                      : dayCompletion >= 75
+                      ? "text-[var(--color-brand-400)]"
+                      : dayCompletion >= 50
+                      ? "text-[var(--color-warning)]"
+                      : dayCompletion > 0
+                      ? "text-[var(--color-error)]"
+                      : "text-[var(--color-text-tertiary)]"
+                  }`}
+                >
+                  {dayCompletion}%
                 </div>
               </div>
-            </div>
-            <div className="flex items-center gap-1">
-              <button className="p-2 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors">
-                <Pencil1Icon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
-              </button>
-              <button className="p-2 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors">
-                <DotsHorizontalIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
-              </button>
-            </div>
-          </div>
-
-          {/* Progress Section */}
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-[var(--color-text-secondary)] font-outfit">
-                Weekly Progress
-              </span>
-              <span
-                className="text-sm font-bold font-outfit"
-                style={{ color: habit.color }}
-              >
-                {habitCompletion}%
-              </span>
-            </div>
-            <div className="w-full bg-[var(--color-surface-secondary)] rounded-full h-2.5">
-              <div
-                className="h-2.5 rounded-full transition-all duration-500"
-                style={{
-                  width: `${habitCompletion}%`,
-                  backgroundColor: habit.color,
-                  boxShadow:
-                    habitCompletion > 0
-                      ? `0 0 8px ${habit.color}40`
-                      : "none",
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Days Grid */}
-          <div className="grid grid-cols-7 gap-2">
-            {daysOfWeek.map((day) => {
-              const isCompleted = getCompletionStatus(day, habit.id);
-              const isToday =
-                new Date().toLocaleDateString("en-US", {
-                  weekday: "long",
-                }) === day;
-
-              return (
-                <div key={day} className="text-center">
-                  <div
-                    className={`text-xs mb-2 font-outfit ${
-                      isToday
-                        ? "text-[var(--color-brand-400)] font-bold"
-                        : "text-[var(--color-text-tertiary)]"
-                    }`}
-                  >
-                    {day.slice(0, 3)}
-                  </div>
-                  <button
-                    onClick={() => handleToggleCompletion(day, habit.id, displayCompletions)}
-                    className={`w-8 h-8 rounded-lg transition-all duration-200 hover:scale-110 flex items-center justify-center relative ${
-                      isCompleted ? "shadow-md" : "hover:shadow-sm"
-                    } ${
-                      isToday
-                        ? "ring-2 ring-[var(--color-brand-400)]/50"
-                        : ""
-                    }`}
-                    style={{
-                      backgroundColor: isCompleted
-                        ? habit.color
-                        : "var(--color-surface-elevated)",
-                      border: `2px solid ${
-                        isCompleted
-                          ? habit.color
-                          : "var(--color-border-primary)"
-                      }`,
-                      boxShadow: isCompleted
-                        ? `0 2px 8px ${habit.color}30`
-                        : "none",
-                    }}
-                  >
-                    {isCompleted && (
-                      <CheckIcon className="w-4 h-4 text-white" />
-                    )}
-                    {isToday && !isCompleted && (
-                      <div className="w-2 h-2 rounded-full bg-[var(--color-brand-400)] animate-pulse" />
-                    )}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      );
-    })}
-
-    {/* Add New Habit Card */}
-    {showAddForm ? (
-      <div className="glass-card rounded-xl p-5 border-2 border-dashed border-[var(--color-brand-400)] bg-[var(--color-brand-500)]/5">
-        <input
-          type="text"
-          placeholder="Enter habit name..."
-          value={newHabitName}
-          onChange={(e) => setNewHabitName(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleAddHabit()}
-          className="w-full bg-transparent border-none outline-none text-base font-outfit text-[var(--color-text-primary)] mb-4 placeholder:text-[var(--color-text-tertiary)]"
-          autoFocus
-        />
-        <div className="flex gap-2">
-          <button
-            onClick={handleAddHabit}
-            className="flex-1 py-2.5 bg-[var(--color-brand-500)] text-white rounded-lg text-sm font-outfit font-semibold hover:bg-[var(--color-brand-600)] transition-colors"
-          >
-            Add Habit
-          </button>
-          <button
-            onClick={handleCancelAdd}
-            className="px-4 py-2.5 bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] rounded-lg text-sm font-outfit hover:bg-[var(--color-surface-hover)] transition-colors"
-          >
-            Cancel
-          </button>
+            );
+          })}
         </div>
       </div>
-    ) : (
-      <button
-        onClick={() => setShowAddForm(true)}
-        className="glass-card rounded-xl p-5 border-2 border-dashed border-[var(--color-border-primary)] hover:border-[var(--color-brand-400)] transition-all duration-200 flex flex-col items-center justify-center text-[var(--color-text-tertiary)] hover:text-[var(--color-brand-400)] min-h-[240px] group"
-      >
-        <div className="w-14 h-14 bg-[var(--color-surface-elevated)] rounded-xl flex items-center justify-center mb-3 group-hover:bg-[var(--color-brand-500)]/10 transition-all duration-200">
-          <PlusIcon className="w-7 h-7" />
-        </div>
-        <span className="text-base font-outfit font-semibold">
-          Add New Habit
-        </span>
-        <span className="text-sm font-outfit opacity-70 mt-1">
-          Track your progress
-        </span>
-      </button>
-    )}
-  </div>
-);
+
+      {/* Habits Grid */}
+      <div className="grid gap-4" style={{
+        gridTemplateColumns: breakpoint === "xs" 
+          ? "1fr" 
+          : breakpoint === "sm" 
+          ? "repeat(auto-fit, minmax(280px, 1fr))"
+          : "repeat(auto-fit, minmax(320px, 1fr))"
+      }}>
+        {displayHabits.map((habit) => (
+          <div
+            key={habit.id}
+            className="bg-[var(--color-surface-elevated)] rounded-lg p-4 border border-[var(--color-border-primary)] hover:shadow-md transition-all duration-200"
+          >
+            {/* Habit Header */}
+            <div className="flex items-center gap-3 mb-4">
+              <div
+                className="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
+                style={{ backgroundColor: `${habit.color}20`, color: habit.color }}
+              >
+                {habit.icon}
+              </div>
+              <div className="flex-1">
+                <h4 className="text-sm font-semibold text-[var(--color-text-primary)] font-outfit">
+                  {habit.name}
+                </h4>
+                <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">
+                  {daysOfWeek.filter(day => getCompletionStatus(day, habit.id)).length}/{daysOfWeek.length} days this week
+                </p>
+              </div>
+            </div>
+
+            {/* Daily Checkboxes */}            <div className="grid grid-cols-7 gap-2">              {daysOfWeek.map((day) => {
+                const isCompleted = getCompletionStatus(day, habit.id);
+                
+                // Find the actual date for this day and compare with today's date
+                const dayInfo = getCurrentWeekDates?.find((d) => d.day === day);
+                // Get today's date in local timezone (YYYY-MM-DD format)
+                const today = new Date();
+                const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                const isToday = dayInfo?.date === todayString;
+
+                return (
+                  <div key={day} className="text-center">
+                    <div
+                      className={`text-xs font-medium mb-1 font-outfit ${
+                        isToday
+                          ? "text-[var(--color-brand-400)]"
+                          : "text-[var(--color-text-tertiary)]"
+                      }`}
+                    >
+                      {day.slice(0, 1)}
+                    </div>
+                    <button
+                      onClick={() => handleToggleCompletion(day, habit.id, displayCompletions)}
+                      className={`w-8 h-8 rounded-lg transition-all duration-200 flex items-center justify-center hover:scale-110 active:scale-95 ${
+                        isCompleted
+                          ? "shadow-sm transform scale-105"
+                          : "hover:shadow-sm"
+                      }`}
+                      style={{
+                        backgroundColor: isCompleted ? habit.color : "transparent",
+                        border: `2px solid ${habit.color}`,
+                        boxShadow: isCompleted ? `0 2px 4px ${habit.color}30` : "none",
+                      }}
+                    >
+                      {isCompleted && (
+                        <CheckIcon className="w-4 h-4 text-white font-bold" />
+                      )}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Progress Bar */}
+            <div className="mt-4">
+              <div className="flex items-center justify-between text-xs text-[var(--color-text-tertiary)] mb-1 font-outfit">
+                <span>Weekly Progress</span>
+                <span>
+                  {daysOfWeek.filter(day => getCompletionStatus(day, habit.id)).length}/{daysOfWeek.length}
+                </span>
+              </div>
+              <div className="w-full bg-[var(--color-surface-secondary)] rounded-full h-2">
+                <div
+                  className="h-2 rounded-full transition-all duration-300"
+                  style={{
+                    backgroundColor: habit.color,
+                    width: `${(daysOfWeek.filter(day => getCompletionStatus(day, habit.id)).length / daysOfWeek.length) * 100}%`,
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {/* Add New Habit Card */}
+        {showAddForm ? (
+          <div className="bg-[var(--color-surface-elevated)] rounded-lg p-4 border border-[var(--color-border-primary)] border-dashed">
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold text-[var(--color-text-primary)] font-outfit">
+                Add New Habit
+              </h4>
+              <input
+                type="text"
+                value={newHabitName}
+                onChange={(e) => setNewHabitName(e.target.value)}
+                placeholder="Enter habit name..."
+                className="w-full px-3 py-2 text-sm border border-[var(--color-border-primary)] rounded-lg bg-[var(--color-surface-primary)] text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)]/50 focus:border-[var(--color-brand-400)] font-outfit"
+                autoFocus
+                onKeyPress={(e) => {
+                  if (e.key === "Enter") {
+                    handleAddHabit();
+                  } else if (e.key === "Escape") {
+                    handleCancelAdd();
+                  }
+                }}
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAddHabit}
+                  disabled={!newHabitName.trim()}
+                  className="flex-1 px-3 py-2 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] disabled:bg-[var(--color-text-tertiary)] disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-all duration-200 font-outfit"
+                >
+                  Add Habit
+                </button>
+                <button
+                  onClick={handleCancelAdd}
+                  className="px-3 py-2 border border-[var(--color-border-primary)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] rounded-lg text-sm font-medium transition-all duration-200 font-outfit"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="bg-[var(--color-surface-elevated)] rounded-lg p-4 border border-[var(--color-border-primary)] border-dashed hover:border-[var(--color-brand-400)] hover:bg-[var(--color-brand-500)]/5 transition-all duration-200 group"
+          >
+            <div className="flex flex-col items-center justify-center text-center space-y-2">
+              <div className="w-10 h-10 rounded-lg bg-[var(--color-brand-500)]/10 flex items-center justify-center group-hover:bg-[var(--color-brand-500)]/20 transition-all duration-200">
+                <PlusIcon className="w-5 h-5 text-[var(--color-brand-400)]" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-[var(--color-text-secondary)] group-hover:text-[var(--color-brand-400)] transition-all duration-200 font-outfit">
+                  Add New Habit
+                </p>
+                <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">
+                  Track a new daily habit
+                </p>
+              </div>
+            </div>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};

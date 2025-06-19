@@ -8,10 +8,23 @@ import React, {
   useEffect,
 } from "react";
 import { Responsive, WidthProvider } from "react-grid-layout";
-import { Pencil1Icon, Cross2Icon, PlusIcon } from "@radix-ui/react-icons";
+import {
+  Pencil1Icon,
+  TrashIcon,
+  PlusIcon,
+  Cross2Icon,
+} from "@radix-ui/react-icons";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import "../widgets/widgets.css";
+
+// Import data service and filter components
+import habitDataService, { filterState } from "../../services/habitDataService";
+import {
+  ChartFilterControls,
+  DatabaseFilterControls,
+} from "../ui/FilterControls";
+import CsvImportModal from "../ui/CsvImportModal";
 
 // Lazy load widgets for better performance
 const ChartWidget = lazy(() =>
@@ -20,7 +33,7 @@ const ChartWidget = lazy(() =>
   }))
 );
 const DatabaseWidget = lazy(() =>
-  import("../widgets/database/components/DatabaseWidget").then((module) => ({
+  import("../widgets/database/components/DatabaseWidget.jsx").then((module) => ({
     default: module.DatabaseWidget,
   }))
 );
@@ -222,71 +235,137 @@ const ContentGrid = () => {
   useEffect(() => {
     saveActiveWidgetsToStorage(activeWidgets);
   }, [activeWidgets]);
+  // Filter state management
+  const [filters, setFilters] = useState(() => filterState.loadFilters());
+
+  // Initialize habit data with enhanced historical data
+  const { habits: initialHabits, completions: initialCompletions } = useMemo(
+    () => habitDataService.initialize(),
+    []
+  );
 
   // Habit data state management
-  const [habits, setHabits] = useState([
-    {
-      id: 1,
-      name: "Morning Meditation",
-      color: "#6366f1",
-      icon: "🧘",
-    },
-    {
-      id: 2,
-      name: "Drink 8 glasses of water",
-      color: "#3b82f6",
-      icon: "💧",
-    },
-    {
-      id: 3,
-      name: "Read for 30 minutes",
-      color: "#10b981",
-      icon: "📚",
-    },
-    {
-      id: 4,
-      name: "Exercise",
-      color: "#f59e0b",
-      icon: "💪",
-    },
-    {
-      id: 5,
-      name: "Write in journal",
-      color: "#8b5cf6",
-      icon: "📝",
-    },
-  ]);
+  const [habits, setHabits] = useState(initialHabits);
+  const [completions, setCompletions] = useState(initialCompletions);
 
-  const [completions, setCompletions] = useState({
-    "Monday-1": true,
-    "Monday-4": true,
-    "Tuesday-1": true,
-    "Tuesday-2": true,
-    "Tuesday-3": true,
-    "Wednesday-1": true,
-    "Wednesday-2": true,
-    "Thursday-1": true,
-    "Thursday-2": true,
-    "Thursday-3": true,
-    "Thursday-4": true,
-    "Friday-1": true,
-    "Friday-5": true,
-    "Saturday-2": true,
-    "Saturday-3": true,
-    "Sunday-1": true,
-    "Sunday-2": true,
-    "Sunday-3": true,
-    "Sunday-4": true,
-    "Sunday-5": true,
-  });
+  // Save filters when they change
+  useEffect(() => {
+    filterState.saveFilters(filters);
+  }, [filters]);
 
+  // CSV Import state
+  const [showCsvImport, setShowCsvImport] = useState(false);
+
+  // Get filter options (dynamically based on selected months)
+  const filterOptions = useMemo(() => {
+    const chartMonth = filters.chartMode === 'week' ? filters.chartSelectedMonth : null;
+    const dbMonth = filters.databaseSelectedMonth; // Database is always weekly
+    
+    // Use the appropriate month for generating options
+    const monthForOptions = chartMonth || dbMonth || new Date().getMonth() + 1;
+    return habitDataService.getFilterOptions(monthForOptions);
+  }, [filters.chartMode, filters.chartSelectedMonth, filters.databaseSelectedMonth]);
+  // Filter update handlers
+  const updateChartFilter = useCallback((mode, period) => {
+    setFilters((prev) => ({
+      ...prev,
+      chartMode: mode,
+      chartPeriod: period,
+    }));
+  }, []);
+
+  const updateChartMonth = useCallback((month) => {
+    setFilters((prev) => ({
+      ...prev,
+      chartSelectedMonth: month,
+      chartPeriod: 1, // Reset to first week when month changes
+    }));
+  }, []);
+  const updateDatabaseFilter = useCallback((period) => {
+    setFilters((prev) => ({
+      ...prev,
+      databasePeriod: period,
+    }));
+  }, []);
+
+  const updateDatabaseMonth = useCallback((month) => {
+    setFilters((prev) => ({
+      ...prev,
+      databaseSelectedMonth: month,
+      databasePeriod: 1, // Reset to first week when month changes
+    }));
+  }, []);
   // Habit event handlers
   const handleToggleCompletion = useCallback((key, isCompleted) => {
     console.log(`Toggling completion for ${key}: ${isCompleted}`);
-    setCompletions((prev) => ({
-      ...prev,
-      [key]: isCompleted,
-    }));
+
+    // Handle both new date-based keys and old day-based keys
+    const today = new Date();
+    const currentDay = today.getDay();
+    const startOfWeek = new Date(today);
+    const daysToSubtract = currentDay === 0 ? 6 : currentDay - 1;
+    startOfWeek.setDate(today.getDate() - daysToSubtract);
+
+    setCompletions((prev) => {
+      const newCompletions = { ...prev };
+
+      if (key.includes("-")) {
+        // Parse the key to determine if it's day-based or date-based
+        const parts = key.split("-");
+        const lastPart = parts[parts.length - 1];
+        const habitId = parseInt(lastPart);
+
+        if (!isNaN(habitId)) {
+          const keyWithoutId = parts.slice(0, -1).join("-");
+
+          // Check if it's a date (YYYY-MM-DD format) or day name
+          const isDateKey = /^\d{4}-\d{2}-\d{2}$/.test(keyWithoutId);
+
+          if (isDateKey) {
+            // It's a date-based key, also set the corresponding day-based key
+            const date = new Date(keyWithoutId);
+            const dayName = date.toLocaleDateString("en-US", {
+              weekday: "long",
+            });
+            const dayKey = `${dayName}-${habitId}`;
+
+            newCompletions[key] = isCompleted;
+            newCompletions[dayKey] = isCompleted;
+          } else {
+            // It's a day-based key, also set the corresponding date-based key
+            const dayName = keyWithoutId;
+            const daysOfWeek = [
+              "Monday",
+              "Tuesday",
+              "Wednesday",
+              "Thursday",
+              "Friday",
+              "Saturday",
+              "Sunday",
+            ];
+            const dayIndex = daysOfWeek.indexOf(dayName);
+
+            if (dayIndex >= 0) {
+              const date = new Date(startOfWeek);
+              date.setDate(startOfWeek.getDate() + dayIndex);
+              const dateStr = date.toISOString().split("T")[0];
+              const dateKey = `${dateStr}-${habitId}`;
+
+              newCompletions[key] = isCompleted;
+              newCompletions[dateKey] = isCompleted;
+            } else {
+              newCompletions[key] = isCompleted;
+            }
+          }
+        } else {
+          newCompletions[key] = isCompleted;
+        }
+      } else {
+        newCompletions[key] = isCompleted;
+      }
+
+      return newCompletions;
+    });
   }, []);
 
   const handleAddHabit = useCallback((habit) => {
@@ -313,6 +392,15 @@ const ContentGrid = () => {
     console.log("Editing habit:", habit);
     setHabits((prev) => prev.map((h) => (h.id === habit.id ? habit : h)));
   }, []);
+
+  // CSV Import handler
+  const handleCsvImport = useCallback((importedData) => {
+    console.log("Importing CSV data:", importedData);
+    setHabits(importedData.habits);
+    setCompletions(importedData.completions);
+    setShowCsvImport(false);
+  }, []);
+
   // Throttled callbacks for better performance
   const handleLayoutChange = useCallback(
     throttle((layout, layouts) => {
@@ -450,23 +538,23 @@ const ContentGrid = () => {
       };
     },
     [currentBreakpoint]
-  );
+  ); // Get filtered data based on current filters
+  const filteredData = useMemo(() => {
+    return habitDataService.getFilteredData(habits, completions, filters);
+  }, [habits, completions, filters]);
+
+  // Helper function to calculate daily completion data (now using filtered data)
+  const calculateDailyCompletions = useCallback(() => {
+    return filteredData.chartData;
+  }, [filteredData.chartData]);
 
   // Memoized widget data to prevent unnecessary re-renders
   const widgetData = useMemo(
     () => ({
       "habits-overview": {
         title: "Daily Habits Completion",
-        type: "bar",
-        data: [
-          { name: "Mon", value: 85 },
-          { name: "Tue", value: 92 },
-          { name: "Wed", value: 78 },
-          { name: "Thu", value: 88 },
-          { name: "Fri", value: 94 },
-          { name: "Sat", value: 76 },
-          { name: "Sun", value: 89 },
-        ],
+        type: "area", // Changed from line to area to match weekly progress style
+        data: calculateDailyCompletions(),
       },
       "weekly-progress": {
         title: "Weekly Progress Trend",
@@ -488,7 +576,7 @@ const ContentGrid = () => {
         { id: 5, name: "Learn coding", completed: false, streak: 3 },
       ],
     }),
-    []
+    [calculateDailyCompletions]
   );
   // Memoized widgets configuration for performance
   const widgets = useMemo(
@@ -503,9 +591,23 @@ const ContentGrid = () => {
             >
               <ChartWidget
                 title="Daily Habits Completion"
-                type="bar"
+                type="area"
                 data={widgetData["habits-overview"].data}
-                color="var(--color-brand-500)"
+                color="var(--color-brand-400)"                filterComponent={
+                  <ChartFilterControls
+                    mode={filters.chartMode}
+                    period={filters.chartPeriod}
+                    selectedMonth={filters.chartSelectedMonth}
+                    onModeChange={(mode) =>
+                      updateChartFilter(mode, filters.chartPeriod)
+                    }
+                    onPeriodChange={(period) =>
+                      updateChartFilter(filters.chartMode, period)
+                    }
+                    onMonthChange={updateChartMonth}
+                    options={filterOptions}
+                  />
+                }
                 {...props}
               />
             </Suspense>
@@ -543,23 +645,31 @@ const ContentGrid = () => {
       "habit-list": {
         title: "My Habits",
         component: (layout) => {
-          const props = getWidgetProps("habit-list", layout);
-          return (
+          const props = getWidgetProps("habit-list", layout);          return (
             <DatabaseWidget
-              title="Today's Habits"
               habits={habits}
-              completions={completions}
+              completions={filteredData.databaseCompletions}
               onToggleCompletion={handleToggleCompletion}
               onAddHabit={handleAddHabit}
               onDeleteHabit={handleDeleteHabit}
               onEditHabit={handleEditHabit}
               viewType="table"
+              dateRange={filteredData.databaseRange}
+              mode={filteredData.databaseMode}
+              filterComponent={
+                <DatabaseFilterControls
+                  period={filters.databasePeriod}
+                  selectedMonth={filters.databaseSelectedMonth}
+                  onPeriodChange={updateDatabaseFilter}
+                  onMonthChange={updateDatabaseMonth}
+                  options={filterOptions}
+                />
+              }
               {...props}
             />
           );
         },
-      },
-    }),
+      },    }),
     [
       currentBreakpoint,
       getWidgetProps,
@@ -570,6 +680,13 @@ const ContentGrid = () => {
       handleDeleteHabit,
       handleEditHabit,
       widgetData,
+      filters,
+      filteredData,
+      updateChartFilter,
+      updateChartMonth,
+      updateDatabaseFilter,
+      updateDatabaseMonth,
+      filterOptions,
     ]
   );
   return (
@@ -596,15 +713,21 @@ const ContentGrid = () => {
               className="w-4 h-4 rounded border border-[var(--color-border-primary)] bg-[var(--color-surface-elevated)] text-[var(--color-brand-500)] focus:ring-[var(--color-brand-500)] focus:ring-2 focus:ring-opacity-50"
             />
             <span>Edit All</span>
-          </label>
-
-          {/* Add widget button */}
+          </label>          {/* Add widget button */}
           <button
             onClick={() => setShowWidgetPicker(!showWidgetPicker)}
             className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg text-sm transition-all duration-200 font-outfit"
           >
             <PlusIcon className="w-4 h-4" />
             Add Widget
+          </button>
+
+          {/* CSV Import button */}
+          <button
+            onClick={() => setShowCsvImport(true)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm transition-all duration-200 font-outfit"
+          >
+            📄 Import CSV
           </button>
 
           {/* Reset layouts button */}
@@ -648,7 +771,8 @@ const ContentGrid = () => {
             if (!widget) return null;
 
             const currentLayout = layouts[currentBreakpoint] || [];
-            const isInEditMode = isWidgetInEditMode(widgetId);            return (
+            const isInEditMode = isWidgetInEditMode(widgetId);
+            return (
               <div
                 key={widgetId}
                 data-edit-mode={isInEditMode}
@@ -747,11 +871,11 @@ const ContentGrid = () => {
                               e.preventDefault();
                               e.stopPropagation();
                             }}
-                            className="relative z-20 p-1.5 rounded-md transition-all duration-200 hover:bg-red-100 text-red-500 hover:text-red-600 border border-red-200 hover:border-red-300"
+                            className="relative z-20 p-1.5 rounded-md transition-all duration-200  text-red-400  border border-red-400"
                             style={{ pointerEvents: "auto" }}
                             title="Remove this widget"
                           >
-                            <Cross2Icon className="w-4 h-4" />
+                            <TrashIcon className="w-4 h-4" />
                           </button>
                         )}
                         {/* Edit mode indicators */}
@@ -835,7 +959,7 @@ const ContentGrid = () => {
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-[var(--color-text-tertiary)] mt-1">
+                        <p className="text-sm text-[var(--color-text-tertiary] mt-1">
                           {config.description}
                         </p>
                         <p className="text-xs text-[var(--color-text-quaternary)] mt-2">
@@ -847,9 +971,17 @@ const ContentGrid = () => {
                 );
               })}
             </div>
-          </div>
-        </div>
+          </div>        </div>
       )}
+
+      {/* CSV Import Modal */}
+      <CsvImportModal
+        isOpen={showCsvImport}
+        onClose={() => setShowCsvImport(false)}
+        onImport={handleCsvImport}
+        existingHabits={habits}
+        existingCompletions={completions}
+      />
     </div>
   );
 };

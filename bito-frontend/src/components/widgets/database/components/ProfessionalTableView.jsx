@@ -8,11 +8,44 @@ export const ProfessionalTableView = ({
   daysOfWeek,
   displayHabits,
   weekStats,
+  getCurrentWeekDates,
   getCompletionStatus,
   getDayCompletion,
   handleToggleCompletion,
   displayCompletions,
-}) => (
+}) => {
+  // Empty state when no habits are available
+  if (!displayHabits || displayHabits.length === 0) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center">
+        <div className="max-w-md space-y-4">
+          {/* Empty state icon */}
+          <div className="w-16 h-16 mx-auto rounded-full bg-[var(--color-surface-secondary)] flex items-center justify-center mb-4">
+            <span className="text-2xl">📋</span>
+          </div>
+          
+          {/* Empty state message */}
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] font-outfit">
+              No Habits Yet
+            </h3>
+            <p className="text-sm text-[var(--color-text-secondary)] font-outfit leading-relaxed">
+              Start tracking your daily habits by importing your data or adding your first habit below.
+            </p>
+          </div>
+          
+          {/* Call to action */}
+          <div className="space-y-3 pt-4">
+            <div className="text-xs text-[var(--color-text-tertiary)] font-outfit">
+              💡 Tip: Use the "📄 Import CSV" button to quickly import your existing habit data
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
   <div className="w-full space-y-3">
     {/* Compact Table Container */}
     <div className="overflow-x-auto bg-[var(--color-surface-elevated)] rounded-lg border border-[var(--color-border-primary)]">
@@ -41,19 +74,21 @@ export const ProfessionalTableView = ({
             </th>
             <th className="text-center py-3 px-4 text-sm font-semibold text-[var(--color-text-secondary)] font-outfit min-w-[100px]">
               Actions
-            </th>
-          </tr>
+            </th>          </tr>
         </thead>
 
         {/* Table Body */}
         <tbody>
           {daysOfWeek.map((day, dayIndex) => {
             const dayCompletion = getDayCompletion(day);
-            const isToday =
-              new Date().toLocaleDateString("en-US", {
-                weekday: "long",
-              }) === day;
-            const completedCount = displayHabits.filter((h) =>
+            
+            // Find the actual date for this day and compare with today's date
+            const dayInfo = getCurrentWeekDates?.find((d) => d.day === day);
+            // Get today's date in local timezone (YYYY-MM-DD format)
+            const today = new Date();
+            const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            const isToday = dayInfo?.date === todayString;
+              const completedCount = displayHabits.filter((h) =>
               getCompletionStatus(day, h.id)
             ).length;
 
@@ -97,32 +132,33 @@ export const ProfessionalTableView = ({
 
                 {/* Habit Checkboxes */}
                 {displayHabits.map((habit) => {
-                  const isCompleted = getCompletionStatus(day, habit.id);
-                  return (
-                    <td key={habit.id} className="py-3 px-3 text-center">
-                      <button
-                        onClick={() =>
-                          handleToggleCompletion(day, habit.id, displayCompletions)
-                        }
-                        className={`w-7 h-7 rounded-lg transition-all duration-200 flex items-center justify-center hover:scale-110 active:scale-95 ${
-                          isCompleted
-                            ? "shadow-md transform scale-105"
-                            : "hover:shadow-sm"
-                        }`}
-                        style={{
-                          backgroundColor: isCompleted
-                            ? habit.color
-                            : "transparent",
-                          border: `2px solid ${habit.color}`,
-                          boxShadow: isCompleted
-                            ? `0 2px 6px ${habit.color}30`
-                            : "none",
-                        }}
-                      >
-                        {isCompleted && (
-                          <CheckIcon className="w-4 h-4 text-white font-bold" />
-                        )}
-                      </button>
+                  const isCompleted = getCompletionStatus(day, habit.id);                  return (
+                    <td key={habit.id} className="py-3 px-3">
+                      <div className="flex items-center justify-center">
+                        <button
+                          onClick={() =>
+                            handleToggleCompletion(day, habit.id, displayCompletions)
+                          }
+                          className={`w-7 h-7 rounded-lg transition-all duration-200 flex items-center justify-center hover:scale-110 active:scale-95 ${
+                            isCompleted
+                              ? "shadow-md transform scale-105"
+                              : "hover:shadow-sm"
+                          }`}
+                          style={{
+                            backgroundColor: isCompleted
+                              ? habit.color
+                              : "transparent",
+                            border: `2px solid ${habit.color}`,
+                            boxShadow: isCompleted
+                              ? `0 2px 6px ${habit.color}30`
+                              : "none",
+                          }}
+                        >
+                          {isCompleted && (
+                            <CheckIcon className="w-4 h-4 text-white font-bold" />
+                          )}
+                        </button>
+                      </div>
                     </td>
                   );
                 })}
@@ -222,9 +258,9 @@ export const ProfessionalTableView = ({
           </div>
           <div className="text-xs text-[var(--color-text-secondary)] font-outfit">
             Average
-          </div>
-        </div>
+          </div>        </div>
       </div>
     </div>
   </div>
-);
+  );
+};

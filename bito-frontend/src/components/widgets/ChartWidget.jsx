@@ -28,6 +28,7 @@ export const ChartWidget = memo(
     availableRows = 4,
     size = { width: 320, height: 200 },
     widgetConfig = {},
+    filterComponent = null,
   }) => {
     const [isAnimating, setIsAnimating] = useState(true);
     const [animatedData, setAnimatedData] = useState([]);
@@ -53,25 +54,29 @@ export const ChartWidget = memo(
       { name: "Completed", value: 27, color: "#22C55E" },
       { name: "Missed", value: 8, color: "#EF4444" },
     ];
-    
+
     // Use provided data or default data
-    const chartData = data.length > 0 ? data : defaultData;
+    const chartData = data.length > 0 ? data : defaultData;    // Determine Y-axis domain based on data type
+    const getYAxisDomain = () => {
+      // All modes now use habit count, so use the same domain
+      return [0, "dataMax + 1"];
+    };
 
     // Animation effect for bars
     useEffect(() => {
       if (type === "bar") {
         setIsAnimating(true);
-        
+
         // Start with zero values
-        const zeroData = chartData.map(item => ({ ...item, value: 0 }));
+        const zeroData = chartData.map((item) => ({ ...item, value: 0 }));
         setAnimatedData(zeroData);
 
         // Animate to actual values with staggered delays
         chartData.forEach((item, index) => {
           setTimeout(() => {
-            setAnimatedData(prev => 
-              prev.map((prevItem, prevIndex) => 
-                prevIndex === index 
+            setAnimatedData((prev) =>
+              prev.map((prevItem, prevIndex) =>
+                prevIndex === index
                   ? { ...prevItem, value: item.value }
                   : prevItem
               )
@@ -92,25 +97,25 @@ export const ChartWidget = memo(
     // Custom animated bar component
     const AnimatedBar = ({ payload, x, y, width, height, fill }) => {
       const [currentHeight, setCurrentHeight] = useState(0);
-      
+
       useEffect(() => {
         const targetHeight = height;
         let startTime = null;
         const duration = 800; // Animation duration in ms
-        
+
         const animate = (timestamp) => {
           if (!startTime) startTime = timestamp;
           const progress = Math.min((timestamp - startTime) / duration, 1);
-          
+
           // Easing function for smooth animation
           const easeOutCubic = 1 - Math.pow(1 - progress, 3);
           setCurrentHeight(targetHeight * easeOutCubic);
-          
+
           if (progress < 1) {
             requestAnimationFrame(animate);
           }
         };
-        
+
         requestAnimationFrame(animate);
       }, [height]);
 
@@ -124,8 +129,8 @@ export const ChartWidget = memo(
           rx="6"
           ry="6"
           style={{
-            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
-            transition: 'all 0.3s ease'
+            filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
+            transition: "all 0.3s ease",
           }}
         />
       );
@@ -176,7 +181,7 @@ export const ChartWidget = memo(
         default:
           return config;
       }
-    }, [widgetConfig, breakpoint, availableColumns, availableRows, type]);    // Simple stats for very small widgets
+    }, [widgetConfig, breakpoint, availableColumns, availableRows, type]); // Simple stats for very small widgets
     if (breakpoint === "xs") {
       const total = chartData.reduce((sum, item) => sum + item.value, 0);
       const avg =
@@ -189,19 +194,19 @@ export const ChartWidget = memo(
           </div>
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
-              <div 
+              <div
                 className={`text-xl font-bold font-dmSerif transition-all duration-1000 ${
-                  isAnimating ? 'transform scale-110' : ''
+                  isAnimating ? "transform scale-110" : ""
                 }`}
                 style={{ color }}
               >
-                {isAnimating ? '...' : total}
+                {isAnimating ? "..." : total}
               </div>
               <div className="text-xs text-[var(--color-text-tertiary)] font-outfit">
                 total
               </div>
               <div className="text-sm text-[var(--color-text-secondary)] mt-1 font-outfit">
-                avg: {isAnimating ? '...' : avg}
+                avg: {isAnimating ? "..." : avg}
               </div>
             </div>
           </div>
@@ -214,8 +219,8 @@ export const ChartWidget = memo(
         data: chartConfig.chartType === "pie" ? pieData : chartData,
         margin:
           breakpoint === "sm"
-            ? { top: 5, right: 5, left: 5, bottom: 5 }
-            : { top: 15, right: 10, left: 0, bottom: 10 },
+            ? { top: 20, right: 5, left: 5, bottom: 5 }
+            : { top: 30, right: 10, left: 0, bottom: 10 },
       };
       switch (chartConfig.chartType) {
         case "line":
@@ -243,8 +248,7 @@ export const ChartWidget = memo(
                   }}
                   dy={5}
                 />
-              )}
-              {chartConfig.showAxes && (
+              )}              {chartConfig.showAxes && (
                 <YAxis
                   axisLine={false}
                   tickLine={false}
@@ -254,8 +258,9 @@ export const ChartWidget = memo(
                     fontFamily: "var(--font-outfit)",
                   }}
                   width={25}
-                />
-              )}
+                  domain={getYAxisDomain()}
+                  allowDecimals={false}
+                />              )}
               <Tooltip
                 contentStyle={{
                   backgroundColor: "var(--color-surface-elevated)",
@@ -269,27 +274,39 @@ export const ChartWidget = memo(
                 labelStyle={{
                   color: "var(--color-text-secondary)",
                   marginBottom: "4px",
+                }}                formatter={(value, name, props) => {
+                  const payload = props?.payload;
+                  return [
+                    `${value} habit${value !== 1 ? "s" : ""} completed`,
+                    payload?.fullName || name,
+                  ];
                 }}
               />{" "}
-              {/* Clean line with dots */}
+              {/* Clean line with dots and labels */}
               <Line
                 type="monotone"
                 dataKey="value"
                 stroke={color}
-                strokeWidth={2}
+                strokeWidth={3}
                 dot={{
                   fill: color,
                   strokeWidth: 0,
-                  r: 3,
-                  stroke: "var(--color-surface-primary)",
-                  strokeWidth: 2,
+                  r: 4,
                 }}
                 activeDot={{
-                  r: 5,
+                  r: 6,
                   fill: color,
                   stroke: "var(--color-surface-primary)",
                   strokeWidth: 2,
                   filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
+                }}
+                label={{
+                  position: "top",
+                  offset: 10,
+                  fontSize: 12,
+                  fill: "var(--color-text-primary)",
+                  fontFamily: "var(--font-outfit)",
+                  fontWeight: 500,
                 }}
               />{" "}
               {/* Gradient definition for line */}
@@ -333,7 +350,7 @@ export const ChartWidget = memo(
                   }}
                   dy={5}
                 />
-              )}
+              )}{" "}
               {chartConfig.showAxes && (
                 <YAxis
                   axisLine={false}
@@ -342,8 +359,9 @@ export const ChartWidget = memo(
                     fontSize: 11,
                     fill: "var(--color-text-tertiary)",
                     fontFamily: "var(--font-outfit)",
-                  }}
-                  width={25}
+                  }}                  width={25}
+                  domain={getYAxisDomain()}
+                  allowDecimals={false}
                 />
               )}
               <Tooltip
@@ -359,28 +377,40 @@ export const ChartWidget = memo(
                 labelStyle={{
                   color: "var(--color-text-secondary)",
                   marginBottom: "4px",
+                }}                formatter={(value, name, props) => {
+                  const payload = props?.payload;
+                  return [
+                    `${value} habit${value !== 1 ? "s" : ""} completed`,
+                    payload?.fullName || name,
+                  ];
                 }}
               />{" "}
-              {/* Area fill with gradient */}
+              {/* Area fill with gradient and labels */}
               <Area
                 type="monotone"
                 dataKey="value"
                 stroke={color}
-                strokeWidth={2}
+                strokeWidth={3}
                 fill={`url(#areaGradient-${gradientId})`}
                 dot={{
                   fill: color,
                   strokeWidth: 0,
-                  r: 3,
-                  stroke: "var(--color-surface-primary)",
-                  strokeWidth: 2,
+                  r: 4,
                 }}
                 activeDot={{
-                  r: 5,
+                  r: 6,
                   fill: color,
                   stroke: "var(--color-surface-primary)",
                   strokeWidth: 2,
                   filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
+                }}
+                label={{
+                  position: "top",
+                  offset: 10,
+                  fontSize: 12,
+                  fill: "var(--color-text-primary)",
+                  fontFamily: "var(--font-outfit)",
+                  fontWeight: 500,
                 }}
               />
               {/* Gradient definition for area */}
@@ -418,10 +448,11 @@ export const ChartWidget = memo(
               <Tooltip />
               {chartConfig.showLegend && availableColumns > 4 && <Legend />}
             </PieChart>
-          );        default: // bar chart
+          );
+        default: // bar chart
           return (
-            <BarChart 
-              {...commonProps} 
+            <BarChart
+              {...commonProps}
               data={type === "bar" ? animatedData : chartData}
             >
               {/* Minimal grid - only horizontal lines */}
@@ -457,6 +488,7 @@ export const ChartWidget = memo(
                     fontFamily: "var(--font-outfit)",
                   }}
                   width={25}
+                  domain={getYAxisDomain()}
                 />
               )}
               <Tooltip
@@ -498,10 +530,10 @@ export const ChartWidget = memo(
                 </linearGradient>
                 {/* Add a subtle glow effect for animation */}
                 <filter id={`barGlow-${gradientId}`}>
-                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                  <feMerge> 
-                    <feMergeNode in="coloredBlur"/>
-                    <feMergeNode in="SourceGraphic"/>
+                  <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                  <feMerge>
+                    <feMergeNode in="coloredBlur" />
+                    <feMergeNode in="SourceGraphic" />
                   </feMerge>
                 </filter>
               </defs>
@@ -509,28 +541,36 @@ export const ChartWidget = memo(
           );
       }
     };
-
     return (
       <div className="w-full h-full flex flex-col">
-        {title && (
-          <div className="mb-2 flex-shrink-0">
-            <h4
-              className={`font-medium text-[var(--color-text-secondary)] truncate font-dmSerif ${
-                breakpoint === "sm" ? "text-xs" : "text-sm"
-              }`}
-            >
-              {title}
-            </h4>
+        {(title || filterComponent) && (
+          <div className="mb-2 flex-shrink-0 flex items-center justify-between">
+            {title && (
+              <h4
+                className={`font-medium text-[var(--color-text-secondary)] truncate font-dmSerif ${
+                  breakpoint === "sm" ? "text-xs" : "text-sm"
+                }`}
+              >
+                {title}
+              </h4>
+            )}
+            {filterComponent && (
+              <div className="flex-shrink-0 ml-2">{filterComponent}</div>
+            )}
           </div>
-        )}        <div className={`flex-1 min-h-0 relative ${
-          isAnimating && type === "bar" ? 'overflow-hidden' : ''
-        }`}>          {/* Loading shimmer overlay */}
+        )}{" "}
+        <div
+          className={`flex-1 min-h-0 relative ${
+            isAnimating && type === "bar" ? "overflow-hidden" : ""
+          }`}
+        >
+          {" "}
+          {/* Loading shimmer overlay */}
           {isAnimating && type === "bar" && (
             <div className="absolute inset-0 z-10 pointer-events-none">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" />
             </div>
           )}
-          
           {chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               {renderChart()}
@@ -546,45 +586,52 @@ export const ChartWidget = memo(
               </p>
             </div>
           )}
-        </div>{/* Quick stats for medium+ widgets */}
+        </div>
+        {/* Quick stats for medium+ widgets */}
         {breakpoint !== "xs" &&
           breakpoint !== "sm" &&
           availableRows > 3 &&
           chartData.length > 0 && (
             <div className="flex justify-around pt-2 mt-2 border-t border-[var(--color-border-primary)] text-xs flex-shrink-0 font-outfit">
               <div className="text-center">
-                <div 
+                <div
                   className={`font-semibold font-dmSerif transition-all duration-500 ${
-                    isAnimating ? 'opacity-60' : 'opacity-100'
+                    isAnimating ? "opacity-60" : "opacity-100"
                   }`}
                   style={{ color }}
                 >
-                  {isAnimating ? '...' : chartData.reduce((sum, item) => sum + item.value, 0)}
+                  {isAnimating
+                    ? "..."
+                    : chartData.reduce((sum, item) => sum + item.value, 0)}
                 </div>
                 <div className="text-[var(--color-text-tertiary)]">Total</div>
               </div>
               <div className="text-center">
-                <div 
+                <div
                   className={`font-semibold text-[var(--color-success)] font-dmSerif transition-all duration-500 ${
-                    isAnimating ? 'opacity-60' : 'opacity-100'
+                    isAnimating ? "opacity-60" : "opacity-100"
                   }`}
                 >
-                  {isAnimating ? '...' : Math.round(
-                    (chartData.reduce((sum, item) => sum + item.value, 0) /
-                      (chartData.length * 5)) *
-                      100
-                  )}
-                  {!isAnimating && '%'}
+                  {isAnimating
+                    ? "..."
+                    : Math.round(
+                        (chartData.reduce((sum, item) => sum + item.value, 0) /
+                          (chartData.length * 5)) *
+                          100
+                      )}
+                  {!isAnimating && "%"}
                 </div>
                 <div className="text-[var(--color-text-tertiary)]">Success</div>
               </div>
               <div className="text-center">
-                <div 
+                <div
                   className={`font-semibold text-[var(--color-brand-400)] font-dmSerif transition-all duration-500 ${
-                    isAnimating ? 'opacity-60' : 'opacity-100'
+                    isAnimating ? "opacity-60" : "opacity-100"
                   }`}
                 >
-                  {isAnimating ? '...' : Math.max(...chartData.map((item) => item.value))}
+                  {isAnimating
+                    ? "..."
+                    : Math.max(...chartData.map((item) => item.value))}
                 </div>
                 <div className="text-[var(--color-text-tertiary)]">Best</div>
               </div>

@@ -1,10 +1,8 @@
 import { useState, memo } from "react";
 import {
   useHabitData,
-  useResizableColumns,
   useHabitActions,
   DatabaseHeader,
-  MatrixTableView,
   GalleryView,
   ProfessionalTableView,
 } from "../index.js";
@@ -33,15 +31,7 @@ const DatabaseWidget = memo(
       getCompletionStatus,
       getDayCompletion,
       getHabitCompletion,
-      weekStats,
-    } = useHabitData({ habits, completions });
-
-    const {
-      tableRef,
-      getColumnWidth,
-      handleResizeStart,
-      resetColumnWidths,
-    } = useResizableColumns();
+      weekStats,    } = useHabitData({ habits, completions });
 
     const {
       editingHabit,
@@ -76,17 +66,8 @@ const DatabaseWidget = memo(
     };
 
     const renderContent = () => {
-      switch (viewType) {
-        case "table":
-          return (
-            <MatrixTableView
-              {...commonProps}
-              tableRef={tableRef}
-              getColumnWidth={getColumnWidth}
-              handleResizeStart={handleResizeStart}
-              resetColumnWidths={resetColumnWidths}
-            />
-          );
+      switch (viewType) {        case "table":
+          return <ProfessionalTableView {...commonProps} />;
         case "professional":
           return <ProfessionalTableView {...commonProps} />;
         case "gallery":

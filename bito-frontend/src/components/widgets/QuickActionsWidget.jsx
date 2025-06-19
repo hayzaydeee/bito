@@ -66,25 +66,22 @@ const QuickActionsWidget = memo(({
         showProgress: false
       };
     }
-    
-    if (breakpoint === 'sm') {
+      if (breakpoint === 'sm') {
       return {
-        columns: 2,
-        rows: Math.ceil(Math.min(totalButtons, availableRows * 2) / 2),
+        columns: 3, // Changed from 2 to 3 for better layout
+        rows: Math.ceil(totalButtons / 3),
         buttonSize: 'medium',
         showLabels: true,
         showProgress: availableRows > 3
       };
-    }
-
-    // For md, lg, xl - calculate optimal grid
+    }// For md, lg, xl - use 3 columns by default for better layout
     const maxCols = Math.floor(availableColumns);
     const maxRows = Math.floor(availableRows);
-    const optimalCols = Math.min(maxCols, Math.ceil(Math.sqrt(totalButtons)));
+    const preferredCols = 3; // Always prefer 3 columns for optimal button layout
     
     return {
-      columns: Math.min(optimalCols, 3), // Max 3 columns for readability
-      rows: Math.ceil(Math.min(totalButtons, maxCols * maxRows) / Math.min(optimalCols, 3)),
+      columns: Math.min(preferredCols, maxCols), // Always use 3 columns if space allows
+      rows: Math.ceil(totalButtons / Math.min(preferredCols, maxCols)),
       buttonSize: availableColumns > 6 ? 'large' : 'medium',
       showLabels: availableRows > 2,
       showProgress: availableRows > 3

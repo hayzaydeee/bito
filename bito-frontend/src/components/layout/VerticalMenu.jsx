@@ -87,10 +87,6 @@ const VerticalMenu = ({ currentPage, onPageChange, isCollapsed }) => {
                 isActive ? "text-white" : "text-[var(--color-text-accent)]"
               }`}
             />{" "}
-            {/* Active glow effect */}
-            {isActive && (
-              <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-white/5 rounded-xl" />
-            )}
           </button>
 
           {/* Tooltip for collapsed mode */}
@@ -148,10 +144,6 @@ const VerticalMenu = ({ currentPage, onPageChange, isCollapsed }) => {
               {item.label}
             </Text>
           </div>
-          {/* Active indicator */}
-          {isActive && (
-            <div className="absolute right-4 w-2 h-8 bg-white/30 rounded-full" />
-          )}
         </button>
       </div>
     );

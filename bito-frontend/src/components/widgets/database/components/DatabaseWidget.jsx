@@ -1,13 +1,36 @@
-import { useState, memo } from "react";
+import { useState, memo, useMemo } from "react";
 import {
   useHabitData,
-  useResizableColumns,
   useHabitActions,
   DatabaseHeader,
-  MatrixTableView,
   GalleryView,
   ProfessionalTableView,
 } from "../index.js";
+
+// Helper function to get current week range
+const getCurrentWeekRange = () => {
+  const today = new Date();
+  const currentDay = today.getDay();
+  const startOfWeek = new Date(today);
+
+  // Calculate start of week (Monday)
+  const daysToSubtract = currentDay === 0 ? 6 : currentDay - 1;
+  startOfWeek.setDate(today.getDate() - daysToSubtract);
+
+  // Calculate end of week (Sunday)
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+  // Format dates as DD/MM/YY
+  const formatDate = (date) => {
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const year = date.getFullYear().toString().slice(-2);
+    return `${day}/${month}/${year}`;
+  };
+
+  return `${formatDate(startOfWeek)} - ${formatDate(endOfWeek)}`;
+};
 
 const DatabaseWidget = memo(
   ({
@@ -20,32 +43,46 @@ const DatabaseWidget = memo(
     onEditHabit,
     viewType: initialViewType = "table",
     breakpoint = "lg",
-    availableColumns = 8,
-    availableRows = 6,
-  }) => {
-    const [viewType, setViewType] = useState(initialViewType);
+    filterComponent = null,
+    dateRange = null,
+    mode = "week",
+  }) => {    const [viewType, setViewType] = useState(initialViewType);
+
+    // Calculate dynamic title with date range
+    const displayTitle = useMemo(() => {
+      if (title === "Today's Habits" || title === "Habit Tracker" || title === "My Habits") {
+        if (dateRange && dateRange.start && dateRange.end) {
+          const formatDate = (date) => {
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            return `${day}/${month}`;
+          };
+          
+          const startStr = formatDate(dateRange.start);
+          const endStr = formatDate(dateRange.end);
+          const modeLabel = mode === 'week' ? 'Week' : 'Month';
+          
+          return `${modeLabel} (${startStr} - ${endStr})`;
+        } else {
+          return `Week ${getCurrentWeekRange()}`;
+        }
+      }
+      return title;
+    }, [title, dateRange, mode]);
 
     // Use custom hooks for data management
     const {
       daysOfWeek,
       displayHabits,
       displayCompletions,
+      getCurrentWeekDates,
       getCompletionStatus,
       getDayCompletion,
       getHabitCompletion,
       weekStats,
-    } = useHabitData({ habits, completions });
+    } = useHabitData({ habits, completions, dateRange, mode });
 
     const {
-      tableRef,
-      getColumnWidth,
-      handleResizeStart,
-      resetColumnWidths,
-    } = useResizableColumns();
-
-    const {
-      editingHabit,
-      setEditingHabit,
       newHabitName,
       setNewHabitName,
       showAddForm,
@@ -53,40 +90,29 @@ const DatabaseWidget = memo(
       handleToggleCompletion,
       handleAddHabit,
       handleCancelAdd,
-      handleEditHabit,
-      handleDeleteHabit,
     } = useHabitActions({
       onToggleCompletion,
       onAddHabit,
       onDeleteHabit,
       onEditHabit,
-    });
-
-    // Common props for all views
+      dateRange,
+    });// Common props for all views
     const commonProps = {
       daysOfWeek,
       displayHabits,
       displayCompletions,
+      getCurrentWeekDates,
       getCompletionStatus,
       getDayCompletion,
       getHabitCompletion,
       weekStats,
       handleToggleCompletion,
       breakpoint,
-    };    const renderContent = () => {
+    };
+    const renderContent = () => {
       switch (viewType) {
         case "table":
           return <ProfessionalTableView {...commonProps} />;
-        case "matrix":
-          return (
-            <MatrixTableView
-              {...commonProps}
-              tableRef={tableRef}
-              getColumnWidth={getColumnWidth}
-              handleResizeStart={handleResizeStart}
-              resetColumnWidths={resetColumnWidths}
-            />
-          );
         case "gallery":
         default:
           return (
@@ -98,21 +124,19 @@ const DatabaseWidget = memo(
               setNewHabitName={setNewHabitName}
               handleAddHabit={handleAddHabit}
               handleCancelAdd={handleCancelAdd}
-            />
-          );
+            />          );
       }
     };
-
+    
     return (
       <div className="w-full h-full flex flex-col">
         <DatabaseHeader
-          title={title}
+          title={displayTitle}
           viewType={viewType}
           setViewType={setViewType}
+          filterComponent={filterComponent}
         />
-        <div className="flex-1 min-h-0 overflow-auto">
-          {renderContent()}
-        </div>
+        <div className="flex-1 min-h-0 overflow-auto">{renderContent()}</div>
       </div>
     );
   }
