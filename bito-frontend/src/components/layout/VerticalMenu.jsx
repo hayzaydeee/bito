@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Flex, Text, Button } from "@radix-ui/themes";
 import {
   DashboardIcon,
@@ -8,16 +9,20 @@ import {
   TargetIcon,
   LightningBoltIcon,
   ActivityLogIcon,
+  HomeIcon,
 } from "@radix-ui/react-icons";
 
-const VerticalMenu = ({ currentPage, onPageChange, isCollapsed }) => {
-  const menuItems = [
+const VerticalMenu = ({ isCollapsed }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+    const menuItems = [
     {
       id: "dashboard",
       label: "Dashboard",
       icon: DashboardIcon,
       description: "Overview & insights",
       color: "from-blue-500 to-blue-600",
+      path: "/app/dashboard",
     },
     {
       id: "habits",
@@ -25,6 +30,7 @@ const VerticalMenu = ({ currentPage, onPageChange, isCollapsed }) => {
       icon: TargetIcon,
       description: "Manage your habits",
       color: "from-green-500 to-green-600",
+      path: "/app/habits",
     },
     {
       id: "calendar",
@@ -32,27 +38,14 @@ const VerticalMenu = ({ currentPage, onPageChange, isCollapsed }) => {
       icon: CalendarIcon,
       description: "Track progress",
       color: "from-purple-500 to-purple-600",
+      path: "/app/calendar",
     },
     {
       id: "analytics",
       label: "Analytics",
       icon: BarChartIcon,
       description: "Detailed reports",
-      color: "from-orange-500 to-orange-600",
-    },
-    {
-      id: "quick-actions",
-      label: "Quick Actions",
-      icon: LightningBoltIcon,
-      description: "Fast completions",
-      color: "from-yellow-500 to-yellow-600",
-    },
-    {
-      id: "activity",
-      label: "Activity",
-      icon: ActivityLogIcon,
-      description: "Recent changes",
-      color: "from-indigo-500 to-indigo-600",
+      color: "from-orange-500 to-orange-600",      path: "/app/analytics",
     },
   ];
 
@@ -63,12 +56,13 @@ const VerticalMenu = ({ currentPage, onPageChange, isCollapsed }) => {
       icon: GearIcon,
       description: "Preferences",
       color: "from-gray-500 to-gray-600",
+      path: "/app/settings",
     },
   ];
-
   const renderMenuItem = (item, isBottom = false) => {
     const Icon = item.icon;
-    const isActive = currentPage === item.id;
+    const isActive = location.pathname === item.path || 
+                     (location.pathname === "/app" && item.path === "/app/dashboard");
 
     if (isCollapsed) {
       return (
@@ -79,7 +73,7 @@ const VerticalMenu = ({ currentPage, onPageChange, isCollapsed }) => {
                 ? `bg-gradient-to-r ${item.color} shadow-lg shadow-black/20 scale-105`
                 : "hover:bg-[var(--color-surface-hover)] hover:scale-105 bg-transparent"
             }`}
-            onClick={() => onPageChange(item.id)}
+            onClick={() => navigate(item.path)}
             title={item.label}
           >
             <Icon
@@ -106,14 +100,13 @@ const VerticalMenu = ({ currentPage, onPageChange, isCollapsed }) => {
 
     return (
       <div key={item.id} className="mb-1">
-        {" "}
-        <button
+        {" "}        <button
           className={`w-full p-3 rounded-xl transition-all duration-300 flex items-center gap-3 relative overflow-hidden group ${
             isActive
               ? `bg-gradient-to-r ${item.color} shadow-lg shadow-black/20 transform scale-[1.02]`
               : "hover:bg-[var(--color-surface-hover)] hover:scale-[1.01] bg-transparent"
           }`}
-          onClick={() => onPageChange(item.id)}
+          onClick={() => navigate(item.path)}
         >
           {" "}
           {/* Background pattern for active state */}

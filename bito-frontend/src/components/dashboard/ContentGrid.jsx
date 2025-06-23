@@ -20,6 +20,7 @@ import "../widgets/widgets.css";
 
 // Import data service and filter components
 import habitDataService, { filterState } from "../../services/habitDataService";
+import useHabitStore from "../../store/habitStore.js";
 import {
   ChartFilterControls,
   DatabaseFilterControls,
@@ -32,9 +33,10 @@ const ChartWidget = lazy(() =>
     default: module.ChartWidget,
   }))
 );
-const DatabaseWidget = lazy(() =>
-  import("../widgets/database/components/DatabaseWidget.jsx").then((module) => ({
-    default: module.DatabaseWidget,
+// Phase 3: Import new bridge widget instead of old widget
+const DatabaseWidgetBridge = lazy(() =>
+  import("../widgets/database/components/DatabaseWidgetBridge.jsx").then((module) => ({
+    default: module.DatabaseWidgetBridge,
   }))
 );
 const QuickActionsWidget = lazy(() =>
@@ -234,19 +236,28 @@ const ContentGrid = () => {
   }, [layouts]);
   useEffect(() => {
     saveActiveWidgetsToStorage(activeWidgets);
-  }, [activeWidgets]);
-  // Filter state management
+  }, [activeWidgets]);  // Filter state management
   const [filters, setFilters] = useState(() => filterState.loadFilters());
 
-  // Initialize habit data with enhanced historical data
-  const { habits: initialHabits, completions: initialCompletions } = useMemo(
-    () => habitDataService.initialize(),
-    []
-  );
-
-  // Habit data state management
-  const [habits, setHabits] = useState(initialHabits);
-  const [completions, setCompletions] = useState(initialCompletions);
+  // Get data from new Zustand store
+  const habitsMap = useHabitStore(state => state.habits);
+  const completionsSet = useHabitStore(state => state.completions);
+  const addHabit = useHabitStore(state => state.addHabit);
+  const removeHabit = useHabitStore(state => state.removeHabit);
+  const updateHabit = useHabitStore(state => state.updateHabit);
+  const toggleCompletion = useHabitStore(state => state.toggleCompletion);
+  
+  // Convert to format expected by old data service for backward compatibility
+  const habits = useMemo(() => Array.from(habitsMap.values()), [habitsMap]);
+  const completions = useMemo(() => {
+    const obj = {};
+    completionsSet.forEach((value, key) => {
+      // Convert from new format (YYYY-MM-DD_habitId) to old format (YYYY-MM-DD-habitId)
+      const oldKey = key.replace('_', '-');
+      obj[oldKey] = true;
+    });
+    return obj;
+  }, [completionsSet]);
 
   // Save filters when they change
   useEffect(() => {
@@ -294,110 +305,81 @@ const ContentGrid = () => {
       databaseSelectedMonth: month,
       databasePeriod: 1, // Reset to first week when month changes
     }));
-  }, []);
-  // Habit event handlers
+  }, []);  // Habit event handlers
   const handleToggleCompletion = useCallback((key, isCompleted) => {
     console.log(`Toggling completion for ${key}: ${isCompleted}`);
 
+    // Check if this is a new format key (YYYY-MM-DD_habitId)
+    if (key.includes('_')) {
+      const [date, habitIdStr] = key.split('_');
+      const habitId = parseInt(habitIdStr);
+      
+      if (!isNaN(habitId)) {
+        // Use the new Zustand store method
+        toggleCompletion(habitId, date);
+        return;
+      }
+    }
+
+    // Fall back to old system for backward compatibility
     // Handle both new date-based keys and old day-based keys
     const today = new Date();
     const currentDay = today.getDay();
     const startOfWeek = new Date(today);
     const daysToSubtract = currentDay === 0 ? 6 : currentDay - 1;
-    startOfWeek.setDate(today.getDate() - daysToSubtract);
+    startOfWeek.setDate(today.getDate() - daysToSubtract);    // For old format keys, try to convert to new format and use Zustand store
+    if (key.includes("-")) {
+      const parts = key.split("-");
+      const lastPart = parts[parts.length - 1];
+      const habitId = parseInt(lastPart);
 
-    setCompletions((prev) => {
-      const newCompletions = { ...prev };
+      if (!isNaN(habitId)) {
+        const keyWithoutId = parts.slice(0, -1).join("-");
 
-      if (key.includes("-")) {
-        // Parse the key to determine if it's day-based or date-based
-        const parts = key.split("-");
-        const lastPart = parts[parts.length - 1];
-        const habitId = parseInt(lastPart);
+        // Check if it's a date (YYYY-MM-DD format) or day name
+        const isDateKey = /^\d{4}-\d{2}-\d{2}$/.test(keyWithoutId);
 
-        if (!isNaN(habitId)) {
-          const keyWithoutId = parts.slice(0, -1).join("-");
-
-          // Check if it's a date (YYYY-MM-DD format) or day name
-          const isDateKey = /^\d{4}-\d{2}-\d{2}$/.test(keyWithoutId);
-
-          if (isDateKey) {
-            // It's a date-based key, also set the corresponding day-based key
-            const date = new Date(keyWithoutId);
-            const dayName = date.toLocaleDateString("en-US", {
-              weekday: "long",
-            });
-            const dayKey = `${dayName}-${habitId}`;
-
-            newCompletions[key] = isCompleted;
-            newCompletions[dayKey] = isCompleted;
-          } else {
-            // It's a day-based key, also set the corresponding date-based key
-            const dayName = keyWithoutId;
-            const daysOfWeek = [
-              "Monday",
-              "Tuesday",
-              "Wednesday",
-              "Thursday",
-              "Friday",
-              "Saturday",
-              "Sunday",
-            ];
-            const dayIndex = daysOfWeek.indexOf(dayName);
-
-            if (dayIndex >= 0) {
-              const date = new Date(startOfWeek);
-              date.setDate(startOfWeek.getDate() + dayIndex);
-              const dateStr = date.toISOString().split("T")[0];
-              const dateKey = `${dateStr}-${habitId}`;
-
-              newCompletions[key] = isCompleted;
-              newCompletions[dateKey] = isCompleted;
-            } else {
-              newCompletions[key] = isCompleted;
-            }
-          }
+        if (isDateKey) {
+          // Convert to new format and use Zustand store
+          toggleCompletion(habitId, keyWithoutId);
         } else {
-          newCompletions[key] = isCompleted;
+          // It's a day-based key, convert to date and use Zustand store
+          const dayName = keyWithoutId;
+          const daysOfWeek = [
+            "Monday", "Tuesday", "Wednesday", "Thursday", 
+            "Friday", "Saturday", "Sunday"
+          ];
+          const dayIndex = daysOfWeek.indexOf(dayName);
+
+          if (dayIndex >= 0) {
+            const date = new Date(startOfWeek);
+            date.setDate(startOfWeek.getDate() + dayIndex);
+            const dateStr = date.toISOString().split("T")[0];
+            toggleCompletion(habitId, dateStr);
+          }
         }
-      } else {
-        newCompletions[key] = isCompleted;
       }
-
-      return newCompletions;
-    });
-  }, []);
-
+    }
+  }, [toggleCompletion]);
   const handleAddHabit = useCallback((habit) => {
     console.log("Adding new habit:", habit);
-    setHabits((prev) => [...prev, habit]);
-  }, []);
+    addHabit(habit);
+  }, [addHabit]);
 
   const handleDeleteHabit = useCallback((habitId) => {
     console.log("Deleting habit:", habitId);
-    setHabits((prev) => prev.filter((h) => h.id !== habitId));
-    // Also remove completions for this habit
-    setCompletions((prev) => {
-      const newCompletions = { ...prev };
-      Object.keys(newCompletions).forEach((key) => {
-        if (key.endsWith(`-${habitId}`)) {
-          delete newCompletions[key];
-        }
-      });
-      return newCompletions;
-    });
-  }, []);
+    removeHabit(habitId);
+  }, [removeHabit]);
 
   const handleEditHabit = useCallback((habit) => {
     console.log("Editing habit:", habit);
-    setHabits((prev) => prev.map((h) => (h.id === habit.id ? habit : h)));
-  }, []);
-
+    updateHabit(habit);
+  }, [updateHabit]);
   // CSV Import handler
   const handleCsvImport = useCallback((importedData) => {
     console.log("Importing CSV data:", importedData);
-    setHabits(importedData.habits);
-    setCompletions(importedData.completions);
+    // The CSV import should now use the store's dual-write system
+    // which is handled in the CsvImportModal, so we just need to close the modal
     setShowCsvImport(false);
   }, []);
 
@@ -641,35 +623,37 @@ const ContentGrid = () => {
             </Suspense>
           );
         },
-      },
-      "habit-list": {
+      },      "habit-list": {
         title: "My Habits",
         component: (layout) => {
-          const props = getWidgetProps("habit-list", layout);          return (
-            <DatabaseWidget
-              habits={habits}
-              completions={filteredData.databaseCompletions}
-              onToggleCompletion={handleToggleCompletion}
-              onAddHabit={handleAddHabit}
-              onDeleteHabit={handleDeleteHabit}
-              onEditHabit={handleEditHabit}
-              viewType="table"
-              dateRange={filteredData.databaseRange}
-              mode={filteredData.databaseMode}
-              filterComponent={
-                <DatabaseFilterControls
-                  period={filters.databasePeriod}
-                  selectedMonth={filters.databaseSelectedMonth}
-                  onPeriodChange={updateDatabaseFilter}
-                  onMonthChange={updateDatabaseMonth}
-                  options={filterOptions}
-                />
-              }
-              {...props}
-            />
+          const props = getWidgetProps("habit-list", layout);
+          return (
+            <Suspense fallback={<WidgetSkeleton title="My Habits" />}>
+              <DatabaseWidgetBridge
+                habits={habits}
+                completions={filteredData.databaseCompletions}
+                onToggleCompletion={handleToggleCompletion}
+                onAddHabit={handleAddHabit}
+                onDeleteHabit={handleDeleteHabit}
+                onEditHabit={handleEditHabit}
+                viewType="table"
+                dateRange={filteredData.databaseRange}
+                mode={filteredData.databaseMode}
+                filterComponent={
+                  <DatabaseFilterControls
+                    period={filters.databasePeriod}
+                    selectedMonth={filters.databaseSelectedMonth}
+                    onPeriodChange={updateDatabaseFilter}
+                    onMonthChange={updateDatabaseMonth}
+                    options={filterOptions}
+                  />
+                }
+                {...props}
+              />
+            </Suspense>
           );
         },
-      },    }),
+      },}),
     [
       currentBreakpoint,
       getWidgetProps,

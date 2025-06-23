@@ -1,10 +1,12 @@
 import React from "react";
 import { Flex, Text } from "@radix-ui/themes";
 import Dashboard from "../../pages/Dashboard";
+import LandingPage from "../../pages/LandingPage";
 
-const ContentPane = ({ currentPage }) => {
-  const renderPageContent = () => {
+const ContentPane = ({ currentPage }) => {  const renderPageContent = () => {
     switch (currentPage) {
+      case "landing":
+        return <LandingPage />;
       case "dashboard":
         return <Dashboard />;
       case "habits":

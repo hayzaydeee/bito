@@ -175,15 +175,23 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--color-brand-600) 0%, var(--color-brand-700) 100%);
+  background: linear-gradient(135deg, var(--color-brand-600), var(--color-brand-700));
+  border: none;
   color: white;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  font-weight: 600;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, var(--color-brand-700) 0%, var(--color-brand-800) 100%);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, var(--color-brand-700), var(--color-brand-800));
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
 }
 
 .btn-secondary {
@@ -250,6 +258,7 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
 }
 
 .glass-card:hover {
@@ -257,6 +266,26 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 
     0 12px 40px rgba(0, 0, 0, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Minimal Glass Card Effect */
+.glass-card-minimal {
+  background: rgba(30, 30, 66, 0.3);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  box-shadow: 
+    0 4px 24px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+}
+
+.glass-card-minimal:hover {
+  border-color: rgba(99, 102, 241, 0.25);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
 }
 
 /* Input Styles */
@@ -280,41 +309,331 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--color-text-tertiary);
 }
 
+/* Minimal Input Styles */
+.input-minimal {
+  background: rgba(37, 37, 81, 0.5);
+  border: none;
+  border-bottom: 2px solid rgba(51, 65, 85, 0.3);
+  border-radius: 8px 8px 0 0;
+  transition: all 0.2s ease;
+}
+
+.input-minimal:focus {
+  border-bottom-color: var(--color-brand-500);
+  background: rgba(37, 37, 81, 0.7);
+  transform: none;
+  box-shadow: none;
+}
+
+.input-minimal:focus + .input-border {
+  transform: scaleX(1);
+}
+
+.input-border {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--color-brand-500);
+  transform: scaleX(0);
+  transition: transform 0.2s ease;
+}
+
+/* Button Minimal Styles */
+.btn-minimal {
+  background: var(--color-brand-600);
+  border: none;
+  color: white;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  text-transform: lowercase;
+  letter-spacing: 0.025em;
+}
+
+.btn-minimal:hover {
+  background: var(--color-brand-700);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.btn-minimal:active {
+  transform: translateY(0);
+}
+
+.btn-minimal:disabled {
+  background: var(--color-surface-elevated);
+  color: var(--color-text-tertiary);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Step Indicator Styles */
+.step-indicator {
+  position: relative;
+}
+
+.step-indicator::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--color-border-primary);
+  z-index: 0;
+}
+
+.step-circle {
+  position: relative;
+  z-index: 1;
+  background: var(--color-surface-primary);
+}
+
+/* Checkbox Enhancement */
+.checkbox-enhanced {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.checkbox-enhanced:hover {
+  transform: scale(1.05);
+}
+
+.checkbox-enhanced input:checked + .checkbox-box {
+  background: var(--color-brand-500);
+  border-color: var(--color-brand-500);
+}
+
+.checkbox-enhanced input:focus + .checkbox-box {
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+/* Checkbox Minimal Styles */
+.checkbox-minimal {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-border-primary);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.checkbox-minimal:hover {
+  border-color: var(--color-brand-400);
+  transform: scale(1.05);
+}
+
+.checkbox-minimal.checked {
+  background: var(--color-brand-500);
+  border-color: var(--color-brand-500);
+}
+
+.checkbox-minimal.error {
+  border-color: var(--color-error);
+}
+
+/* Progress Bar Minimal */
+.progress-minimal {
+  height: 2px;
+  background: var(--color-surface-elevated);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-brand-500), var(--color-brand-400));
+  transition: width 0.3s ease;
+}
+
+/* Social Button Enhancements */
+.social-btn {
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.social-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.social-btn:active {
+  transform: translateY(0);
+}
+
+/* Social Button Minimal */
+.social-btn-minimal {
+  background: rgba(37, 37, 81, 0.5);
+  border: 1px solid rgba(51, 65, 85, 0.3);
+  color: var(--color-text-primary);
+  transition: all 0.2s ease;
+}
+
+.social-btn-minimal:hover {
+  background: rgba(37, 37, 81, 0.7);
+  border-color: rgba(99, 102, 241, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
 /* Animation Classes */
 .animate-float {
-  animation: float 3s ease-in-out infinite;
+  animation: float 6s ease-in-out infinite;
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg);
+    opacity: 0.7;
+  }
+  25% { 
+    transform: translateY(-10px) rotate(2deg);
+    opacity: 0.9;
+  }
+  50% { 
+    transform: translateY(-20px) rotate(0deg);
+    opacity: 1;
+  }
+  75% { 
+    transform: translateY(-10px) rotate(-2deg);
+    opacity: 0.9;
+  }
 }
 
-.animate-glow {
-  animation: glow 2s ease-in-out infinite alternate;
-}
-
-@keyframes glow {
-  from {
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
-  }
-  to {
-    box-shadow: 0 0 30px rgba(99, 102, 241, 0.6);
-  }
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+  opacity: 0;
 }
 
 .animate-slide-up {
-  animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideUp 0.8s ease-out forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* Password Strength Indicator */
+.password-strength-bar {
+  height: 4px;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.password-strength-fill {
+  height: 100%;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+/* Floating Label Effect */
+.floating-label {
+  position: relative;
+}
+
+.floating-label input:focus + label,
+.floating-label input:not(:placeholder-shown) + label {
+  transform: translateY(-25px) scale(0.85);
+  color: var(--color-brand-500);
+}
+
+.floating-label label {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--color-surface-secondary);
+  padding: 0 8px;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  color: var(--color-text-tertiary);
+}
+
+/* Responsive Adjustments for Minimal Design */
+@media (max-width: 640px) {
+  .glass-card-minimal {
+    margin: 0.5rem;
+    padding: 2rem 1.5rem;
+  }
+  
+  .step-indicator {
+    justify-content: space-between;
+  }
+  
+  .text-minimal-header {
+    font-size: 1.5rem;
+  }
+}
+
+/* Enhanced Transitions */
+* {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Focus Visible Enhancement */
+*:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Enhanced Mobile Responsiveness */
+@media (max-width: 640px) {
+  .glass-card {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+  
+  .animate-slide-up {
+    animation-duration: 0.6s;
+  }
+  
+  .floating-label label {
+    font-size: 0.875rem;
   }
 }
 
@@ -366,6 +685,79 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* Additional Landing Page Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.animate-fadeInLeft {
+  animation: fadeInLeft 0.8s ease-out;
+}
+
+.animate-fadeInRight {
+  animation: fadeInRight 0.8s ease-out;
+}
+
+.animate-pulse-slow {
+  animation: pulse 3s ease-in-out infinite;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}
+
 /* Apply animations to components */
 .animate-in {
   animation: slideInUp 0.6s ease-out;
@@ -393,77 +785,58 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
 
-/* Improved focus states for accessibility */
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid var(--color-brand-500);
-  outline-offset: 2px;
-  border-radius: 8px;
+/* Landing Page Specific Enhancements */
+.landing-hero {
+  background: linear-gradient(135deg, 
+    var(--color-bg-primary) 0%, 
+    var(--color-bg-secondary) 50%, 
+    var(--color-bg-tertiary) 100%);
 }
 
-/* Gradient Text */
-.gradient-text {
-  background: linear-gradient(135deg, var(--color-brand-400) 0%, var(--color-brand-600) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.landing-feature-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(99, 102, 241, 0.1);
 }
 
-/* Glass Effect */
-.glass {
-  background: rgba(30, 30, 66, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+.landing-cta-button {
+  position: relative;
+  overflow: hidden;
 }
 
-/* Status Indicators */
-.status-success {
-  color: var(--color-success);
+.landing-cta-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.6s;
 }
 
-.status-warning {
-  color: var(--color-warning);
+.landing-cta-button:hover::before {
+  left: 100%;
 }
 
-.status-error {
-  color: var(--color-error);
+/* Testimonial card enhancements */
+.testimonial-card {
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.status-info {
-  color: var(--color-info);
+.testimonial-card:hover {
+  transform: translateY(-6px) rotate(1deg);
 }
 
-/* Text selection styling */
-::selection {
-  background: var(--color-brand-500);
-  color: white;
-}
-
-::-moz-selection {
-  background: var(--color-brand-500);
-  color: white;
-}
-
-/* Layout enhancements */
-.layout {
-  min-height: 400px;
-}
-
-/* Widget transitions */
-.react-grid-item {
-  transition: all 200ms ease;
-}
-
-.react-grid-item.react-grid-placeholder {
-  background: rgba(99, 102, 241, 0.2) !important;
-  border-radius: 12px;
-  border: 2px dashed rgba(99, 102, 241, 0.4);
-}
-
-.react-grid-item > .react-resizable-handle::after {
-  border-right: 2px solid rgba(99, 102, 241, 0.6);
-  border-bottom: 2px solid rgba(99, 102, 241, 0.6);
+/* Enhanced glass effect for landing */
+.landing-glass {
+  background: rgba(30, 30, 66, 0.3);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
 }

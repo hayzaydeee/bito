@@ -1,9 +1,11 @@
 /**
  * CSV Import Service
  * Handles importing habit data from CSV files
+ * PHASE 2: Enhanced with new store integration
  */
 
 import Papa from 'papaparse';
+import useHabitStore from '../store/habitStore.js';
 
 // Map CSV habit names to internal habit structure
 const HABIT_MAPPING = {
@@ -46,26 +48,97 @@ const parseCompletion = (value) => {
   return Boolean(value);
 };
 
-// Main CSV import function
-export const importCsvData = (csvText) => {
-  return new Promise((resolve, reject) => {
-    Papa.parse(csvText, {
-      header: true,
-      skipEmptyLines: true,
-      transformHeader: (header) => header.trim(),
-      complete: (results) => {
-        try {
-          const importResult = processCsvData(results.data);
-          resolve(importResult);
-        } catch (error) {
-          reject(error);
-        }
-      },
-      error: (error) => {
-        reject(new Error(`CSV parsing failed: ${error.message}`));
-      }
-    });
+// NEW: Process CSV data for new store format
+const processCsvDataForNewStore = (csvData) => {
+  const habits = [];
+  const completions = [];
+  const errors = [];
+  const stats = {
+    totalRows: csvData.length,
+    validRows: 0,
+    duplicateDates: 0,
+    invalidDates: 0,
+    habitsFound: new Set()
+  };
+
+  // Create habits for new store
+  let habitId = 1;
+  const habitIdMap = {};
+  
+  Object.entries(HABIT_MAPPING).forEach(([csvName, habitData]) => {
+    const habit = {
+      id: habitId,
+      name: habitData.name,
+      color: habitData.color,
+      icon: habitData.icon,
+      createdAt: new Date()
+    };
+    habits.push(habit);
+    habitIdMap[csvName] = habitId;
+    habitId++;
   });
+
+  const processedDates = new Set();
+
+  // Process each row
+  csvData.forEach((row, index) => {
+    const rowNumber = index + 2;
+    
+    const dateStr = parseCsvDate(row.Day);
+    if (!dateStr) {
+      errors.push(`Row ${rowNumber}: Invalid date format "${row.Day}"`);
+      stats.invalidDates++;
+      return;
+    }
+
+    if (processedDates.has(dateStr)) {
+      errors.push(`Row ${rowNumber}: Duplicate date "${dateStr}"`);
+      stats.duplicateDates++;
+      return;
+    }
+    processedDates.add(dateStr);
+
+    // Process each habit column - NEW FORMAT
+    Object.entries(HABIT_MAPPING).forEach(([csvHabitName, habitData]) => {
+      if (row.hasOwnProperty(csvHabitName)) {
+        stats.habitsFound.add(csvHabitName);
+        const habitId = habitIdMap[csvHabitName];
+        const isCompleted = parseCompletion(row[csvHabitName]);
+        
+        if (isCompleted) {
+          // NEW: Use new store completion format (YYYY-MM-DD_habitId)
+          completions.push({
+            id: `${dateStr}_${habitId}`,
+            habitId,
+            date: dateStr,
+            timestamp: new Date().toISOString()
+          });
+        }
+      }
+    });    stats.validRows++;
+  });
+
+  const dates = Array.from(processedDates).sort();
+  const dateRange = dates.length > 0 ? {
+    start: dates[0],
+    end: dates[dates.length - 1],
+    totalDays: dates.length
+  } : {
+    start: null,
+    end: null,
+    totalDays: 0
+  };
+
+  return {
+    habits,
+    completions,
+    stats: {
+      ...stats,
+      habitsFound: Array.from(stats.habitsFound),
+      dateRange
+    },
+    errors
+  };
 };
 
 // Process parsed CSV data into habit tracker format
@@ -135,13 +208,16 @@ const processCsvData = (csvData) => {
 
     stats.validRows++;
   });
-
   // Calculate date range
   const dates = Array.from(processedDates).sort();
-  const dateRange = {
+  const dateRange = dates.length > 0 ? {
     start: dates[0],
     end: dates[dates.length - 1],
     totalDays: dates.length
+  } : {
+    start: null,
+    end: null,
+    totalDays: 0
   };
 
   return {
@@ -154,6 +230,44 @@ const processCsvData = (csvData) => {
     },
     errors
   };
+};
+
+// Main CSV import function - PHASE 2
+export const importCsvData = (file) => {
+  return new Promise((resolve, reject) => {
+    if (!file) {
+      reject(new Error('No file provided'));
+      return;
+    }
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        if (results.errors.length > 0) {
+          reject(new Error(`CSV parsing error: ${results.errors[0].message}`));
+          return;
+        }
+
+        try {
+          // Process for both old and new formats
+          const oldFormatData = processCsvData(results.data);
+          const newFormatData = processCsvDataForNewStore(results.data);
+          
+          resolve({
+            oldFormat: oldFormatData,
+            newFormat: newFormatData,
+            rawData: results.data
+          });
+        } catch (error) {
+          reject(error);
+        }
+      },
+      error: (error) => {
+        reject(new Error(`File reading error: ${error.message}`));
+      }
+    });
+  });
 };
 
 // Merge imported data with existing data
@@ -183,6 +297,33 @@ export const mergeWithExistingData = (importedData, existingHabits = [], existin
     completions: mergedCompletions
   };
 };
+
+// NEW: Merge function for new store
+export const mergeWithNewStore = (importedData) => {
+  const store = useHabitStore.getState();
+    // Add new habits (avoid duplicates by name)
+  const existingHabitNames = new Set(
+    Array.from(store.habits.values()).map(h => h.name.toLowerCase())
+  );
+  
+  const newHabits = importedData.habits.filter(habit => 
+    !existingHabitNames.has(habit.name.toLowerCase())
+  );
+  
+  // Add habits to store
+  newHabits.forEach(habit => {
+    store.addHabit(habit);
+  });
+  
+  // Add completions to store
+  store.bulkImportCompletions(importedData.completions);
+  
+  return {
+    habitsAdded: newHabits.length,
+    completionsAdded: importedData.completions.length
+  };
+};
+
 
 // Validate CSV structure before import
 export const validateCsvStructure = (csvText) => {
@@ -235,6 +376,7 @@ export const validateCsvStructure = (csvText) => {
 export default {
   importCsvData,
   mergeWithExistingData,
+  mergeWithNewStore,
   validateCsvStructure,
   HABIT_MAPPING
 };

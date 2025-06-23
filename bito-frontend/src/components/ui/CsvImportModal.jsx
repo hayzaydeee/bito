@@ -1,5 +1,8 @@
 import React, { useState, useCallback } from 'react';
-import { importCsvData, validateCsvStructure, mergeWithExistingData } from '../../services/csvImportService';
+import csvImportService from '../../services/csvImportService';
+import { dualWriteHabits } from '../../utils/dualWriteSystem';
+
+const { importCsvData, validateCsvStructure, mergeWithExistingData, mergeWithNewStore } = csvImportService;
 
 const CsvImportModal = ({ isOpen, onClose, onImport, existingHabits = [], existingCompletions = {} }) => {
   const [file, setFile] = useState(null);
@@ -38,12 +41,11 @@ const CsvImportModal = ({ isOpen, onClose, onImport, existingHabits = [], existi
     try {
       const text = await selectedFile.text();
       const validationResult = await validateCsvStructure(text);
-      setValidation(validationResult);
-      
-      if (validationResult.isValid) {
+      setValidation(validationResult);      if (validationResult.isValid) {
         setImportStep('preview');
         // Generate preview
         const importData = await importCsvData(text);
+        // Store the full import data for preview and later use
         setImportPreview(importData);
       } else {
         setImportStep('select');
@@ -84,19 +86,35 @@ const CsvImportModal = ({ isOpen, onClose, onImport, existingHabits = [], existi
       handleFileSelect(files[0]);
     }
   }, [handleFileSelect]);
-
   // Execute import
   const executeImport = useCallback(async () => {
     if (!importPreview) return;
 
     setImportStep('importing');
     try {
-      const mergedData = mergeWithExistingData(importPreview, existingHabits, existingCompletions);
-      setImportResult(mergedData);
+      // Phase 2: Use dual-write system for import
+        // Handle old format for backward compatibility
+      const mergedData = mergeWithExistingData(
+        importPreview.oldFormat, 
+        existingHabits, 
+        existingCompletions
+      );
+      
+      // Handle new store format
+      const newStoreResult = mergeWithNewStore(importPreview.newFormat);
+      
+      setImportResult({
+        ...mergedData,
+        newStoreStats: newStoreResult
+      });
       setImportStep('complete');
       
-      // Call parent callback with merged data
+      // Call parent callback with merged data (old system)
       onImport(mergedData);
+      
+      console.log('📊 Import Results:');
+      console.log('Old system:', mergedData);
+      console.log('New store:', newStoreResult);
     } catch (err) {
       setError(`Import failed: ${err.message}`);
       setImportStep('preview');
@@ -189,37 +207,40 @@ const CsvImportModal = ({ isOpen, onClose, onImport, existingHabits = [], existi
           {/* Step 3: Preview */}
           {importStep === 'preview' && importPreview && (
             <div>
-              <h3 className="text-lg font-medium mb-4">Import Preview</h3>
-              
-              {/* Stats */}
+              <h3 className="text-lg font-medium mb-4">Import Preview</h3>              {/* Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="bg-blue-50 p-3 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">{importPreview.stats.validRows}</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {importPreview?.newFormat?.stats?.validRows || 0}
+                  </div>
                   <div className="text-sm text-blue-700">Valid Days</div>
                 </div>
                 <div className="bg-green-50 p-3 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">{importPreview.habits.length}</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {importPreview?.newFormat?.habits?.length || 0}
+                  </div>
                   <div className="text-sm text-green-700">Habits</div>
                 </div>
                 <div className="bg-purple-50 p-3 rounded-lg">
                   <div className="text-2xl font-bold text-purple-600">
-                    {Object.keys(importPreview.completions).length}
+                    {importPreview?.newFormat?.completions?.length || 0}
                   </div>
                   <div className="text-sm text-purple-700">Completions</div>
                 </div>
                 <div className="bg-orange-50 p-3 rounded-lg">
                   <div className="text-2xl font-bold text-orange-600">
-                    {importPreview.stats.dateRange.totalDays}
+                    {importPreview?.newFormat?.stats?.dateRange?.totalDays || 0}
                   </div>
                   <div className="text-sm text-orange-700">Days Tracked</div>
                 </div>
-              </div>
-
-              {/* Date Range */}
+              </div>              {/* Date Range */}
               <div className="mb-4">
                 <h4 className="font-medium text-gray-900 mb-2">Date Range</h4>
                 <p className="text-sm text-gray-600">
-                  {importPreview.stats.dateRange.start} to {importPreview.stats.dateRange.end}
+                  {importPreview?.newFormat?.stats?.dateRange?.start 
+                    ? `${importPreview.newFormat.stats.dateRange.start} to ${importPreview.newFormat.stats.dateRange.end}`
+                    : 'No valid dates found'
+                  }
                 </p>
               </div>
 
@@ -227,21 +248,19 @@ const CsvImportModal = ({ isOpen, onClose, onImport, existingHabits = [], existi
               <div className="mb-6">
                 <h4 className="font-medium text-gray-900 mb-2">Habits to Import</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {importPreview.habits.map((habit) => (
+                  {(importPreview?.newFormat?.habits || []).map((habit) => (
                     <div key={habit.id} className="flex items-center space-x-2 text-sm">
                       <span className="text-lg">{habit.icon}</span>
                       <span>{habit.name}</span>
                     </div>
                   ))}
                 </div>
-              </div>
-
-              {/* Errors/Warnings */}
-              {importPreview.errors.length > 0 && (
+              </div>              {/* Errors/Warnings */}
+              {(importPreview?.newFormat?.errors?.length || 0) > 0 && (
                 <div className="mb-4">
                   <h4 className="font-medium text-red-700 mb-2">Issues Found</h4>
                   <div className="max-h-32 overflow-y-auto bg-red-50 p-3 rounded-md">
-                    {importPreview.errors.map((error, index) => (
+                    {(importPreview?.newFormat?.errors || []).map((error, index) => (
                       <p key={index} className="text-sm text-red-600">{error}</p>
                     ))}
                   </div>
@@ -280,11 +299,10 @@ const CsvImportModal = ({ isOpen, onClose, onImport, existingHabits = [], existi
               <h3 className="text-lg font-medium text-gray-900 mb-2">Import Successful!</h3>
               <p className="text-gray-600 mb-6">
                 Your habit data has been imported and merged with existing data.
-              </p>
-              <div className="bg-green-50 p-4 rounded-lg mb-6">
+              </p>              <div className="bg-green-50 p-4 rounded-lg mb-6">
                 <p className="text-sm text-green-700">
-                  Imported {Object.keys(importPreview.completions).length} habit completions 
-                  across {importPreview.stats.dateRange.totalDays} days
+                  Imported {importPreview?.newFormat?.completions?.length || 0} habit completions 
+                  across {importPreview?.newFormat?.stats?.dateRange?.totalDays || 0} days
                 </p>
               </div>
               <button

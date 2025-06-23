@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Avatar } from "@radix-ui/themes";
 import {
   HamburgerMenuIcon,
@@ -10,29 +11,27 @@ import {
 } from "@radix-ui/react-icons";
 
 const StatusBar = ({
-  currentPage,
   isMenuCollapsed,
   setIsMenuCollapsed,
   userName = "Alex",
 }) => {
+  const location = useLocation();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   const getBreadcrumbTitle = () => {
-    switch (currentPage) {
-      case "dashboard":
+    const path = location.pathname;
+    switch (path) {
+      case "/app":
+      case "/app/dashboard":
         return "Dashboard";
-      case "habits":
+      case "/app/habits":
         return "Habits Management";
-      case "calendar":
+      case "/app/calendar":
         return "Calendar View";
-      case "analytics":
+      case "/app/analytics":
         return "Analytics";
-      case "quick-actions":
-        return "Quick Actions";
-      case "activity":
-        return "Activity Log";
-      case "settings":
+      case "/app/settings":
         return "Settings";
       default:
         return "Dashboard";

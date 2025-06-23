@@ -183,4 +183,4 @@ const QuickActionsWidget = memo(({
 
 QuickActionsWidget.displayName = 'QuickActionsWidget';
 
-export { QuickActionsWidget };
+export default QuickActionsWidget;
