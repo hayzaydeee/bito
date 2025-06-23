@@ -1,6 +1,5 @@
-import React, { useMemo } from 'react';
-import useHabitStore from '../../store/habitStore.js';
-import { habitUtils } from '../../utils/habitLogic.js';
+import React, { useMemo, useEffect } from 'react';
+import { useHabits, habitUtils } from '../../contexts/HabitContext';
 import { HabitRow } from './HabitRow.jsx';
 import { WeekHeader } from './WeekHeader.jsx';
 import { EmptyState } from './EmptyState.jsx';
@@ -14,18 +13,22 @@ export const HabitGrid = ({
   showStats = true,
   showHeader = true,
   tableStyle = false
-}) => {// Memoize the start date to prevent infinite re-renders
+}) => {
+  // Memoize the start date to prevent infinite re-renders
   const memoizedStartDate = useMemo(() => {
     return startDate || habitUtils.getWeekStart(new Date());
   }, [startDate]);
 
-  // Get data from new store with individual selectors to avoid re-renders
-  const habitsMap = useHabitStore(state => state.habits);
-  const completions = useHabitStore(state => state.completions);
-  const toggleCompletion = useHabitStore(state => state.toggleCompletion);
-    // Memoize habits array conversion
-  const habits = useMemo(() => Array.from(habitsMap.values()), [habitsMap]);
-  
+  // Get data from habit context
+  const { 
+    habits, 
+    entries, 
+    isLoading, 
+    error,
+    toggleHabitCompletion,
+    fetchHabitEntries 
+  } = useHabits();
+
   // Calculate week dates
   const weekDates = useMemo(() => {
     if (endDate) {
@@ -46,7 +49,21 @@ export const HabitGrid = ({
     } else {
       // Default: current week
       return habitUtils.getWeekDates(memoizedStartDate);
-    }  }, [memoizedStartDate, endDate]);
+    }
+  }, [memoizedStartDate, endDate]);
+
+  // Fetch entries for visible habits and date range
+  useEffect(() => {
+    if (habits.length > 0 && weekDates.length > 0) {
+      const startDateObj = weekDates[0].dateObj;
+      const endDateObj = weekDates[weekDates.length - 1].dateObj;
+      
+      // Fetch entries for each habit
+      habits.forEach(habit => {
+        fetchHabitEntries(habit._id, startDateObj, endDateObj);
+      });
+    }
+  }, [habits, weekDates, fetchHabitEntries]);
 
   // DEBUG: Log data to compare views
   // console.log('HabitGrid - Habits count:', habits.length);
@@ -54,17 +71,17 @@ export const HabitGrid = ({
   // console.log('HabitGrid - Completions size:', completions.size);
   // console.log('HabitGrid - Sample completions:', Array.from(completions.keys()).slice(0, 5));
   // console.log('HabitGrid - Week dates:', weekDates.map(d => d.date));
-
   // Calculate week statistics
   const weekStats = useMemo(() => {
-    const totalCells = habits.length * weekDates.length;
+    let totalCells = habits.length * weekDates.length;
     let completedCells = 0;
     let perfectDays = 0;
 
     const dailyCompletions = weekDates.map(({ date }) => {
-      const dayCompletions = habits.filter(habit => 
-        completions.has(`${date}_${habit.id}`)
-      ).length;
+      const dayCompletions = habits.filter(habit => {
+        const habitEntries = entries[habit._id];
+        return habitEntries && habitEntries[date];
+      }).length;
       
       completedCells += dayCompletions;
       
@@ -91,16 +108,41 @@ export const HabitGrid = ({
       ),
       dailyCompletions
     };
-  }, [habits, completions, weekDates]);
+  }, [habits, entries, weekDates]);
 
   // Handle habit completion toggle
-  const handleToggleCompletion = (habitId, date) => {
-    toggleCompletion(habitId, date);
+  const handleToggleCompletion = async (habitId, date) => {
+    await toggleHabitCompletion(habitId, date);
   };
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className={`habit-grid ${className} flex items-center justify-center p-8`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-brand-500)] mx-auto mb-4"></div>
+          <p className="text-[var(--color-text-secondary)]">Loading habits...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className={`habit-grid ${className} flex items-center justify-center p-8`}>
+        <div className="text-center">
+          <p className="text-red-400 mb-2">Error loading habits</p>
+          <p className="text-[var(--color-text-secondary)] text-sm">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state if no habits
   if (habits.length === 0) {
     return <EmptyState />;
   }
-
   // If table style is requested, use the TableView component
   if (tableStyle) {
     return (
@@ -108,7 +150,7 @@ export const HabitGrid = ({
         <TableView 
           habits={habits}
           weekDates={weekDates}
-          completions={completions}
+          entries={entries}
           onToggle={handleToggleCompletion}
           weekStats={weekStats}
         />
@@ -125,10 +167,10 @@ export const HabitGrid = ({
       <div className="habit-rows space-y-2">
         {habits.map(habit => (
           <HabitRow
-            key={habit.id}
+            key={habit._id}
             habit={habit}
             weekDates={weekDates}
-            completions={completions}
+            entries={entries[habit._id] || {}}
             onToggle={handleToggleCompletion}
           />
         ))}

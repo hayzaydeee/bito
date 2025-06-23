@@ -1,0 +1,206 @@
+require('dotenv').config();
+require('express-async-errors');
+
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
+const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
+const session = require('express-session');
+const MongoStore = require('connect-mongo');
+const passport = require('passport');
+
+// Import configurations
+require('./config/passport');
+
+// Import routes
+const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/users');
+const habitRoutes = require('./routes/habits');
+const testRoutes = require('./routes/test');
+
+// Import middleware
+const errorHandler = require('./middleware/errorHandler');
+const notFound = require('./middleware/notFound');
+
+const app = express();
+
+// Trust proxy for rate limiting
+app.set('trust proxy', 1);
+
+// Security middleware
+app.use(helmet());
+app.use(compression());
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/', limiter);
+
+// CORS configuration
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Logging
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'));
+}
+
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Session configuration for OAuth
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'fallback-secret-change-this',
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGODB_URI || 'mongodb://localhost:27017/bito-db',
+    touchAfter: 24 * 3600 // lazy session update
+  }),
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+// Passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// API routes
+app.use('/api/test', testRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/habits', habitRoutes);
+
+// API documentation endpoint
+app.get('/api', (req, res) => {
+  res.json({
+    message: 'Bito API v1.0.0',
+    documentation: 'Available endpoints:',
+    endpoints: {
+      auth: [
+        'POST /api/auth/register',
+        'POST /api/auth/login',
+        'POST /api/auth/logout',
+        'GET /api/auth/me',
+        'GET /api/auth/google',
+        'GET /api/auth/github'
+      ],
+      users: [
+        'GET /api/users/profile',
+        'PUT /api/users/profile',
+        'DELETE /api/users/account'
+      ],
+      habits: [
+        'GET /api/habits',
+        'POST /api/habits',
+        'PUT /api/habits/:id',
+        'DELETE /api/habits/:id',
+        'POST /api/habits/:id/check',
+        'GET /api/habits/stats'
+      ]
+    }
+  });
+});
+
+// Catch-all for undefined routes
+app.use(notFound);
+
+// Error handling middleware (must be last)
+app.use(errorHandler);
+
+// Database connection
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/bito-db', {
+      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+    });
+    
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    return true;
+  } catch (error) {
+    console.error('Database connection error:', error.message);
+    console.log('Server will start without database connection. Please ensure MongoDB is running.');
+    return false;
+  }
+};
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.log('Unhandled Promise Rejection:', err.message);
+  // Don't exit the process, just log the error
+});
+
+// Start server
+const PORT = process.env.PORT || 5000;
+
+if (require.main === module) {
+  // Start the server first, then try to connect to database
+  const server = app.listen(PORT, () => {
+    console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+    console.log(`Health check: http://localhost:${PORT}/health`);
+    console.log(`API documentation: http://localhost:${PORT}/api`);
+  });
+
+  // Try to connect to database after server starts
+  connectDB().then((connected) => {
+    if (!connected) {
+      console.log('\n⚠️  WARNING: MongoDB is not connected!');
+      console.log('   To use all features, please:');
+      console.log('   1. Install MongoDB: https://www.mongodb.com/try/download/community');
+      console.log('   2. Start MongoDB service');
+      console.log('   3. Restart this server');
+      console.log('   OR use MongoDB Atlas cloud database');
+    } else {
+      console.log('\n✅ Database connected successfully!');
+      console.log('   You can now use all API features.');
+    }
+  });
+
+  // Handle MongoDB connection errors after initial connection
+  mongoose.connection.on('error', (err) => {
+    console.error('Database connection lost:', err.message);
+  });
+
+  mongoose.connection.on('disconnected', () => {
+    console.log('Database disconnected');
+  });
+
+  // Graceful shutdown
+  process.on('SIGINT', async () => {
+    console.log('\nShutting down gracefully...');
+    server.close(() => {
+      console.log('HTTP server closed.');
+      mongoose.connection.close(false, () => {
+        console.log('Database connection closed.');
+        process.exit(0);
+      });
+    });
+  });
+}
+
+module.exports = app;

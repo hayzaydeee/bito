@@ -4,7 +4,7 @@ import { HabitCheckbox } from './HabitCheckbox.jsx';
 export const HabitRow = memo(({ 
   habit, 
   weekDates, 
-  completions, 
+  entries = {}, 
   onToggle 
 }) => {
   return (
@@ -12,13 +12,13 @@ export const HabitRow = memo(({
       <div className="flex items-center">
         {/* Habit Info */}
         <div className="habit-info flex items-center gap-3 p-4 min-w-[200px] bg-[var(--color-surface-secondary)]/30">
-          <span className="text-xl">{habit.icon}</span>
+          <span className="text-xl">{habit.icon || '✓'}</span>
           <div className="flex-1 min-w-0">
             <h3 className="font-medium text-[var(--color-text-primary)] truncate">
               {habit.name}
             </h3>
             <p className="text-xs text-[var(--color-text-tertiary)]">
-              Streak: {getHabitStreak(habit.id, completions, weekDates)} days
+              Streak: {getHabitStreak(entries, weekDates)} days
             </p>
           </div>
         </div>
@@ -31,12 +31,12 @@ export const HabitRow = memo(({
                 {shortDay}
               </div>
               <HabitCheckbox
-                habitId={habit.id}
+                habitId={habit._id}
                 date={date}
-                isCompleted={completions.has(`${date}_${habit.id}`)}
+                isCompleted={!!entries[date]}
                 isToday={isToday}
-                color={habit.color}
-                onToggle={() => onToggle(habit.id, date)}
+                color={habit.color || '#6366f1'}
+                onToggle={() => onToggle(habit._id, date)}
               />
             </div>
           ))}
@@ -47,13 +47,18 @@ export const HabitRow = memo(({
 });
 
 // Helper function to calculate streak
-const getHabitStreak = (habitId, completions, weekDates) => {
+const getHabitStreak = (entries, weekDates) => {
   let streak = 0;
-  // Start from most recent date and work backwards
-  const sortedDates = [...weekDates].reverse();
+  const today = new Date().toISOString().split('T')[0];
   
-  for (const { date } of sortedDates) {
-    if (completions.has(`${date}_${habitId}`)) {
+  // Start from today and go backwards
+  const sortedDates = weekDates
+    .map(d => d.date)
+    .filter(date => date <= today)
+    .sort((a, b) => new Date(b) - new Date(a));
+  
+  for (const date of sortedDates) {
+    if (entries[date]) {
       streak++;
     } else {
       break;

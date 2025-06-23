@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Flex, Text, Button } from '@radix-ui/themes';
 import { 
   EnvelopeClosedIcon, 
@@ -12,17 +12,32 @@ import {
   CheckIcon,
   ExclamationTriangleIcon
 } from '@radix-ui/react-icons';
+import { useAuth } from '../contexts/AuthContext';
 
 const Login = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { login, isLoading: authLoading, error: authError, clearError } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+
+  // Check for OAuth error in URL params
+  useEffect(() => {
+    const error = searchParams.get('error');
+    if (error) {
+      const errorMessages = {
+        oauth_failed: 'Social login failed. Please try again.',
+        oauth_invalid: 'Invalid OAuth response. Please try again.',
+        oauth_error: 'An error occurred during social login.'
+      };
+      setErrors({ general: errorMessages[error] || 'An error occurred. Please try again.' });
+    }
+  }, [searchParams]);
 
   // Form validation
   const validateForm = () => {
@@ -58,45 +73,50 @@ const Login = () => {
       }));
     }
   };
-
   const handleLogin = async (e) => {
     e.preventDefault();
     
     if (!validateForm()) return;
     
-    setIsLoading(true);
+    // Clear any previous errors
+    clearError();
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      console.log('Login attempt:', formData);
-      navigate('/app');
+      const result = await login({
+        email: formData.email,
+        password: formData.password
+      });
+      
+      if (result.success) {
+        navigate('/app');
+      } else {
+        // Error will be set in AuthContext state
+        console.error('Login failed:', result.error);
+      }
     } catch (error) {
-      setErrors({ general: 'Invalid email or password. Please try again.' });
-    } finally {
-      setIsLoading(false);
+      console.error('Login error:', error);
     }
   };
-
   const handleSocialLogin = async (provider) => {
-    setIsLoading(true);
-    try {
-      // Simulate social login
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log(`${provider} login`);
-      navigate('/app');
-    } catch (error) {
-      setErrors({ general: `Failed to login with ${provider}. Please try again.` });
-    } finally {
-      setIsLoading(false);
-    }
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const authUrl = `${baseUrl}/api/auth/${provider.toLowerCase()}`;
+    
+    // Redirect to backend OAuth URL
+    window.location.href = authUrl;
   };
-
   // Auto-focus email field on mount
   useEffect(() => {
     const emailInput = document.getElementById('email-input');
     if (emailInput) emailInput.focus();
   }, []);
+
+  // Redirect if already authenticated
+  const { isAuthenticated } = useAuth();
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/app');
+    }
+  }, [isAuthenticated, navigate]);
   return (
     <div className="min-h-screen bg-gradient-to-br from-[var(--color-bg-primary)] via-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] relative overflow-hidden">
       {/* Enhanced Animated Background */}
@@ -140,15 +160,13 @@ const Login = () => {
             <Text className="text-lg text-[var(--color-text-secondary)] animate-fade-in" style={{ animationDelay: '0.2s' }}>
               Continue your habit-building journey
             </Text>
-          </div>
-
-          {/* Error Message */}
-          {errors.general && (
+          </div>          {/* Error Message */}
+          {(authError || errors.general) && (
             <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-400 animate-shake">
               <ExclamationTriangleIcon className="w-5 h-5 flex-shrink-0" />
-              <Text className="text-sm">{errors.general}</Text>
+              <Text className="text-sm">{authError || errors.general}</Text>
             </div>
-          )}          {/* Enhanced Login Card with Minimal Design */}
+          )}{/* Enhanced Login Card with Minimal Design */}
           <div className="glass-card-minimal p-10 rounded-2xl space-y-8 animate-fade-in max-w-sm mx-auto" style={{ animationDelay: '0.4s' }}>
             {/* Minimal Header */}
             <div className="text-center space-y-2">
@@ -161,10 +179,9 @@ const Login = () => {
             </div>
 
             {/* Enhanced Social Login */}
-            <div className="space-y-3">
-              <Button
+            <div className="space-y-3">              <Button
                 onClick={() => handleSocialLogin('GitHub')}
-                disabled={isLoading}
+                disabled={authLoading}
                 className="w-full flex items-center justify-center gap-3 py-3 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)] rounded-lg transition-all duration-200 hover:scale-[1.01] hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 variant="soft"
               >
@@ -173,7 +190,7 @@ const Login = () => {
               </Button>
               <Button
                 onClick={() => handleSocialLogin('Google')}
-                disabled={isLoading}
+                disabled={authLoading}
                 className="w-full flex items-center justify-center gap-3 py-3 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)] rounded-lg transition-all duration-200 hover:scale-[1.01] hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 variant="soft"
               >
@@ -204,19 +221,18 @@ const Login = () => {
               <div className="space-y-1">
                 <label className="text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wide">
                   email address
-                </label>
-                <input
-                  id="email-input"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  className={`w-full px-4 py-3 bg-[var(--color-surface-secondary)]/50 border-0 border-b-2 rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-0 focus:border-[var(--color-brand-500)] transition-all duration-200 ${
-                    errors.email ? 'border-red-500' : 'border-[var(--color-border-primary)]/30'
-                  }`}
-                  placeholder="your@email.com"
-                  disabled={isLoading}
-                  autoComplete="email"
-                />
+                </label>                  <input
+                    id="email-input"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    className={`w-full px-4 py-3 bg-[var(--color-surface-secondary)]/50 border-0 border-b-2 rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-0 focus:border-[var(--color-brand-500)] transition-all duration-200 ${
+                      errors.email ? 'border-red-500' : 'border-[var(--color-border-primary)]/30'
+                    }`}
+                    placeholder="your@email.com"
+                    disabled={authLoading}
+                    autoComplete="email"
+                  />
                 {errors.email && (
                   <Text className="text-red-400 text-xs mt-1 animate-fade-in">
                     {errors.email}
@@ -229,24 +245,22 @@ const Login = () => {
                 <label className="text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wide">
                   password
                 </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={formData.password}
-                    onChange={(e) => handleInputChange('password', e.target.value)}
-                    className={`w-full px-4 py-3 pr-10 bg-[var(--color-surface-secondary)]/50 border-0 border-b-2 rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-0 focus:border-[var(--color-brand-500)] transition-all duration-200 ${
-                      errors.password ? 'border-red-500' : 'border-[var(--color-border-primary)]/30'
-                    }`}
-                    placeholder="••••••••"
-                    disabled={isLoading}
-                    autoComplete="current-password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors duration-200"
-                    disabled={isLoading}
-                  >
+                <div className="relative">                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={formData.password}
+                      onChange={(e) => handleInputChange('password', e.target.value)}
+                      className={`w-full px-4 py-3 pr-10 bg-[var(--color-surface-secondary)]/50 border-0 border-b-2 rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-0 focus:border-[var(--color-brand-500)] transition-all duration-200 ${
+                        errors.password ? 'border-red-500' : 'border-[var(--color-border-primary)]/30'
+                      }`}
+                      placeholder="••••••••"
+                      disabled={authLoading}
+                      autoComplete="current-password"
+                    />                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors duration-200"
+                      disabled={authLoading}
+                    >
                     {showPassword ? <EyeNoneIcon className="w-4 h-4" /> : <EyeOpenIcon className="w-4 h-4" />}
                   </button>
                 </div>
@@ -258,27 +272,25 @@ const Login = () => {
               </div>
 
               {/* Forgot Password Link */}
-              <div className="text-right">
-                <button
+              <div className="text-right">                <button
                   type="button"
                   className="text-xs text-[var(--color-brand-400)] hover:text-[var(--color-brand-300)] transition-colors duration-200"
-                  disabled={isLoading}
+                  disabled={authLoading}
                 >
                   forgot password?
                 </button>
               </div>
 
-              {/* Sign In Button */}
-              <Button
+              {/* Sign In Button */}              <Button
                 type="submit"
-                disabled={isLoading}
+                disabled={authLoading}
                 className={`w-full py-3 mt-8 rounded-lg font-medium transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99] ${
-                  isLoading 
+                  authLoading 
                     ? 'bg-[var(--color-surface-elevated)] text-[var(--color-text-tertiary)] cursor-not-allowed' 
                     : 'bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white shadow-md hover:shadow-lg'
                 }`}
               >
-                {isLoading ? (
+                {authLoading ? (
                   <div className="flex items-center justify-center gap-2">
                     <div className="w-4 h-4 border-2 border-[var(--color-text-tertiary)] border-t-transparent rounded-full animate-spin" />
                     <Text className="text-sm">signing in...</Text>
@@ -291,13 +303,12 @@ const Login = () => {
           </div>
 
           {/* Bottom Link */}
-          <div className="text-center mt-6 animate-fade-in" style={{ animationDelay: '0.6s' }}>
-            <Text className="text-sm text-[var(--color-text-secondary)]">
+          <div className="text-center mt-6 animate-fade-in" style={{ animationDelay: '0.6s' }}>            <Text className="text-sm text-[var(--color-text-secondary)]">
               don't have an account?{' '}
               <button
                 onClick={() => navigate('/signup')}
                 className="text-[var(--color-brand-400)] hover:text-[var(--color-brand-300)] font-medium transition-colors duration-200"
-                disabled={isLoading}
+                disabled={authLoading}
               >
                 sign up now
               </button>

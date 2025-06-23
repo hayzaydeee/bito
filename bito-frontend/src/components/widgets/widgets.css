@@ -298,3 +298,41 @@
 .react-grid-item:not(.react-draggable-dragging) .widget-header-buttons button {
   pointer-events: auto;
 }
+
+/* Glowing Line Chart Styles */
+.glow-line-chart {
+  background: linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.95) 100%) !important;
+  border-radius: 8px;
+}
+
+.glow-line-chart .recharts-line-curve {
+  stroke: var(--color-brand-400) !important;
+  stroke-width: 2px !important;
+  filter: drop-shadow(0 0 4px var(--color-brand-400)) drop-shadow(0 0 8px var(--color-brand-400)) !important;
+}
+
+.glow-line-chart .recharts-dot {
+  fill: var(--color-brand-400) !important;
+  stroke: var(--color-brand-400) !important;
+  filter: drop-shadow(0 0 6px var(--color-brand-400)) !important;
+}
+
+.glow-line-chart .recharts-active-dot {
+  fill: var(--color-brand-400) !important;
+  stroke: var(--color-brand-400) !important;
+  filter: drop-shadow(0 0 10px var(--color-brand-400)) drop-shadow(0 0 16px var(--color-brand-400)) !important;
+}
+
+.glow-line-chart .recharts-cartesian-grid-horizontal line {
+  stroke: rgba(255,255,255,0.1) !important;
+}
+
+.glow-line-chart .recharts-cartesian-grid-vertical line {
+  stroke: transparent !important;
+}
+
+/* Force theme color on line chart text labels */
+.glow-line-chart text {
+  fill: var(--color-brand-400) !important;
+  font-family: var(--font-outfit) !important;
+}

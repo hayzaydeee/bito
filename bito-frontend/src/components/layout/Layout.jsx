@@ -3,9 +3,11 @@ import { Outlet } from "react-router-dom";
 import { Flex } from "@radix-ui/themes";
 import VerticalMenu from "./VerticalMenu";
 import StatusBar from "./StatusBar";
+import { useAuth, withAuth } from "../../contexts/AuthContext";
 
 const Layout = () => {
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
+  const { user } = useAuth();
 
   return (
     <Flex className="h-screen relative">
@@ -26,7 +28,7 @@ const Layout = () => {
             <StatusBar
               isMenuCollapsed={isMenuCollapsed}
               setIsMenuCollapsed={setIsMenuCollapsed}
-              userName="Alex"
+              userName={user?.name || user?.username || 'User'}
             />
 
             {/* Content Pane - This will render the current route */}
@@ -47,4 +49,4 @@ const Layout = () => {
   );
 };
 
-export default Layout;
+export default withAuth(Layout);

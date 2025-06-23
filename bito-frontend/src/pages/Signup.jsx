@@ -13,13 +13,15 @@ import {
   CheckIcon,
   ExclamationTriangleIcon
 } from '@radix-ui/react-icons';
+import { useAuth } from '../contexts/AuthContext';
+import { oauthAPI } from '../services/api';
 
 const Signup = () => {
   const navigate = useNavigate();
+  const { register, isAuthenticated, authLoading: authLoading, error: authError, clearError } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     firstName: '',
@@ -87,49 +89,52 @@ const Signup = () => {
       }));
     }
   };
-
   const handleSignup = async (e) => {
     e.preventDefault();
     
     if (!validateForm()) return;
     
-    setIsLoading(true);
+    // Clear any previous auth errors
+    clearError();
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('Signup attempt:', {
-        ...formData,
-        password: '[REDACTED]',
-        confirmPassword: '[REDACTED]'
-      });
-      navigate('/app');
+      const result = await register(formData);
+      
+      if (result.success) {
+        console.log('Signup successful:', result.user);
+        navigate('/app/dashboard');
+      } else {
+        setErrors({ general: result.error });
+      }
     } catch (error) {
+      console.error('Signup error:', error);
       setErrors({ general: 'Failed to create account. Please try again.' });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleSocialSignup = async (provider) => {
-    setIsLoading(true);
     try {
-      // Simulate social signup
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log(`${provider} signup`);
-      navigate('/app');
+      if (provider === 'google') {
+        window.location.href = oauthAPI.getGoogleLoginUrl();
+      } else if (provider === 'github') {
+        window.location.href = oauthAPI.getGithubLoginUrl();
+      }
     } catch (error) {
       setErrors({ general: `Failed to sign up with ${provider}. Please try again.` });
-    } finally {
-      setIsLoading(false);
     }
   };
-
   // Auto-focus first name field on mount
   useEffect(() => {
     const firstNameInput = document.getElementById('firstName-input');
     if (firstNameInput) firstNameInput.focus();
   }, []);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/app');
+    }
+  }, [isAuthenticated, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[var(--color-bg-primary)] via-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] relative overflow-hidden">
@@ -178,13 +183,11 @@ const Signup = () => {
             <Text className="text-lg text-[var(--color-text-secondary)] animate-fade-in" style={{ animationDelay: '0.2s' }}>
               Start building better habits today
             </Text>
-          </div>
-
-          {/* Error Message */}
-          {errors.general && (
+          </div>          {/* Error Message */}
+          {(errors.general || authError) && (
             <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-400 animate-shake">
               <ExclamationTriangleIcon className="w-5 h-5 flex-shrink-0" />
-              <Text className="text-sm">{errors.general}</Text>
+              <Text className="text-sm">{errors.general || authError}</Text>
             </div>
           )}
 
@@ -201,10 +204,9 @@ const Signup = () => {
             </div>
 
             {/* Enhanced Social Signup */}
-            <div className="space-y-3">
-              <Button
+            <div className="space-y-3">              <Button
                 onClick={() => handleSocialSignup('GitHub')}
-                disabled={isLoading}
+                disabled={authLoading}
                 className="w-full flex items-center justify-center gap-3 py-3 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)] rounded-lg transition-all duration-200 hover:scale-[1.01] hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 variant="soft"
               >
@@ -213,7 +215,7 @@ const Signup = () => {
               </Button>
               <Button
                 onClick={() => handleSocialSignup('Google')}
-                disabled={isLoading}
+                disabled={authLoading}
                 className="w-full flex items-center justify-center gap-3 py-3 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)] rounded-lg transition-all duration-200 hover:scale-[1.01] hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 variant="soft"
               >
@@ -254,10 +256,9 @@ const Signup = () => {
                     value={formData.firstName}
                     onChange={(e) => handleInputChange('firstName', e.target.value)}
                     className={`w-full px-3 py-3 bg-[var(--color-surface-secondary)]/50 border-0 border-b-2 rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-0 focus:border-[var(--color-brand-500)] transition-all duration-200 ${
-                      errors.firstName ? 'border-red-500' : 'border-[var(--color-border-primary)]/30'
-                    }`}
+                      errors.firstName ? 'border-red-500' : 'border-[var(--color-border-primary)]/30'                    }`}
                     placeholder="john"
-                    disabled={isLoading}
+                    disabled={authLoading}
                     autoComplete="given-name"
                   />
                   {errors.firstName && (
@@ -278,9 +279,8 @@ const Signup = () => {
                     onChange={(e) => handleInputChange('lastName', e.target.value)}
                     className={`w-full px-3 py-3 bg-[var(--color-surface-secondary)]/50 border-0 border-b-2 rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-0 focus:border-[var(--color-brand-500)] transition-all duration-200 ${
                       errors.lastName ? 'border-red-500' : 'border-[var(--color-border-primary)]/30'
-                    }`}
-                    placeholder="doe"
-                    disabled={isLoading}
+                    }`}                    placeholder="doe"
+                    disabled={authLoading}
                     autoComplete="family-name"
                   />
                   {errors.lastName && (
@@ -304,7 +304,7 @@ const Signup = () => {
                     errors.email ? 'border-red-500' : 'border-[var(--color-border-primary)]/30'
                   }`}
                   placeholder="your@email.com"
-                  disabled={isLoading}
+                  disabled={authLoading}
                   autoComplete="email"
                 />
                 {errors.email && (
@@ -328,14 +328,14 @@ const Signup = () => {
                       errors.password ? 'border-red-500' : 'border-[var(--color-border-primary)]/30'
                     }`}
                     placeholder="••••••••"
-                    disabled={isLoading}
+                    disabled={authLoading}
                     autoComplete="new-password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors duration-200"
-                    disabled={isLoading}
+                    disabled={authLoading}
                   >
                     {showPassword ? <EyeNoneIcon className="w-4 h-4" /> : <EyeOpenIcon className="w-4 h-4" />}
                   </button>
@@ -361,14 +361,14 @@ const Signup = () => {
                       errors.confirmPassword ? 'border-red-500' : 'border-[var(--color-border-primary)]/30'
                     }`}
                     placeholder="••••••••"
-                    disabled={isLoading}
+                    disabled={authLoading}
                     autoComplete="new-password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors duration-200"
-                    disabled={isLoading}
+                    disabled={authLoading}
                   >
                     {showConfirmPassword ? <EyeNoneIcon className="w-4 h-4" /> : <EyeOpenIcon className="w-4 h-4" />}
                   </button>
@@ -397,7 +397,7 @@ const Signup = () => {
                         }
                       }}
                       className="sr-only"
-                      disabled={isLoading}
+                      disabled={authLoading}
                     />
                     <div className={`w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center ${
                       acceptTerms 
@@ -412,7 +412,7 @@ const Signup = () => {
                     <button
                       type="button"
                       className="text-[var(--color-brand-400)] hover:text-[var(--color-brand-300)] transition-colors duration-200"
-                      disabled={isLoading}
+                      disabled={authLoading}
                     >
                       Terms of Service
                     </button>
@@ -420,7 +420,7 @@ const Signup = () => {
                     <button
                       type="button"
                       className="text-[var(--color-brand-400)] hover:text-[var(--color-brand-300)] transition-colors duration-200"
-                      disabled={isLoading}
+                      disabled={authLoading}
                     >
                       Privacy Policy
                     </button>
@@ -431,19 +431,17 @@ const Signup = () => {
                     {errors.terms}
                   </Text>
                 )}
-              </div>
-
-              {/* Sign Up Button */}
+              </div>              {/* Sign Up Button */}
               <Button
                 type="submit"
-                disabled={isLoading}
+                disabled={authLoading}
                 className={`w-full py-3 mt-8 rounded-lg font-medium transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99] ${
-                  isLoading 
+                  authLoading 
                     ? 'bg-[var(--color-surface-elevated)] text-[var(--color-text-tertiary)] cursor-not-allowed' 
                     : 'bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white shadow-md hover:shadow-lg'
                 }`}
               >
-                {isLoading ? (
+                {authLoading ? (
                   <div className="flex items-center justify-center gap-2">
                     <div className="w-4 h-4 border-2 border-[var(--color-text-tertiary)] border-t-transparent rounded-full animate-spin" />
                     <Text className="text-sm">creating account...</Text>
@@ -458,11 +456,10 @@ const Signup = () => {
           {/* Bottom Link */}
           <div className="text-center mt-6 animate-fade-in" style={{ animationDelay: '0.6s' }}>
             <Text className="text-sm text-[var(--color-text-secondary)]">
-              already have an account?{' '}
-              <button
+              already have an account?{' '}              <button
                 onClick={() => navigate('/login')}
                 className="text-[var(--color-brand-400)] hover:text-[var(--color-brand-300)] font-medium transition-colors duration-200"
-                disabled={isLoading}
+                disabled={authLoading}
               >
                 sign in
               </button>

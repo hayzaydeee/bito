@@ -19,8 +19,7 @@ import "react-resizable/css/styles.css";
 import "../widgets/widgets.css";
 
 // Import data service and filter components
-import habitDataService, { filterState } from "../../services/habitDataService";
-import useHabitStore from "../../store/habitStore.js";
+import { useHabits } from "../../contexts/HabitContext";
 import {
   ChartFilterControls,
   DatabaseFilterControls,
@@ -40,9 +39,7 @@ const DatabaseWidgetBridge = lazy(() =>
   }))
 );
 const QuickActionsWidget = lazy(() =>
-  import("../widgets/QuickActionsWidget").then((module) => ({
-    default: module.QuickActionsWidget,
-  }))
+  import("../widgets/QuickActionsWidget")
 );
 
 // Loading component for lazy widgets
@@ -237,36 +234,53 @@ const ContentGrid = () => {
   useEffect(() => {
     saveActiveWidgetsToStorage(activeWidgets);
   }, [activeWidgets]);  // Filter state management
-  const [filters, setFilters] = useState(() => filterState.loadFilters());
+  const [filters, setFilters] = useState({
+    chartMode: 'week',
+    chartPeriod: 'current',
+    chartSelectedMonth: new Date().getMonth(),
+    databaseMode: 'week',
+    databaseRange: null,
+  });
 
-  // Get data from new Zustand store
-  const habitsMap = useHabitStore(state => state.habits);
-  const completionsSet = useHabitStore(state => state.completions);
-  const addHabit = useHabitStore(state => state.addHabit);
-  const removeHabit = useHabitStore(state => state.removeHabit);
-  const updateHabit = useHabitStore(state => state.updateHabit);
-  const toggleCompletion = useHabitStore(state => state.toggleCompletion);
+  // Get data from new HabitContext
+  const {
+    habits,
+    entries,
+    isLoading,
+    error,
+    createHabit,
+    updateHabit,
+    deleteHabit,
+    toggleHabitCompletion,
+  } = useHabits();
   
-  // Convert to format expected by old data service for backward compatibility
-  const habits = useMemo(() => Array.from(habitsMap.values()), [habitsMap]);
-  const completions = useMemo(() => {
-    const obj = {};
-    completionsSet.forEach((value, key) => {
-      // Convert from new format (YYYY-MM-DD_habitId) to old format (YYYY-MM-DD-habitId)
-      const oldKey = key.replace('_', '-');
-      obj[oldKey] = true;
-    });
-    return obj;
-  }, [completionsSet]);
+  // Helper function to get date range from filters
+  const getDateRangeFromFilters = useCallback((filterObj) => {
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    
+    if (filterObj.chartMode === 'week') {
+      return {
+        start: startOfWeek,
+        end: new Date(startOfWeek.getTime() + 6 * 24 * 60 * 60 * 1000)
+      };
+    } else {
+      // Month mode
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      return {
+        start: startOfMonth,
+        end: endOfMonth
+      };
+    }  }, []);
 
-  // Save filters when they change
-  useEffect(() => {
-    filterState.saveFilters(filters);
-  }, [filters]);
-
+  // Calculate current date range based on filters
+  const dateRange = useMemo(() => {
+    return getDateRangeFromFilters(filters);
+  }, [filters, getDateRangeFromFilters]);
   // CSV Import state
   const [showCsvImport, setShowCsvImport] = useState(false);
-
   // Get filter options (dynamically based on selected months)
   const filterOptions = useMemo(() => {
     const chartMonth = filters.chartMode === 'week' ? filters.chartSelectedMonth : null;
@@ -274,7 +288,35 @@ const ContentGrid = () => {
     
     // Use the appropriate month for generating options
     const monthForOptions = chartMonth || dbMonth || new Date().getMonth() + 1;
-    return habitDataService.getFilterOptions(monthForOptions);
+    
+    // Simple filter options - can be enhanced later
+    return {
+      chartModes: [
+        { value: 'week', label: 'Weekly View' },
+        { value: 'month', label: 'Monthly View' },
+        { value: 'continuous', label: 'All Time' }
+      ],
+      weeks: [
+        { value: 1, label: 'Week 1' },
+        { value: 2, label: 'Week 2' },
+        { value: 3, label: 'Week 3' },
+        { value: 4, label: 'Week 4' }
+      ],
+      months: [
+        { value: 1, label: 'January' },
+        { value: 2, label: 'February' },
+        { value: 3, label: 'March' },
+        { value: 4, label: 'April' },
+        { value: 5, label: 'May' },
+        { value: 6, label: 'June' },
+        { value: 7, label: 'July' },
+        { value: 8, label: 'August' },
+        { value: 9, label: 'September' },
+        { value: 10, label: 'October' },
+        { value: 11, label: 'November' },
+        { value: 12, label: 'December' }
+      ]
+    };
   }, [filters.chartMode, filters.chartSelectedMonth, filters.databaseSelectedMonth]);
   // Filter update handlers
   const updateChartFilter = useCallback((mode, period) => {
@@ -298,83 +340,50 @@ const ContentGrid = () => {
       databasePeriod: period,
     }));
   }, []);
-
   const updateDatabaseMonth = useCallback((month) => {
     setFilters((prev) => ({
       ...prev,
       databaseSelectedMonth: month,
       databasePeriod: 1, // Reset to first week when month changes
     }));
-  }, []);  // Habit event handlers
-  const handleToggleCompletion = useCallback((key, isCompleted) => {
-    console.log(`Toggling completion for ${key}: ${isCompleted}`);
+  }, []);
 
-    // Check if this is a new format key (YYYY-MM-DD_habitId)
-    if (key.includes('_')) {
-      const [date, habitIdStr] = key.split('_');
-      const habitId = parseInt(habitIdStr);
-      
-      if (!isNaN(habitId)) {
-        // Use the new Zustand store method
-        toggleCompletion(habitId, date);
-        return;
-      }
+  // Habit event handlers
+  const handleAddHabit = useCallback(async (habitData) => {
+    console.log("Adding new habit:", habitData);
+    const result = await createHabit(habitData);
+    if (!result.success) {
+      console.error("Failed to create habit:", result.error);
+      // You could show a toast notification here
     }
+  }, [createHabit]);
 
-    // Fall back to old system for backward compatibility
-    // Handle both new date-based keys and old day-based keys
-    const today = new Date();
-    const currentDay = today.getDay();
-    const startOfWeek = new Date(today);
-    const daysToSubtract = currentDay === 0 ? 6 : currentDay - 1;
-    startOfWeek.setDate(today.getDate() - daysToSubtract);    // For old format keys, try to convert to new format and use Zustand store
-    if (key.includes("-")) {
-      const parts = key.split("-");
-      const lastPart = parts[parts.length - 1];
-      const habitId = parseInt(lastPart);
-
-      if (!isNaN(habitId)) {
-        const keyWithoutId = parts.slice(0, -1).join("-");
-
-        // Check if it's a date (YYYY-MM-DD format) or day name
-        const isDateKey = /^\d{4}-\d{2}-\d{2}$/.test(keyWithoutId);
-
-        if (isDateKey) {
-          // Convert to new format and use Zustand store
-          toggleCompletion(habitId, keyWithoutId);
-        } else {
-          // It's a day-based key, convert to date and use Zustand store
-          const dayName = keyWithoutId;
-          const daysOfWeek = [
-            "Monday", "Tuesday", "Wednesday", "Thursday", 
-            "Friday", "Saturday", "Sunday"
-          ];
-          const dayIndex = daysOfWeek.indexOf(dayName);
-
-          if (dayIndex >= 0) {
-            const date = new Date(startOfWeek);
-            date.setDate(startOfWeek.getDate() + dayIndex);
-            const dateStr = date.toISOString().split("T")[0];
-            toggleCompletion(habitId, dateStr);
-          }
-        }
-      }
-    }
-  }, [toggleCompletion]);
-  const handleAddHabit = useCallback((habit) => {
-    console.log("Adding new habit:", habit);
-    addHabit(habit);
-  }, [addHabit]);
-
-  const handleDeleteHabit = useCallback((habitId) => {
+  const handleDeleteHabit = useCallback(async (habitId) => {
     console.log("Deleting habit:", habitId);
-    removeHabit(habitId);
-  }, [removeHabit]);
+    const result = await deleteHabit(habitId);
+    if (!result.success) {
+      console.error("Failed to delete habit:", result.error);
+      // You could show a toast notification here
+    }
+  }, [deleteHabit]);
 
-  const handleEditHabit = useCallback((habit) => {
-    console.log("Editing habit:", habit);
-    updateHabit(habit);
+  const handleEditHabit = useCallback(async (habitData) => {
+    console.log("Editing habit:", habitData);
+    const result = await updateHabit(habitData._id, habitData);
+    if (!result.success) {
+      console.error("Failed to update habit:", result.error);
+      // You could show a toast notification here
+    }
   }, [updateHabit]);
+
+  const handleToggleCompletion = useCallback(async (habitId, date) => {
+    console.log("Toggling completion:", habitId, date);
+    const result = await toggleHabitCompletion(habitId, date);
+    if (!result.success) {
+      console.error("Failed to toggle habit:", result.error);
+      // You could show a toast notification here
+    }
+  }, [toggleHabitCompletion]);
   // CSV Import handler
   const handleCsvImport = useCallback((importedData) => {
     console.log("Importing CSV data:", importedData);
@@ -520,10 +529,18 @@ const ContentGrid = () => {
       };
     },
     [currentBreakpoint]
-  ); // Get filtered data based on current filters
+  );  // Get filtered data based on current filters (now using backend entries)
   const filteredData = useMemo(() => {
-    return habitDataService.getFilteredData(habits, completions, filters);
-  }, [habits, completions, filters]);
+    // For now, return a simple structure - we can enhance filtering later
+    return {
+      chartData: [], // Will be handled by useChartData hook in widgets
+      databaseCompletions: entries, // Use backend entries directly
+      chartRange: dateRange,
+      databaseRange: dateRange,
+      chartMode: 'week',
+      databaseMode: 'week'
+    };
+  }, [habits, entries, filters, dateRange]);
 
   // Helper function to calculate daily completion data (now using filtered data)
   const calculateDailyCompletions = useCallback(() => {
@@ -570,12 +587,12 @@ const ContentGrid = () => {
           return (
             <Suspense
               fallback={<WidgetSkeleton title="Daily Habits Completion" />}
-            >
-              <ChartWidget
+            >              <ChartWidget
                 title="Daily Habits Completion"
-                type="area"
-                data={widgetData["habits-overview"].data}
-                color="var(--color-brand-400)"                filterComponent={
+                type="line"
+                chartType="completion"
+                dateRange={dateRange}
+                color="var(--color-brand-400)"filterComponent={
                   <ChartFilterControls
                     mode={filters.chartMode}
                     period={filters.chartPeriod}
@@ -612,11 +629,11 @@ const ContentGrid = () => {
         component: (layout) => {
           const props = getWidgetProps("weekly-progress", layout);
           return (
-            <Suspense fallback={<WidgetSkeleton title="Weekly Progress" />}>
-              <ChartWidget
+            <Suspense fallback={<WidgetSkeleton title="Weekly Progress" />}>              <ChartWidget
                 title="Weekly Habit Streaks"
-                type="area"
-                data={widgetData["weekly-progress"].data}
+                type="line"
+                chartType="weekly"
+                dateRange={dateRange}
                 color="var(--color-brand-400)"
                 {...props}
               />
@@ -653,12 +670,11 @@ const ContentGrid = () => {
             </Suspense>
           );
         },
-      },}),
-    [
+      },}),    [
       currentBreakpoint,
       getWidgetProps,
       habits,
-      completions,
+      entries,
       handleToggleCompletion,
       handleAddHabit,
       handleDeleteHabit,
@@ -956,15 +972,13 @@ const ContentGrid = () => {
               })}
             </div>
           </div>        </div>
-      )}
-
-      {/* CSV Import Modal */}
+      )}      {/* CSV Import Modal */}
       <CsvImportModal
         isOpen={showCsvImport}
         onClose={() => setShowCsvImport(false)}
         onImport={handleCsvImport}
         existingHabits={habits}
-        existingCompletions={completions}
+        existingCompletions={entries}
       />
     </div>
   );

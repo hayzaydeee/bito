@@ -2,8 +2,7 @@ import React, { useState, memo, useMemo } from "react";
 import { HabitGrid } from "../../../HabitGrid/index.js";
 import { DatabaseHeader } from "./DatabaseHeader.jsx";
 import { GalleryViewV2 } from "./GalleryViewV2.jsx";
-import { habitUtils } from "../../../../utils/habitLogic.js";
-import useHabitStore from "../../../../store/habitStore.js";
+import { habitUtils } from "../../../../contexts/HabitContext";
 
 const DatabaseWidgetV2 = memo(({
   title = "Habit Tracker",

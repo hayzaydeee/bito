@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { PlusIcon, CheckIcon } from "@radix-ui/react-icons";
-import useHabitStore from "../../../../store/habitStore.js";
+import { useHabits } from "../../../../contexts/HabitContext";
 import { habitUtils } from "../../../../utils/habitLogic.js";
 
 /**
@@ -44,15 +44,15 @@ export const GalleryViewV2 = ({
   className = "",
   showStats = true,
   showHeader = true
-}) => {
-  // Use individual selectors to avoid infinite loops
-  const habitsMap = useHabitStore(state => state.habits);
-  const completions = useHabitStore(state => state.completions);
-  const toggleCompletion = useHabitStore(state => state.toggleCompletion);
-  const addHabit = useHabitStore(state => state.addHabit);
-  
-  // Memoize the habits array conversion
-  const habits = useMemo(() => Array.from(habitsMap.values()), [habitsMap]);
+}) => {  // Use HabitContext instead of Zustand
+  const { 
+    habits, 
+    entries, 
+    loading, 
+    error, 
+    toggleHabitEntry, 
+    addHabit 
+  } = useHabits();
     const [showAddForm, setShowAddForm] = useState(false);
   const [newHabitName, setNewHabitName] = useState("");
 
@@ -98,36 +98,34 @@ export const GalleryViewV2 = ({
   // console.log('GalleryView - Completions size:', completions.size);
   // console.log('GalleryView - Sample completions:', Array.from(completions.keys()).slice(0, 5));
   // console.log('GalleryView - Week dates:', weekDates.map(d => d.date));
-
   // Helper functions
   const getCompletionStatus = (day, habitId) => {
     const dayInfo = weekDates.find(d => d.dayName === day);
     if (!dayInfo) return false;
-    return completions.has(`${dayInfo.date}_${habitId}`);
+    const habitEntries = entries[habitId];
+    return habitEntries && habitEntries[dayInfo.date];
   };
 
   const getDayCompletion = (day) => {
     if (habits.length === 0) return 0;
-    const completedCount = habits.filter(habit => getCompletionStatus(day, habit.id)).length;
+    const completedCount = habits.filter(habit => getCompletionStatus(day, habit._id)).length;
     return Math.round((completedCount / habits.length) * 100);
   };
 
   const handleToggleCompletion = (day, habitId) => {
     const dayInfo = weekDates.find(d => d.dayName === day);
     if (!dayInfo) return;
-    toggleCompletion(habitId, dayInfo.date);
+    toggleHabitEntry(habitId, dayInfo.date);
   };
-
-  const handleAddHabit = () => {
+  const handleAddHabit = async () => {
     if (!newHabitName.trim()) return;
-    
-    const newHabit = {
+      const newHabit = {
       name: newHabitName.trim(),
-      color: '#3B82F6', // Default blue color
+      color: 'var(--color-brand-500)', // Theme color
       icon: '⭐', // Default icon
     };
     
-    addHabit(newHabit);
+    await addHabit(newHabit);
     setNewHabitName("");
     setShowAddForm(false);
   };
@@ -201,7 +199,7 @@ export const GalleryViewV2 = ({
       }}>
         {habits.map((habit) => (
           <div
-            key={habit.id}
+            key={habit._id}
             className="bg-[var(--color-surface-elevated)] rounded-lg p-4 border border-[var(--color-border-primary)] hover:shadow-md transition-all duration-200"
           >
             {/* Habit Header */}
@@ -216,13 +214,13 @@ export const GalleryViewV2 = ({
                 <h4 className="text-sm font-semibold text-[var(--color-text-primary)] font-outfit">
                   {habit.name}
                 </h4>                <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">
-                  {weekDates.filter(day => getCompletionStatus(day.dayName, habit.id)).length}/{weekDates.length} days this week
+                  {weekDates.filter(day => getCompletionStatus(day.dayName, habit._id)).length}/{weekDates.length} days this week
                 </p>
               </div>
             </div>            {/* Daily Checkboxes */}
             <div className="grid grid-cols-7 gap-2">
               {weekDates.map((dayInfo) => {
-                const isCompleted = getCompletionStatus(dayInfo.dayName, habit.id);
+                const isCompleted = getCompletionStatus(dayInfo.dayName, habit._id);
                 const isToday = dayInfo.isToday;
 
                 return (
@@ -237,7 +235,7 @@ export const GalleryViewV2 = ({
                       {dayInfo.dayName.slice(0, 1)}
                     </div>
                     <button
-                      onClick={() => handleToggleCompletion(dayInfo.dayName, habit.id)}
+                      onClick={() => handleToggleCompletion(dayInfo.dayName, habit._id)}
                       className={`w-8 h-8 rounded-lg transition-all duration-200 flex items-center justify-center hover:scale-110 active:scale-95 ${
                         isCompleted
                           ? "shadow-sm transform scale-105"
@@ -262,7 +260,7 @@ export const GalleryViewV2 = ({
             <div className="mt-4">              <div className="flex items-center justify-between text-xs text-[var(--color-text-tertiary)] mb-1 font-outfit">
                 <span>Weekly Progress</span>
                 <span>
-                  {weekDates.filter(day => getCompletionStatus(day.dayName, habit.id)).length}/{weekDates.length}
+                  {weekDates.filter(day => getCompletionStatus(day.dayName, habit._id)).length}/{weekDates.length}
                 </span>
               </div>
               <div className="w-full bg-[var(--color-surface-secondary)] rounded-full h-2">
@@ -270,7 +268,7 @@ export const GalleryViewV2 = ({
                   className="h-2 rounded-full transition-all duration-300"
                   style={{
                     backgroundColor: habit.color,
-                    width: `${(weekDates.filter(day => getCompletionStatus(day.dayName, habit.id)).length / weekDates.length) * 100}%`,
+                    width: `${(weekDates.filter(day => getCompletionStatus(day.dayName, habit._id)).length / weekDates.length) * 100}%`,
                   }}
                 />
               </div>

@@ -1,53 +1,81 @@
 import React, { useMemo, memo, useCallback } from 'react';
 import { PlusIcon, BarChartIcon, GearIcon, ResetIcon, CheckIcon, ActivityLogIcon } from '@radix-ui/react-icons';
+import { useHabits } from '../../contexts/HabitContext';
 
 const QuickActionsWidget = memo(({
   breakpoint = 'lg',
   availableColumns = 4,
   availableRows = 2,
   widgetConfig = {}
-}) => {const defaultActions = [
+}) => {  // Get habit context for actions
+  const { habits, addHabit, toggleHabitEntry } = useHabits();
+
+  // Action handlers
+  const handleAddHabit = useCallback(() => {
+    addHabit({
+      name: 'New Habit',
+      color: 'var(--color-brand-500)',
+      icon: '⭐'
+    });
+  }, [addHabit]);
+
+  const handleQuickComplete = useCallback(() => {
+    const today = new Date().toISOString().split('T')[0];
+    habits.forEach(habit => {
+      toggleHabitEntry(habit._id, today);
+    });
+  }, [habits, toggleHabitEntry]);
+
+  const handleViewAnalytics = useCallback(() => {
+    window.location.hash = '#/analytics';
+  }, []);
+
+  const handleViewSettings = useCallback(() => {
+    window.location.hash = '#/settings';
+  }, []);
+
+  const defaultActions = [
     {
       id: 'add-habit',
       label: 'Add Habit',
       icon: <PlusIcon />,
       color: 'bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)]',
-      action: () => console.log('Add new habit')
+      action: handleAddHabit
     },
     {
       id: 'quick-complete',
       label: 'Mark Complete',
       icon: <CheckIcon />,
       color: 'bg-[var(--color-success)] hover:bg-[var(--color-success)]/80',
-      action: () => console.log('Quick complete habits')
+      action: handleQuickComplete
     },
     {
       id: 'view-analytics',
       label: 'Analytics',
       icon: <BarChartIcon />,
       color: 'bg-[var(--color-brand-700)] hover:bg-[var(--color-brand-800)]',
-      action: () => console.log('View analytics')
+      action: handleViewAnalytics
     },
     {
       id: 'activity-log',
       label: 'Activity',
       icon: <ActivityLogIcon />,
       color: 'bg-[var(--color-brand-400)] hover:bg-[var(--color-brand-500)]',
-      action: () => console.log('View activity log')
+      action: () => console.log('View activity log - feature coming soon')
     },
     {
       id: 'settings',
       label: 'Settings',
       icon: <GearIcon />,
       color: 'bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-primary)]',
-      action: () => console.log('Open settings')
+      action: handleViewSettings
     },
     {
       id: 'reset-day',
       label: 'Reset Day',
       icon: <ResetIcon />,
       color: 'bg-[var(--color-warning)] hover:bg-[var(--color-warning)]/80',
-      action: () => console.log('Reset day progress')
+      action: () => console.log('Reset day progress - feature coming soon')
     }
   ];
 
@@ -63,18 +91,19 @@ const QuickActionsWidget = memo(({
         rows: Math.min(totalButtons, availableRows),
         buttonSize: 'large',
         showLabels: true,
-        showProgress: false
-      };
+        showProgress: false      };
     }
-      if (breakpoint === 'sm') {
+    
+    if (breakpoint === 'sm') {
       return {
         columns: 3, // Changed from 2 to 3 for better layout
         rows: Math.ceil(totalButtons / 3),
         buttonSize: 'medium',
         showLabels: true,
-        showProgress: availableRows > 3
-      };
-    }// For md, lg, xl - use 3 columns by default for better layout
+        showProgress: availableRows > 3      };
+    }
+    
+    // For md, lg, xl - use 3 columns by default for better layout
     const maxCols = Math.floor(availableColumns);
     const maxRows = Math.floor(availableRows);
     const preferredCols = 3; // Always prefer 3 columns for optimal button layout
@@ -123,7 +152,9 @@ const QuickActionsWidget = memo(({
 
     const completed = 3; // This would come from actual data
     const total = 5;
-    const percentage = (completed / total) * 100;    return (
+    const percentage = (completed / total) * 100;
+    
+    return (
       <div className={`mt-3 p-3 bg-[var(--color-brand-500)]/10 rounded-xl border border-[var(--color-brand-500)]/20 backdrop-blur-sm ${
         breakpoint === 'sm' ? 'text-xs' : 'text-sm'
       }`}>
@@ -154,8 +185,7 @@ const QuickActionsWidget = memo(({
         className="grid gap-3 flex-1"
         style={{
           gridTemplateColumns: `repeat(${buttonLayout.columns}, 1fr)`,
-          gridTemplateRows: `repeat(${buttonLayout.rows}, 1fr)`
-        }}
+          gridTemplateRows: `repeat(${buttonLayout.rows}, 1fr)`        }}
       >
         {visibleActions.map((action) => (
           <button
@@ -165,7 +195,8 @@ const QuickActionsWidget = memo(({
           >
             <div className="flex-shrink-0">
               {React.cloneElement(action.icon, { className: getIconSize() })}
-            </div>            {buttonLayout.showLabels && (
+            </div>
+            {buttonLayout.showLabels && (
               <span className={`font-medium text-center leading-tight font-outfit ${
                 buttonLayout.buttonSize === 'large' ? 'text-sm' : 
                 buttonLayout.buttonSize === 'medium' ? 'text-xs' : 'text-xs'
@@ -178,7 +209,8 @@ const QuickActionsWidget = memo(({
       </div>
       
       {renderProgress()}
-    </div>  );
+    </div>
+  );
 });
 
 QuickActionsWidget.displayName = 'QuickActionsWidget';

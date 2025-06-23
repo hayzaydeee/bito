@@ -11,14 +11,35 @@ import {
   LightningBoltIcon,
   StarIcon
 } from '@radix-ui/react-icons';
+import { useAuth } from '../contexts/AuthContext';
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, isLoading } = useAuth();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     setIsVisible(true);
   }, []);
+
+  // Redirect authenticated users to the app
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigate('/app');
+    }
+  }, [isAuthenticated, isLoading, navigate]);
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--color-bg-primary)] via-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-brand-500)] mx-auto mb-4"></div>
+          <p className="text-[var(--color-text-secondary)]">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const features = [
     {

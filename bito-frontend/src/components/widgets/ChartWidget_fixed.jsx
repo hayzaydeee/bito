@@ -17,7 +17,6 @@ import {
   AreaChart,
 } from "recharts";
 import { useChartData } from "../../hooks/useChartData";
-import "./widgets.css";
 
 export const ChartWidget = memo(
   ({
@@ -57,9 +56,11 @@ export const ChartWidget = memo(
         { name: "Sat", value: 0 },
         { name: "Sun", value: 0 },
       ];
-    }, [habitChartData, data]);    const pieData = [
-      { name: "Completed", value: 27, color: "var(--color-success)" },
-      { name: "Missed", value: 8, color: "var(--color-error)" },
+    }, [habitChartData, data]);
+
+    const pieData = [
+      { name: "Completed", value: 27, color: "#22C55E" },
+      { name: "Missed", value: 8, color: "#EF4444" },
     ];
 
     // Determine Y-axis domain based on data type
@@ -85,95 +86,50 @@ export const ChartWidget = memo(
     };
 
     const renderChart = () => {
-      switch (type) {        case "line":          // Custom label component for showing values on points
-          const CustomLabel = ({ x, y, value }) => {
-            if (value === undefined || value === null) return null;
-            return (              <text 
-                x={x} 
-                y={y - 15} 
-                fill="var(--color-brand-400)" 
-                textAnchor="middle" 
-                fontSize="11" 
-                fontWeight="600"
-                fontFamily="var(--font-outfit)"
-                style={{
-                  filter: "drop-shadow(0 0 2px rgba(0,0,0,0.8))",
-                  textShadow: "0 0 4px var(--color-brand-400)"
-                }}
-              >
-                {value}
-              </text>
-            );
-          };return (
+      switch (type) {
+        case "line":
+          return (
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart {...commonProps} className="glow-line-chart" style={{ backgroundColor: 'transparent' }}>                <CartesianGrid 
-                  strokeDasharray="1 1" 
-                  stroke="var(--color-border-primary)" 
-                  horizontal={true}
-                  vertical={false}
-                />                <XAxis 
+              <LineChart {...commonProps}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-primary)" />
+                <XAxis 
                   dataKey="name" 
                   stroke="var(--color-text-secondary)"
-                  fontSize={11}
-                  fontFamily="var(--font-outfit)"
-                  axisLine={false}
-                  tickLine={false}
+                  fontSize={12}
                 />
                 <YAxis 
                   stroke="var(--color-text-secondary)"
-                  fontSize={11}
-                  fontFamily="var(--font-outfit)"
+                  fontSize={12}
                   domain={yAxisDomain}
-                  axisLine={false}
-                  tickLine={false}
                 />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "var(--color-surface-elevated)",
-                    border: "1px solid var(--color-brand-400)",
+                    border: "1px solid var(--color-border-primary)",
                     borderRadius: "8px",
                     color: "var(--color-text-primary)",
-                    fontFamily: "var(--font-outfit)",
-                    boxShadow: "0 4px 20px var(--color-brand-400)/20",
-                  }}
-                  labelStyle={{ 
-                    color: "var(--color-brand-400)",
-                    fontFamily: "var(--font-outfit)"
                   }}
                 />
                 <Line
-                  type="linear"
+                  type="monotone"
                   dataKey="value"
-                  stroke="var(--color-brand-400)"
-                  strokeWidth={2}
-                  dot={{ 
-                    fill: "var(--color-brand-400)", 
-                    strokeWidth: 0, 
-                    r: 3,
-                    filter: "drop-shadow(0 0 4px var(--color-brand-400))"
-                  }}
-                  activeDot={{ 
-                    r: 5, 
-                    fill: "var(--color-brand-400)", 
-                    stroke: "var(--color-brand-400)",
-                    strokeWidth: 2,
-                    filter: "drop-shadow(0 0 8px var(--color-brand-400))"
-                  }}
-                  label={<CustomLabel />}
-                  style={{
-                    filter: "drop-shadow(0 0 2px var(--color-brand-400))"
-                  }}
+                  stroke={color}
+                  strokeWidth={3}
+                  dot={{ fill: color, strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, fill: color }}
                 />
               </LineChart>
             </ResponsiveContainer>
           );
-            case "area":
+          
+        case "area":
           return (
-            <ResponsiveContainer width="100%" height="100%">              <AreaChart {...commonProps}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart {...commonProps}>
                 <defs>
                   <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-brand-400)" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="var(--color-brand-400)" stopOpacity={0.1}/>
+                    <stop offset="5%" stopColor={color} stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor={color} stopOpacity={0.1}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-primary)" />
@@ -181,39 +137,33 @@ export const ChartWidget = memo(
                   dataKey="name" 
                   stroke="var(--color-text-secondary)"
                   fontSize={12}
-                  fontFamily="var(--font-outfit)"
                 />
                 <YAxis 
                   stroke="var(--color-text-secondary)"
                   fontSize={12}
-                  fontFamily="var(--font-outfit)"
                   domain={yAxisDomain}
                 />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "var(--color-surface-elevated)",
-                    border: "1px solid var(--color-brand-400)",
+                    border: "1px solid var(--color-border-primary)",
                     borderRadius: "8px",
                     color: "var(--color-text-primary)",
-                    fontFamily: "var(--font-outfit)",
-                    boxShadow: "0 4px 20px var(--color-brand-400)/20",
-                  }}
-                  labelStyle={{ 
-                    color: "var(--color-brand-400)",
-                    fontFamily: "var(--font-outfit)"
                   }}
                 />
                 <Area
                   type="monotone"
                   dataKey="value"
-                  stroke="var(--color-brand-400)"
+                  stroke={color}
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#colorValue)"
                 />
               </AreaChart>
             </ResponsiveContainer>
-          );        case "pie":
+          );
+
+        case "pie":
           return (
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -222,69 +172,54 @@ export const ChartWidget = memo(
                   cx="50%"
                   cy="50%"
                   outerRadius={60}
-                  fill="var(--color-brand-400)"
+                  fill="#8884d8"
                   dataKey="value"
                   label
                 >
                   {pieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
-                </Pie>                <Tooltip
+                </Pie>
+                <Tooltip
                   contentStyle={{
                     backgroundColor: "var(--color-surface-elevated)",
-                    border: "1px solid var(--color-brand-400)",
+                    border: "1px solid var(--color-border-primary)",
                     borderRadius: "8px",
                     color: "var(--color-text-primary)",
-                    fontFamily: "var(--font-outfit)",
-                    boxShadow: "0 4px 20px var(--color-brand-400)/20",
-                  }}
-                  labelStyle={{ 
-                    color: "var(--color-brand-400)",
-                    fontFamily: "var(--font-outfit)"
                   }}
                 />
-                <Legend 
-                  wrapperStyle={{
-                    fontFamily: "var(--font-outfit)",
-                    color: "var(--color-text-primary)"
-                  }}
-                />
+                <Legend />
               </PieChart>
             </ResponsiveContainer>
-          );        default:
+          );
+
+        default:
         case "bar":
           return (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart {...commonProps}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-primary)" />                <XAxis 
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-primary)" />
+                <XAxis 
                   dataKey="name" 
                   stroke="var(--color-text-secondary)"
                   fontSize={12}
-                  fontFamily="var(--font-outfit)"
                 />
                 <YAxis 
                   stroke="var(--color-text-secondary)"
                   fontSize={12}
-                  fontFamily="var(--font-outfit)"
                   domain={yAxisDomain}
                 />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "var(--color-surface-elevated)",
-                    border: "1px solid var(--color-brand-400)",
+                    border: "1px solid var(--color-border-primary)",
                     borderRadius: "8px",
                     color: "var(--color-text-primary)",
-                    fontFamily: "var(--font-outfit)",
-                    boxShadow: "0 4px 20px var(--color-brand-400)/20",
-                  }}
-                  labelStyle={{ 
-                    color: "var(--color-brand-400)",
-                    fontFamily: "var(--font-outfit)"
                   }}
                 />
                 <Bar 
                   dataKey="value" 
-                  fill="var(--color-brand-400)"
+                  fill={color}
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>
@@ -305,10 +240,12 @@ export const ChartWidget = memo(
               {filterComponent}
             </div>
           )}
-        </div>        {/* Chart Container */}
+        </div>
+
+        {/* Chart Container */}
         <div className="flex-1 min-h-0">
           {finalData && finalData.length > 0 ? (
-            <div className={`w-full h-full ${type === 'line' ? 'glow-line-chart p-4' : ''}`}>
+            <div className="w-full h-full">
               {renderChart()}
             </div>
           ) : (
