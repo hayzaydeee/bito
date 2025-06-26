@@ -6,6 +6,7 @@ import { useAuth } from './AuthContext';
 const initialState = {
   habits: [],
   entries: {},
+  lastFetch: {}, // Track when entries were last fetched for each habit
   isLoading: true,
   error: null,
   stats: null,
@@ -103,6 +104,10 @@ const habitReducer = (state, action) => {
           ...state.entries,
           [action.payload.habitId]: action.payload.entries,
         },
+        lastFetch: {
+          ...state.lastFetch,
+          [action.payload.habitId]: Date.now(),
+        },
       };
 
     case actionTypes.FETCH_STATS_SUCCESS:
@@ -138,12 +143,24 @@ const habitReducer = (state, action) => {
 };
 
 // Create context
-const HabitContext = createContext();
+const HabitContext = createContext(null);
 
 // Habit provider component
 export const HabitProvider = ({ children }) => {
   const [state, dispatch] = useReducer(habitReducer, initialState);
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  
+  // Safely get auth context - handle case where it might not be available yet
+  let isAuthenticated = false;
+  let authLoading = true;
+  
+  try {
+    const auth = useAuth();
+    isAuthenticated = auth.isAuthenticated;
+    authLoading = auth.isLoading;
+  } catch (error) {
+    // AuthContext not available yet, use defaults
+    console.warn('AuthContext not available in HabitProvider:', error.message);
+  }
 
   // Fetch all habits on mount, but only if authenticated
   useEffect(() => {
@@ -234,7 +251,8 @@ export const HabitProvider = ({ children }) => {
       
       // Check if already completed for this date
       const existingEntry = state.entries[habitId]?.[dateString];
-      const shouldComplete = value !== null ? value : !existingEntry;
+      const isCurrentlyCompleted = !!(existingEntry && existingEntry.completed);
+      const shouldComplete = value !== null ? value : !isCurrentlyCompleted;
 
       const response = await habitsAPI.checkHabit(habitId, {
         date: dateString,
@@ -254,6 +272,11 @@ export const HabitProvider = ({ children }) => {
 
       return { success: true, completed: shouldComplete };
     } catch (error) {
+      console.error('❌ toggleHabitCompletion failed:', { 
+        habitId, 
+        date, 
+        error: error.message 
+      });
       const errorMessage = handleAPIError(error);
       dispatch({
         type: actionTypes.TOGGLE_HABIT_FAILURE,
@@ -265,6 +288,14 @@ export const HabitProvider = ({ children }) => {
   // Fetch habit entries for a date range
   const fetchHabitEntries = useCallback(async (habitId, startDate, endDate) => {
     try {
+      // Check if we recently fetched data for this habit (within last 1 second)
+      const lastFetchTime = state.lastFetch[habitId];
+      const now = Date.now();
+      if (lastFetchTime && (now - lastFetchTime) < 1000) {
+        // Skip fetch if we recently fetched data
+        return { success: true, entries: state.entries[habitId] || {} };
+      }
+
       const response = await habitsAPI.getHabitEntries(habitId, {
         startDate: startDate.toISOString().split('T')[0],
         endDate: endDate.toISOString().split('T')[0],
@@ -283,12 +314,14 @@ export const HabitProvider = ({ children }) => {
           habitId,
           entries: entriesMap,
         },
-      });      return { success: true, entries: entriesMap };
+      });
+
+      return { success: true, entries: entriesMap };
     } catch (error) {
       const errorMessage = handleAPIError(error);
       return { success: false, error: errorMessage };
     }
-  }, []);
+  }, [state.lastFetch, state.entries]); // Added dependencies for the cache check
 
   // Fetch habit statistics
   const fetchStats = async (dateRange = {}) => {
@@ -349,7 +382,8 @@ export const HabitProvider = ({ children }) => {
 export const useHabits = () => {
   const context = useContext(HabitContext);
   if (!context) {
-    throw new Error('useHabits must be used within a HabitProvider');
+    console.error('HabitContext is null/undefined. Provider may not be wrapping this component.');
+    throw new Error('useHabits must be used within a HabitProvider. Make sure the component is wrapped in <HabitProvider>.');
   }
   return context;
 };

@@ -70,21 +70,23 @@ export const GalleryViewV2 = ({
   // console.log('GalleryView - Completions size:', completions.size);
   // console.log('GalleryView - Sample completions:', Array.from(completions.keys()).slice(0, 5));
   // console.log('GalleryView - Week dates:', weekDates.map(d => d.date));  // Helper functions
-  const getCompletionStatus = (day, habitId) => {
-    const dayInfo = weekDates.find(d => d.dayName === day);
-    if (!dayInfo) return false;
+  const getCompletionStatus = (date, habitId) => {
     const habitEntries = entries[habitId];
-    return !!(habitEntries && habitEntries[dayInfo.date]);
+    const entry = habitEntries && habitEntries[date];
+    // Only return true if entry exists AND is completed
+    return !!(entry && entry.completed);
   };
 
   const getDayCompletion = (day) => {
     if (habits.length === 0) return 0;
-    const completedCount = habits.filter(habit => getCompletionStatus(day, habit._id)).length;
-    return Math.round((completedCount / habits.length) * 100);  };
-  const handleToggleCompletion = (day, habitId) => {
     const dayInfo = weekDates.find(d => d.dayName === day);
-    if (!dayInfo) return;
-    toggleHabitCompletion(habitId, dayInfo.date);
+    if (!dayInfo) return 0;
+    const completedCount = habits.filter(habit => getCompletionStatus(dayInfo.date, habit._id)).length;
+    return Math.round((completedCount / habits.length) * 100);
+  };
+
+  const handleToggleCompletion = (date, habitId) => {
+    toggleHabitCompletion(habitId, date);
   };
 
   // Add habit handlers for when habits already exist
@@ -202,13 +204,13 @@ export const GalleryViewV2 = ({
                 <h4 className="text-sm font-semibold text-[var(--color-text-primary)] font-outfit">
                   {habit.name}
                 </h4>                <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">
-                  {weekDates.filter(day => getCompletionStatus(day.dayName, habit._id)).length}/{weekDates.length} days this week
+                  {weekDates.filter(day => getCompletionStatus(day.date, habit._id)).length}/{weekDates.length} days this week
                 </p>
               </div>
             </div>            {/* Daily Checkboxes */}
             <div className="grid grid-cols-7 gap-2">
               {weekDates.map((dayInfo) => {
-                const isCompleted = getCompletionStatus(dayInfo.dayName, habit._id);
+                const isCompleted = getCompletionStatus(dayInfo.date, habit._id);
                 const isToday = dayInfo.isToday;
 
                 return (
@@ -223,7 +225,7 @@ export const GalleryViewV2 = ({
                       {dayInfo.dayName.slice(0, 1)}
                     </div>
                     <button
-                      onClick={() => handleToggleCompletion(dayInfo.dayName, habit._id)}
+                      onClick={() => handleToggleCompletion(dayInfo.date, habit._id)}
                       className={`w-8 h-8 rounded-lg transition-all duration-200 flex items-center justify-center hover:scale-110 active:scale-95 ${
                         isCompleted
                           ? "shadow-sm transform scale-105"
@@ -248,7 +250,7 @@ export const GalleryViewV2 = ({
             <div className="mt-4">              <div className="flex items-center justify-between text-xs text-[var(--color-text-tertiary)] mb-1 font-outfit">
                 <span>Weekly Progress</span>
                 <span>
-                  {weekDates.filter(day => getCompletionStatus(day.dayName, habit._id)).length}/{weekDates.length}
+                  {weekDates.filter(day => getCompletionStatus(day.date, habit._id)).length}/{weekDates.length}
                 </span>
               </div>
               <div className="w-full bg-[var(--color-surface-secondary)] rounded-full h-2">
@@ -256,7 +258,7 @@ export const GalleryViewV2 = ({
                   className="h-2 rounded-full transition-all duration-300"
                   style={{
                     backgroundColor: habit.color,
-                    width: `${(weekDates.filter(day => getCompletionStatus(day.dayName, habit._id)).length / weekDates.length) * 100}%`,
+                    width: `${(weekDates.filter(day => getCompletionStatus(day.date, habit._id)).length / weekDates.length) * 100}%`,
                   }}
                 />
               </div>

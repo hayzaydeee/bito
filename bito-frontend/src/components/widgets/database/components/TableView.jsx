@@ -24,7 +24,9 @@ export const TableView = ({ startDate, endDate = null }) => {
       const key = `${habitId}_${date}`;
       if (!memo.has(key)) {
         const habitEntries = entries[habitId];
-        memo.set(key, habitEntries && habitEntries[date]);
+        const entry = habitEntries && habitEntries[date];
+        // Only return true if entry exists AND is completed
+        memo.set(key, !!(entry && entry.completed));
       }
       return memo.get(key);
     };

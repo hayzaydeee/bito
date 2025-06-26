@@ -57,12 +57,22 @@ export const HabitGrid = ({
       const startDateObj = weekDates[0].dateObj;
       const endDateObj = weekDates[weekDates.length - 1].dateObj;
 
-      // Fetch entries for each habit
+      // Only fetch entries if we don't already have them for this date range
       habits.forEach((habit) => {
-        fetchHabitEntries(habit._id, startDateObj, endDateObj);
+        const habitEntries = entries[habit._id];
+        
+        // Check if we have entries for all dates in the range
+        const missingDates = weekDates.filter(({ date }) => {
+          return !habitEntries || !habitEntries.hasOwnProperty(date);
+        });
+
+        // Only fetch if we have missing dates (not just incomplete data)
+        if (missingDates.length > 0) {
+          fetchHabitEntries(habit._id, startDateObj, endDateObj);
+        }
       });
     }
-  }, [habits, weekDates, fetchHabitEntries]); // fetchHabitEntries is now memoized with useCallback
+  }, [habits, weekDates, fetchHabitEntries]); // Removed entries to prevent refetch loops
 
   // DEBUG: Log data to compare views
   // console.log('HabitGrid - Habits count:', habits.length);
@@ -79,7 +89,9 @@ export const HabitGrid = ({
     const dailyCompletions = weekDates.map(({ date }) => {
       const dayCompletions = habits.filter((habit) => {
         const habitEntries = entries[habit._id];
-        return habitEntries && habitEntries[date];
+        const entry = habitEntries && habitEntries[date];
+        // Only count as completed if entry exists AND is completed
+        return entry && entry.completed;
       }).length;
 
       completedCells += dayCompletions;
@@ -121,7 +133,9 @@ export const HabitGrid = ({
       const habitEntries = entries[habit._id];
       if (habitEntries) {
         Object.keys(habitEntries).forEach((date) => {
-          if (habitEntries[date]) {
+          const entry = habitEntries[date];
+          // Only add to completions if entry exists AND is completed
+          if (entry && entry.completed) {
             completionsSet.add(`${date}_${habit._id}`);
           }
         });

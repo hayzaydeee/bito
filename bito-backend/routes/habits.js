@@ -212,8 +212,16 @@ router.get('/:id/entries', [validateObjectId('id'), validateDateRange, validateP
     const dateFilter = { habitId: req.params.id };
     if (startDate || endDate) {
       dateFilter.date = {};
-      if (startDate) dateFilter.date.$gte = new Date(startDate);
-      if (endDate) dateFilter.date.$lte = new Date(endDate);
+      if (startDate) {
+        // Parse date string and create UTC date to avoid timezone issues
+        const start = new Date(startDate + 'T00:00:00.000Z');
+        dateFilter.date.$gte = start;
+      }
+      if (endDate) {
+        // Parse date string and create UTC date to avoid timezone issues
+        const end = new Date(endDate + 'T23:59:59.999Z');
+        dateFilter.date.$lte = end;
+      }
     }
 
     // Get entries with pagination
@@ -266,26 +274,23 @@ router.post('/:id/check', [validateObjectId('id'), validateHabitEntry], async (r
       });
     }
 
-    // Normalize date to start of day
-    const entryDate = new Date(date);
-    entryDate.setHours(0, 0, 0, 0);
-
-    // Find or create entry
-    let entry = await HabitEntry.findOne({
-      habitId: habit._id,
-      date: entryDate
-    });
-
-    if (entry) {
-      // Update existing entry
-      entry.completed = completed;
-      entry.value = completed ? value : 0;
-      if (notes !== undefined) entry.notes = notes;
-      if (mood !== undefined) entry.mood = mood;
-      entry.completedAt = completed ? new Date() : null;
+    // Normalize date to start of day - handle timezone properly
+    let entryDate;
+    if (typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      // Parse YYYY-MM-DD format as UTC to avoid timezone issues
+      entryDate = new Date(date + 'T00:00:00.000Z');
     } else {
-      // Create new entry
-      entry = new HabitEntry({
+      entryDate = new Date(date);
+      entryDate.setHours(0, 0, 0, 0);
+    }
+
+    // Use findOneAndUpdate with upsert to avoid duplicate key errors
+    const entry = await HabitEntry.findOneAndUpdate(
+      {
+        habitId: habit._id,
+        date: entryDate
+      },
+      {
         habitId: habit._id,
         userId: req.user._id,
         date: entryDate,
@@ -294,10 +299,13 @@ router.post('/:id/check', [validateObjectId('id'), validateHabitEntry], async (r
         notes,
         mood,
         completedAt: completed ? new Date() : null
-      });
-    }
-
-    await entry.save();
+      },
+      {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true
+      }
+    );
 
     res.json({
       success: true,
