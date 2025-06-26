@@ -1,40 +1,21 @@
 import React from "react";
 import { CheckIcon } from "@radix-ui/react-icons";
 import { HabitCheckbox } from "./HabitCheckbox.jsx";
+import { EmptyStateWithAddHabit } from "./EmptyStateWithAddHabit.jsx";
 
 /**
  * Table View Component - Matches the old ProfessionalTableView styling
  */
-export const TableView = ({ habits, weekDates, completions, onToggle, weekStats }) => {
+export const TableView = ({
+  habits,
+  weekDates,
+  completions = new Set(),
+  onToggle,
+  weekStats,
+}) => {
   // Empty state when no habits are available
   if (!habits || habits.length === 0) {
-    return (
-      <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center">
-        <div className="max-w-md space-y-4">
-          {/* Empty state icon */}
-          <div className="w-16 h-16 mx-auto rounded-full bg-[var(--color-surface-secondary)] flex items-center justify-center mb-4">
-            <span className="text-2xl">📋</span>
-          </div>
-          
-          {/* Empty state message */}
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] font-outfit">
-              No Habits Yet
-            </h3>
-            <p className="text-sm text-[var(--color-text-secondary)] font-outfit leading-relaxed">
-              Start tracking your daily habits by importing your data or adding your first habit below.
-            </p>
-          </div>
-          
-          {/* Call to action */}
-          <div className="space-y-3 pt-4">
-            <div className="text-xs text-[var(--color-text-tertiary)] font-outfit">
-              💡 Tip: Use the "📄 Import CSV" button to quickly import your existing habit data
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <EmptyStateWithAddHabit />;
   }
 
   return (
@@ -42,7 +23,6 @@ export const TableView = ({ habits, weekDates, completions, onToggle, weekStats 
       {/* Compact Table Container */}
       <div className="overflow-x-auto bg-[var(--color-surface-elevated)] rounded-lg border border-[var(--color-border-primary)]">
         <table className="w-full">
-          {/* Table Header */}
           <thead>
             <tr className="border-b border-[var(--color-border-primary)] bg-[var(--color-surface-secondary)]/30">
               <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--color-text-secondary)] font-outfit min-w-[120px]">
@@ -50,7 +30,7 @@ export const TableView = ({ habits, weekDates, completions, onToggle, weekStats 
               </th>
               {habits.map((habit) => (
                 <th
-                  key={habit.id}
+                  key={habit._id || habit.id}
                   className="text-center py-3 px-3 text-xs font-medium text-[var(--color-text-secondary)] font-outfit min-w-[60px]"
                 >
                   <div className="flex flex-col items-center gap-1">
@@ -69,20 +49,18 @@ export const TableView = ({ habits, weekDates, completions, onToggle, weekStats 
               </th>
             </tr>
           </thead>
-
-          {/* Table Body */}
           <tbody>
             {weekDates.map((dateInfo, dayIndex) => {
               const { date, dayName, isToday } = dateInfo;
-              
               // Calculate completion percentage for this day
               const completedCount = habits.filter((habit) =>
-                completions.has(`${date}_${habit.id}`)
+                completions.has(`${date}_${habit._id || habit.id}`)
               ).length;
-              
-              const dayCompletion = habits.length > 0 
-                ? Math.round((completedCount / habits.length) * 100)
-                : 0;
+
+              const dayCompletion =
+                habits.length > 0
+                  ? Math.round((completedCount / habits.length) * 100)
+                  : 0;
 
               return (
                 <tr
@@ -121,16 +99,18 @@ export const TableView = ({ habits, weekDates, completions, onToggle, weekStats 
                       )}
                     </div>
                   </td>
-
                   {/* Habit Checkboxes */}
                   {habits.map((habit) => {
-                    const isCompleted = completions.has(`${date}_${habit.id}`);
-                    
+                    const isCompleted = completions.has(
+                      `${date}_${habit._id || habit.id}`
+                    );
                     return (
-                      <td key={habit.id} className="py-3 px-3">
+                      <td key={habit._id || habit.id} className="py-3 px-3">
                         <div className="flex items-center justify-center">
                           <button
-                            onClick={() => onToggle(habit.id, date)}
+                            onClick={() =>
+                              onToggle(habit._id || habit.id, date)
+                            }
                             className={`w-7 h-7 rounded-lg transition-all duration-200 flex items-center justify-center hover:scale-110 active:scale-95 ${
                               isCompleted
                                 ? "shadow-md transform scale-105"
@@ -154,7 +134,6 @@ export const TableView = ({ habits, weekDates, completions, onToggle, weekStats 
                       </td>
                     );
                   })}
-
                   {/* Score - Status Badge Style */}
                   <td className="py-3 px-4 text-center">
                     <span
@@ -176,7 +155,6 @@ export const TableView = ({ habits, weekDates, completions, onToggle, weekStats 
                       {dayCompletion}%
                     </span>
                   </td>
-
                   {/* Actions */}
                   <td className="py-3 px-4 text-center">
                     <div className="flex items-center justify-center gap-2">

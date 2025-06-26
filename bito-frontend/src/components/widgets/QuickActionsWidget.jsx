@@ -7,24 +7,24 @@ const QuickActionsWidget = memo(({
   availableColumns = 4,
   availableRows = 2,
   widgetConfig = {}
-}) => {  // Get habit context for actions
-  const { habits, addHabit, toggleHabitEntry } = useHabits();
+}) => {
+  // Get habit context for actions
+  const { habits, createHabit, toggleHabitCompletion } = useHabits();
 
   // Action handlers
   const handleAddHabit = useCallback(() => {
-    addHabit({
+    createHabit({
       name: 'New Habit',
       color: 'var(--color-brand-500)',
       icon: '⭐'
     });
-  }, [addHabit]);
-
+  }, [createHabit]);
   const handleQuickComplete = useCallback(() => {
     const today = new Date().toISOString().split('T')[0];
     habits.forEach(habit => {
-      toggleHabitEntry(habit._id, today);
+      toggleHabitCompletion(habit._id, today);
     });
-  }, [habits, toggleHabitEntry]);
+  }, [habits, toggleHabitCompletion]);
 
   const handleViewAnalytics = useCallback(() => {
     window.location.hash = '#/analytics';

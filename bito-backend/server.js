@@ -20,6 +20,8 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const habitRoutes = require('./routes/habits');
 const testRoutes = require('./routes/test');
+const csvAnalysisRoutes = require('./routes/csvAnalysis');
+const csvRoutes = require('./routes/csv');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -34,23 +36,46 @@ app.set('trust proxy', 1);
 app.use(helmet());
 app.use(compression());
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use('/api/', limiter);
+// Rate limiting (only in production)
+if (process.env.NODE_ENV === 'production') {
+  const limiter = rateLimit({
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 1000, // Increased for testing
+    message: 'Too many requests from this IP, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: (req) => {
+      // Skip rate limiting for OPTIONS requests (CORS preflight)
+      if (req.method === 'OPTIONS') return true;
+      // Skip rate limiting for auth endpoints to avoid login issues
+      if (req.path.startsWith('/api/auth/')) return true;
+      return false;
+    }
+  });
+  app.use('/api/', limiter);
+  console.log('Rate limiting enabled for production');
+} else {
+  console.log('Rate limiting disabled for development');
+}
 
 // CORS configuration
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  preflightContinue: false,
+  optionsSuccessStatus: 200
 }));
+
+// Handle preflight requests explicitly
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', process.env.FRONTEND_URL || 'http://localhost:5173');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.sendStatus(200);
+});
 
 // Logging
 if (process.env.NODE_ENV === 'development') {
@@ -95,6 +120,8 @@ app.use('/api/test', testRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/habits', habitRoutes);
+app.use('/api/csv-analysis', csvAnalysisRoutes);
+app.use('/api/csv', csvRoutes);
 
 // API documentation endpoint
 app.get('/api', (req, res) => {
@@ -122,6 +149,10 @@ app.get('/api', (req, res) => {
         'DELETE /api/habits/:id',
         'POST /api/habits/:id/check',
         'GET /api/habits/stats'
+      ],
+      'csv-analysis': [
+        'POST /api/csv-analysis/analyze',
+        'GET /api/csv-analysis/results'
       ]
     }
   });

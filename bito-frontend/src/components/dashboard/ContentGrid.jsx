@@ -25,6 +25,8 @@ import {
   DatabaseFilterControls,
 } from "../ui/FilterControls";
 import CsvImportModal from "../ui/CsvImportModal";
+import EnhancedCsvImportModal from "../ui/EnhancedCsvImportModal";
+import LLMSettingsModal from "../ui/LLMSettingsModal";
 
 // Lazy load widgets for better performance
 const ChartWidget = lazy(() =>
@@ -32,15 +34,15 @@ const ChartWidget = lazy(() =>
     default: module.ChartWidget,
   }))
 );
-// Phase 3: Import new bridge widget instead of old widget
+
 const DatabaseWidgetBridge = lazy(() =>
-  import("../widgets/database/components/DatabaseWidgetBridge.jsx").then((module) => ({
-    default: module.DatabaseWidgetBridge,
-  }))
+  import("../widgets/database/components/DatabaseWidgetBridge.jsx").then(
+    (module) => ({
+      default: module.DatabaseWidgetBridge,
+    })
+  )
 );
-const QuickActionsWidget = lazy(() =>
-  import("../widgets/QuickActionsWidget")
-);
+const QuickActionsWidget = lazy(() => import("../widgets/QuickActionsWidget"));
 
 // Loading component for lazy widgets
 const WidgetSkeleton = ({ title }) => (
@@ -226,6 +228,8 @@ const ContentGrid = () => {
   const [globalEditMode, setGlobalEditMode] = useState(false);
   const [widgetEditStates, setWidgetEditStates] = useState({});
   const [showWidgetPicker, setShowWidgetPicker] = useState(false);
+  const [showEnhancedCsvImport, setShowEnhancedCsvImport] = useState(false);
+  const [showLLMSettings, setShowLLMSettings] = useState(false);
 
   // Auto-save layouts and widgets to localStorage
   useEffect(() => {
@@ -233,12 +237,12 @@ const ContentGrid = () => {
   }, [layouts]);
   useEffect(() => {
     saveActiveWidgetsToStorage(activeWidgets);
-  }, [activeWidgets]);  // Filter state management
+  }, [activeWidgets]); // Filter state management
   const [filters, setFilters] = useState({
-    chartMode: 'week',
-    chartPeriod: 'current',
+    chartMode: "week",
+    chartPeriod: "current",
     chartSelectedMonth: new Date().getMonth(),
-    databaseMode: 'week',
+    databaseMode: "week",
     databaseRange: null,
   });
 
@@ -253,17 +257,17 @@ const ContentGrid = () => {
     deleteHabit,
     toggleHabitCompletion,
   } = useHabits();
-  
+
   // Helper function to get date range from filters
   const getDateRangeFromFilters = useCallback((filterObj) => {
     const now = new Date();
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay());
-    
-    if (filterObj.chartMode === 'week') {
+
+    if (filterObj.chartMode === "week") {
       return {
         start: startOfWeek,
-        end: new Date(startOfWeek.getTime() + 6 * 24 * 60 * 60 * 1000)
+        end: new Date(startOfWeek.getTime() + 6 * 24 * 60 * 60 * 1000),
       };
     } else {
       // Month mode
@@ -271,9 +275,10 @@ const ContentGrid = () => {
       const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
       return {
         start: startOfMonth,
-        end: endOfMonth
+        end: endOfMonth,
       };
-    }  }, []);
+    }
+  }, []);
 
   // Calculate current date range based on filters
   const dateRange = useMemo(() => {
@@ -283,41 +288,46 @@ const ContentGrid = () => {
   const [showCsvImport, setShowCsvImport] = useState(false);
   // Get filter options (dynamically based on selected months)
   const filterOptions = useMemo(() => {
-    const chartMonth = filters.chartMode === 'week' ? filters.chartSelectedMonth : null;
+    const chartMonth =
+      filters.chartMode === "week" ? filters.chartSelectedMonth : null;
     const dbMonth = filters.databaseSelectedMonth; // Database is always weekly
-    
+
     // Use the appropriate month for generating options
     const monthForOptions = chartMonth || dbMonth || new Date().getMonth() + 1;
-    
+
     // Simple filter options - can be enhanced later
     return {
       chartModes: [
-        { value: 'week', label: 'Weekly View' },
-        { value: 'month', label: 'Monthly View' },
-        { value: 'continuous', label: 'All Time' }
+        { value: "week", label: "Weekly View" },
+        { value: "month", label: "Monthly View" },
+        { value: "continuous", label: "All Time" },
       ],
       weeks: [
-        { value: 1, label: 'Week 1' },
-        { value: 2, label: 'Week 2' },
-        { value: 3, label: 'Week 3' },
-        { value: 4, label: 'Week 4' }
+        { value: 1, label: "Week 1" },
+        { value: 2, label: "Week 2" },
+        { value: 3, label: "Week 3" },
+        { value: 4, label: "Week 4" },
       ],
       months: [
-        { value: 1, label: 'January' },
-        { value: 2, label: 'February' },
-        { value: 3, label: 'March' },
-        { value: 4, label: 'April' },
-        { value: 5, label: 'May' },
-        { value: 6, label: 'June' },
-        { value: 7, label: 'July' },
-        { value: 8, label: 'August' },
-        { value: 9, label: 'September' },
-        { value: 10, label: 'October' },
-        { value: 11, label: 'November' },
-        { value: 12, label: 'December' }
-      ]
+        { value: 1, label: "January" },
+        { value: 2, label: "February" },
+        { value: 3, label: "March" },
+        { value: 4, label: "April" },
+        { value: 5, label: "May" },
+        { value: 6, label: "June" },
+        { value: 7, label: "July" },
+        { value: 8, label: "August" },
+        { value: 9, label: "September" },
+        { value: 10, label: "October" },
+        { value: 11, label: "November" },
+        { value: 12, label: "December" },
+      ],
     };
-  }, [filters.chartMode, filters.chartSelectedMonth, filters.databaseSelectedMonth]);
+  }, [
+    filters.chartMode,
+    filters.chartSelectedMonth,
+    filters.databaseSelectedMonth,
+  ]);
   // Filter update handlers
   const updateChartFilter = useCallback((mode, period) => {
     setFilters((prev) => ({
@@ -349,42 +359,65 @@ const ContentGrid = () => {
   }, []);
 
   // Habit event handlers
-  const handleAddHabit = useCallback(async (habitData) => {
-    console.log("Adding new habit:", habitData);
-    const result = await createHabit(habitData);
-    if (!result.success) {
-      console.error("Failed to create habit:", result.error);
-      // You could show a toast notification here
-    }
-  }, [createHabit]);
+  const handleAddHabit = useCallback(
+    async (habitData) => {
+      console.log("Adding new habit:", habitData);
+      const result = await createHabit(habitData);
+      if (!result.success) {
+        console.error("Failed to create habit:", result.error);
+        // You could show a toast notification here
+      }
+    },
+    [createHabit]
+  );
 
-  const handleDeleteHabit = useCallback(async (habitId) => {
-    console.log("Deleting habit:", habitId);
-    const result = await deleteHabit(habitId);
-    if (!result.success) {
-      console.error("Failed to delete habit:", result.error);
-      // You could show a toast notification here
-    }
-  }, [deleteHabit]);
+  const handleDeleteHabit = useCallback(
+    async (habitId) => {
+      console.log("Deleting habit:", habitId);
+      const result = await deleteHabit(habitId);
+      if (!result.success) {
+        console.error("Failed to delete habit:", result.error);
+        // You could show a toast notification here
+      }
+    },
+    [deleteHabit]
+  );
 
-  const handleEditHabit = useCallback(async (habitData) => {
-    console.log("Editing habit:", habitData);
-    const result = await updateHabit(habitData._id, habitData);
-    if (!result.success) {
-      console.error("Failed to update habit:", result.error);
-      // You could show a toast notification here
-    }
-  }, [updateHabit]);
+  const handleEditHabit = useCallback(
+    async (habitData) => {
+      console.log("Editing habit:", habitData);
+      const result = await updateHabit(habitData._id, habitData);
+      if (!result.success) {
+        console.error("Failed to update habit:", result.error);
+        // You could show a toast notification here
+      }
+    },
+    [updateHabit]
+  );
 
-  const handleToggleCompletion = useCallback(async (habitId, date) => {
-    console.log("Toggling completion:", habitId, date);
-    const result = await toggleHabitCompletion(habitId, date);
-    if (!result.success) {
-      console.error("Failed to toggle habit:", result.error);
-      // You could show a toast notification here
+  const handleToggleCompletion = useCallback(
+    async (habitId, date) => {
+      console.log("Toggling completion:", habitId, date);
+      const result = await toggleHabitCompletion(habitId, date);
+      if (!result.success) {
+        console.error("Failed to toggle habit:", result.error);
+        // You could show a toast notification here
+      }
+    },
+    [toggleHabitCompletion]
+  ); // Enhanced CSV Import handler
+  const handleEnhancedCsvImport = useCallback((importedData) => {
+    console.log("Enhanced CSV import completed:", importedData);
+    // The enhanced import uses the HabitContext directly, so we just need to close the modal
+    setShowEnhancedCsvImport(false);
+
+    // Optionally show a success message or update UI
+    if (importedData.habits.length > 0) {
+      console.log(`Successfully imported ${importedData.habits.length} habits`);
     }
-  }, [toggleHabitCompletion]);
-  // CSV Import handler
+  }, []);
+
+  // CSV Import handler (legacy)
   const handleCsvImport = useCallback((importedData) => {
     console.log("Importing CSV data:", importedData);
     // The CSV import should now use the store's dual-write system
@@ -529,7 +562,7 @@ const ContentGrid = () => {
       };
     },
     [currentBreakpoint]
-  );  // Get filtered data based on current filters (now using backend entries)
+  ); // Get filtered data based on current filters (now using backend entries)
   const filteredData = useMemo(() => {
     // For now, return a simple structure - we can enhance filtering later
     return {
@@ -537,8 +570,8 @@ const ContentGrid = () => {
       databaseCompletions: entries, // Use backend entries directly
       chartRange: dateRange,
       databaseRange: dateRange,
-      chartMode: 'week',
-      databaseMode: 'week'
+      chartMode: "week",
+      databaseMode: "week",
     };
   }, [habits, entries, filters, dateRange]);
 
@@ -587,12 +620,15 @@ const ContentGrid = () => {
           return (
             <Suspense
               fallback={<WidgetSkeleton title="Daily Habits Completion" />}
-            >              <ChartWidget
+            >
+              {" "}
+              <ChartWidget
                 title="Daily Habits Completion"
                 type="line"
                 chartType="completion"
                 dateRange={dateRange}
-                color="var(--color-brand-400)"filterComponent={
+                color="var(--color-brand-400)"
+                filterComponent={
                   <ChartFilterControls
                     mode={filters.chartMode}
                     period={filters.chartPeriod}
@@ -629,7 +665,9 @@ const ContentGrid = () => {
         component: (layout) => {
           const props = getWidgetProps("weekly-progress", layout);
           return (
-            <Suspense fallback={<WidgetSkeleton title="Weekly Progress" />}>              <ChartWidget
+            <Suspense fallback={<WidgetSkeleton title="Weekly Progress" />}>
+              {" "}
+              <ChartWidget
                 title="Weekly Habit Streaks"
                 type="line"
                 chartType="weekly"
@@ -640,7 +678,8 @@ const ContentGrid = () => {
             </Suspense>
           );
         },
-      },      "habit-list": {
+      },
+      "habit-list": {
         title: "My Habits",
         component: (layout) => {
           const props = getWidgetProps("habit-list", layout);
@@ -670,7 +709,9 @@ const ContentGrid = () => {
             </Suspense>
           );
         },
-      },}),    [
+      },
+    }),
+    [
       currentBreakpoint,
       getWidgetProps,
       habits,
@@ -713,23 +754,39 @@ const ContentGrid = () => {
               className="w-4 h-4 rounded border border-[var(--color-border-primary)] bg-[var(--color-surface-elevated)] text-[var(--color-brand-500)] focus:ring-[var(--color-brand-500)] focus:ring-2 focus:ring-opacity-50"
             />
             <span>Edit All</span>
-          </label>          {/* Add widget button */}
+          </label>{" "}
+          {/* Add widget button */}
           <button
             onClick={() => setShowWidgetPicker(!showWidgetPicker)}
             className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg text-sm transition-all duration-200 font-outfit"
           >
             <PlusIcon className="w-4 h-4" />
             Add Widget
-          </button>
-
-          {/* CSV Import button */}
-          <button
-            onClick={() => setShowCsvImport(true)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm transition-all duration-200 font-outfit"
+          </button>{" "}
+          {/* Primary CSV Import button - Enhanced with AI */}
+          {/* <button
+            onClick={() => setShowEnhancedCsvImport(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white rounded-lg text-sm transition-all duration-200 font-outfit font-medium shadow-lg"
           >
-            📄 Import CSV
-          </button>
-
+            <span className="text-sm">🤖</span>
+            Import CSV with AI
+          </button> */}
+          {/* LLM Settings button */}
+          {/* <button
+            onClick={() => setShowLLMSettings(true)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-sm transition-all duration-200 font-outfit"
+          >
+            <span className="text-sm">⚙️</span>
+            AI Settings
+          </button> */}
+          {/* Legacy CSV Import button - Secondary option */}
+          {/* <button
+            onClick={() => setShowCsvImport(true)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-gray-400 hover:bg-gray-500 text-white rounded-lg text-xs transition-all duration-200 font-outfit opacity-75"
+            title="Basic CSV import without AI assistance"
+          >
+            📄 Basic Import
+          </button> */}
           {/* Reset layouts button */}
           {(globalEditMode ||
             Object.values(widgetEditStates).some(Boolean)) && (
@@ -971,14 +1028,25 @@ const ContentGrid = () => {
                 );
               })}
             </div>
-          </div>        </div>
-      )}      {/* CSV Import Modal */}
+          </div>{" "}
+        </div>
+      )}{" "}
+      {/* CSV Import Modal */}
       <CsvImportModal
         isOpen={showCsvImport}
         onClose={() => setShowCsvImport(false)}
         onImport={handleCsvImport}
-        existingHabits={habits}
-        existingCompletions={entries}
+      />
+      {/* Enhanced CSV Import Modal */}
+      <EnhancedCsvImportModal
+        isOpen={showEnhancedCsvImport}
+        onClose={() => setShowEnhancedCsvImport(false)}
+        onImportComplete={handleEnhancedCsvImport}
+      />
+      {/* LLM Settings Modal */}
+      <LLMSettingsModal
+        isOpen={showLLMSettings}
+        onClose={() => setShowLLMSettings(false)}
       />
     </div>
   );

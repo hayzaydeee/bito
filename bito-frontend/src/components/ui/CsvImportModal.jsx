@@ -1,10 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import csvImportService from '../../services/csvImportService';
-import { dualWriteHabits } from '../../utils/dualWriteSystem';
+import { useHabits } from '../../contexts/HabitContext';
 
-const { importCsvData, validateCsvStructure, mergeWithExistingData, mergeWithNewStore } = csvImportService;
+const { importCsvData, validateCsvStructure, executeImportWithBackend } = csvImportService;
 
-const CsvImportModal = ({ isOpen, onClose, onImport, existingHabits = [], existingCompletions = {} }) => {
+const CsvImportModal = ({ isOpen, onClose, onImport }) => {
   const [file, setFile] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [importStep, setImportStep] = useState('select'); // select, validate, preview, importing, complete
@@ -12,6 +12,9 @@ const CsvImportModal = ({ isOpen, onClose, onImport, existingHabits = [], existi
   const [importPreview, setImportPreview] = useState(null);
   const [importResult, setImportResult] = useState(null);
   const [error, setError] = useState(null);
+  
+  // Get HabitContext for backend integration
+  const habitContext = useHabits();
 
   // Reset state when modal opens/closes
   React.useEffect(() => {
@@ -85,41 +88,31 @@ const CsvImportModal = ({ isOpen, onClose, onImport, existingHabits = [], existi
     if (files && files[0]) {
       handleFileSelect(files[0]);
     }
-  }, [handleFileSelect]);
-  // Execute import
+  }, [handleFileSelect]);  // Execute import with backend integration
   const executeImport = useCallback(async () => {
     if (!importPreview) return;
 
     setImportStep('importing');
     try {
-      // Phase 2: Use dual-write system for import
-        // Handle old format for backward compatibility
-      const mergedData = mergeWithExistingData(
-        importPreview.oldFormat, 
-        existingHabits, 
-        existingCompletions
-      );
+      console.log('🚀 Starting CSV import to backend...');
       
-      // Handle new store format
-      const newStoreResult = mergeWithNewStore(importPreview.newFormat);
+      // Use the new backend integration
+      const results = await executeImportWithBackend(importPreview, habitContext);
       
-      setImportResult({
-        ...mergedData,
-        newStoreStats: newStoreResult
-      });
+      setImportResult(results);
       setImportStep('complete');
       
-      // Call parent callback with merged data (old system)
-      onImport(mergedData);
+      // Call parent callback if provided
+      if (onImport) {
+        onImport(results);
+      }
       
-      console.log('📊 Import Results:');
-      console.log('Old system:', mergedData);
-      console.log('New store:', newStoreResult);
-    } catch (err) {
+      console.log('✅ CSV Import completed successfully:', results);    } catch (err) {
+      console.error('❌ CSV Import failed:', err);
       setError(`Import failed: ${err.message}`);
       setImportStep('preview');
     }
-  }, [importPreview, existingHabits, existingCompletions, onImport]);
+  }, [importPreview, habitContext, onImport]);
 
   if (!isOpen) return null;
 
@@ -202,43 +195,45 @@ const CsvImportModal = ({ isOpen, onClose, onImport, existingHabits = [], existi
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
               <p className="mt-4 text-gray-600">Validating CSV file...</p>
             </div>
-          )}
-
-          {/* Step 3: Preview */}
+          )}          {/* Step 3: Preview */}
           {importStep === 'preview' && importPreview && (
             <div>
-              <h3 className="text-lg font-medium mb-4">Import Preview</h3>              {/* Stats */}
+              <h3 className="text-lg font-medium mb-4">Import Preview</h3>
+              
+              {/* Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="bg-blue-50 p-3 rounded-lg">
                   <div className="text-2xl font-bold text-blue-600">
-                    {importPreview?.newFormat?.stats?.validRows || 0}
+                    {importPreview.stats?.validRows || 0}
                   </div>
                   <div className="text-sm text-blue-700">Valid Days</div>
                 </div>
                 <div className="bg-green-50 p-3 rounded-lg">
                   <div className="text-2xl font-bold text-green-600">
-                    {importPreview?.newFormat?.habits?.length || 0}
+                    {importPreview.habits?.length || 0}
                   </div>
                   <div className="text-sm text-green-700">Habits</div>
                 </div>
                 <div className="bg-purple-50 p-3 rounded-lg">
                   <div className="text-2xl font-bold text-purple-600">
-                    {importPreview?.newFormat?.completions?.length || 0}
+                    {importPreview.entries?.length || 0}
                   </div>
                   <div className="text-sm text-purple-700">Completions</div>
                 </div>
                 <div className="bg-orange-50 p-3 rounded-lg">
                   <div className="text-2xl font-bold text-orange-600">
-                    {importPreview?.newFormat?.stats?.dateRange?.totalDays || 0}
+                    {importPreview.stats?.dateRange?.totalDays || 0}
                   </div>
                   <div className="text-sm text-orange-700">Days Tracked</div>
                 </div>
-              </div>              {/* Date Range */}
+              </div>
+              
+              {/* Date Range */}
               <div className="mb-4">
                 <h4 className="font-medium text-gray-900 mb-2">Date Range</h4>
                 <p className="text-sm text-gray-600">
-                  {importPreview?.newFormat?.stats?.dateRange?.start 
-                    ? `${importPreview.newFormat.stats.dateRange.start} to ${importPreview.newFormat.stats.dateRange.end}`
+                  {importPreview.stats?.dateRange?.start 
+                    ? `${importPreview.stats.dateRange.start} to ${importPreview.stats.dateRange.end}`
                     : 'No valid dates found'
                   }
                 </p>
@@ -248,19 +243,25 @@ const CsvImportModal = ({ isOpen, onClose, onImport, existingHabits = [], existi
               <div className="mb-6">
                 <h4 className="font-medium text-gray-900 mb-2">Habits to Import</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {(importPreview?.newFormat?.habits || []).map((habit) => (
-                    <div key={habit.id} className="flex items-center space-x-2 text-sm">
+                  {(importPreview.habits || []).map((habit, index) => (
+                    <div key={index} className="flex items-center space-x-2 text-sm">
                       <span className="text-lg">{habit.icon}</span>
                       <span>{habit.name}</span>
+                      <div 
+                        className="w-3 h-3 rounded-full ml-2" 
+                        style={{ backgroundColor: habit.color }}
+                      ></div>
                     </div>
                   ))}
                 </div>
-              </div>              {/* Errors/Warnings */}
-              {(importPreview?.newFormat?.errors?.length || 0) > 0 && (
+              </div>
+              
+              {/* Errors/Warnings */}
+              {(importPreview.errors?.length || 0) > 0 && (
                 <div className="mb-4">
                   <h4 className="font-medium text-red-700 mb-2">Issues Found</h4>
                   <div className="max-h-32 overflow-y-auto bg-red-50 p-3 rounded-md">
-                    {(importPreview?.newFormat?.errors || []).map((error, index) => (
+                    {(importPreview.errors || []).map((error, index) => (
                       <p key={index} className="text-sm text-red-600">{error}</p>
                     ))}
                   </div>
@@ -277,8 +278,9 @@ const CsvImportModal = ({ isOpen, onClose, onImport, existingHabits = [], existi
                 <button
                   onClick={executeImport}
                   className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                  disabled={importPreview.habits?.length === 0}
                 >
-                  Import Data
+                  Import {importPreview.habits?.length || 0} Habits
                 </button>
               </div>
             </div>
@@ -290,21 +292,39 @@ const CsvImportModal = ({ isOpen, onClose, onImport, existingHabits = [], existi
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
               <p className="mt-4 text-gray-600">Importing your data...</p>
             </div>
-          )}
-
-          {/* Step 5: Complete */}
+          )}          {/* Step 5: Complete */}
           {importStep === 'complete' && importResult && (
             <div className="text-center py-8">
               <div className="text-4xl mb-4">✅</div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">Import Successful!</h3>
               <p className="text-gray-600 mb-6">
-                Your habit data has been imported and merged with existing data.
-              </p>              <div className="bg-green-50 p-4 rounded-lg mb-6">
-                <p className="text-sm text-green-700">
-                  Imported {importPreview?.newFormat?.completions?.length || 0} habit completions 
-                  across {importPreview?.newFormat?.stats?.dateRange?.totalDays || 0} days
-                </p>
+                Your habit data has been imported and saved to your account.
+              </p>
+              
+              <div className="bg-green-50 p-4 rounded-lg mb-6">
+                <div className="grid grid-cols-2 gap-4 text-sm text-green-700">
+                  <div>
+                    <span className="font-medium">{importResult.habitsCreated}</span> habits created
+                  </div>
+                  <div>
+                    <span className="font-medium">{importResult.entriesCreated}</span> entries added
+                  </div>
+                </div>
+                
+                {importResult.errors && importResult.errors.length > 0 && (
+                  <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                    <p className="text-sm text-yellow-800 font-medium mb-2">
+                      {importResult.errors.length} issues occurred:
+                    </p>
+                    <div className="max-h-20 overflow-y-auto">
+                      {importResult.errors.map((error, index) => (
+                        <p key={index} className="text-xs text-yellow-700">{error}</p>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
+              
               <button
                 onClick={onClose}
                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"

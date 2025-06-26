@@ -2,37 +2,7 @@ import React, { useMemo, useState } from "react";
 import { PlusIcon, CheckIcon } from "@radix-ui/react-icons";
 import { useHabits } from "../../../../contexts/HabitContext";
 import { habitUtils } from "../../../../utils/habitLogic.js";
-
-/**
- * Empty State Component for Gallery View
- */
-const EmptyGalleryState = ({ onGetStarted }) => (
-  <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-    <div className="w-16 h-16 bg-[var(--color-surface-elevated)] rounded-full flex items-center justify-center mb-4 border-2 border-dashed border-[var(--color-border-primary)]">
-      <span className="text-2xl">📝</span>
-    </div>
-    
-    <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2 font-outfit">
-      Ready to build great habits?
-    </h3>
-    
-    <p className="text-sm text-[var(--color-text-secondary)] mb-6 max-w-xs font-outfit">
-      Start tracking your daily habits and build consistency. Add your first habit to get started!
-    </p>
-    
-    <button
-      onClick={onGetStarted}
-      className="flex items-center gap-2 px-4 py-2 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg transition-all duration-200 font-outfit text-sm"
-    >
-      <PlusIcon className="w-4 h-4" />
-      Add Your First Habit
-    </button>
-    
-    <div className="mt-8 text-xs text-[var(--color-text-tertiary)] space-y-1 font-outfit">
-      <p>💡 Try habits like "Drink 8 glasses of water" or "Read for 30 minutes"</p>
-    </div>
-  </div>
-);
+import { EmptyStateWithAddHabit } from "../../../HabitGrid/EmptyStateWithAddHabit.jsx";
 
 /**
  * Gallery View Component - Card-based layout for habits (V2 with Zustand)
@@ -50,10 +20,12 @@ export const GalleryViewV2 = ({
     entries, 
     loading, 
     error, 
-    toggleHabitEntry, 
-    addHabit 
+    toggleHabitCompletion, 
+    createHabit 
   } = useHabits();
-    const [showAddForm, setShowAddForm] = useState(false);
+  
+  // State for inline add habit functionality
+  const [showAddForm, setShowAddForm] = useState(false);
   const [newHabitName, setNewHabitName] = useState("");
 
   // Memoize the start date to prevent infinite re-renders (same logic as HabitGrid)
@@ -97,37 +69,47 @@ export const GalleryViewV2 = ({
   // console.log('GalleryView - Habits:', habits.map(h => ({ id: h.id, name: h.name })));
   // console.log('GalleryView - Completions size:', completions.size);
   // console.log('GalleryView - Sample completions:', Array.from(completions.keys()).slice(0, 5));
-  // console.log('GalleryView - Week dates:', weekDates.map(d => d.date));
-  // Helper functions
+  // console.log('GalleryView - Week dates:', weekDates.map(d => d.date));  // Helper functions
   const getCompletionStatus = (day, habitId) => {
     const dayInfo = weekDates.find(d => d.dayName === day);
     if (!dayInfo) return false;
     const habitEntries = entries[habitId];
-    return habitEntries && habitEntries[dayInfo.date];
+    return !!(habitEntries && habitEntries[dayInfo.date]);
   };
 
   const getDayCompletion = (day) => {
     if (habits.length === 0) return 0;
     const completedCount = habits.filter(habit => getCompletionStatus(day, habit._id)).length;
-    return Math.round((completedCount / habits.length) * 100);
-  };
-
+    return Math.round((completedCount / habits.length) * 100);  };
   const handleToggleCompletion = (day, habitId) => {
     const dayInfo = weekDates.find(d => d.dayName === day);
     if (!dayInfo) return;
-    toggleHabitEntry(habitId, dayInfo.date);
+    toggleHabitCompletion(habitId, dayInfo.date);
   };
+
+  // Add habit handlers for when habits already exist
   const handleAddHabit = async () => {
     if (!newHabitName.trim()) return;
-      const newHabit = {
+    
+    const newHabit = {
       name: newHabitName.trim(),
-      color: 'var(--color-brand-500)', // Theme color
+      color: '#3B82F6', // Use a standard hex color instead of CSS variable
       icon: '⭐', // Default icon
     };
     
-    await addHabit(newHabit);
-    setNewHabitName("");
-    setShowAddForm(false);
+    try {
+      const result = await createHabit(newHabit);
+      if (result.success) {
+        setNewHabitName("");
+        setShowAddForm(false);
+      } else {
+        console.error('Failed to create habit:', result.error);
+        // TODO: Show error message to user
+      }
+    } catch (error) {
+      console.error('Error creating habit:', error);
+      // TODO: Show error message to user
+    }
   };
 
   const handleCancelAdd = () => {
@@ -135,11 +117,17 @@ export const GalleryViewV2 = ({
     setShowAddForm(false);
   };
 
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleAddHabit();
+    } else if (e.key === "Escape") {
+      handleCancelAdd();
+    }
+  };
+
   // Show empty state if no habits exist
   if (!habits || habits.length === 0) {
-    return (
-      <EmptyGalleryState onGetStarted={() => setShowAddForm(true)} />
-    );
+    return <EmptyStateWithAddHabit />;
   }
 
   return (
@@ -273,8 +261,7 @@ export const GalleryViewV2 = ({
                 />
               </div>
             </div>
-          </div>
-        ))}
+          </div>        ))}
 
         {/* Add New Habit Card */}
         {showAddForm ? (
@@ -290,13 +277,7 @@ export const GalleryViewV2 = ({
                 placeholder="Enter habit name..."
                 className="w-full px-3 py-2 text-sm border border-[var(--color-border-primary)] rounded-lg bg-[var(--color-surface-primary)] text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)]/50 focus:border-[var(--color-brand-400)] font-outfit"
                 autoFocus
-                onKeyPress={(e) => {
-                  if (e.key === "Enter") {
-                    handleAddHabit();
-                  } else if (e.key === "Escape") {
-                    handleCancelAdd();
-                  }
-                }}
+                onKeyPress={handleKeyPress}
               />
               <div className="flex gap-2">
                 <button

@@ -1,31 +1,22 @@
 /**
- * CSV Import Service
- * Handles importing habit data from CSV files
- * PHASE 2: Enhanced with new store integration
+ * Flexible CSV Import Service
+ * Handles importing habit data from any CSV format
+ * Integrates with MongoDB backend via HabitContext
  */
 
 import Papa from 'papaparse';
-import useHabitStore from '../store/habitStore.js';
 
-// Map CSV habit names to internal habit structure
-const HABIT_MAPPING = {
-  'pushups': { name: 'Pushups', color: '#f59e0b', icon: '💪' },
-  'bible study': { name: 'Bible Study', color: '#8b5cf6', icon: '📖' },
-  '7hrs of sleep': { name: '7+ Hours Sleep', color: '#3b82f6', icon: '😴' },
-  'substack': { name: 'Substack Writing', color: '#10b981', icon: '✍️' },
-  'learning': { name: 'Learning', color: '#6366f1', icon: '🧠' },
-  'work': { name: 'Work', color: '#ef4444', icon: '💼' },
-  '7k steps/day': { name: '7K+ Steps', color: '#f97316', icon: '🚶' },
-  'album review': { name: 'Album Review', color: '#ec4899', icon: '🎵' },
-  'review tiktoks/yt': { name: 'Review TikToks/YT', color: '#14b8a6', icon: '📱' },
-  'screen time < 4hrs': { name: 'Screen Time < 4hrs', color: '#84cc16', icon: '⏰' }
-};
-
-// Parse date from CSV format "@May 1, 2025" to YYYY-MM-DD
+// Helper function to parse various date formats
 const parseCsvDate = (csvDate) => {
   try {
-    // Remove @ symbol and parse
-    const cleanDate = csvDate.replace('@', '').trim();
+    // Handle various date formats
+    let cleanDate = csvDate;
+    
+    // Remove @ symbol if present
+    if (typeof cleanDate === 'string') {
+      cleanDate = cleanDate.replace('@', '').trim();
+    }
+    
     const date = new Date(cleanDate);
     
     if (isNaN(date.getTime())) {
@@ -40,343 +31,346 @@ const parseCsvDate = (csvDate) => {
   }
 };
 
-// Convert Yes/No to boolean
+// Helper function to parse completion values (Yes/No, 1/0, true/false, etc.)
 const parseCompletion = (value) => {
-  if (typeof value === 'string') {
-    return value.toLowerCase().trim() === 'yes';
+  if (value === null || value === undefined || value === '') {
+    return false;
   }
+  
+  if (typeof value === 'boolean') {
+    return value;
+  }
+  
+  if (typeof value === 'number') {
+    return value > 0;
+  }
+  
+  if (typeof value === 'string') {
+    const normalized = value.toLowerCase().trim();
+    return normalized === 'yes' || 
+           normalized === 'true' || 
+           normalized === '1' || 
+           normalized === 'y' ||
+           normalized === 'completed' ||
+           normalized === 'done';
+  }
+  
   return Boolean(value);
 };
 
-// NEW: Process CSV data for new store format
-const processCsvDataForNewStore = (csvData) => {
-  const habits = [];
-  const completions = [];
-  const errors = [];
-  const stats = {
-    totalRows: csvData.length,
-    validRows: 0,
-    duplicateDates: 0,
-    invalidDates: 0,
-    habitsFound: new Set()
-  };
-
-  // Create habits for new store
-  let habitId = 1;
-  const habitIdMap = {};
-  
-  Object.entries(HABIT_MAPPING).forEach(([csvName, habitData]) => {
-    const habit = {
-      id: habitId,
-      name: habitData.name,
-      color: habitData.color,
-      icon: habitData.icon,
-      createdAt: new Date()
-    };
-    habits.push(habit);
-    habitIdMap[csvName] = habitId;
-    habitId++;
-  });
-
-  const processedDates = new Set();
-
-  // Process each row
-  csvData.forEach((row, index) => {
-    const rowNumber = index + 2;
-    
-    const dateStr = parseCsvDate(row.Day);
-    if (!dateStr) {
-      errors.push(`Row ${rowNumber}: Invalid date format "${row.Day}"`);
-      stats.invalidDates++;
-      return;
-    }
-
-    if (processedDates.has(dateStr)) {
-      errors.push(`Row ${rowNumber}: Duplicate date "${dateStr}"`);
-      stats.duplicateDates++;
-      return;
-    }
-    processedDates.add(dateStr);
-
-    // Process each habit column - NEW FORMAT
-    Object.entries(HABIT_MAPPING).forEach(([csvHabitName, habitData]) => {
-      if (row.hasOwnProperty(csvHabitName)) {
-        stats.habitsFound.add(csvHabitName);
-        const habitId = habitIdMap[csvHabitName];
-        const isCompleted = parseCompletion(row[csvHabitName]);
-        
-        if (isCompleted) {
-          // NEW: Use new store completion format (YYYY-MM-DD_habitId)
-          completions.push({
-            id: `${dateStr}_${habitId}`,
-            habitId,
-            date: dateStr,
-            timestamp: new Date().toISOString()
-          });
-        }
-      }
-    });    stats.validRows++;
-  });
-
-  const dates = Array.from(processedDates).sort();
-  const dateRange = dates.length > 0 ? {
-    start: dates[0],
-    end: dates[dates.length - 1],
-    totalDays: dates.length
-  } : {
-    start: null,
-    end: null,
-    totalDays: 0
-  };
-
-  return {
-    habits,
-    completions,
-    stats: {
-      ...stats,
-      habitsFound: Array.from(stats.habitsFound),
-      dateRange
-    },
-    errors
-  };
+// Helper function to generate colors for habits
+const generateHabitColor = (index) => {
+  const colors = [
+    'var(--color-brand-400)',
+    'var(--color-success)', 
+    'var(--color-warning)',
+    '#f59e0b', // amber
+    '#8b5cf6', // purple
+    '#3b82f6', // blue
+    '#10b981', // emerald
+    '#6366f1', // indigo
+    '#ef4444', // red
+    '#f97316', // orange
+    '#ec4899', // pink
+    '#14b8a6', // teal
+    '#84cc16', // lime
+    '#6b7280', // gray
+    '#7c3aed', // violet
+  ];
+  return colors[index % colors.length];
 };
 
-// Process parsed CSV data into habit tracker format
-const processCsvData = (csvData) => {
-  const habits = [];
-  const completions = {};
-  const errors = [];
-  const stats = {
-    totalRows: csvData.length,
-    validRows: 0,
-    duplicateDates: 0,
-    invalidDates: 0,
-    habitsFound: new Set()
-  };
-
-  // Create habits array from mapping
-  let habitId = 1;
-  const habitIdMap = {};
+// Helper function to generate icons for habits
+const generateHabitIcon = (index, habitName) => {
+  // Try to match icon based on habit name
+  const name = habitName.toLowerCase();
   
-  Object.entries(HABIT_MAPPING).forEach(([csvName, habitData]) => {
-    const habit = {
-      id: habitId,
-      name: habitData.name,
-      color: habitData.color,
-      icon: habitData.icon
-    };
-    habits.push(habit);
-    habitIdMap[csvName] = habitId;
-    habitId++;
-  });
+  if (name.includes('exercise') || name.includes('workout') || name.includes('gym') || name.includes('pushup')) return '💪';
+  if (name.includes('read') || name.includes('book') || name.includes('study')) return '📖';
+  if (name.includes('sleep') || name.includes('rest')) return '😴';
+  if (name.includes('write') || name.includes('blog') || name.includes('journal')) return '✍️';
+  if (name.includes('learn') || name.includes('course')) return '🧠';
+  if (name.includes('work') || name.includes('job')) return '💼';
+  if (name.includes('walk') || name.includes('step') || name.includes('run')) return '🚶';
+  if (name.includes('music') || name.includes('song') || name.includes('album')) return '🎵';
+  if (name.includes('meditat') || name.includes('mindful')) return '🧘';
+  if (name.includes('water') || name.includes('drink')) return '💧';
+  if (name.includes('vitamin') || name.includes('supplement')) return '💊';
+  if (name.includes('clean') || name.includes('tidy')) return '🧹';
+  if (name.includes('code') || name.includes('program')) return '💻';
+  if (name.includes('prayer') || name.includes('spiritual')) return '🙏';
+  
+  // Default icons if no match
+  const defaultIcons = ['✅', '🎯', '🔥', '💎', '⭐', '🌟', '✨', '🚀', '💫', '🎨', '🎪', '🎭', '🎮', '🎲'];
+  return defaultIcons[index % defaultIcons.length];
+};
 
-  // Track processed dates to detect duplicates
+// Flexible CSV parser that works with any format
+const parseFlexibleCsv = (csvData) => {
+  console.log('📊 Parsing flexible CSV data:', csvData.length, 'rows');
+  
+  if (!csvData || csvData.length === 0) {
+    throw new Error('CSV file is empty or invalid');
+  }
+  
+  // Get first row to determine columns
+  const firstRow = csvData[0];
+  const columns = Object.keys(firstRow);
+  
+  console.log('📋 Detected columns:', columns);
+  
+  // Identify date column (flexible matching)
+  const dateColumn = columns.find(col => 
+    /^(date|day|time|when)$/i.test(col.trim())
+  );
+  
+  if (!dateColumn) {
+    throw new Error('No date column found. Please ensure your CSV has a column named "Date", "Day", or "Time"');
+  }
+  
+  console.log('📅 Using date column:', dateColumn);
+  
+  // All other non-empty columns are potential habits
+  const habitColumns = columns.filter(col => 
+    col !== dateColumn && 
+    col.trim() !== '' &&
+    !col.startsWith('_') && // Ignore metadata columns
+    !col.toLowerCase().includes('note') && // Ignore notes columns
+    !col.toLowerCase().includes('comment') // Ignore comment columns
+  );
+  
+  console.log('🎯 Detected habit columns:', habitColumns);
+  
+  if (habitColumns.length === 0) {
+    throw new Error('No habit columns found. Please ensure your CSV has columns for habits besides the date column.');
+  }
+  
+  // Generate dynamic habit definitions
+  const habits = habitColumns.map((habitName, index) => ({
+    name: habitName.trim(),
+    color: generateHabitColor(index),
+    icon: generateHabitIcon(index, habitName),
+    description: `Imported from CSV`
+  }));
+  
+  // Process entries for each date
+  const entries = [];
   const processedDates = new Set();
-
-  // Process each row
+  const errors = [];
+  
   csvData.forEach((row, index) => {
-    const rowNumber = index + 2; // +2 because CSV is 1-indexed and has header
+    const rowNumber = index + 1;
     
     // Parse date
-    const dateStr = parseCsvDate(row.Day);
+    const dateStr = parseCsvDate(row[dateColumn]);
     if (!dateStr) {
-      errors.push(`Row ${rowNumber}: Invalid date format "${row.Day}"`);
-      stats.invalidDates++;
+      errors.push(`Row ${rowNumber}: Invalid date format "${row[dateColumn]}"`);
       return;
     }
-
+    
     // Check for duplicate dates
     if (processedDates.has(dateStr)) {
       errors.push(`Row ${rowNumber}: Duplicate date "${dateStr}"`);
-      stats.duplicateDates++;
       return;
     }
     processedDates.add(dateStr);
-
-    // Process each habit column
-    Object.entries(HABIT_MAPPING).forEach(([csvHabitName, habitData]) => {
-      if (row.hasOwnProperty(csvHabitName)) {
-        stats.habitsFound.add(csvHabitName);
-        const habitId = habitIdMap[csvHabitName];
-        const isCompleted = parseCompletion(row[csvHabitName]);
-        
-        if (isCompleted) {
-          completions[`${dateStr}-${habitId}`] = true;
-        }
+    
+    // Process each habit for this date
+    habitColumns.forEach((habitName, habitIndex) => {
+      const value = row[habitName];
+      const isCompleted = parseCompletion(value);
+      
+      if (isCompleted) {
+        entries.push({
+          habitName: habitName.trim(),
+          habitIndex,
+          date: dateStr,
+          completed: true
+        });
       }
     });
-
-    stats.validRows++;
   });
-  // Calculate date range
-  const dates = Array.from(processedDates).sort();
-  const dateRange = dates.length > 0 ? {
-    start: dates[0],
-    end: dates[dates.length - 1],
-    totalDays: dates.length
-  } : {
-    start: null,
-    end: null,
-    totalDays: 0
+  
+  // Calculate statistics
+  const stats = {
+    totalRows: csvData.length,
+    validRows: processedDates.size,
+    habitsFound: habitColumns.length,
+    totalEntries: entries.length,
+    dateRange: processedDates.size > 0 ? {
+      start: Math.min(...Array.from(processedDates)),
+      end: Math.max(...Array.from(processedDates)),
+      totalDays: processedDates.size
+    } : null,
+    errors
   };
-
+  
+  console.log('📈 Import statistics:', stats);
+  
   return {
     habits,
-    completions,
-    stats: {
-      ...stats,
-      habitsFound: Array.from(stats.habitsFound),
-      dateRange
-    },
+    entries,
+    stats,
     errors
   };
 };
 
-// Main CSV import function - PHASE 2
-export const importCsvData = (file) => {
-  return new Promise((resolve, reject) => {
-    if (!file) {
-      reject(new Error('No file provided'));
-      return;
-    }
-
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        if (results.errors.length > 0) {
-          reject(new Error(`CSV parsing error: ${results.errors[0].message}`));
-          return;
-        }
-
-        try {
-          // Process for both old and new formats
-          const oldFormatData = processCsvData(results.data);
-          const newFormatData = processCsvDataForNewStore(results.data);
-          
-          resolve({
-            oldFormat: oldFormatData,
-            newFormat: newFormatData,
-            rawData: results.data
-          });
-        } catch (error) {
-          reject(error);
-        }
-      },
-      error: (error) => {
-        reject(new Error(`File reading error: ${error.message}`));
-      }
-    });
-  });
-};
-
-// Merge imported data with existing data
-export const mergeWithExistingData = (importedData, existingHabits = [], existingCompletions = {}) => {
-  const mergedHabits = [...existingHabits];
-  const mergedCompletions = { ...existingCompletions };
-  
-  // Add new habits (avoid duplicates by name)
-  const existingHabitNames = new Set(existingHabits.map(h => h.name.toLowerCase()));
-  
-  importedData.habits.forEach(importedHabit => {
-    if (!existingHabitNames.has(importedHabit.name.toLowerCase())) {
-      // Assign new ID to avoid conflicts
-      const newId = Math.max(0, ...mergedHabits.map(h => h.id)) + 1;
-      mergedHabits.push({
-        ...importedHabit,
-        id: newId
+// Validate CSV structure
+export const validateCsvStructure = async (csvText) => {
+  try {
+    const result = await new Promise((resolve, reject) => {
+      Papa.parse(csvText, {
+        header: true,
+        skipEmptyLines: true,
+        complete: resolve,
+        error: reject
       });
-    }
-  });
-  
-  // Add completions (imported data takes precedence for conflicts)
-  Object.assign(mergedCompletions, importedData.completions);
-  
-  return {
-    habits: mergedHabits,
-    completions: mergedCompletions
-  };
-};
-
-// NEW: Merge function for new store
-export const mergeWithNewStore = (importedData) => {
-  const store = useHabitStore.getState();
-    // Add new habits (avoid duplicates by name)
-  const existingHabitNames = new Set(
-    Array.from(store.habits.values()).map(h => h.name.toLowerCase())
-  );
-  
-  const newHabits = importedData.habits.filter(habit => 
-    !existingHabitNames.has(habit.name.toLowerCase())
-  );
-  
-  // Add habits to store
-  newHabits.forEach(habit => {
-    store.addHabit(habit);
-  });
-  
-  // Add completions to store
-  store.bulkImportCompletions(importedData.completions);
-  
-  return {
-    habitsAdded: newHabits.length,
-    completionsAdded: importedData.completions.length
-  };
-};
-
-
-// Validate CSV structure before import
-export const validateCsvStructure = (csvText) => {
-  return new Promise((resolve) => {
-    Papa.parse(csvText, {
-      header: true,
-      preview: 5, // Only parse first 5 rows for validation
-      complete: (results) => {
-        const headers = results.meta.fields || [];
-        const validation = {
-          isValid: true,
-          errors: [],
-          warnings: [],
-          detectedHabits: [],
-          sampleData: results.data[0] || {}
-        };
-
-        // Check required columns
-        if (!headers.includes('Day')) {
-          validation.isValid = false;
-          validation.errors.push('Missing required "Day" column');
-        }
-
-        // Check for recognized habit columns
-        const recognizedHabits = headers.filter(header => 
-          Object.keys(HABIT_MAPPING).includes(header.toLowerCase().trim())
-        );
-        
-        validation.detectedHabits = recognizedHabits;
-        
-        if (recognizedHabits.length === 0) {
-          validation.warnings.push('No recognized habit columns found');
-        }
-
-        // Check date format in first row
-        if (results.data.length > 0 && results.data[0].Day) {
-          const testDate = parseCsvDate(results.data[0].Day);
-          if (!testDate) {
-            validation.errors.push(`Invalid date format in first row: "${results.data[0].Day}"`);
-            validation.isValid = false;
-          }
-        }
-
-        resolve(validation);
-      }
     });
-  });
+    
+    if (result.errors.length > 0) {
+      return {
+        isValid: false,
+        errors: result.errors.map(err => err.message)
+      };
+    }
+    
+    if (!result.data || result.data.length === 0) {
+      return {
+        isValid: false,
+        errors: ['CSV file is empty']
+      };
+    }
+    
+    // Try to parse and validate
+    try {
+      const parsed = parseFlexibleCsv(result.data);
+      return {
+        isValid: true,
+        preview: {
+          totalRows: parsed.stats.totalRows,
+          habitsFound: parsed.stats.habitsFound,
+          habits: parsed.habits.map(h => h.name),
+          dateRange: parsed.stats.dateRange
+        }
+      };
+    } catch (error) {
+      return {
+        isValid: false,
+        errors: [error.message]
+      };
+    }
+  } catch (error) {
+    return {
+      isValid: false,
+      errors: [`Failed to parse CSV: ${error.message}`]
+    };
+  }
 };
 
-export default {
-  importCsvData,
-  mergeWithExistingData,
-  mergeWithNewStore,
-  validateCsvStructure,
-  HABIT_MAPPING
+// Main import function
+export const importCsvData = async (csvText) => {
+  try {
+    const result = await new Promise((resolve, reject) => {
+      Papa.parse(csvText, {
+        header: true,
+        skipEmptyLines: true,
+        complete: resolve,
+        error: reject
+      });
+    });
+    
+    if (result.errors.length > 0) {
+      throw new Error(`CSV parsing error: ${result.errors[0].message}`);
+    }
+    
+    return parseFlexibleCsv(result.data);
+  } catch (error) {
+    console.error('CSV import error:', error);
+    throw error;
+  }
 };
+
+// Execute import with backend integration
+export const executeImportWithBackend = async (csvData, habitContext) => {
+  console.log('🚀 Starting backend import process...');
+  
+  const { addHabit, toggleHabitEntry } = habitContext;
+  const results = {
+    habitsCreated: 0,
+    entriesCreated: 0,
+    errors: [],
+    createdHabits: []
+  };
+  
+  try {
+    // Step 1: Create all habits in the backend
+    console.log('📝 Creating habits in backend...');
+    const habitMap = new Map(); // Map original name to created habit
+    
+    for (const habitData of csvData.habits) {
+      try {
+        console.log(`Creating habit: ${habitData.name}`);
+        const createdHabit = await addHabit(habitData);
+        
+        habitMap.set(habitData.name, createdHabit);
+        results.habitsCreated++;
+        results.createdHabits.push(createdHabit);
+        
+        console.log(`✅ Created habit: ${createdHabit.name} (ID: ${createdHabit._id})`);
+      } catch (error) {
+        console.error(`❌ Failed to create habit ${habitData.name}:`, error);
+        results.errors.push(`Failed to create habit "${habitData.name}": ${error.message}`);
+      }
+    }
+    
+    // Step 2: Create all entries in the backend
+    console.log('📅 Creating habit entries in backend...');
+    
+    for (const entry of csvData.entries) {
+      try {
+        const habit = habitMap.get(entry.habitName);
+        if (!habit) {
+          results.errors.push(`Habit "${entry.habitName}" not found for entry on ${entry.date}`);
+          continue;
+        }
+        
+        console.log(`Creating entry: ${habit.name} on ${entry.date}`);
+        await toggleHabitEntry(habit._id, entry.date);
+        results.entriesCreated++;
+        
+      } catch (error) {
+        console.error(`❌ Failed to create entry for ${entry.habitName} on ${entry.date}:`, error);
+        results.errors.push(`Failed to create entry for "${entry.habitName}" on ${entry.date}: ${error.message}`);
+      }
+    }
+    
+    console.log('✅ Backend import completed:', results);
+    return results;
+    
+  } catch (error) {
+    console.error('💥 Fatal error during backend import:', error);
+    throw new Error(`Import failed: ${error.message}`);
+  }
+};
+
+// Legacy compatibility functions (kept for backward compatibility)
+export const mergeWithExistingData = () => {
+  console.warn('⚠️  mergeWithExistingData is deprecated. Use executeImportWithBackend instead.');
+  return { merged: true };
+};
+
+export const mergeWithNewStore = () => {
+  console.warn('⚠️  mergeWithNewStore is deprecated. Use executeImportWithBackend instead.');
+  return { merged: true };
+};
+
+// Default export
+const csvImportService = {
+  importCsvData,
+  validateCsvStructure,
+  executeImportWithBackend,
+  mergeWithExistingData, // Legacy
+  mergeWithNewStore     // Legacy
+};
+
+export default csvImportService;

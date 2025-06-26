@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import { habitsAPI, handleAPIError } from '../services/api';
 import { useAuth } from './AuthContext';
 
@@ -262,9 +262,8 @@ export const HabitProvider = ({ children }) => {
       return { success: false, error: errorMessage };
     }
   };
-
   // Fetch habit entries for a date range
-  const fetchHabitEntries = async (habitId, startDate, endDate) => {
+  const fetchHabitEntries = useCallback(async (habitId, startDate, endDate) => {
     try {
       const response = await habitsAPI.getHabitEntries(habitId, {
         startDate: startDate.toISOString().split('T')[0],
@@ -284,14 +283,12 @@ export const HabitProvider = ({ children }) => {
           habitId,
           entries: entriesMap,
         },
-      });
-
-      return { success: true, entries: entriesMap };
+      });      return { success: true, entries: entriesMap };
     } catch (error) {
       const errorMessage = handleAPIError(error);
       return { success: false, error: errorMessage };
     }
-  };
+  }, []);
 
   // Fetch habit statistics
   const fetchStats = async (dateRange = {}) => {
