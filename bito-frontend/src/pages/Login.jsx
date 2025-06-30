@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Flex, Text, Button } from '@radix-ui/themes';
 import { 
@@ -13,11 +13,12 @@ import {
   ExclamationTriangleIcon
 } from '@radix-ui/react-icons';
 import { useAuth } from '../contexts/AuthContext';
+import { oauthAPI } from '../services/api';
 
 const Login = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { login, isLoading: authLoading, error: authError, clearError } = useAuth();
+  const { login, isLoading, isAuthenticated, user, error: authError, clearError } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState({});
@@ -98,11 +99,16 @@ const Login = () => {
     }
   };
   const handleSocialLogin = async (provider) => {
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    const authUrl = `${baseUrl}/api/auth/${provider.toLowerCase()}`;
-    
-    // Redirect to backend OAuth URL
-    window.location.href = authUrl;
+    try {
+      if (provider === 'Google') {
+        window.location.href = oauthAPI.getGoogleLoginUrl();
+      } else if (provider === 'GitHub') {
+        window.location.href = oauthAPI.getGithubLoginUrl();
+      }
+    } catch (error) {
+      console.error(`Social login error for ${provider}:`, error);
+      setErrors({ general: `Failed to initiate ${provider} login. Please try again.` });
+    }
   };
   // Auto-focus email field on mount
   useEffect(() => {
@@ -111,12 +117,27 @@ const Login = () => {
   }, []);
 
   // Redirect if already authenticated
-  const { isAuthenticated } = useAuth();
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/app');
     }
   }, [isAuthenticated, navigate]);
+  
+  
+  // Debug: log auth state and render tracking
+  const renderRef = useRef(0);
+  renderRef.current += 1;
+  console.log(`🔄 Login.jsx render #${renderRef.current}:`, { isLoading, isAuthenticated, user, hasAuthError: !!authError });
+  
+  // Show loading spinner while auth state is being determined
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--color-bg-primary)] via-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)]">
+        <div className="w-12 h-12 border-4 border-[var(--color-brand-500)] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[var(--color-bg-primary)] via-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] relative overflow-hidden">
       {/* Enhanced Animated Background */}
@@ -142,7 +163,7 @@ const Login = () => {
             Back to Home
           </Button>
           
-          <Flex align="center" gap="3" className="animate-fade-in">
+          <Flex align="center" gap="3">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center shadow-lg">
               <TargetIcon className="w-5 h-5 text-white" />
             </div>
@@ -151,13 +172,13 @@ const Login = () => {
         </Flex>
       </nav>      {/* Main Content */}
       <div className="relative z-10 flex items-center justify-center min-h-[calc(100vh-120px)] px-6">
-        <div className="w-full max-w-md animate-slide-up">
+        <div className="w-full max-w-md">
           {/* Enhanced Header */}
           <div className="text-center mb-8">
-            <Text className="text-4xl font-bold font-dmSerif gradient-text mb-3 animate-fade-in">
+            <Text className="text-4xl font-bold font-dmSerif gradient-text mb-3">
               Welcome Back
             </Text>
-            <Text className="text-lg text-[var(--color-text-secondary)] animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            <Text className="text-lg text-[var(--color-text-secondary)]">
               Continue your habit-building journey
             </Text>
           </div>          {/* Error Message */}
@@ -167,7 +188,7 @@ const Login = () => {
               <Text className="text-sm">{authError || errors.general}</Text>
             </div>
           )}{/* Enhanced Login Card with Minimal Design */}
-          <div className="glass-card-minimal p-10 rounded-2xl space-y-8 animate-fade-in max-w-sm mx-auto" style={{ animationDelay: '0.4s' }}>
+          <div className="glass-card-minimal p-10 rounded-2xl space-y-8 max-w-sm mx-auto">
             {/* Minimal Header */}
             <div className="text-center space-y-2">
               <Text className="text-2xl font-bold text-[var(--color-text-primary)]">
@@ -181,7 +202,7 @@ const Login = () => {
             {/* Enhanced Social Login */}
             <div className="space-y-3">              <Button
                 onClick={() => handleSocialLogin('GitHub')}
-                disabled={authLoading}
+                disabled={isLoading}
                 className="w-full flex items-center justify-center gap-3 py-3 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)] rounded-lg transition-all duration-200 hover:scale-[1.01] hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 variant="soft"
               >
@@ -190,7 +211,7 @@ const Login = () => {
               </Button>
               <Button
                 onClick={() => handleSocialLogin('Google')}
-                disabled={authLoading}
+                disabled={isLoading}
                 className="w-full flex items-center justify-center gap-3 py-3 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)] rounded-lg transition-all duration-200 hover:scale-[1.01] hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 variant="soft"
               >
@@ -210,7 +231,7 @@ const Login = () => {
                 <div className="w-full border-t border-[var(--color-border-primary)]/30"></div>
               </div>
               <div className="relative flex justify-center">
-                <span className="px-4 bg-[var(--color-surface-primary)] text-xs text-[var(--color-text-tertiary)] uppercase tracking-wide">
+                <span className="px-4 bg-[var(--color-surface-primary)] text-xs text-[var(--color-text-tertiary] uppercase tracking-wide">
                   or
                 </span>
               </div>            </div>
@@ -230,7 +251,7 @@ const Login = () => {
                       errors.email ? 'border-red-500' : 'border-[var(--color-border-primary)]/30'
                     }`}
                     placeholder="your@email.com"
-                    disabled={authLoading}
+                    disabled={isLoading}
                     autoComplete="email"
                   />
                 {errors.email && (
@@ -253,13 +274,13 @@ const Login = () => {
                         errors.password ? 'border-red-500' : 'border-[var(--color-border-primary)]/30'
                       }`}
                       placeholder="••••••••"
-                      disabled={authLoading}
+                      disabled={isLoading}
                       autoComplete="current-password"
                     />                    <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors duration-200"
-                      disabled={authLoading}
+                      disabled={isLoading}
                     >
                     {showPassword ? <EyeNoneIcon className="w-4 h-4" /> : <EyeOpenIcon className="w-4 h-4" />}
                   </button>
@@ -275,7 +296,7 @@ const Login = () => {
               <div className="text-right">                <button
                   type="button"
                   className="text-xs text-[var(--color-brand-400)] hover:text-[var(--color-brand-300)] transition-colors duration-200"
-                  disabled={authLoading}
+                  disabled={isLoading}
                 >
                   forgot password?
                 </button>
@@ -283,14 +304,14 @@ const Login = () => {
 
               {/* Sign In Button */}              <Button
                 type="submit"
-                disabled={authLoading}
+                disabled={isLoading}
                 className={`w-full py-3 mt-8 rounded-lg font-medium transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99] ${
-                  authLoading 
+                  isLoading 
                     ? 'bg-[var(--color-surface-elevated)] text-[var(--color-text-tertiary)] cursor-not-allowed' 
                     : 'bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white shadow-md hover:shadow-lg'
                 }`}
               >
-                {authLoading ? (
+                {isLoading ? (
                   <div className="flex items-center justify-center gap-2">
                     <div className="w-4 h-4 border-2 border-[var(--color-text-tertiary)] border-t-transparent rounded-full animate-spin" />
                     <Text className="text-sm">signing in...</Text>
@@ -303,12 +324,12 @@ const Login = () => {
           </div>
 
           {/* Bottom Link */}
-          <div className="text-center mt-6 animate-fade-in" style={{ animationDelay: '0.6s' }}>            <Text className="text-sm text-[var(--color-text-secondary)]">
+          <div className="text-center mt-6">            <Text className="text-sm text-[var(--color-text-secondary)]">
               don't have an account?{' '}
               <button
                 onClick={() => navigate('/signup')}
                 className="text-[var(--color-brand-400)] hover:text-[var(--color-brand-300)] font-medium transition-colors duration-200"
-                disabled={authLoading}
+                disabled={isLoading}
               >
                 sign up now
               </button>

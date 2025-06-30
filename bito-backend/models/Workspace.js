@@ -23,8 +23,7 @@ const workspaceSchema = new mongoose.Schema({
   ownerId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
   },
   
   // Workspace settings
@@ -126,16 +125,48 @@ workspaceSchema.virtual('memberCount').get(function() {
 
 // Methods
 workspaceSchema.methods.isMember = function(userId) {
-  return this.members.some(member => 
-    member.userId.toString() === userId.toString() && 
-    member.status === 'active'
-  );
+  if (!userId) return false;
+  
+  const userIdString = userId.toString();
+  
+  return this.members.some(member => {
+    if (!member.userId || member.status !== 'active') return false;
+    
+    // Handle both ObjectId and string comparisons
+    const memberIdString = member.userId.toString();
+    
+    // Also check if the member.userId might be a corrupted string
+    if (typeof member.userId === 'string' && member.userId.includes('_id:')) {
+      // Extract ObjectId from corrupted string format
+      const match = member.userId.match(/_id: new ObjectId\('([^']+)'\)/);
+      if (match && match[1]) {
+        return match[1] === userIdString;
+      }
+    }
+    
+    return memberIdString === userIdString;
+  });
 };
 
 workspaceSchema.methods.getMemberRole = function(userId) {
-  const member = this.members.find(member => 
-    member.userId.toString() === userId.toString()
-  );
+  if (!userId) return null;
+  
+  const userIdString = userId.toString();
+  
+  const member = this.members.find(member => {
+    if (!member.userId) return false;
+    
+    // Handle corrupted userId strings
+    if (typeof member.userId === 'string' && member.userId.includes('_id:')) {
+      const match = member.userId.match(/_id: new ObjectId\('([^']+)'\)/);
+      if (match && match[1]) {
+        return match[1] === userIdString;
+      }
+    }
+    
+    return member.userId.toString() === userIdString;
+  });
+  
   return member ? member.role : null;
 };
 
@@ -147,6 +178,11 @@ workspaceSchema.methods.canUserAccess = function(userId, action) {
   
   if (!member) return false;
   
+  // Owner has all permissions
+  if (this.ownerId.toString() === userId.toString()) {
+    return true;
+  }
+  
   const rolePermissions = {
     owner: ['all'],
     admin: ['invite', 'manage_habits', 'view_all', 'manage_members'],
@@ -156,6 +192,38 @@ workspaceSchema.methods.canUserAccess = function(userId, action) {
   
   const userPermissions = rolePermissions[member.role] || [];
   return userPermissions.includes('all') || userPermissions.includes(action);
+};
+
+// Get default permissions for a role
+workspaceSchema.methods.getDefaultPermissions = function(role) {
+  const defaultPermissions = {
+    owner: {
+      canInviteMembers: true,
+      canCreateHabits: true,
+      canViewAllProgress: true,
+      canManageSettings: true
+    },
+    admin: {
+      canInviteMembers: true,
+      canCreateHabits: true,
+      canViewAllProgress: true,
+      canManageSettings: false
+    },
+    member: {
+      canInviteMembers: false,
+      canCreateHabits: true,
+      canViewAllProgress: true,
+      canManageSettings: false
+    },
+    viewer: {
+      canInviteMembers: false,
+      canCreateHabits: false,
+      canViewAllProgress: true,
+      canManageSettings: false
+    }
+  };
+  
+  return defaultPermissions[role] || defaultPermissions.viewer;
 };
 
 // Static methods

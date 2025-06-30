@@ -221,7 +221,7 @@ memberHabitSchema.statics.getWorkspaceLeaderboard = function(workspaceId, metric
 
 memberHabitSchema.statics.getWorkspaceStats = function(workspaceId) {
   return this.aggregate([
-    { $match: { workspaceId: mongoose.Types.ObjectId(workspaceId), isActive: true } },
+    { $match: { workspaceId: new mongoose.Types.ObjectId(workspaceId), isActive: true } },
     {
       $group: {
         _id: '$workspaceId',

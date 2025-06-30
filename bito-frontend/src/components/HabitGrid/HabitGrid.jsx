@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect } from "react";
-import { useHabits, habitUtils } from "../../contexts/HabitContext";
+import { useHabits, habitUtils } from "../../contexts/HabitContext.jsx";
 import { HabitRow } from "./HabitRow.jsx";
 import { WeekHeader } from "./WeekHeader.jsx";
 import { EmptyStateWithAddHabit } from "./EmptyStateWithAddHabit.jsx";
@@ -13,6 +13,10 @@ export const HabitGrid = ({
   showStats = true,
   showHeader = true,
   tableStyle = false,
+  onEditHabit = null,
+  habits: propHabits = null, // Habits passed from parent (for reordering)
+  isInEditMode = false,
+  onHabitReorder = null,
 }) => {
   // Memoize the start date to prevent infinite re-renders
   const memoizedStartDate = useMemo(() => {
@@ -21,7 +25,7 @@ export const HabitGrid = ({
 
   // Get data from habit context
   const {
-    habits,
+    habits: contextHabits,
     entries,
     isLoading,
     error,
@@ -29,11 +33,15 @@ export const HabitGrid = ({
     fetchHabitEntries,
   } = useHabits();
 
+  // Use propHabits if provided (for reordering), otherwise use context habits
+  const habits = propHabits || contextHabits;
+
   // Calculate week dates
   const weekDates = useMemo(() => {
+    let dates;
     if (endDate) {
       // Custom date range
-      const dates = [];
+      dates = [];
       const current = new Date(memoizedStartDate);
       while (current <= endDate) {
         dates.push({
@@ -45,11 +53,12 @@ export const HabitGrid = ({
         });
         current.setDate(current.getDate() + 1);
       }
-      return dates;
     } else {
-      // Default: current week
-      return habitUtils.getWeekDates(memoizedStartDate);
+      // Standard week view
+      dates = habitUtils.getWeekDates(memoizedStartDate);
     }
+    
+    return dates;
   }, [memoizedStartDate, endDate]);
   // Fetch entries for visible habits and date range
   useEffect(() => {
@@ -60,7 +69,7 @@ export const HabitGrid = ({
       // Only fetch entries if we don't already have them for this date range
       habits.forEach((habit) => {
         const habitEntries = entries[habit._id];
-        
+
         // Check if we have entries for all dates in the range
         const missingDates = weekDates.filter(({ date }) => {
           return !habitEntries || !habitEntries.hasOwnProperty(date);
@@ -75,11 +84,6 @@ export const HabitGrid = ({
   }, [habits, weekDates, fetchHabitEntries]); // Removed entries to prevent refetch loops
 
   // DEBUG: Log data to compare views
-  // console.log('HabitGrid - Habits count:', habits.length);
-  // console.log('HabitGrid - Habits:', habits.map(h => ({ id: h.id, name: h.name })));
-  // console.log('HabitGrid - Completions size:', completions.size);
-  // console.log('HabitGrid - Sample completions:', Array.from(completions.keys()).slice(0, 5));
-  // console.log('HabitGrid - Week dates:', weekDates.map(d => d.date));
   // Calculate week statistics
   const weekStats = useMemo(() => {
     let totalCells = habits.length * weekDates.length;
@@ -147,7 +151,20 @@ export const HabitGrid = ({
 
   // Handle habit completion toggle
   const handleToggleCompletion = async (habitId, date) => {
-    await toggleHabitCompletion(habitId, date);
+    // Find the habit name for logging
+    const habit = habits.find(h => h._id === habitId);
+    const habitName = habit?.name || 'Unknown';
+    
+    // Get the day name for the date
+    const dateObj = new Date(date + 'T00:00:00');
+    const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+    
+    // Check current completion status
+    const habitEntries = entries[habitId];
+    const currentEntry = habitEntries?.[date];
+    const wasCompleted = currentEntry?.completed || false;
+    
+    const result = await toggleHabitCompletion(habitId, date);
   };
 
   // Show loading state
@@ -194,6 +211,9 @@ export const HabitGrid = ({
           completions={completions}
           onToggle={handleToggleCompletion}
           weekStats={weekStats}
+          onEditHabit={onEditHabit}
+          isInEditMode={isInEditMode}
+          onHabitReorder={onHabitReorder}
         />
         {showStats && <WeekStats stats={weekStats} />}
       </div>
@@ -213,6 +233,7 @@ export const HabitGrid = ({
             weekDates={weekDates}
             entries={entries[habit._id] || {}}
             onToggle={handleToggleCompletion}
+            onEditHabit={onEditHabit}
           />
         ))}
       </div>

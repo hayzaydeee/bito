@@ -6,13 +6,16 @@ const User = require('../models/User');
 const authenticateJWT = (req, res, next) => {
   passport.authenticate('jwt', { session: false }, (err, user, info) => {
     if (err) {
+      console.log('JWT Auth Error:', err);
       return res.status(500).json({ error: 'Authentication error' });
     }
     
     if (!user) {
+      console.log('JWT Auth Failed - No user found:', info);
       return res.status(401).json({ error: 'Access denied. No valid token provided.' });
     }
     
+    console.log('JWT Auth Success - User:', { id: user._id || user.id, email: user.email, name: user.name });
     req.user = user;
     next();
   })(req, res, next);

@@ -1,11 +1,14 @@
 import React, { memo } from 'react';
 import { HabitCheckbox } from './HabitCheckbox.jsx';
+import { IconButton } from '@radix-ui/themes';
+import { Pencil1Icon } from '@radix-ui/react-icons';
 
 export const HabitRow = memo(({ 
   habit, 
   weekDates, 
   entries = {}, 
-  onToggle 
+  onToggle,
+  onEditHabit
 }) => {
   return (
     <div className="habit-row bg-[var(--color-surface-elevated)] rounded-lg border border-[var(--color-border-primary)] overflow-hidden">
@@ -21,6 +24,19 @@ export const HabitRow = memo(({
               Streak: {getHabitStreak(entries, weekDates)} days
             </p>
           </div>
+          {onEditHabit && (
+            <IconButton
+              variant="ghost"
+              size="1"
+              color="gray"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEditHabit(habit);
+              }}
+            >
+              <Pencil1Icon />
+            </IconButton>
+          )}
         </div>
 
         {/* Checkboxes */}

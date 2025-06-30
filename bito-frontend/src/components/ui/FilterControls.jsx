@@ -1,6 +1,6 @@
 import React from "react";
 import { ChevronDownIcon } from "@radix-ui/react-icons";
-import { dateUtils } from '../../services/habitDataService';
+import { habitUtils } from '../../contexts/HabitContext';
 
 /**
  * Filter Dropdown Component
@@ -76,7 +76,7 @@ export const ChartFilterControls = ({
   const getPeriodOptions = () => {
     switch (mode) {
       case "week":
-        return options.weeks;
+        return options.weeks || [];
       case "month":
         return options.months;
       case "continuous":
@@ -132,20 +132,54 @@ export const DatabaseFilterControls = ({
   onMonthChange,
   options 
 }) => {
-  // Get weeks for the selected month
-  const getWeeksForSelectedMonth = () => {
+  // Generate calendar weeks using HabitContext's logic (fixed timezone issues)
+  const getCalendarWeeksForMonth = () => {
     if (selectedMonth) {
       const year = new Date().getFullYear();
-      const weeks = dateUtils.getWeeksInMonth(year, selectedMonth - 1); // month is 1-based, function expects 0-based
-      return weeks.map(week => ({
-        value: week.number,
-        label: week.label
-      }));
+      const weeks = [];
+      
+      // Get first day of selected month
+      const monthStart = new Date(year, selectedMonth - 1, 1);
+      const monthEnd = new Date(year, selectedMonth, 0);
+      
+      // Start from the Monday of the week containing the first day of month
+      let currentWeekStart = habitUtils.getWeekStart(monthStart);
+      let weekNumber = 1;
+      
+      // Generate weeks that overlap with this month
+      while (currentWeekStart <= monthEnd) {
+        const weekEnd = new Date(currentWeekStart);
+        weekEnd.setDate(currentWeekStart.getDate() + 6);
+        
+        // Format dates as DD/MM
+        const formatDate = (date) => {
+          const day = date.getDate().toString().padStart(2, '0');
+          const month = (date.getMonth() + 1).toString().padStart(2, '0');
+          return `${day}/${month}`;
+        };
+        
+        const startStr = formatDate(currentWeekStart);
+        const endStr = formatDate(weekEnd);
+        
+        weeks.push({
+          value: weekNumber,
+          label: `Week ${weekNumber} (${startStr} - ${endStr})`,
+          start: new Date(currentWeekStart),
+          end: new Date(weekEnd)
+        });
+        
+        // Move to next week
+        currentWeekStart = new Date(currentWeekStart);
+        currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+        weekNumber++;
+      }
+      
+      return weeks;
     }
     return [];
   };
 
-  const weekOptions = getWeeksForSelectedMonth();
+  const weekOptions = getCalendarWeeksForMonth();
 
   return (
     <div className="flex items-center gap-3 flex-wrap">

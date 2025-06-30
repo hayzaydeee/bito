@@ -1,8 +1,8 @@
-import React, { useState, memo, useMemo } from "react";
-import { HabitGrid } from "../../../HabitGrid/index.js";
+import React, { useState, memo, useMemo, useCallback } from "react";
+import { HabitGrid } from "../../../habitGrid/index.js";
 import { DatabaseHeader } from "./DatabaseHeader.jsx";
 import { GalleryViewV2 } from "./GalleryViewV2.jsx";
-import { habitUtils } from "../../../../contexts/HabitContext";
+import { habitUtils, useHabits } from "../../../../contexts/HabitContext";
 
 const DatabaseWidgetV2 = memo(
   ({
@@ -12,8 +12,52 @@ const DatabaseWidgetV2 = memo(
     filterComponent = null,
     dateRange = null,
     mode = "week",
+    onAddHabit = null,
+    onEditHabit = null,
+    isInEditMode = false,
   }) => {
     const [viewType, setViewType] = useState(initialViewType);
+    const { habits } = useHabits();
+    
+    // State for custom habit order
+    const [habitOrder, setHabitOrder] = useState(() => {
+      const saved = localStorage.getItem('habit-order');
+      return saved ? JSON.parse(saved) : [];
+    });
+
+    // Memoized ordered habits
+    const orderedHabits = useMemo(() => {
+      if (!habits || habits.length === 0) return [];
+      
+      // If no custom order, use default order
+      if (habitOrder.length === 0) {
+        return habits;
+      }
+      
+      // Apply custom order
+      const ordered = [];
+      const habitMap = new Map(habits.map(h => [h._id || h.id, h]));
+      
+      // Add habits in custom order
+      for (const id of habitOrder) {
+        if (habitMap.has(id)) {
+          ordered.push(habitMap.get(id));
+          habitMap.delete(id);
+        }
+      }
+      
+      // Add any new habits that weren't in the saved order
+      ordered.push(...habitMap.values());
+      
+      return ordered;
+    }, [habits, habitOrder]);
+
+    // Handle habit reorder
+    const handleHabitReorder = useCallback((newOrder) => {
+      console.log('Reordering habits:', newOrder);
+      setHabitOrder(newOrder);
+      localStorage.setItem('habit-order', JSON.stringify(newOrder));
+    }, []);
 
     // Calculate display title with date range
     const displayTitle = useMemo(() => {
@@ -66,6 +110,9 @@ const DatabaseWidgetV2 = memo(
               showStats={true}
               showHeader={true}
               tableStyle={true}
+              habits={orderedHabits}
+              isInEditMode={isInEditMode}
+              onHabitReorder={handleHabitReorder}
             />
           );
         case "gallery":
@@ -75,6 +122,11 @@ const DatabaseWidgetV2 = memo(
               startDate={startDate}
               endDate={dateRange?.end}
               breakpoint={breakpoint}
+              onAddHabit={onAddHabit}
+              onEditHabit={onEditHabit}
+              habits={orderedHabits}
+              isInEditMode={isInEditMode}
+              onHabitReorder={handleHabitReorder}
             />
           );
       }

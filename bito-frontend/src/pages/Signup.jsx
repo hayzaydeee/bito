@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Flex, Text, Button } from '@radix-ui/themes';
 import { 
@@ -18,7 +18,7 @@ import { oauthAPI } from '../services/api';
 
 const Signup = () => {
   const navigate = useNavigate();
-  const { register, isAuthenticated, authLoading: authLoading, error: authError, clearError } = useAuth();
+  const { register, isAuthenticated, isLoading, error: authError, clearError, user } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -30,6 +30,11 @@ const Signup = () => {
     password: '',
     confirmPassword: ''
   });
+
+  // Debug: log auth state and render tracking
+  const renderRef = useRef(0);
+  renderRef.current += 1;
+  console.log(`🔄 Signup.jsx render #${renderRef.current}:`, { isLoading, isAuthenticated, user, hasAuthError: !!authError });
 
   // Form validation
   const validateForm = () => {
@@ -136,6 +141,15 @@ const Signup = () => {
     }
   }, [isAuthenticated, navigate]);
 
+  // Show loading spinner while auth state is being determined
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--color-bg-primary)] via-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)]">
+        <div className="w-12 h-12 border-4 border-[var(--color-brand-500)] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[var(--color-bg-primary)] via-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] relative overflow-hidden">
       {/* Enhanced Animated Background */}
@@ -174,13 +188,13 @@ const Signup = () => {
 
       {/* Main Content */}
       <div className="relative z-10 flex items-center justify-center min-h-[calc(100vh-120px)] px-6">
-        <div className="w-full max-w-md animate-slide-up">
+        <div className="w-full max-w-md">
           {/* Enhanced Header */}
           <div className="text-center mb-8">
-            <Text className="text-4xl font-bold font-dmSerif gradient-text mb-3 animate-fade-in">
+            <Text className="text-4xl font-bold font-dmSerif gradient-text mb-3">
               Join Bito
             </Text>
-            <Text className="text-lg text-[var(--color-text-secondary)] animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            <Text className="text-lg text-[var(--color-text-secondary)]">
               Start building better habits today
             </Text>
           </div>          {/* Error Message */}
@@ -192,7 +206,7 @@ const Signup = () => {
           )}
 
           {/* Enhanced Signup Card with Minimal Design */}
-          <div className="glass-card-minimal p-10 rounded-2xl space-y-8 animate-fade-in max-w-sm mx-auto" style={{ animationDelay: '0.4s' }}>
+          <div className="glass-card-minimal p-10 rounded-2xl space-y-8 max-w-sm mx-auto">
             {/* Minimal Header */}
             <div className="text-center space-y-2">
               <Text className="text-2xl font-bold text-[var(--color-text-primary)]">
@@ -206,7 +220,7 @@ const Signup = () => {
             {/* Enhanced Social Signup */}
             <div className="space-y-3">              <Button
                 onClick={() => handleSocialSignup('GitHub')}
-                disabled={authLoading}
+                disabled={isLoading}
                 className="w-full flex items-center justify-center gap-3 py-3 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)] rounded-lg transition-all duration-200 hover:scale-[1.01] hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 variant="soft"
               >
@@ -215,7 +229,7 @@ const Signup = () => {
               </Button>
               <Button
                 onClick={() => handleSocialSignup('Google')}
-                disabled={authLoading}
+                disabled={isLoading}
                 className="w-full flex items-center justify-center gap-3 py-3 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)] rounded-lg transition-all duration-200 hover:scale-[1.01] hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 variant="soft"
               >
@@ -235,7 +249,7 @@ const Signup = () => {
                 <div className="w-full border-t border-[var(--color-border-primary)]/30"></div>
               </div>
               <div className="relative flex justify-center">
-                <span className="px-4 bg-[var(--color-surface-primary)] text-xs text-[var(--color-text-tertiary)] uppercase tracking-wide">
+                <span className="px-4 bg-[var(--color-surface-primary)] text-xs text-[var(--color-text-tertiary] uppercase tracking-wide">
                   or
                 </span>
               </div>
@@ -258,7 +272,7 @@ const Signup = () => {
                     className={`w-full px-3 py-3 bg-[var(--color-surface-secondary)]/50 border-0 border-b-2 rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-0 focus:border-[var(--color-brand-500)] transition-all duration-200 ${
                       errors.firstName ? 'border-red-500' : 'border-[var(--color-border-primary)]/30'                    }`}
                     placeholder="john"
-                    disabled={authLoading}
+                    disabled={isLoading}
                     autoComplete="given-name"
                   />
                   {errors.firstName && (
@@ -280,7 +294,7 @@ const Signup = () => {
                     className={`w-full px-3 py-3 bg-[var(--color-surface-secondary)]/50 border-0 border-b-2 rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-0 focus:border-[var(--color-brand-500)] transition-all duration-200 ${
                       errors.lastName ? 'border-red-500' : 'border-[var(--color-border-primary)]/30'
                     }`}                    placeholder="doe"
-                    disabled={authLoading}
+                    disabled={isLoading}
                     autoComplete="family-name"
                   />
                   {errors.lastName && (
@@ -304,7 +318,7 @@ const Signup = () => {
                     errors.email ? 'border-red-500' : 'border-[var(--color-border-primary)]/30'
                   }`}
                   placeholder="your@email.com"
-                  disabled={authLoading}
+                  disabled={isLoading}
                   autoComplete="email"
                 />
                 {errors.email && (
@@ -328,14 +342,14 @@ const Signup = () => {
                       errors.password ? 'border-red-500' : 'border-[var(--color-border-primary)]/30'
                     }`}
                     placeholder="••••••••"
-                    disabled={authLoading}
+                    disabled={isLoading}
                     autoComplete="new-password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors duration-200"
-                    disabled={authLoading}
+                    disabled={isLoading}
                   >
                     {showPassword ? <EyeNoneIcon className="w-4 h-4" /> : <EyeOpenIcon className="w-4 h-4" />}
                   </button>
@@ -361,14 +375,14 @@ const Signup = () => {
                       errors.confirmPassword ? 'border-red-500' : 'border-[var(--color-border-primary)]/30'
                     }`}
                     placeholder="••••••••"
-                    disabled={authLoading}
+                    disabled={isLoading}
                     autoComplete="new-password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors duration-200"
-                    disabled={authLoading}
+                    disabled={isLoading}
                   >
                     {showConfirmPassword ? <EyeNoneIcon className="w-4 h-4" /> : <EyeOpenIcon className="w-4 h-4" />}
                   </button>
@@ -397,7 +411,7 @@ const Signup = () => {
                         }
                       }}
                       className="sr-only"
-                      disabled={authLoading}
+                      disabled={isLoading}
                     />
                     <div className={`w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center ${
                       acceptTerms 
@@ -412,7 +426,7 @@ const Signup = () => {
                     <button
                       type="button"
                       className="text-[var(--color-brand-400)] hover:text-[var(--color-brand-300)] transition-colors duration-200"
-                      disabled={authLoading}
+                      disabled={isLoading}
                     >
                       Terms of Service
                     </button>
@@ -420,7 +434,7 @@ const Signup = () => {
                     <button
                       type="button"
                       className="text-[var(--color-brand-400)] hover:text-[var(--color-brand-300)] transition-colors duration-200"
-                      disabled={authLoading}
+                      disabled={isLoading}
                     >
                       Privacy Policy
                     </button>
@@ -434,14 +448,14 @@ const Signup = () => {
               </div>              {/* Sign Up Button */}
               <Button
                 type="submit"
-                disabled={authLoading}
+                disabled={isLoading}
                 className={`w-full py-3 mt-8 rounded-lg font-medium transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99] ${
-                  authLoading 
+                  isLoading 
                     ? 'bg-[var(--color-surface-elevated)] text-[var(--color-text-tertiary)] cursor-not-allowed' 
                     : 'bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white shadow-md hover:shadow-lg'
                 }`}
               >
-                {authLoading ? (
+                {isLoading ? (
                   <div className="flex items-center justify-center gap-2">
                     <div className="w-4 h-4 border-2 border-[var(--color-text-tertiary)] border-t-transparent rounded-full animate-spin" />
                     <Text className="text-sm">creating account...</Text>
@@ -454,12 +468,12 @@ const Signup = () => {
           </div>
 
           {/* Bottom Link */}
-          <div className="text-center mt-6 animate-fade-in" style={{ animationDelay: '0.6s' }}>
+          <div className="text-center mt-6">
             <Text className="text-sm text-[var(--color-text-secondary)]">
               already have an account?{' '}              <button
                 onClick={() => navigate('/login')}
                 className="text-[var(--color-brand-400)] hover:text-[var(--color-brand-300)] font-medium transition-colors duration-200"
-                disabled={authLoading}
+                disabled={isLoading}
               >
                 sign in
               </button>

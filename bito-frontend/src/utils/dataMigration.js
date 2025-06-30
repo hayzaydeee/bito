@@ -1,4 +1,4 @@
-import { habitUtils } from './habitLogic.js';
+import { habitUtils } from '../contexts/HabitContext.jsx';
 import useHabitStore from '../store/habitStore.js';
 
 export const migrateExistingData = (oldHabits = [], oldCompletions = {}) => {

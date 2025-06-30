@@ -6,10 +6,20 @@ import { useHabits } from "../../contexts/HabitContext";
  * Shared Empty State Component with Add Habit functionality
  * Used by both Gallery and Table views
  */
-export const EmptyStateWithAddHabit = ({ className = "" }) => {
+export const EmptyStateWithAddHabit = ({ className = "", onAddHabit = null }) => {
   const { createHabit } = useHabits();
   const [showAddForm, setShowAddForm] = useState(false);
   const [newHabitName, setNewHabitName] = useState("");
+
+  const handleAddClick = () => {
+    if (onAddHabit) {
+      // Use the modal if handler is provided
+      onAddHabit();
+    } else {
+      // Fall back to inline form if no handler provided
+      setShowAddForm(true);
+    }
+  };
   const handleAddHabit = async () => {
     if (!newHabitName.trim()) return;
     
@@ -105,7 +115,7 @@ export const EmptyStateWithAddHabit = ({ className = "" }) => {
       </p>
       
       <button
-        onClick={() => setShowAddForm(true)}
+        onClick={handleAddClick}
         className="flex items-center gap-2 px-4 py-2 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg transition-all duration-200 font-outfit text-sm"
       >
         <PlusIcon className="w-4 h-4" />

@@ -1,5 +1,5 @@
 // API configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 // API request helper
 const apiRequest = async (endpoint, options = {}) => {
@@ -24,6 +24,14 @@ const apiRequest = async (endpoint, options = {}) => {
     const data = await response.json();
 
     if (!response.ok) {
+      console.error('API Error Response:', {
+        status: response.status,
+        statusText: response.statusText,
+        data: data,
+        url: url,
+        method: config.method,
+        body: config.body
+      });
       throw new Error(data.error || `HTTP error! status: ${response.status}`);
     }
 
@@ -38,7 +46,7 @@ const apiRequest = async (endpoint, options = {}) => {
 export const authAPI = {
   // Register new user
   register: async (userData) => {
-    return apiRequest('/auth/register', {
+    return apiRequest('/api/auth/register', {
       method: 'POST',
       body: JSON.stringify({
         name: `${userData.firstName} ${userData.lastName}`.trim(),
@@ -50,7 +58,7 @@ export const authAPI = {
 
   // Login user
   login: async (credentials) => {
-    return apiRequest('/auth/login', {
+    return apiRequest('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
@@ -58,19 +66,19 @@ export const authAPI = {
 
   // Get current user
   getMe: async () => {
-    return apiRequest('/auth/me');
+    return apiRequest('/api/auth/me');
   },
 
   // Logout user
   logout: async () => {
-    return apiRequest('/auth/logout', {
+    return apiRequest('/api/auth/logout', {
       method: 'POST',
     });
   },
 
   // Refresh token
   refreshToken: async () => {
-    return apiRequest('/auth/refresh', {
+    return apiRequest('/api/auth/refresh', {
       method: 'PUT',
     });
   },
@@ -80,12 +88,12 @@ export const authAPI = {
 export const userAPI = {
   // Get user profile
   getProfile: async () => {
-    return apiRequest('/users/profile');
+    return apiRequest('/api/users/profile');
   },
 
   // Update user profile
   updateProfile: async (profileData) => {
-    return apiRequest('/users/profile', {
+    return apiRequest('/api/users/profile', {
       method: 'PUT',
       body: JSON.stringify(profileData),
     });
@@ -93,7 +101,7 @@ export const userAPI = {
 
   // Change password
   changePassword: async (passwordData) => {
-    return apiRequest('/users/change-password', {
+    return apiRequest('/api/users/change-password', {
       method: 'PUT',
       body: JSON.stringify(passwordData),
     });
@@ -101,19 +109,19 @@ export const userAPI = {
 
   // Get user statistics
   getStats: async () => {
-    return apiRequest('/users/stats');
+    return apiRequest('/api/users/stats');
   },
 
   // Export user data
   exportData: async () => {
-    return apiRequest('/users/export-data', {
+    return apiRequest('/api/users/export-data', {
       method: 'POST',
     });
   },
 
   // Delete account
   deleteAccount: async (confirmData) => {
-    return apiRequest('/users/account', {
+    return apiRequest('/api/users/account', {
       method: 'DELETE',
       body: JSON.stringify(confirmData),
     });
@@ -132,14 +140,14 @@ export const habitsAPI = {
     });
     
     const queryString = searchParams.toString();
-    const endpoint = queryString ? `/habits?${queryString}` : '/habits';
+    const endpoint = queryString ? `/api/habits?${queryString}` : '/api/habits';
     
     return apiRequest(endpoint);
   },
 
   // Create new habit
   createHabit: async (habitData) => {
-    return apiRequest('/habits', {
+    return apiRequest('/api/habits', {
       method: 'POST',
       body: JSON.stringify(habitData),
     });
@@ -147,12 +155,12 @@ export const habitsAPI = {
 
   // Get specific habit
   getHabit: async (habitId) => {
-    return apiRequest(`/habits/${habitId}`);
+    return apiRequest(`/api/habits/${habitId}`);
   },
 
   // Update habit
   updateHabit: async (habitId, habitData) => {
-    return apiRequest(`/habits/${habitId}`, {
+    return apiRequest(`/api/habits/${habitId}`, {
       method: 'PUT',
       body: JSON.stringify(habitData),
     });
@@ -160,14 +168,14 @@ export const habitsAPI = {
 
   // Delete habit
   deleteHabit: async (habitId) => {
-    return apiRequest(`/habits/${habitId}`, {
+    return apiRequest(`/api/habits/${habitId}`, {
       method: 'DELETE',
     });
   },
 
   // Check/uncheck habit
   checkHabit: async (habitId, entryData) => {
-    return apiRequest(`/habits/${habitId}/check`, {
+    return apiRequest(`/api/habits/${habitId}/check`, {
       method: 'POST',
       body: JSON.stringify(entryData),
     });
@@ -184,8 +192,8 @@ export const habitsAPI = {
     
     const queryString = searchParams.toString();
     const endpoint = queryString 
-      ? `/habits/${habitId}/entries?${queryString}` 
-      : `/habits/${habitId}/entries`;
+      ? `/api/habits/${habitId}/entries?${queryString}` 
+      : `/api/habits/${habitId}/entries`;
     
     return apiRequest(endpoint);
   },
@@ -200,16 +208,286 @@ export const habitsAPI = {
     });
     
     const queryString = searchParams.toString();
-    const endpoint = queryString ? `/habits/stats?${queryString}` : '/habits/stats';
+    const endpoint = queryString ? `/api/habits/stats?${queryString}` : '/api/habits/stats';
     
     return apiRequest(endpoint);
   },
 
   // Archive/unarchive habit
   archiveHabit: async (habitId, archived = true) => {
-    return apiRequest(`/habits/${habitId}/archive`, {
+    return apiRequest(`/api/habits/${habitId}/archive`, {
       method: 'PUT',
       body: JSON.stringify({ archived }),
+    });
+  },
+};
+
+// Workspaces API
+export const workspacesAPI = {
+  // Get all user workspaces
+  getWorkspaces: async () => {
+    return apiRequest('/api/workspaces');
+  },
+
+  // Create new workspace
+  createWorkspace: async (workspaceData) => {
+    return apiRequest('/api/workspaces', {
+      method: 'POST',
+      body: JSON.stringify(workspaceData),
+    });
+  },
+
+  // Get specific workspace
+  getWorkspace: async (workspaceId) => {
+    return apiRequest(`/api/workspaces/${workspaceId}`);
+  },
+
+  // Update workspace
+  updateWorkspace: async (workspaceId, workspaceData) => {
+    return apiRequest(`/api/workspaces/${workspaceId}`, {
+      method: 'PUT',
+      body: JSON.stringify(workspaceData),
+    });
+  },
+
+  // Delete workspace
+  deleteWorkspace: async (workspaceId) => {
+    return apiRequest(`/api/workspaces/${workspaceId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Get workspace overview
+  getWorkspaceOverview: async (workspaceId) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/overview`);
+  },
+
+  // Get workspace activity
+  getWorkspaceActivity: async (workspaceId, params = {}) => {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        searchParams.append(key, value);
+      }
+    });
+    
+    const queryString = searchParams.toString();
+    const endpoint = queryString 
+      ? `/api/workspaces/${workspaceId}/activity?${queryString}` 
+      : `/api/workspaces/${workspaceId}/activity`;
+    
+    return apiRequest(endpoint);
+  },
+
+  // Invite member to workspace
+  inviteMember: async (workspaceId, inviteData) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/members/invite`, {
+      method: 'POST',
+      body: JSON.stringify(inviteData),
+    });
+  },
+
+  // Get workspace invitations
+  getInvitations: async (workspaceId, status) => {
+    const params = status ? `?status=${status}` : '';
+    return apiRequest(`/api/workspaces/${workspaceId}/invitations${params}`);
+  },
+
+  // Accept invitation
+  acceptInvitation: async (token) => {
+    return apiRequest(`/api/workspaces/invitations/${token}/accept`, {
+      method: 'POST',
+    });
+  },
+
+  // Decline invitation
+  declineInvitation: async (token) => {
+    return apiRequest(`/api/workspaces/invitations/${token}/decline`, {
+      method: 'POST',
+    });
+  },
+
+  // Cancel invitation
+  cancelInvitation: async (workspaceId, invitationId) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/invitations/${invitationId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Update member role
+  updateMemberRole: async (workspaceId, userId, roleData) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/members/${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify(roleData),
+    });
+  },
+
+  // Remove member from workspace
+  removeMember: async (workspaceId, userId) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/members/${userId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Get workspace habits
+  getWorkspaceHabits: async (workspaceId) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/habits`);
+  },
+
+  // Create workspace habit
+  createWorkspaceHabit: async (workspaceId, habitData) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/habits`, {
+      method: 'POST',
+      body: JSON.stringify(habitData),
+    });
+  },
+};
+
+// Groups API (mapped to workspace endpoints for now)
+export const groupsAPI = {
+  // Get all user groups
+  getGroups: async () => {
+    return apiRequest('/api/workspaces');
+  },
+
+  // Create new group
+  createGroup: async (groupData) => {
+    return apiRequest('/api/workspaces', {
+      method: 'POST',
+      body: JSON.stringify(groupData),
+    });
+  },
+
+  // Get specific group
+  getGroup: async (groupId) => {
+    return apiRequest(`/api/workspaces/${groupId}`);
+  },
+
+  // Update group
+  updateGroup: async (groupId, groupData) => {
+    return apiRequest(`/api/workspaces/${groupId}`, {
+      method: 'PUT',
+      body: JSON.stringify(groupData),
+    });
+  },
+
+  // Delete group
+  deleteGroup: async (groupId) => {
+    return apiRequest(`/api/workspaces/${groupId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Get group overview
+  getGroupOverview: async (groupId) => {
+    return apiRequest(`/api/workspaces/${groupId}/overview`);
+  },
+
+  // Get group activity
+  getGroupActivity: async (groupId, params = {}) => {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        searchParams.append(key, value);
+      }
+    });
+    
+    const queryString = searchParams.toString();
+    const endpoint = queryString 
+      ? `/api/workspaces/${groupId}/activity?${queryString}` 
+      : `/api/workspaces/${groupId}/activity`;
+    
+    return apiRequest(endpoint);
+  },
+
+  // Invite member to group
+  inviteMember: async (groupId, inviteData) => {
+    return apiRequest(`/api/workspaces/${groupId}/members/invite`, {
+      method: 'POST',
+      body: JSON.stringify(inviteData),
+    });
+  },
+
+  // Get group invitations
+  getInvitations: async (groupId, status) => {
+    const params = status ? `?status=${status}` : '';
+    return apiRequest(`/api/workspaces/${groupId}/invitations${params}`);
+  },
+
+  // Accept invitation
+  acceptInvitation: async (token) => {
+    return apiRequest(`/api/workspaces/invitations/${token}/accept`, {
+      method: 'POST',
+    });
+  },
+
+  // Decline invitation
+  declineInvitation: async (token) => {
+    return apiRequest(`/api/workspaces/invitations/${token}/decline`, {
+      method: 'POST',
+    });
+  },
+
+  // Cancel invitation
+  cancelInvitation: async (groupId, invitationId) => {
+    return apiRequest(`/api/workspaces/${groupId}/invitations/${invitationId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Update member role
+  updateMemberRole: async (groupId, userId, roleData) => {
+    return apiRequest(`/api/workspaces/${groupId}/members/${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify(roleData),
+    });
+  },
+
+  // Remove member from group
+  removeMember: async (groupId, userId) => {
+    return apiRequest(`/api/workspaces/${groupId}/members/${userId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Get group habits
+  getGroupHabits: async (groupId) => {
+    return apiRequest(`/api/workspaces/${groupId}/habits`);
+  },
+
+  // Create group habit
+  createGroupHabit: async (groupId, habitData) => {
+    return apiRequest(`/api/workspaces/${groupId}/habits`, {
+      method: 'POST',
+      body: JSON.stringify(habitData),
+    });
+  },
+
+  // Get member habits (user's adopted habits in workspace)
+  getMemberHabits: async (workspaceId) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/member-habits`);
+  },
+
+  // Adopt workspace habit to personal dashboard
+  adoptWorkspaceHabit: async (workspaceId, workspaceHabitId, settingsData) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/habits/${workspaceHabitId}/adopt`, {
+      method: 'POST',
+      body: JSON.stringify(settingsData),
+    });
+  },
+
+  // Update member habit settings
+  updateMemberHabit: async (workspaceId, memberHabitId, updateData) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/member-habits/${memberHabitId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updateData),
+    });
+  },
+
+  // Remove member habit
+  removeMemberHabit: async (workspaceId, memberHabitId) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/member-habits/${memberHabitId}`, {
+      method: 'DELETE',
     });
   },
 };
@@ -218,19 +496,19 @@ export const habitsAPI = {
 export const testAPI = {
   // Ping test
   ping: async () => {
-    return apiRequest('/test/ping');
+    return apiRequest('/api/test/ping');
   },
 
   // Health check
   health: async () => {
-    return fetch(`${API_BASE_URL.replace('/api', '')}/health`).then(res => res.json());
+    return fetch(`${API_BASE_URL}/health`).then(res => res.json());
   },
 };
 
 // OAuth URLs
 export const oauthAPI = {
-  getGoogleLoginUrl: () => `${API_BASE_URL}/auth/google`,
-  getGithubLoginUrl: () => `${API_BASE_URL}/auth/github`,
+  getGoogleLoginUrl: () => `${API_BASE_URL}/api/auth/google`,
+  getGithubLoginUrl: () => `${API_BASE_URL}/api/auth/github`,
 };
 
 // Error handler

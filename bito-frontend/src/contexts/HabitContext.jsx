@@ -31,6 +31,7 @@ const actionTypes = {
   
   FETCH_ENTRIES_SUCCESS: 'FETCH_ENTRIES_SUCCESS',
   FETCH_STATS_SUCCESS: 'FETCH_STATS_SUCCESS',
+  UPDATE_FETCH_CACHE: 'UPDATE_FETCH_CACHE',
   
   SET_LOADING: 'SET_LOADING',
   CLEAR_ERROR: 'CLEAR_ERROR',
@@ -81,8 +82,7 @@ const habitReducer = (state, action) => {
       };
 
     case actionTypes.TOGGLE_HABIT_SUCCESS:
-      const { habitId, date, completed, entry } = action.payload;
-      const dateKey = typeof date === 'string' ? date : date.toISOString().split('T')[0];
+      const { habitId, date, entry } = action.payload;
       
       return {
         ...state,
@@ -90,11 +90,9 @@ const habitReducer = (state, action) => {
           ...state.entries,
           [habitId]: {
             ...state.entries[habitId],
-            [dateKey]: completed ? entry : null,
-          },
-        },
-        isLoading: false,
-        error: null,
+            [date]: entry
+          }
+        }
       };
 
     case actionTypes.FETCH_ENTRIES_SUCCESS:
@@ -102,7 +100,10 @@ const habitReducer = (state, action) => {
         ...state,
         entries: {
           ...state.entries,
-          [action.payload.habitId]: action.payload.entries,
+          [action.payload.habitId]: {
+            ...state.entries[action.payload.habitId], // Preserve existing entries
+            ...action.payload.entries, // Merge in new entries
+          },
         },
         lastFetch: {
           ...state.lastFetch,
@@ -114,6 +115,15 @@ const habitReducer = (state, action) => {
       return {
         ...state,
         stats: action.payload,
+      };
+
+    case actionTypes.UPDATE_FETCH_CACHE:
+      return {
+        ...state,
+        lastFetch: {
+          ...state.lastFetch,
+          [action.payload.cacheKey]: action.payload.timestamp,
+        },
       };
 
     case actionTypes.FETCH_HABITS_FAILURE:
@@ -244,39 +254,32 @@ export const HabitProvider = ({ children }) => {
 
   // Toggle habit completion function
   const toggleHabitCompletion = async (habitId, date, value = null) => {
-    dispatch({ type: actionTypes.TOGGLE_HABIT_START });
-
     try {
-      const dateString = typeof date === 'string' ? date : date.toISOString().split('T')[0];
+      const dateKey = typeof date === 'string' ? date : date.toISOString().split('T')[0];
       
-      // Check if already completed for this date
-      const existingEntry = state.entries[habitId]?.[dateString];
-      const isCurrentlyCompleted = !!(existingEntry && existingEntry.completed);
-      const shouldComplete = value !== null ? value : !isCurrentlyCompleted;
+      // Get current completion status
+      const currentEntries = state.entries[habitId] || {};
+      const currentEntry = currentEntries[dateKey];
+      const isCurrentlyCompleted = currentEntry?.completed || false;
 
+      // Call API to toggle
       const response = await habitsAPI.checkHabit(habitId, {
-        date: dateString,
-        completed: shouldComplete,
-        value: shouldComplete ? 1 : 0,
+        date: dateKey,
+        completed: !isCurrentlyCompleted,
+        value: !isCurrentlyCompleted ? 1 : 0,
       });
 
+      // Dispatch success action
       dispatch({
         type: actionTypes.TOGGLE_HABIT_SUCCESS,
         payload: {
           habitId,
-          date: dateString,
-          completed: shouldComplete,
-          entry: shouldComplete ? response.data.entry : null,
+          date: dateKey,
+          entry: response.data.entry, // Always use the actual entry from API response
         },
       });
-
-      return { success: true, completed: shouldComplete };
     } catch (error) {
-      console.error('❌ toggleHabitCompletion failed:', { 
-        habitId, 
-        date, 
-        error: error.message 
-      });
+      console.error('🎯 HabitContext: Error in toggleHabitCompletion', error);
       const errorMessage = handleAPIError(error);
       dispatch({
         type: actionTypes.TOGGLE_HABIT_FAILURE,
@@ -288,17 +291,22 @@ export const HabitProvider = ({ children }) => {
   // Fetch habit entries for a date range
   const fetchHabitEntries = useCallback(async (habitId, startDate, endDate) => {
     try {
-      // Check if we recently fetched data for this habit (within last 1 second)
-      const lastFetchTime = state.lastFetch[habitId];
+      // Create cache key based on habit and date range
+      const startDateStr = startDate.toISOString().split('T')[0];
+      const endDateStr = endDate.toISOString().split('T')[0];
+      const cacheKey = `${habitId}-${startDateStr}-${endDateStr}`;
+      
+      // Check if we recently fetched data for this specific date range (within last 30 seconds)
+      const lastFetchTime = state.lastFetch[cacheKey];
       const now = Date.now();
-      if (lastFetchTime && (now - lastFetchTime) < 1000) {
-        // Skip fetch if we recently fetched data
+      if (lastFetchTime && (now - lastFetchTime) < 30000) {
+        // Skip fetch if we recently fetched this exact range
         return { success: true, entries: state.entries[habitId] || {} };
       }
 
       const response = await habitsAPI.getHabitEntries(habitId, {
-        startDate: startDate.toISOString().split('T')[0],
-        endDate: endDate.toISOString().split('T')[0],
+        startDate: startDateStr,
+        endDate: endDateStr,
       });
 
       // Transform entries into a date-indexed object
@@ -315,13 +323,19 @@ export const HabitProvider = ({ children }) => {
           entries: entriesMap,
         },
       });
+      
+      // Update cache for this specific range
+      dispatch({
+        type: 'UPDATE_FETCH_CACHE',
+        payload: { cacheKey, timestamp: now }
+      });
 
       return { success: true, entries: entriesMap };
     } catch (error) {
       const errorMessage = handleAPIError(error);
       return { success: false, error: errorMessage };
     }
-  }, [state.lastFetch, state.entries]); // Added dependencies for the cache check
+  }, [state.lastFetch, state.entries]);
 
   // Fetch habit statistics
   const fetchStats = async (dateRange = {}) => {
@@ -393,42 +407,93 @@ export const habitUtils = {
   // Get week start date (Monday)
   getWeekStart: (date) => {
     const d = new Date(date);
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    d.setDate(diff);
-    d.setHours(0, 0, 0, 0);
-    return d;
+    
+    const day = d.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    
+    // Calculate days to subtract to get to Monday
+    let daysToSubtract;
+    if (day === 0) {
+      // If it's Sunday, go back 6 days to get to Monday
+      daysToSubtract = 6;
+    } else {
+      // For Monday-Saturday, go back (day-1) days to get to Monday
+      daysToSubtract = day - 1;
+    }
+    
+    d.setDate(d.getDate() - daysToSubtract);
+    
+    // Use local time formatting to avoid timezone issues
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const dayOfMonth = String(d.getDate()).padStart(2, '0');
+    
+    // Create a new date from the local date string to ensure consistent timezone handling
+    return new Date(`${year}-${month}-${dayOfMonth}T00:00:00`);
   },
 
   // Get week dates
   getWeekDates: (startDate) => {
     const dates = [];
-    const current = new Date(startDate);
+    
+    // Start from the given date and ensure we're working with local dates
+    let currentDate = new Date(startDate);
     
     for (let i = 0; i < 7; i++) {
+      // Create date string in YYYY-MM-DD format using local time
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const day = String(currentDate.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+      
+      // Use the same date object for day name calculation
+      const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
+      const shortDay = currentDate.toLocaleDateString('en-US', { weekday: 'short' });
+      
+      // Check if this is today by comparing date strings
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const isToday = dateStr === todayStr;
+      
       dates.push({
-        date: current.toISOString().split('T')[0],
-        dayName: current.toLocaleDateString('en-US', { weekday: 'long' }),
-        shortDay: current.toLocaleDateString('en-US', { weekday: 'short' }),
-        isToday: current.toDateString() === new Date().toDateString(),
-        dateObj: new Date(current)
+        date: dateStr,
+        dayName: dayName,
+        shortDay: shortDay,
+        isToday: isToday,
+        dateObj: new Date(currentDate)
       });
-      current.setDate(current.getDate() + 1);
+      
+      // Move to next day
+      currentDate.setDate(currentDate.getDate() + 1);
     }
     
     return dates;
   },
 
-  // Normalize date to YYYY-MM-DD format
+  // Normalize date to YYYY-MM-DD format using LOCAL time (no timezone conversion)
   normalizeDate: (date) => {
     const d = new Date(date);
-    return d.toISOString().split('T')[0];
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   },
 
-  // Check if date is today
+  // Check if date is today using consistent local time format
   isToday: (date) => {
     const today = new Date();
-    const checkDate = new Date(date);
-    return checkDate.toDateString() === today.toDateString();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
+    
+    const checkDateStr = typeof date === 'string' ? date : (() => {
+      const d = new Date(date);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const dayOfMonth = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${dayOfMonth}`;
+    })();
+    
+    return checkDateStr === todayStr;
   },
 };

@@ -52,7 +52,7 @@ const StatusBar = ({
     }
   };
   return (
-    <div className="bg-[var(--color-surface-secondary)]/90 border-b border-[var(--color-border-primary)] px-4 py-2 flex items-center justify-between font-outfit backdrop-blur-sm">
+    <div className="bg-[var(--color-surface-secondary)]/90 border-b border-[var(--color-border-primary)] px-4 py-2 flex items-center justify-between font-outfit backdrop-blur-sm relative z-30">
       <div className="flex items-center">
         {/* Menu toggle button */}
         <button
@@ -134,7 +134,7 @@ const StatusBar = ({
           <button className="group p-1.5 rounded-lg hover:bg-[var(--color-surface-hover)]/60 transition-all duration-200">
             <GearIcon className="w-4 h-4 text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors" />
           </button>          {/* User Avatar with Dropdown */}
-          <div className="relative flex items-center gap-2 pl-2 ml-1 border-l border-[var(--color-border-primary)]/50">
+          <div className="relative flex items-center gap-2 pl-2 ml-1 border-l border-[var(--color-border-primary)]/50 z-50">
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
               className="flex items-center gap-2 p-1 rounded-lg hover:bg-[var(--color-surface-hover)]/60 transition-all duration-200"
@@ -156,12 +156,12 @@ const StatusBar = ({
               <>
                 {/* Backdrop */}
                 <div 
-                  className="fixed inset-0 z-10" 
+                  className="fixed inset-0 z-40" 
                   onClick={() => setShowUserMenu(false)}
                 />
                 
                 {/* Menu */}
-                <div className="absolute top-full right-0 mt-2 w-48 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)] rounded-lg shadow-lg z-20 py-1">
+                <div className="absolute top-full right-0 mt-2 w-48 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)] rounded-lg shadow-lg z-50 py-1">
                   <button
                     onClick={() => {
                       setShowUserMenu(false);

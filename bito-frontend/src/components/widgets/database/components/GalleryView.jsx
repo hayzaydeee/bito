@@ -219,6 +219,8 @@ export const GalleryView = ({
               </h4>
               <input
                 type="text"
+                id="new-habit-name"
+                name="newHabitName"
                 value={newHabitName}
                 onChange={(e) => setNewHabitName(e.target.value)}
                 placeholder="Enter habit name..."

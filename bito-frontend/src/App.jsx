@@ -1,4 +1,4 @@
-import React from "react";
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Theme } from "@radix-ui/themes";
 import Layout from "./components/layout/Layout";
@@ -7,10 +7,12 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import OAuthCallback from "./pages/OAuthCallback";
 import Dashboard from "./pages/Dashboard";
-import HabitsPage from "./pages/HabitsPage";
-import CalendarPage from "./pages/CalendarPage";
+// import HabitsPage from "./pages/HabitsPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import SettingsPage from "./pages/SettingsPage";
+import WorkspaceOverview from "./pages/WorkspaceOverview";
+import WorkspaceDashboard from "./pages/WorkspaceDashboard";
+import GroupSelection from "./pages/GroupSelection";
 
 // Import authentication context
 import { AuthProvider } from "./contexts/AuthContext";
@@ -43,10 +45,12 @@ function App() {
               <Route path="/app" element={<Layout />}>
                 <Route index element={<Dashboard />} />
                 <Route path="dashboard" element={<Dashboard />} />
-                <Route path="habits" element={<HabitsPage />} />
-                <Route path="calendar" element={<CalendarPage />} />
+                {/* <Route path="habits" element={<HabitsPage />} /> */}
                 <Route path="analytics" element={<AnalyticsPage />} />
                 <Route path="settings" element={<SettingsPage />} />
+                <Route path="groups" element={<GroupSelection />} />
+                <Route path="groups/:groupId" element={<WorkspaceOverview />} />
+                <Route path="workspaces/:workspaceId/dashboard" element={<WorkspaceDashboard />} />
               </Route>
             </Routes>
           </div>

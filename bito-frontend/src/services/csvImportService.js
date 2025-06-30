@@ -107,8 +107,6 @@ const generateHabitIcon = (index, habitName) => {
 
 // Flexible CSV parser that works with any format
 const parseFlexibleCsv = (csvData) => {
-  console.log('📊 Parsing flexible CSV data:', csvData.length, 'rows');
-  
   if (!csvData || csvData.length === 0) {
     throw new Error('CSV file is empty or invalid');
   }
@@ -116,8 +114,6 @@ const parseFlexibleCsv = (csvData) => {
   // Get first row to determine columns
   const firstRow = csvData[0];
   const columns = Object.keys(firstRow);
-  
-  console.log('📋 Detected columns:', columns);
   
   // Identify date column (flexible matching)
   const dateColumn = columns.find(col => 
@@ -138,8 +134,6 @@ const parseFlexibleCsv = (csvData) => {
     !col.toLowerCase().includes('note') && // Ignore notes columns
     !col.toLowerCase().includes('comment') // Ignore comment columns
   );
-  
-  console.log('🎯 Detected habit columns:', habitColumns);
   
   if (habitColumns.length === 0) {
     throw new Error('No habit columns found. Please ensure your CSV has columns for habits besides the date column.');
