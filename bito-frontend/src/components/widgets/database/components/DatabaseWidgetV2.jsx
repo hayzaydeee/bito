@@ -19,116 +19,220 @@ const DatabaseWidgetV2 = memo(
     const [viewType, setViewType] = useState(initialViewType);
     const { habits } = useHabits();
     
+    // Safe habit ID extraction
+    const safeGetHabitId = useCallback((habit) => {
+      if (!habit) return null;
+      
+      try {
+        // Try _id first, then id, then generate a fallback
+        const id = habit._id || habit.id;
+        if (id === null || id === undefined) {
+          console.warn('Habit missing ID:', habit);
+          return `habit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        }
+        return String(id);
+      } catch (error) {
+        console.warn('Error extracting habit ID:', error);
+        return `habit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      }
+    }, []);
+    
     // State for custom habit order
     const [habitOrder, setHabitOrder] = useState(() => {
-      const saved = localStorage.getItem('habit-order');
-      return saved ? JSON.parse(saved) : [];
+      try {
+        const saved = localStorage.getItem('habit-order');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          return Array.isArray(parsed) ? parsed : [];
+        }
+      } catch (error) {
+        console.warn('Error loading habit order from localStorage:', error);
+      }
+      return [];
     });
 
-    // Memoized ordered habits
+    // Memoized ordered habits with safe ID handling
     const orderedHabits = useMemo(() => {
       if (!habits || habits.length === 0) return [];
       
+      // Ensure all habits have valid IDs and filter out invalid ones
+      const validHabits = habits.filter(h => {
+        const id = safeGetHabitId(h);
+        return id && typeof id === 'string' && id.length > 0;
+      }).map(h => ({
+        ...h,
+        _id: safeGetHabitId(h) // Ensure consistent ID
+      }));
+      
       // If no custom order, use default order
       if (habitOrder.length === 0) {
-        return habits;
+        return validHabits;
       }
       
-      // Apply custom order
+      // Apply custom order safely
       const ordered = [];
-      const habitMap = new Map(habits.map(h => [h._id || h.id, h]));
+      const habitMap = new Map();
+      
+      // Populate habit map with safe string keys
+      validHabits.forEach(habit => {
+        const id = safeGetHabitId(habit);
+        if (id) {
+          habitMap.set(id, habit);
+        }
+      });
       
       // Add habits in custom order
-      for (const id of habitOrder) {
-        if (habitMap.has(id)) {
-          ordered.push(habitMap.get(id));
-          habitMap.delete(id);
+      habitOrder.forEach(id => {
+        try {
+          const stringId = String(id);
+          if (habitMap.has(stringId)) {
+            ordered.push(habitMap.get(stringId));
+            habitMap.delete(stringId);
+          }
+        } catch (error) {
+          console.warn('Error processing habit order ID:', id, error);
         }
-      }
+      });
       
       // Add any new habits that weren't in the saved order
-      ordered.push(...habitMap.values());
+      habitMap.forEach(habit => ordered.push(habit));
       
       return ordered;
-    }, [habits, habitOrder]);
+    }, [habits, habitOrder, safeGetHabitId]);
 
-    // Handle habit reorder
+    // Handle habit reorder with safe ID conversion
     const handleHabitReorder = useCallback((newOrder) => {
-      console.log('Reordering habits:', newOrder);
-      setHabitOrder(newOrder);
-      localStorage.setItem('habit-order', JSON.stringify(newOrder));
+      try {
+        // Ensure all IDs are valid strings
+        const safeOrder = newOrder
+          .map(id => {
+            try {
+              return String(id);
+            } catch (error) {
+              console.warn('Error converting habit ID to string:', id, error);
+              return null;
+            }
+          })
+          .filter(id => id && id.length > 0);
+        
+        setHabitOrder(safeOrder);
+        
+        // Save to localStorage safely
+        try {
+          localStorage.setItem('habit-order', JSON.stringify(safeOrder));
+        } catch (error) {
+          console.warn('Error saving habit order to localStorage:', error);
+        }
+        
+      } catch (error) {
+        console.warn('Error in handleHabitReorder:', error);
+      }
     }, []);
 
-    // Calculate display title with date range
+    // Calculate display title with date range - safe string handling
     const displayTitle = useMemo(() => {
-      if (
-        title === "Today's Habits" ||
-        title === "Habit Tracker" ||
-        title === "My Habits"
-      ) {
-        if (dateRange && dateRange.start && dateRange.end) {
-          const formatDate = (date) => {
-            const day = date.getDate().toString().padStart(2, "0");
-            const month = (date.getMonth() + 1).toString().padStart(2, "0");
-            return `${day}/${month}`;
-          };
+      try {
+        if (
+          title === "Today's Habits" ||
+          title === "Habit Tracker" ||
+          title === "My Habits"
+        ) {
+          if (dateRange && dateRange.start && dateRange.end) {
+            const formatDate = (date) => {
+              try {
+                const day = date.getDate().toString().padStart(2, "0");
+                const month = (date.getMonth() + 1).toString().padStart(2, "0");
+                return `${day}/${month}`;
+              } catch (error) {
+                console.warn('Error formatting date:', error);
+                return 'Invalid Date';
+              }
+            };
 
-          const startStr = formatDate(dateRange.start);
-          const endStr = formatDate(dateRange.end);
-          const modeLabel = mode === "week" ? "Week" : "Month";
+            const startStr = formatDate(dateRange.start);
+            const endStr = formatDate(dateRange.end);
+            const modeLabel = mode === "week" ? "Week" : "Month";
 
-          return `${modeLabel} (${startStr} - ${endStr})`;
-        } else {
-          const weekStart = habitUtils.getWeekStart(new Date());
-          const weekEnd = new Date(weekStart);
-          weekEnd.setDate(weekStart.getDate() + 6);
+            return `${modeLabel} (${startStr} - ${endStr})`;
+          } else {
+            const weekStart = habitUtils.getWeekStart(new Date());
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
 
-          const formatDate = (date) => {
-            const day = date.getDate().toString().padStart(2, "0");
-            const month = (date.getMonth() + 1).toString().padStart(2, "0");
-            const year = date.getFullYear().toString().slice(-2);
-            return `${day}/${month}/${year}`;
-          };
+            const formatDate = (date) => {
+              try {
+                const day = date.getDate().toString().padStart(2, "0");
+                const month = (date.getMonth() + 1).toString().padStart(2, "0");
+                const year = date.getFullYear().toString().slice(-2);
+                return `${day}/${month}/${year}`;
+              } catch (error) {
+                console.warn('Error formatting date:', error);
+                return 'Invalid Date';
+              }
+            };
 
-          return `Week ${formatDate(weekStart)} - ${formatDate(weekEnd)}`;
+            return `Week ${formatDate(weekStart)} - ${formatDate(weekEnd)}`;
+          }
         }
+        return String(title);
+      } catch (error) {
+        console.warn('Error calculating display title:', error);
+        return String(title);
       }
-      return title;
     }, [title, dateRange, mode]);
+    
     // Memoize the start date to prevent re-renders
     const startDate = useMemo(() => {
-      return dateRange?.start || habitUtils.getWeekStart(new Date());
+      try {
+        return dateRange?.start || habitUtils.getWeekStart(new Date());
+      } catch (error) {
+        console.warn('Error calculating start date:', error);
+        return new Date();
+      }
     }, [dateRange?.start]);
+    
     const renderContent = () => {
-      switch (viewType) {
-        case "table":
-          return (
-            <HabitGrid
-              startDate={startDate}
-              endDate={dateRange?.end}
-              className="w-full"
-              showStats={true}
-              showHeader={true}
-              tableStyle={true}
-              habits={orderedHabits}
-              isInEditMode={isInEditMode}
-              onHabitReorder={handleHabitReorder}
-            />
-          );
-        case "gallery":
-        default:
-          return (
-            <GalleryViewV2
-              startDate={startDate}
-              endDate={dateRange?.end}
-              breakpoint={breakpoint}
-              onAddHabit={onAddHabit}
-              onEditHabit={onEditHabit}
-              habits={orderedHabits}
-              isInEditMode={isInEditMode}
-              onHabitReorder={handleHabitReorder}
-            />
-          );
+      try {
+        switch (viewType) {
+          case "table":
+            return (
+              <HabitGrid
+                startDate={startDate}
+                endDate={dateRange?.end}
+                className="w-full"
+                showStats={true}
+                showHeader={true}
+                tableStyle={true}
+                habits={orderedHabits}
+                isInEditMode={isInEditMode}
+                onHabitReorder={handleHabitReorder}
+              />
+            );
+          case "gallery":
+          default:
+            return (
+              <GalleryViewV2
+                startDate={startDate}
+                endDate={dateRange?.end}
+                breakpoint={breakpoint}
+                onAddHabit={onAddHabit}
+                onEditHabit={onEditHabit}
+                habits={orderedHabits}
+                isInEditMode={isInEditMode}
+                onHabitReorder={handleHabitReorder}
+              />
+            );
+        }
+      } catch (error) {
+        console.warn('Error rendering database widget content:', error);
+        return (
+          <div className="w-full h-full flex items-center justify-center text-red-500">
+            <div className="text-center">
+              <div className="text-lg font-semibold mb-2">Rendering Error</div>
+              <div className="text-sm">Failed to render widget content</div>
+            </div>
+          </div>
+        );
       }
     };
 
@@ -140,7 +244,7 @@ const DatabaseWidgetV2 = memo(
           setViewType={setViewType}
           filterComponent={filterComponent}
         />
-        <div className="flex-1 min-h-0 overflow-auto">{renderContent()}</div>
+        <div className="widget-content-area">{renderContent()}</div>
       </div>
     );
   }

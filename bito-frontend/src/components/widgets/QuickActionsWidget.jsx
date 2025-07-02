@@ -15,11 +15,7 @@ const QuickActionsWidget = memo(({
   // Action handlers
   const handleAddHabit = useCallback(() => {
     if (onAddHabit) {
-      onAddHabit({
-        name: 'New Habit',
-        color: 'var(--color-brand-500)',
-        icon: '⭐'
-      });
+      onAddHabit();
     }
   }, [onAddHabit]);
 
@@ -78,9 +74,10 @@ const QuickActionsWidget = memo(({
     {
       id: 'csv-import',
       label: 'Import Data',
+      subtitle: 'Coming Soon',
       icon: <UploadIcon />,
-      color: 'bg-[var(--color-brand-700)] hover:bg-[var(--color-brand-800)]',
-      action: handleCsvImport
+      color: 'bg-gray-400 cursor-not-allowed',
+      action: () => {}
     },
     {
       id: 'reset-day',
@@ -133,13 +130,14 @@ const QuickActionsWidget = memo(({
   const maxButtons = buttonLayout.columns * buttonLayout.rows;
   const visibleActions = actions.slice(0, maxButtons);
   const getButtonClasses = (action) => {
+    const isDisabled = action.id === 'csv-import';
     const baseClasses = `
       ${action.color} 
       text-white rounded-xl 
       flex items-center justify-center
-      transition-all duration-200 transform hover:scale-105
+      ${isDisabled ? '' : 'transition-all duration-200 transform hover:scale-105'}
       focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-brand-500)]
-      shadow-lg hover:shadow-xl backdrop-blur-sm
+      shadow-lg ${isDisabled ? '' : 'hover:shadow-xl'} backdrop-blur-sm
     `;
 
     const sizeClasses = {
@@ -160,69 +158,28 @@ const QuickActionsWidget = memo(({
     }
   };
 
-  const renderProgress = () => {
-    if (!buttonLayout.showProgress) return null;
 
-    // Calculate actual progress from habits and entries
-    const today = new Date().toISOString().split('T')[0];
-    const total = habits.length;
-    const completed = habits.filter(habit => {
-      // Check if habit is completed today using entries structure
-      // entries = { [habitId]: { [date]: entryObject } }
-      const habitEntries = entries[habit._id];
-      if (!habitEntries) return false;
-      
-      const todayEntry = habitEntries[today];
-      return todayEntry && todayEntry.completed;
-    }).length;
-    
-    const percentage = total > 0 ? (completed / total) * 100 : 0;
-    
-    return (
-      <div className={`mt-3 p-3 bg-[var(--color-brand-500)]/10 rounded-xl border border-[var(--color-brand-500)]/20 backdrop-blur-sm ${
-        breakpoint === 'sm' ? 'text-xs' : 'text-sm'
-      }`}>
-        <h5 className={`font-medium text-[var(--color-brand-400)] mb-2 font-dmSerif ${
-          breakpoint === 'sm' ? 'text-xs' : 'text-sm'
-        }`}>
-          Today's Progress
-        </h5>
-        <div className="flex items-center justify-between font-outfit">
-          <span className="text-[var(--color-text-secondary)]">Completed:</span>
-          <span className="font-semibold text-[var(--color-text-primary)]">
-            {completed}/{total} habits
-          </span>
-        </div>
-        <div className="mt-2 w-full bg-[var(--color-surface-secondary)] rounded-full h-2">
-          <div 
-            className="bg-gradient-to-r from-[var(--color-brand-400)] to-[var(--color-brand-500)] h-2 rounded-full transition-all duration-300" 
-            style={{ width: `${percentage}%` }}
-          />
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="w-full h-full flex flex-col">
-      {habits.length === 0 ? (
-        <div className="flex-1 flex items-center justify-center text-center p-4">
-          <div className="text-[var(--color-text-secondary)]">
-            <PlusIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm mb-4">No habits yet. Create your first habit!</p>
-            <button
-              onClick={handleAddHabit}
-              className="bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2 mx-auto"
-            >
-              <PlusIcon className="w-4 h-4" />
-              Add Habit
-            </button>
+      <div className="widget-content-area">
+        {habits.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center text-center p-4">
+            <div className="text-[var(--color-text-secondary)]">
+              <PlusIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm mb-4">No habits yet. Create your first habit!</p>
+              <button
+                onClick={handleAddHabit}
+                className="bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2 mx-auto"
+              >
+                <PlusIcon className="w-4 h-4" />
+                Add Habit
+              </button>
+            </div>
           </div>
-        </div>
-      ) : (
-        <>
+        ) : (
           <div 
-            className="grid gap-3 flex-1"
+            className="grid gap-4 flex-1"
             style={{
               gridTemplateColumns: `repeat(${buttonLayout.columns}, 1fr)`,
               gridTemplateRows: `repeat(${buttonLayout.rows}, 1fr)`
@@ -233,25 +190,33 @@ const QuickActionsWidget = memo(({
                 key={action.id}
                 onClick={action.action}
                 className={getButtonClasses(action)}
-                disabled={action.id === 'quick-complete' && habits.length === 0}
+                disabled={(action.id === 'quick-complete' && habits.length === 0) || action.id === 'csv-import'}
               >
                 <div className="flex-shrink-0">
                   {React.cloneElement(action.icon, { className: getIconSize() })}
                 </div>
                 {buttonLayout.showLabels && (
-                  <span className={`font-medium text-center leading-tight font-outfit ${
-                    buttonLayout.buttonSize === 'large' ? 'text-sm' : 
-                    buttonLayout.buttonSize === 'medium' ? 'text-xs' : 'text-xs'
-                  }`}>
-                    {action.label}
-                  </span>
+                  <div className="text-center">
+                    <span className={`font-medium leading-tight font-outfit block ${
+                      buttonLayout.buttonSize === 'large' ? 'text-sm' : 
+                      buttonLayout.buttonSize === 'medium' ? 'text-xs' : 'text-xs'
+                    }`}>
+                      {action.label}
+                    </span>
+                    {action.subtitle && (
+                      <span className={`text-xs opacity-75 font-outfit block ${
+                        buttonLayout.buttonSize === 'large' ? 'text-xs' : 'text-[10px]'
+                      }`}>
+                        {action.subtitle}
+                      </span>
+                    )}
+                  </div>
                 )}
               </button>
             ))}
           </div>
-          {renderProgress()}
-        </>
-      )}
+        )}
+      </div>
     </div>
   );
 });

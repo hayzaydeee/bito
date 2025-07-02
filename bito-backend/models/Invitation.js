@@ -45,7 +45,6 @@ const invitationSchema = new mongoose.Schema({
   // Security and tracking
   token: {
     type: String,
-    required: true,
     unique: true
   },
   status: {
@@ -58,7 +57,6 @@ const invitationSchema = new mongoose.Schema({
   // Timestamps
   expiresAt: {
     type: Date,
-    required: true,
     index: true
   },
   acceptedAt: {
@@ -84,11 +82,13 @@ invitationSchema.index({ invitedBy: 1, createdAt: -1 });
 
 // Pre-save middleware to generate token and set expiration
 invitationSchema.pre('save', function(next) {
-  if (this.isNew && !this.token) {
+  // Always generate token if not present
+  if (!this.token) {
     this.token = crypto.randomBytes(32).toString('hex');
   }
   
-  if (this.isNew && !this.expiresAt) {
+  // Always set expiration if not present
+  if (!this.expiresAt) {
     // Set expiration to 7 days from now
     this.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   }

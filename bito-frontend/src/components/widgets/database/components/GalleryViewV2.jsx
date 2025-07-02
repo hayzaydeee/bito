@@ -392,7 +392,7 @@ export const GalleryViewV2 = ({
           {onAddHabit && (
             <div className="bg-[var(--color-surface-elevated)]/50 rounded-lg p-4 border-2 border-dashed border-[var(--color-border-primary)] hover:border-[var(--color-brand-500)] hover:bg-[var(--color-surface-elevated)] transition-all duration-200 cursor-pointer group"
                  onClick={onAddHabit}>
-              <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center">
+              <div className="flex flex-col items-center justify-center h-full min-h-[100px] text-center">
                 <div className="w-12 h-12 rounded-full bg-[var(--color-brand-500)]/10 group-hover:bg-[var(--color-brand-500)]/20 flex items-center justify-center mb-3 transition-colors duration-200">
                   <PlusIcon className="w-6 h-6 text-[var(--color-brand-500)] group-hover:text-[var(--color-brand-600)]" />
                 </div>

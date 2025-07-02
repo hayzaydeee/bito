@@ -19,17 +19,6 @@ const EMOJI_CATEGORIES = {
   mindfulness: ["🧘", "😌", "🌱", "🌈", "🌞", "🌙", "💭", "🧠", "❤️", "🙏", "✨", "💫", "🔮"],
 };
 
-// Days of the week for frequency selector (0=Sunday to 6=Saturday to match backend)
-const DAYS_OF_WEEK = [
-  { id: 1, short: "Mon", fullName: "Monday" },
-  { id: 2, short: "Tue", fullName: "Tuesday" },
-  { id: 3, short: "Wed", fullName: "Wednesday" },
-  { id: 4, short: "Thu", fullName: "Thursday" },
-  { id: 5, short: "Fri", fullName: "Friday" },
-  { id: 6, short: "Sat", fullName: "Saturday" },
-  { id: 0, short: "Sun", fullName: "Sunday" },
-];
-
 // Predefined colors
 const COLOR_OPTIONS = [
   "#4f46e5", // indigo
@@ -39,6 +28,12 @@ const COLOR_OPTIONS = [
   "#ef4444", // red
   "#8b5cf6", // purple
   "#ec4899", // pink
+  "#06b6d4", // cyan
+  "#84cc16", // lime
+  "#f97316", // orange
+  "#e11d48", // rose
+  "#059669", // green
+  "#dc2626", // red-600
 ];
 
 const CustomHabitEditModal = ({ 
@@ -242,232 +237,168 @@ const CustomHabitEditModal = ({
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }} data-modal="habit-edit">
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm animate-fade-in" 
-        style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-200" 
         onClick={onClose}
       />
       
       {/* Modal */}
       <div 
         ref={modalRef}
-        className="relative bg-[var(--color-surface-primary)] rounded-xl border border-[var(--color-border-primary)] shadow-xl p-6 w-full max-w-md animate-zoom-in mx-auto"
-        style={{ zIndex: 100000 }}
+        className="relative bg-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)] shadow-xl p-6 w-full max-w-lg mx-auto max-h-[90vh] overflow-y-auto z-10 transform transition-all duration-200 scale-100"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close button */}
-        <button 
-          className="absolute top-4 right-4 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
-          onClick={onClose}
-        >
-          <Cross2Icon />
-        </button>
-        
-        {/* Header */}
-        <h2 className="text-2xl font-dmSerif gradient-text mb-5">
-          {habit ? "Edit Habit" : "Create New Habit"}
-        </h2>
-        
-        {/* Tabs */}
-        <div className="mb-6">
-          <div className="flex border-b border-[var(--color-border-primary)]">
-            <button
-              className={`px-4 py-2 font-medium text-sm ${activeTab === "details" ? "text-[var(--color-brand-600)] border-b-2 border-[var(--color-brand-600)]" : "text-[var(--color-text-secondary)]"}`}
-              onClick={() => setActiveTab("details")}
-            >
-              Details
-            </button>
-            <button
-              className={`px-4 py-2 font-medium text-sm ${activeTab === "appearance" ? "text-[var(--color-brand-600)] border-b-2 border-[var(--color-brand-600)]" : "text-[var(--color-text-secondary)]"}`}
-              onClick={() => setActiveTab("appearance")}
-            >
-              Appearance
-            </button>
-            <button
-              className={`px-4 py-2 font-medium text-sm ${activeTab === "settings" ? "text-[var(--color-brand-600)] border-b-2 border-[var(--color-brand-600)]" : "text-[var(--color-text-secondary)]"}`}
-              onClick={() => setActiveTab("settings")}
-            >
-              Settings
-            </button>
-            {habit && (
-              <button
-                className={`px-4 py-2 font-medium text-sm ${activeTab === "danger" ? "text-[var(--color-brand-600)] border-b-2 border-[var(--color-brand-600)]" : "text-[var(--color-text-secondary)]"}`}
-                onClick={() => setActiveTab("danger")}
-              >
-                Manage
-              </button>
-            )}
+        <div className="space-y-4">
+          {/* Close button */}
+          <button 
+            className="absolute top-4 right-4 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+            onClick={onClose}
+          >
+            <Cross2Icon />
+          </button>
+          
+          {/* Header */}
+          <div className="text-center">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center mx-auto mb-3">
+              {habit ? <CheckIcon className="w-6 h-6 text-white" /> : <PlusIcon className="w-6 h-6 text-white" />}
+            </div>
+            <h2 className="text-xl font-bold text-[var(--color-text-primary)] font-dmSerif mb-1">
+              {habit ? "Edit Habit" : "Create Habit"}
+            </h2>
+            <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
+              {habit ? "Update your habit details" : "Add a new habit to track"}
+            </p>
           </div>
-        </div>
-        
-        {/* Tab Content */}
-        <div className="mb-6">
-          {activeTab === "details" && (
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
+          
+          {/* Tabs */}
+          <div className="mb-4">
+            <div className="flex border-b border-[var(--color-border-primary)]">
+              <button
+                type="button"
+                className={`px-3 py-2 font-medium text-xs ${activeTab === "details" ? "text-[var(--color-brand-600)] border-b-2 border-[var(--color-brand-600)]" : "text-[var(--color-text-secondary)]"}`}
+                onClick={() => setActiveTab("details")}
+              >
+                Details
+              </button>
+              <button
+                type="button"
+                className={`px-3 py-2 font-medium text-xs ${activeTab === "appearance" ? "text-[var(--color-brand-600)] border-b-2 border-[var(--color-brand-600)]" : "text-[var(--color-text-secondary)]"}`}
+                onClick={() => setActiveTab("appearance")}
+              >
+                Style
+              </button>
+              <button
+                type="button"
+                className={`px-3 py-2 font-medium text-xs ${activeTab === "settings" ? "text-[var(--color-brand-600)] border-b-2 border-[var(--color-brand-600)]" : "text-[var(--color-text-secondary)]"}`}
+                onClick={() => setActiveTab("settings")}
+              >
+                Settings
+              </button>
+              {habit && (
+                <button
+                  type="button"
+                  className={`px-3 py-2 font-medium text-xs ${activeTab === "danger" ? "text-[var(--color-brand-600)] border-b-2 border-[var(--color-brand-600)]" : "text-[var(--color-text-secondary)]"}`}
+                  onClick={() => setActiveTab("danger")}
+                >
+                  Manage
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Tab Content */}
+          <div className="mb-4">
+            {activeTab === "details" && (
+              <div className="space-y-3">
+                {/* Basic Info */}
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium mb-1">
+                  <label className="text-xs font-medium text-[var(--color-text-primary)] font-outfit block mb-1">
                     Habit Name *
                   </label>
                   <input
-                    id="name"
+                    type="text"
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    placeholder="e.g., Drink water"
-                    className="w-full px-3 py-2 border border-[var(--color-border-primary)] rounded-md bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)]"
-                    autoFocus
+                    className="w-full h-10 px-3 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/40 rounded-lg text-[var(--color-text-primary)] font-outfit placeholder-[var(--color-text-tertiary)] focus:outline-none focus:border-[var(--color-brand-500)] transition-colors text-sm"
+                    placeholder="e.g., Daily Exercise"
                   />
-                  {errors.name && (
-                    <p className="text-xs text-red-500 mt-1">{errors.name}</p>
-                  )}
+                  {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
                 </div>
-                
+
                 <div>
-                  <label htmlFor="description" className="block text-sm font-medium mb-1">
+                  <label className="text-xs font-medium text-[var(--color-text-primary)] font-outfit block mb-1">
                     Description
                   </label>
                   <textarea
-                    id="description"
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
-                    placeholder="Why this habit matters to you"
-                    className="w-full px-3 py-2 border border-[var(--color-border-primary)] rounded-md bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)]"
-                    rows="4"
+                    className="w-full h-16 px-3 py-2 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/40 rounded-lg text-[var(--color-text-primary)] font-outfit placeholder-[var(--color-text-tertiary)] focus:outline-none focus:border-[var(--color-brand-500)] transition-colors resize-none text-sm"
+                    placeholder="Describe this habit..."
                   />
                 </div>
-                
+
+                {/* Schedule */}
                 <div>
-                  <label className="block text-sm font-medium mb-1">
+                  <label className="text-xs font-medium text-[var(--color-text-primary)] font-outfit block mb-2">
                     Schedule
                   </label>
-                  <p className="text-xs text-[var(--color-text-secondary)] mb-2">
-                    Which days should you perform this habit?
-                  </p>
-                  <div className="flex gap-1">
-                    {DAYS_OF_WEEK.map((day) => (
-                      <button
-                        key={day.id}
-                        type="button"
-                        className={`w-9 h-9 flex items-center justify-center rounded-md text-sm font-medium transition-colors ${
-                          formData.schedule.days.includes(day.id)
-                            ? "bg-[var(--color-brand-500)] text-white"
-                            : "bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] border border-[var(--color-border-primary)]"
-                        }`}
-                        onClick={() => handleFrequencyToggle(day.id)}
-                        title={day.fullName}
-                      >
-                        {day.short}
-                      </button>
-                    ))}
+                  <div className="flex flex-wrap gap-1">
+                    {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, index) => {
+                      const dayId = index === 6 ? 0 : index + 1; // Convert to backend format (0=Sunday)
+                      const isSelected = formData.schedule?.days?.includes(dayId) ?? true;
+                      
+                      return (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => handleFrequencyToggle(dayId)}
+                          className={`w-8 h-8 rounded-lg text-xs font-medium transition-all duration-200 font-outfit ${
+                            isSelected
+                              ? 'bg-[var(--color-brand-500)] text-white'
+                              : 'bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                          }`}
+                        >
+                          {day}
+                        </button>
+                      );
+                    })}
                   </div>
-                  <p className="text-xs text-[var(--color-text-secondary)] mt-2">
-                    {formData.schedule.days.length === 7 
-                      ? "Every day" 
-                      : formData.schedule.days.length === 0 
-                      ? "No days selected" 
-                      : `${formData.schedule.days.length} day${formData.schedule.days.length > 1 ? 's' : ''} per week`}
-                  </p>
-                  {errors.schedule && (
-                    <p className="text-xs text-red-500 mt-1">{errors.schedule}</p>
-                  )}
-                </div>
-                
-                {/* Reminder Settings */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Reminder Settings
-                  </label>
-                  
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <span className="text-sm font-medium">Enable Reminders</span>
-                      <p className="text-xs text-[var(--color-text-secondary)]">
-                        Get notified to complete this habit
-                      </p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.schedule.reminderEnabled}
-                        onChange={(e) => 
-                          setFormData({
-                            ...formData, 
-                            schedule: { 
-                              ...formData.schedule, 
-                              reminderEnabled: e.target.checked 
-                            }
-                          })
-                        }
-                        className="sr-only"
-                      />
-                      <div className={`w-11 h-6 rounded-full transition-colors ${
-                        formData.schedule.reminderEnabled 
-                          ? 'bg-[var(--color-brand-500)]' 
-                          : 'bg-gray-300'
-                      }`}>
-                        <div className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${
-                          formData.schedule.reminderEnabled ? 'translate-x-5' : 'translate-x-0'
-                        } mt-0.5 ml-0.5`} />
-                      </div>
-                    </label>
-                  </div>
-                  
-                  {formData.schedule.reminderEnabled && (
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Reminder Time
-                      </label>
-                      <input
-                        type="time"
-                        value={formData.schedule.reminderTime}
-                        onChange={(e) => 
-                          setFormData({
-                            ...formData, 
-                            schedule: { 
-                              ...formData.schedule, 
-                              reminderTime: e.target.value 
-                            }
-                          })
-                        }
-                        className="w-full px-3 py-2 border border-[var(--color-border-primary)] rounded-md bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)]"
-                      />
-                    </div>
-                  )}
+                  {errors.schedule && <p className="text-xs text-red-500 mt-1">{errors.schedule}</p>}
                 </div>
               </div>
-            </form>
-          )}
-          
-          {activeTab === "appearance" && (
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium mb-2">Icon</label>
-                <div className="flex items-center gap-2 mb-4">
+            )}
+
+            {activeTab === "appearance" && (
+              <div className="space-y-4">
+                {/* Icon & Color Preview */}
+                <div className="flex items-center gap-3 mb-3">
                   <div
-                    className="w-12 h-12 rounded-md flex items-center justify-center text-2xl"
-                    style={{ backgroundColor: formData.color, color: "#fff" }}
+                    className="w-10 h-10 rounded-lg flex items-center justify-center text-xl text-white"
+                    style={{ backgroundColor: formData.color }}
                   >
                     {formData.icon}
                   </div>
-                  <span className="text-sm text-[var(--color-text-secondary)]">
-                    Current icon
+                  <span className="text-sm text-[var(--color-text-secondary)] font-outfit">
+                    Preview
                   </span>
                 </div>
                 
-                <div className="mb-4">
-                  <div className="flex gap-1 mb-2 flex-wrap">
+                {/* Compact Emoji Picker */}
+                <div>
+                  <label className="text-xs font-medium text-[var(--color-text-primary)] font-outfit block mb-2">Icon</label>
+                  <div className="flex gap-1 mb-2">
                     {Object.keys(EMOJI_CATEGORIES).map((category) => (
                       <button
                         key={category}
                         type="button"
-                        className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                        className={`px-2 py-1 text-xs rounded transition-colors font-outfit ${
                           emojiCategory === category
                             ? "bg-[var(--color-brand-500)] text-white"
-                            : "bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] border border-[var(--color-border-primary)]"
+                            : "bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)]"
                         }`}
                         onClick={() => setEmojiCategory(category)}
                       >
@@ -476,13 +407,15 @@ const CustomHabitEditModal = ({
                     ))}
                   </div>
                   
-                  <div className="border border-[var(--color-border-primary)] p-3 rounded-md bg-[var(--color-surface-elevated)]">
-                    <div className="flex flex-wrap gap-2">
-                      {EMOJI_CATEGORIES[emojiCategory].map((emoji) => (
+                  <div className="border border-[var(--color-border-primary)]/40 p-2 rounded-lg bg-[var(--color-surface-elevated)]">
+                    <div className="flex flex-wrap gap-1">
+                      {EMOJI_CATEGORIES[emojiCategory].slice(0, 12).map((emoji) => (
                         <button
                           key={emoji}
                           type="button"
-                          className="w-8 h-8 flex items-center justify-center text-xl hover:bg-[var(--color-surface-hover)] rounded-md transition-colors"
+                          className={`w-8 h-8 flex items-center justify-center text-lg hover:bg-[var(--color-surface-hover)] rounded transition-colors ${
+                            formData.icon === emoji ? 'bg-[var(--color-brand-100)] ring-1 ring-[var(--color-brand-500)]' : ''
+                          }`}
                           onClick={() => handleIconSelect(emoji)}
                         >
                           {emoji}
@@ -491,107 +424,175 @@ const CustomHabitEditModal = ({
                     </div>
                   </div>
                 </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-2">Color</label>
-                <div className="flex gap-3 flex-wrap">
-                  {COLOR_OPTIONS.map((color) => (
-                    <button
-                      key={color}
-                      type="button"
-                      className="w-8 h-8 rounded-full transition-transform hover:scale-110"
-                      style={{ 
-                        backgroundColor: color,
-                        border: formData.color === color ? "3px solid white" : "none",
-                        outline: formData.color === color ? `2px solid ${color}` : "none"
-                      }}
-                      onClick={() => setFormData({...formData, color})}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {activeTab === "settings" && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-3 border border-[var(--color-border-primary)] rounded-md bg-[var(--color-surface-elevated)]">
+                
+                {/* Compact Color Picker */}
                 <div>
-                  <h4 className="font-medium text-[var(--color-text-primary)]">
-                    {formData.isActive ? "Active" : "Archived"}
-                  </h4>
-                  <p className="text-xs text-[var(--color-text-secondary)]">
-                    {formData.isActive 
-                      ? "Visible in your habit tracker" 
-                      : "Hidden from your habit tracker"
-                    }
-                  </p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only"
-                    checked={formData.isActive}
-                    onChange={() => handleSwitchChange("isActive")}
-                  />
-                  <div className={`w-11 h-6 rounded-full transition-colors ${formData.isActive ? "bg-[var(--color-brand-500)]" : "bg-[var(--color-text-tertiary)]"}`}>
-                    <div className={`w-5 h-5 rounded-full bg-white transform transition-transform ${formData.isActive ? "translate-x-5" : "translate-x-1"}`}></div>
+                  <label className="text-xs font-medium text-[var(--color-text-primary)] font-outfit block mb-2">Color</label>
+                  <div className="flex gap-2">
+                    {COLOR_OPTIONS.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        className="w-8 h-8 rounded-lg transition-transform hover:scale-110"
+                        style={{ 
+                          backgroundColor: color,
+                          border: formData.color === color ? "2px solid white" : "1px solid var(--color-border-primary)",
+                          outline: formData.color === color ? `2px solid ${color}` : "none"
+                        }}
+                        onClick={() => setFormData({...formData, color})}
+                      />
+                    ))}
                   </div>
-                </label>
-              </div>
-            </div>
-          )}
-          
-          {activeTab === "danger" && habit && (
-            <div className="space-y-4">
-              <div className="p-4 border border-amber-300 rounded-md bg-amber-50">
-                <div className="flex gap-2 items-center">
-                  <InfoCircledIcon className="text-amber-600" />
-                  <p className="text-sm text-amber-700">
-                    The actions below can't be undone. Please be certain.
-                  </p>
                 </div>
               </div>
-              
-              <button
-                type="button"
-                className="w-full flex items-center justify-center gap-2 py-2 px-4 border border-amber-300 rounded-md text-amber-700 hover:bg-amber-50 transition-colors"
-                onClick={handleArchive}
-              >
-                <ArchiveIcon />
-                {formData.isActive ? "Archive Habit" : "Restore Habit"}
-              </button>
-              
-              <button
-                type="button"
-                className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                onClick={handleDelete}
-              >
-                <TrashIcon />
-                {showDeleteConfirm ? "Are you sure? Click again to delete" : "Delete Habit"}
-              </button>
-            </div>
-          )}
-        </div>
-        
-        {/* Footer */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-[var(--color-border-primary)]">
-          <button
-            type="button"
-            className="px-4 py-2 text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] rounded-md transition-colors"
-            onClick={onClose}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            className="px-4 py-2 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-md flex items-center gap-2 transition-colors"
-            onClick={handleSubmit}
-          >
-            <CheckIcon />
-            {habit ? "Update Habit" : "Create Habit"}
-          </button>
+            )}
+
+            {activeTab === "settings" && (
+              <div className="space-y-4">
+                {/* Reminders */}
+                <div className="flex items-center justify-between p-3 bg-[var(--color-surface-elevated)] rounded-lg">
+                  <div>
+                    <span className="text-sm font-medium text-[var(--color-text-primary)] font-outfit">
+                      Enable Reminders
+                    </span>
+                    <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">
+                      Get notifications for this habit
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.schedule.reminderEnabled || false}
+                      onChange={(e) => 
+                        setFormData({
+                          ...formData, 
+                          schedule: { 
+                            ...formData.schedule, 
+                            reminderEnabled: e.target.checked 
+                          }
+                        })
+                      }
+                      className="sr-only"
+                    />
+                    <div className={`w-11 h-6 rounded-full transition-colors ${
+                      formData.schedule.reminderEnabled 
+                        ? 'bg-[var(--color-brand-500)]' 
+                        : 'bg-gray-300'
+                    }`}>
+                      <div className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${
+                        formData.schedule.reminderEnabled ? 'translate-x-5' : 'translate-x-0'
+                      } mt-0.5 ml-0.5`} />
+                    </div>
+                  </label>
+                </div>
+                
+                {formData.schedule.reminderEnabled && (
+                  <div>
+                    <label className="text-xs font-medium text-[var(--color-text-primary)] font-outfit block mb-1">
+                      Reminder Time
+                    </label>
+                    <input
+                      type="time"
+                      value={formData.schedule.reminderTime || ''}
+                      onChange={(e) => 
+                        setFormData({
+                          ...formData, 
+                          schedule: { 
+                            ...formData.schedule, 
+                            reminderTime: e.target.value 
+                          }
+                        })
+                      }
+                      className="w-full h-10 px-3 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/40 rounded-lg text-[var(--color-text-primary)] font-outfit focus:outline-none focus:border-[var(--color-brand-500)] transition-colors text-sm"
+                    />
+                  </div>
+                )}
+
+                {/* Active Setting */}
+                <div className="flex items-center justify-between p-3 bg-[var(--color-surface-elevated)] rounded-lg">
+                  <div>
+                    <span className="text-sm font-medium text-[var(--color-text-primary)] font-outfit">
+                      {formData.isActive ? "Active" : "Archived"}
+                    </span>
+                    <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">
+                      {formData.isActive 
+                        ? "Visible in your habit tracker" 
+                        : "Hidden from your habit tracker"
+                      }
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.isActive}
+                      onChange={() => handleSwitchChange("isActive")}
+                      className="sr-only"
+                    />
+                    <div className={`w-11 h-6 rounded-full transition-colors ${
+                      formData.isActive 
+                        ? 'bg-[var(--color-brand-500)]' 
+                        : 'bg-gray-300'
+                    }`}>
+                      <div className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${
+                        formData.isActive ? 'translate-x-5' : 'translate-x-0'
+                      } mt-0.5 ml-0.5`} />
+                    </div>
+                  </label>
+                </div>
+              </div>
+            )}
+            
+            {activeTab === "danger" && habit && (
+              <div className="space-y-4">
+                <div className="p-4 border border-amber-300 rounded-lg bg-amber-50">
+                  <div className="flex gap-2 items-center">
+                    <InfoCircledIcon className="text-amber-600" />
+                    <p className="text-sm text-amber-700">
+                      The actions below can't be undone. Please be certain.
+                    </p>
+                  </div>
+                </div>
+                
+                <button
+                  type="button"
+                  className="w-full flex items-center justify-center gap-2 py-2 px-4 border border-amber-300 rounded-lg text-amber-700 hover:bg-amber-50 transition-colors"
+                  onClick={handleArchive}
+                >
+                  <ArchiveIcon />
+                  {formData.isActive ? "Archive Habit" : "Restore Habit"}
+                </button>
+                
+                <button
+                  type="button"
+                  className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                  onClick={handleDelete}
+                >
+                  <TrashIcon />
+                  {showDeleteConfirm ? "Are you sure? Click again to delete" : "Delete Habit"}
+                </button>
+              </div>
+            )}
+          </div>
+          
+          {/* Footer */}
+          <div className="flex items-center gap-3 pt-3 border-t border-[var(--color-border-primary)]">
+            <button
+              type="button"
+              className="flex-1 h-10 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/40 text-[var(--color-text-primary)] rounded-lg transition-all duration-200 font-outfit font-medium text-sm"
+              onClick={onClose}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="flex-1 h-10 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] disabled:bg-[var(--color-surface-elevated)] disabled:text-[var(--color-text-tertiary)] text-white rounded-lg transition-all duration-200 font-outfit font-semibold flex items-center justify-center gap-2 text-sm"
+              onClick={handleSubmit}
+              disabled={!formData.name.trim()}
+            >
+              <CheckIcon className="w-4 h-4" />
+              {habit ? "Update" : "Create"}
+            </button>
+          </div>
         </div>
       </div>
     </div>,

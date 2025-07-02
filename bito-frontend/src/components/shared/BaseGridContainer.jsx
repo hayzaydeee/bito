@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useMemo, useEffect, lazy, Suspense } from 'react';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import { PlusIcon, Cross2Icon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
 import 'react-grid-layout/css/styles.css';
@@ -6,33 +6,98 @@ import 'react-resizable/css/styles.css';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
+// Lazy load widgets like ContentGrid does
+const ChartWidget = lazy(() =>
+  import('../widgets/ChartWidget').then((module) => ({
+    default: module.ChartWidget,
+  }))
+);
+
+const DatabaseWidgetBridge = lazy(() =>
+  import('../widgets/database/components/DatabaseWidgetBridge.jsx').then(
+    (module) => ({
+      default: module.DatabaseWidgetBridge,
+    })
+  )
+);
+
+const QuickActionsWidget = lazy(() => import('../widgets/QuickActionsWidget'));
+
+// Widget skeleton
+const WidgetSkeleton = ({ title }) => (
+  <div className="w-full h-full glass-card rounded-xl p-4 animate-pulse">
+    <div className="h-4 bg-[var(--color-surface-elevated)] rounded mb-3 w-1/2"></div>
+    <div className="space-y-2">
+      <div className="h-3 bg-[var(--color-surface-elevated)] rounded w-3/4"></div>
+      <div className="h-3 bg-[var(--color-surface-elevated)] rounded w-1/2"></div>
+      <div className="h-3 bg-[var(--color-surface-elevated)] rounded w-2/3"></div>
+    </div>
+  </div>
+);
+
 const BaseGridContainer = ({
-  mode = 'dashboard', // 'dashboard' | 'analytics'
-  children,
-  widgets,
-  availableWidgets,
-  defaultWidgets,
-  defaultLayouts,
-  storageKeys,
-  onWidgetAction,
+  mode = 'dashboard', // 'dashboard' | 'analytics' | 'settings'
+  
+  // NEW PATTERN: Direct props like ContentGrid (for Dashboard)
+  habits = [],
+  entries = {},
+  isLoading = false,
+  
+  // Handlers (NEW PATTERN)
+  onToggleCompletion = () => {},
+  onAddHabit = () => {},
+  onDeleteHabit = () => {},
+  onEditHabit = () => {},
+  
+  // Filter states and handlers (NEW PATTERN)
+  chartFilters = {},
+  databaseFilters = {},
+  chartDateRange = null,
+  databaseDateRange = null,
+  filterOptions = {},
+  updateChartFilter = () => {},
+  updateChartMonth = () => {},
+  updateDatabaseFilter = () => {},
+  updateDatabaseMonth = () => {},
+  
+  // UI handlers (NEW PATTERN)
+  onShowEnhancedCsvImport = () => {},
+  onShowLLMSettings = () => {},
+  
+  // Filter components (NEW PATTERN)
+  ChartFilterControls = null,
+  DatabaseFilterControls = null,
+  
+  // OLD PATTERN: Widget factory props (for Analytics/Settings)
+  widgets: prebuiltWidgets = null,
+  
+  // Configuration (BOTH PATTERNS)
+  availableWidgets = {},
+  defaultWidgets = [],
+  defaultLayouts = {},
+  storageKeys = {},
   className = ''
 }) => {
-  // State management
+  
+  // State management (same as ContentGrid)
   const [layouts, setLayouts] = useState(() => loadLayoutsFromStorage(storageKeys.layouts) || defaultLayouts);
   const [activeWidgets, setActiveWidgets] = useState(() => loadActiveWidgetsFromStorage(storageKeys.widgets) || defaultWidgets);
   const [currentBreakpoint, setCurrentBreakpoint] = useState('lg');
   const [globalEditMode, setGlobalEditMode] = useState(false);
   const [widgetEditStates, setWidgetEditStates] = useState({});
   const [showWidgetPicker, setShowWidgetPicker] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('all');
 
   // Auto-save to localStorage
   useEffect(() => {
-    saveLayoutsToStorage(storageKeys.layouts, layouts);
+    if (storageKeys.layouts) {
+      saveLayoutsToStorage(storageKeys.layouts, layouts);
+    }
   }, [layouts, storageKeys.layouts]);
 
   useEffect(() => {
-    saveActiveWidgetsToStorage(storageKeys.widgets, activeWidgets);
+    if (storageKeys.widgets) {
+      saveActiveWidgetsToStorage(storageKeys.widgets, activeWidgets);
+    }
   }, [activeWidgets, storageKeys.widgets]);
 
   // Layout change handlers
@@ -44,7 +109,37 @@ const BaseGridContainer = ({
     setCurrentBreakpoint(breakpoint);
   }, []);
 
-  // Widget management
+  // Calculate responsive props like ContentGrid
+  const getWidgetProps = useCallback(
+    (widgetKey, layout) => {
+      const widgetLayout = layout.find((item) => item.i === widgetKey);
+      if (!widgetLayout)
+        return {
+          breakpoint: currentBreakpoint,
+          availableColumns: 6,
+          availableRows: 4,
+        };
+
+      // Determine breakpoint based on widget size and current screen breakpoint
+      let effectiveBreakpoint = currentBreakpoint;
+      if (widgetLayout.w <= 3) effectiveBreakpoint = "xs";
+      else if (widgetLayout.w <= 6) effectiveBreakpoint = "sm";
+      else if (widgetLayout.w <= 8) effectiveBreakpoint = "md";
+
+      return {
+        breakpoint: effectiveBreakpoint,
+        availableColumns: widgetLayout.w,
+        availableRows: widgetLayout.h,
+        size: {
+          width: widgetLayout.w * 100, // Approximate pixel width
+          height: widgetLayout.h * 60, // 60px row height
+        },
+      };
+    },
+    [currentBreakpoint]
+  );
+
+  // Widget management (same as ContentGrid)
   const addWidget = useCallback((widgetType) => {
     if (activeWidgets.includes(widgetType)) {
       setShowWidgetPicker(false);
@@ -114,9 +209,129 @@ const BaseGridContainer = ({
     setWidgetEditStates({});
   }, [defaultLayouts, defaultWidgets]);
 
+  // DETERMINE WHICH PATTERN TO USE
+  const isNewPattern = mode === 'dashboard' && !prebuiltWidgets && habits !== undefined;
+
+  // Create widgets - DUAL PATTERN SUPPORT
+  const widgets = useMemo(() => {
+    // OLD PATTERN: Use prebuilt widgets (for Analytics/Settings)
+    if (prebuiltWidgets) {
+      return prebuiltWidgets;
+    }
+
+    // NEW PATTERN: Build widgets like ContentGrid (for Dashboard)
+    if (isNewPattern) {
+      const result = {};
+      
+      result['habits-overview'] = {
+        title: "Habits Overview",
+        component: (layout) => {
+          const props = getWidgetProps("habits-overview", layout);
+          return (
+            <Suspense fallback={<WidgetSkeleton title="Daily Habits Completion" />}>
+              <ChartWidget
+                title="Daily Habits Completion"
+                type="line"
+                chartType="completion"
+                dateRange={chartDateRange}
+                color="var(--color-brand-400)"
+                habits={habits}
+                entries={entries}
+                onAddHabit={onAddHabit}
+                filterComponent={
+                  ChartFilterControls ? (
+                    <ChartFilterControls
+                      mode={chartFilters.mode}
+                      period={chartFilters.period}
+                      selectedMonth={chartFilters.selectedMonth}
+                      onModeChange={(mode) => updateChartFilter(mode, 1)}
+                      onPeriodChange={(period) => updateChartFilter(chartFilters.mode, period)}
+                      onMonthChange={updateChartMonth}
+                      options={filterOptions}
+                    />
+                  ) : null
+                }
+                {...props}
+              />
+            </Suspense>
+          );
+        },
+      };
+
+      result['quick-actions'] = {
+        title: "Quick Actions",
+        component: (layout) => {
+          const props = getWidgetProps("quick-actions", layout);
+          return (
+            <Suspense fallback={<WidgetSkeleton title="Quick Actions" />}>
+              <QuickActionsWidget 
+                habits={habits}
+                entries={entries}
+                onAddHabit={onAddHabit}
+                onToggleCompletion={onToggleCompletion}
+                onShowCsvImport={onShowEnhancedCsvImport}
+                onShowLLMSettings={onShowLLMSettings}
+                {...props} 
+              />
+            </Suspense>
+          );
+        },
+      };
+
+      result['habit-list'] = {
+        title: "My Habits",
+        component: (layout) => {
+          const props = getWidgetProps("habit-list", layout);
+          const isInEditMode = isWidgetInEditMode("habit-list");
+          return (
+            <Suspense fallback={<WidgetSkeleton title="My Habits" />}>
+              <DatabaseWidgetBridge
+                habits={habits}
+                completions={entries}
+                onToggleCompletion={onToggleCompletion}
+                onAddHabit={onAddHabit}
+                onDeleteHabit={onDeleteHabit}
+                onEditHabit={onEditHabit}
+                viewType="table"
+                dateRange={databaseDateRange}
+                mode="week"
+                isInEditMode={isInEditMode}
+                filterComponent={
+                  DatabaseFilterControls ? (
+                    <DatabaseFilterControls
+                      period={databaseFilters.period}
+                      selectedMonth={databaseFilters.selectedMonth}
+                      onPeriodChange={updateDatabaseFilter}
+                      onMonthChange={updateDatabaseMonth}
+                      options={filterOptions}
+                    />
+                  ) : null
+                }
+                {...props}
+              />
+            </Suspense>
+          );
+        },
+      };
+
+      return result;
+    }
+
+    // FALLBACK: Empty widgets object
+    return {};
+  }, [
+    prebuiltWidgets, 
+    isNewPattern,
+    mode, habits, entries, chartFilters, databaseFilters, chartDateRange, databaseDateRange,
+    onToggleCompletion, onAddHabit, onDeleteHabit, onEditHabit, filterOptions,
+    updateChartFilter, updateChartMonth, updateDatabaseFilter, updateDatabaseMonth,
+    onShowEnhancedCsvImport, onShowLLMSettings, ChartFilterControls, DatabaseFilterControls,
+    getWidgetProps, isWidgetInEditMode
+  ]);
+
   return (
     <div className={`w-full h-full ${className}`}>
-      {/* Header Controls */}
+      {/* Header Controls (same as ContentGrid) */}
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex items-center gap-2 text-sm text-[var(--color-text-tertiary)] font-outfit">
@@ -160,9 +375,9 @@ const BaseGridContainer = ({
         </div>
       </div>
 
-      {/* Grid Layout */}
+      {/* Grid Layout (same as ContentGrid) */}
       <ResponsiveGridLayout
-        className="layout"
+        className={`layout ${globalEditMode ? 'resizable-mode edit-active' : ''}`}
         layouts={layouts}
         onLayoutChange={handleLayoutChange}
         onBreakpointChange={handleBreakpointChange}
@@ -171,6 +386,7 @@ const BaseGridContainer = ({
         rowHeight={60}
         isDraggable={globalEditMode || Object.values(widgetEditStates).some(Boolean)}
         isResizable={globalEditMode || Object.values(widgetEditStates).some(Boolean)}
+        dragHandleClassName="widget-drag-handle"
         margin={[20, 20]}
         containerPadding={[0, 0]}
         useCSSTransforms={true}
@@ -194,18 +410,20 @@ const BaseGridContainer = ({
                 }`}
               >
                 <div className="h-full flex flex-col">
-                  {/* Widget Header */}
+                  {/* Widget Header (same as ContentGrid) */}
                   <div className="px-4 py-3 bg-[var(--color-surface-elevated)]/50 backdrop-blur-sm border-b border-[var(--color-border-primary)]/30">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         {isInEditMode && (
-                          <div className="flex flex-col gap-0.5 cursor-move opacity-60 hover:opacity-100 transition-opacity">
+                          <div className="widget-drag-handle flex flex-col gap-0.5 cursor-move opacity-60 hover:opacity-100 transition-opacity" title="Drag to move widget">
                             {[...Array(4)].map((_, i) => (
                               <div key={i} className="w-1 h-1 bg-[var(--color-text-tertiary)] rounded-full"></div>
                             ))}
                           </div>
                         )}
-                        <h3 className="font-semibold text-[var(--color-text-primary)] truncate font-dmSerif text-lg">
+                        <h3 className={`font-semibold text-[var(--color-text-primary)] truncate font-dmSerif text-lg ${
+                          isInEditMode ? "cursor-move widget-drag-handle" : ""
+                        }`} title={isInEditMode ? "Drag to move widget" : widget.title}>
                           {widget.title}
                         </h3>
                       </div>
@@ -250,13 +468,13 @@ const BaseGridContainer = ({
           })}
       </ResponsiveGridLayout>
 
-      {/* Enhanced Widget Picker Modal */}
+      {/* Widget Picker Modal */}
       {showWidgetPicker && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowWidgetPicker(false)}>
-          <div className="glass-card rounded-xl shadow-xl p-6 m-4 max-w-4xl w-full max-h-[80vh] overflow-auto" onClick={e => e.stopPropagation()}>
+          <div className="glass-card rounded-xl shadow-xl p-6 m-4 max-w-2xl w-full max-h-[80vh] overflow-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-[var(--color-text-primary)] font-dmSerif">
-                Add New Widget - {mode === 'analytics' ? 'Analytics' : 'Dashboard'}
+                Add New Widget
               </h3>
               <button
                 onClick={() => setShowWidgetPicker(false)}
@@ -266,51 +484,9 @@ const BaseGridContainer = ({
               </button>
             </div>
 
-            {/* Category Tabs */}
-            <div className="flex mb-6 border-b border-[var(--color-border-primary)]">
-              <button
-                onClick={() => setSelectedCategory('all')}
-                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                  selectedCategory === 'all'
-                    ? 'border-[var(--color-brand-500)] text-[var(--color-brand-500)]'
-                    : 'border-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
-                }`}
-              >
-                All Widgets
-              </button>
-              {mode === 'analytics' && (
-                <button
-                  onClick={() => setSelectedCategory('analytics')}
-                  className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                    selectedCategory === 'analytics'
-                      ? 'border-[var(--color-brand-500)] text-[var(--color-brand-500)]'
-                      : 'border-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
-                  }`}
-                >
-                  Analytics
-                </button>
-              )}
-              {mode === 'dashboard' && (
-                <button
-                  onClick={() => setSelectedCategory('dashboard')}
-                  className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                    selectedCategory === 'dashboard'
-                      ? 'border-[var(--color-brand-500)] text-[var(--color-brand-500)]'
-                      : 'border-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
-                  }`}
-                >
-                  Dashboard
-                </button>
-              )}
-            </div>
-
-            {/* Widget Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {Object.entries(availableWidgets)
-                .filter(([type, config]) => {
-                  if (selectedCategory === 'all') return true;
-                  return config.category === selectedCategory || config.category === mode;
-                })
+                .filter(([type, config]) => !config.category || config.category === mode)
                 .map(([type, config]) => {
                   const isActive = activeWidgets.includes(type);
                   return (
@@ -325,63 +501,28 @@ const BaseGridContainer = ({
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <span className="text-2xl flex-shrink-0">{config.icon}</span>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className={`font-medium transition-colors truncate ${
+                        <span className="text-2xl">{config.icon}</span>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className={`font-medium transition-colors ${
                               isActive ? 'text-[var(--color-success)]' : 'text-[var(--color-text-primary)] group-hover:text-[var(--color-brand-500)]'
                             }`}>
                               {config.title}
                             </h4>
                             {isActive && (
-                              <span className="text-xs bg-[var(--color-success)] text-white px-2 py-1 rounded-full flex-shrink-0">
+                              <span className="text-xs bg-[var(--color-success)] text-white px-2 py-1 rounded-full">
                                 Active
                               </span>
                             )}
                           </div>
-                          <p className="text-sm text-[var(--color-text-tertiary)] mb-2 line-clamp-2">
+                          <p className="text-sm text-[var(--color-text-tertiary)] mt-1">
                             {config.description}
                           </p>
-                          <div className="flex items-center justify-between text-xs text-[var(--color-text-quaternary)]">
-                            <span>Size: {config.defaultProps.w}×{config.defaultProps.h}</span>
-                            <span className="px-2 py-1 bg-[var(--color-surface-elevated)] rounded text-xs">
-                              {config.category}
-                            </span>
-                          </div>
                         </div>
                       </div>
                     </button>
                   );
                 })}
-            </div>
-
-            {/* Quick Actions */}
-            <div className="mt-6 pt-6 border-t border-[var(--color-border-primary)] flex justify-between">
-              <div className="text-sm text-[var(--color-text-tertiary)]">
-                {activeWidgets.length} of {Object.keys(availableWidgets).filter(key => 
-                  availableWidgets[key].category === mode
-                ).length} widgets active
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    // Add all available widgets for current mode
-                    const modeWidgets = Object.keys(availableWidgets).filter(key => 
-                      availableWidgets[key].category === mode && !activeWidgets.includes(key)
-                    );
-                    modeWidgets.forEach(widgetType => addWidget(widgetType));
-                  }}
-                  className="text-sm px-3 py-1 bg-[var(--color-brand-500)] text-white rounded hover:bg-[var(--color-brand-600)] transition-colors"
-                >
-                  Add All
-                </button>
-                <button
-                  onClick={() => setShowWidgetPicker(false)}
-                  className="text-sm px-3 py-1 bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] rounded hover:bg-[var(--color-surface-hover)] transition-colors"
-                >
-                  Close
-                </button>
-              </div>
             </div>
           </div>
         </div>
@@ -390,7 +531,7 @@ const BaseGridContainer = ({
   );
 };
 
-// Storage utility functions
+// Storage utility functions (same as ContentGrid)
 const saveLayoutsToStorage = (key, layouts) => {
   try {
     localStorage.setItem(key, JSON.stringify(layouts));

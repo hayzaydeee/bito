@@ -153,6 +153,33 @@ const validateHabitEntry = [
   handleValidationErrors
 ];
 
+// Encouragement validation rules
+const validateEncouragement = [
+  body('toUserId')
+    .isMongoId()
+    .withMessage('To user ID must be a valid MongoDB ObjectId'),
+  body('workspaceId')
+    .isMongoId()
+    .withMessage('Workspace ID must be a valid MongoDB ObjectId'),
+  body('habitId')
+    .optional()
+    .isMongoId()
+    .withMessage('Habit ID must be a valid MongoDB ObjectId'),
+  body('type')
+    .optional()
+    .isIn(['general_support', 'streak_celebration', 'goal_achieved', 'comeback_support', 'milestone_reached', 'custom_message'])
+    .withMessage('Invalid encouragement type'),
+  body('message')
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Message must be between 1 and 500 characters'),
+  body('reaction')
+    .optional()
+    .isIn(['👏', '🔥', '💪', '⭐', '🎉', '👊', '💯', '🚀'])
+    .withMessage('Invalid reaction emoji'),
+  handleValidationErrors
+];
+
 // Parameter validation rules
 const validateObjectId = (paramName) => [
   param(paramName)
@@ -193,6 +220,7 @@ module.exports = {
   validateHabitCreation,
   validateHabitUpdate,
   validateHabitEntry,
+  validateEncouragement,
   validateObjectId,
   validateDateRange,
   validatePagination

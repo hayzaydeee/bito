@@ -96,7 +96,7 @@ All components follow the established Bito design system:
 All components expect these common props:
 - `habits`: Array of habit objects from HabitContext
 - `entries`: Object containing habit entry data
-- `timeRange`: String indicating the analysis period ('7d', '30d', '90d', '1y')
+- `timeRange`: String indicating the analysis period ('7d', '30d', '90d')
 
 ### Habit Object Structure
 ```javascript

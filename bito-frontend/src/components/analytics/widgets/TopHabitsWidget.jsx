@@ -34,14 +34,16 @@ const TopHabitsWidget = ({
   }
 
   return (
-    <div className="w-full h-full overflow-hidden">
-      <TopHabits 
-        habits={habits}
-        entries={entries}
-        timeRange={timeRange}
-        {...responsiveProps}
-        {...props}
-      />
+    <div className="w-full h-full flex flex-col">
+      <div className="widget-content-area">
+        <TopHabits 
+          habits={habits}
+          entries={entries}
+          timeRange={timeRange}
+          {...responsiveProps}
+          {...props}
+        />
+      </div>
     </div>
   );
 };

@@ -10,7 +10,15 @@ import {
   ClockIcon
 } from '@radix-ui/react-icons';
 
-const InsightsPanel = ({ habits, entries, analyticsData, timeRange }) => {
+const InsightsPanel = ({ 
+  habits, 
+  entries, 
+  analyticsData, 
+  timeRange,
+  compact = false,
+  maxInsights = 4,
+  singleColumn = false 
+}) => {
   const insights = useMemo(() => {
     if (!habits.length) return [];
 
@@ -122,7 +130,7 @@ const InsightsPanel = ({ habits, entries, analyticsData, timeRange }) => {
     }
 
     // Completion rate trends
-    if (analyticsData.averageCompletionRate >= 80) {
+    if (analyticsData && analyticsData.averageCompletionRate >= 80) {
       generatedInsights.push({
         type: 'success',
         icon: CheckCircledIcon,
@@ -130,7 +138,7 @@ const InsightsPanel = ({ habits, entries, analyticsData, timeRange }) => {
         description: `You're maintaining an impressive ${analyticsData.averageCompletionRate}% completion rate.`,
         action: 'You might be ready to add a new challenging habit to your routine.'
       });
-    } else if (analyticsData.averageCompletionRate < 50) {
+    } else if (analyticsData && analyticsData.averageCompletionRate < 50) {
       generatedInsights.push({
         type: 'warning',
         icon: ExclamationTriangleIcon,
@@ -236,89 +244,98 @@ const InsightsPanel = ({ habits, entries, analyticsData, timeRange }) => {
 
   if (!habits.length) {
     return (
-      <div className="glass-card p-6 rounded-2xl">
-        <h3 className="text-xl font-semibold font-dmSerif text-[var(--color-text-primary)] mb-4">
-          Smart Insights
-        </h3>
-        <div className="text-center py-12">
-          <LightningBoltIcon className="w-12 h-12 text-[var(--color-text-tertiary)] mx-auto mb-4" />
-          <p className="text-[var(--color-text-secondary)] font-outfit">
-            AI-powered insights will appear here as you build your habit data
-          </p>
+      <div className="glass-card rounded-2xl h-full flex flex-col">
+        <div className="p-4 flex-shrink-0">
+          <h3 className={`font-semibold font-dmSerif text-[var(--color-text-primary)] mb-4 ${compact ? 'text-lg' : 'text-xl'}`}>
+            Smart Insights
+          </h3>
+        </div>
+        <div className="flex-1 flex items-center justify-center text-center p-4">
+          <div>
+            <LightningBoltIcon className={`text-[var(--color-text-tertiary)] mx-auto mb-4 ${compact ? 'w-8 h-8' : 'w-12 h-12'}`} />
+            <p className="text-[var(--color-text-secondary)] font-outfit text-sm">
+              AI-powered insights will appear here as you build your habit data
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="glass-card p-6 rounded-2xl">
+    <div className="glass-card rounded-2xl h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-semibold font-dmSerif text-[var(--color-text-primary)]">
-          Smart Insights
-        </h3>
-        <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] font-outfit">
-          <LightningBoltIcon className="w-4 h-4 text-[var(--color-brand-400)]" />
-          AI-Powered
+      <div className="flex-shrink-0 p-4 pb-2">
+        <div className="flex items-center justify-between">
+          <h3 className={`font-semibold font-dmSerif text-[var(--color-text-primary)] ${compact ? 'text-lg' : 'text-xl'}`}>
+            Smart Insights
+          </h3>
+          <div className={`flex items-center gap-2 text-[var(--color-text-secondary)] font-outfit ${compact ? 'text-xs' : 'text-sm'}`}>
+            <LightningBoltIcon className="w-4 h-4 text-[var(--color-brand-400)]" />
+            AI-Powered
+          </div>
         </div>
       </div>
 
-      {/* Insights Grid */}
-      {insights.length === 0 ? (
-        <div className="text-center py-8">
-          <InfoCircledIcon className="w-8 h-8 text-[var(--color-text-tertiary)] mx-auto mb-3" />
-          <p className="text-[var(--color-text-secondary)] font-outfit">
-            Keep tracking your habits to unlock personalized insights!
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {insights.map((insight, index) => {
-            const Icon = insight.icon;
-            const styles = getInsightStyles(insight.type);
-            
-            return (
-              <div 
-                key={index}
-                className={`relative overflow-hidden rounded-xl border ${styles.border} p-4 bg-gradient-to-br ${styles.bg}`}
-              >
-                {/* Background Pattern */}
-                <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-white/5 to-transparent rounded-full -translate-y-8 translate-x-8"></div>
-                
-                <div className="relative z-10">
-                  {/* Icon */}
-                  <div className="mb-3">
-                    <Icon className={`w-5 h-5 ${styles.icon}`} />
+      {/* Scrollable Content Area */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pb-4" style={{ minHeight: 0 }}>
+        {/* Insights Grid */}
+        {insights.length === 0 ? (
+          <div className="text-center py-8">
+            <InfoCircledIcon className="w-8 h-8 text-[var(--color-text-tertiary)] mx-auto mb-3" />
+            <p className="text-[var(--color-text-secondary)] font-outfit">
+              Keep tracking your habits to unlock personalized insights!
+            </p>
+          </div>
+        ) : (
+          <div className={`grid gap-4 ${singleColumn || compact ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
+            {insights.slice(0, maxInsights).map((insight, index) => {
+              const Icon = insight.icon;
+              const styles = getInsightStyles(insight.type);
+              
+              return (
+                <div 
+                  key={index}
+                  className={`relative overflow-hidden rounded-xl border ${styles.border} ${compact ? 'p-3' : 'p-4'} bg-gradient-to-br ${styles.bg}`}
+                >
+                  {/* Background Pattern */}
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-white/5 to-transparent rounded-full -translate-y-8 translate-x-8"></div>
+                  
+                  <div className="relative z-10">
+                    {/* Icon */}
+                    <div className="mb-3">
+                      <Icon className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} ${styles.icon}`} />
+                    </div>
+
+                    {/* Title */}
+                    <h4 className={`font-semibold text-[var(--color-text-primary)] font-outfit mb-2 ${compact ? 'text-xs' : 'text-sm'}`}>
+                      {insight.title}
+                    </h4>
+
+                    {/* Description */}
+                    <p className={`text-[var(--color-text-secondary)] font-outfit mb-3 line-clamp-2 ${compact ? 'text-xs' : 'text-xs'}`}>
+                      {insight.description}
+                    </p>
+
+                    {/* Action */}
+                    <p className={`text-[var(--color-text-primary)] font-outfit font-medium rounded-lg p-2 ${compact ? 'text-xs' : 'text-xs'}`}>
+                      💡 {insight.action}
+                    </p>
                   </div>
-
-                  {/* Title */}
-                  <h4 className="font-semibold text-[var(--color-text-primary)] font-outfit mb-2 text-sm">
-                    {insight.title}
-                  </h4>
-
-                  {/* Description */}
-                  <p className="text-xs text-[var(--color-text-secondary)] font-outfit mb-3 line-clamp-2">
-                    {insight.description}
-                  </p>
-
-                  {/* Action */}
-                  <p className="text-xs text-[var(--color-text-primary)] font-outfit font-medium 0 rounded-lg p-2">
-                    💡 {insight.action}
-                  </p>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
 
-      {/* Footer */}
-      <div className="mt-6 pt-6 border-t border-[var(--color-border-primary)]/20">
-        <div className="flex items-center justify-center gap-2 text-xs text-[var(--color-text-tertiary)] font-outfit">
-          <CalendarIcon className="w-4 h-4" />
-          <span>
-            Insights based on {timeRange} of habit data • Updates daily
-          </span>
+        {/* Footer */}
+        <div className={`mt-6 pt-6 border-t border-[var(--color-border-primary)]/20 ${compact ? 'mt-4 pt-4' : ''}`}>
+          <div className={`flex items-center justify-center gap-2 text-[var(--color-text-tertiary)] font-outfit ${compact ? 'text-xs' : 'text-xs'}`}>
+            <CalendarIcon className="w-4 h-4" />
+            <span>
+              Insights based on {timeRange} of habit data • Updates daily
+            </span>
+          </div>
         </div>
       </div>
     </div>

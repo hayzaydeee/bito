@@ -34,14 +34,16 @@ const WeeklyHeatmapWidget = ({
   }
 
   return (
-    <div className="w-full h-full overflow-hidden">
-      <WeeklyHeatmap 
-        habits={habits}
-        entries={entries}
-        timeRange={timeRange}
-        {...responsiveProps}
-        {...props}
-      />
+    <div className="w-full h-full flex flex-col">
+      <div className="widget-content-area">
+        <WeeklyHeatmap 
+          habits={habits}
+          entries={entries}
+          timeRange={timeRange}
+          {...responsiveProps}
+          {...props}
+        />
+      </div>
     </div>
   );
 };

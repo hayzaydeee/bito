@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { useHabits } from '../../../contexts/HabitContext';
+import { ArrowUpIcon, ArrowDownIcon } from '@radix-ui/react-icons';
 import CompletionRateChart from '../CompletionRateChart';
 
 const CompletionRateChartWidget = ({ 
@@ -10,7 +11,63 @@ const CompletionRateChartWidget = ({
   ...props 
 }) => {
   const { habits, entries, isLoading } = useHabits();
+  // Calculate trend data for display in header
+  const trendData = useMemo(() => {
+    if (!habits.length) return { trend: 0 };
 
+    const days = parseInt(timeRange) || 30;
+    const endDate = new Date();
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - days);
+
+    // Group by weeks to calculate trend
+    const weeks = [];
+    let currentWeekStart = new Date(startDate);
+    
+    while (currentWeekStart <= endDate) {
+      const weekEnd = new Date(currentWeekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      if (weekEnd > endDate) weekEnd.setTime(endDate.getTime());
+
+      weeks.push({
+        start: new Date(currentWeekStart),
+        end: new Date(weekEnd)
+      });
+
+      currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+    }
+
+    const weeklyRates = weeks.map(week => {
+      let totalCompletions = 0;
+      let totalPossible = 0;
+
+      habits.forEach(habit => {
+        const habitEntries = entries[habit._id] || {};
+        
+        for (let d = new Date(week.start); d <= week.end; d.setDate(d.getDate() + 1)) {
+          const dateStr = d.toISOString().split('T')[0];
+          const entry = habitEntries[dateStr];
+          
+          totalPossible++;
+          if (entry && entry.completed) {
+            totalCompletions++;
+          }
+        }
+      });
+
+      const rate = totalPossible > 0 ? (totalCompletions / totalPossible) * 100 : 0;
+      return rate;
+    });
+
+    // Calculate trend
+    const trend = weeklyRates.length >= 2 
+      ? weeklyRates[weeklyRates.length - 1] - weeklyRates[weeklyRates.length - 2]
+      : 0;
+
+    return { trend };
+  }, [habits, entries, timeRange]);
+
+  // Add responsive behavior based on widget size
   // Add responsive behavior based on widget size
   const responsiveProps = useMemo(() => {
     const isMobile = breakpoint === 'xs' || breakpoint === 'xxs';
@@ -38,19 +95,38 @@ const CompletionRateChartWidget = ({
     <div className="w-full h-full overflow-hidden flex flex-col">
       {/* Custom header for widget mode */}
       <div className="flex-shrink-0">
-        <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] font-outfit mb-4">
-          <span>🎯</span>
-          Success over time
+        <div className="flex items-center justify-between text-sm text-[var(--color-text-secondary)] font-outfit mb-4">
+          <div className="flex items-center gap-2">
+            <span>🎯</span>
+            Success over time
+          </div>
+          <div className="flex items-center gap-1">
+            {trendData.trend > 0 ? (
+              <ArrowUpIcon className="w-3 h-3 text-[var(--color-success)]" />
+            ) : trendData.trend < 0 ? (
+              <ArrowDownIcon className="w-3 h-3 text-[var(--color-error)]" />
+            ) : null}
+            <span className={`text-sm font-medium font-outfit ${
+              trendData.trend > 0 
+                ? 'text-[var(--color-success)]' 
+                : trendData.trend < 0 
+                  ? 'text-[var(--color-error)]' 
+                  : 'text-[var(--color-text-secondary)]'
+            }`}>
+              {trendData.trend > 0 ? '+' : ''}{trendData.trend.toFixed(1)}%
+            </span>
+          </div>
         </div>
       </div>
       
       {/* Chart content without the outer card wrapper */}
-      <div className="flex-1 min-h-0">
+      <div className="widget-content-area">
         <CompletionRateChart 
           habits={habits}
           entries={entries}
           timeRange={timeRange}
           responsiveMode={true} // Flag to indicate this is in widget mode
+          hideTrendInResponsiveMode={true} // Hide trend display since we show it in header
           {...responsiveProps}
           {...props}
         />

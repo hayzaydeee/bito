@@ -69,6 +69,27 @@ const userSchema = new mongoose.Schema({  // Basic user information
       default: 1 // Monday
     }
   },
+
+  // Workspace dashboard sharing permissions
+  dashboardSharingPermissions: [{
+    workspaceId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Workspace',
+      required: true
+    },
+    allowedMembers: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
+    isPublicToWorkspace: {
+      type: Boolean,
+      default: false
+    },
+    updatedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   
   // Security
   lastLogin: {

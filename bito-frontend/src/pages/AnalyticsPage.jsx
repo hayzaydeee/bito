@@ -14,7 +14,6 @@ const AnalyticsPage = () => {
     { value: '7d', label: '7 Days', icon: ClockIcon },
     { value: '30d', label: '30 Days', icon: CalendarIcon },
     { value: '90d', label: '90 Days', icon: BarChartIcon },
-    { value: '1y', label: '1 Year', icon: ArrowUpIcon },
   ];
 
   // Widget dependencies for analytics
@@ -24,12 +23,11 @@ const AnalyticsPage = () => {
     isLoading,
     timeRange: selectedTimeRange,
     getWidgetProps: (widgetKey, layout) => {
-      const widgetLayout = layout.find(item => item.i === widgetKey);
+      const widgetLayout = Array.isArray(layout) ? layout.find(item => item.i === widgetKey) : {};
       return {
         breakpoint: 'lg', // TODO: Make this dynamic based on actual breakpoint
         availableColumns: widgetLayout?.w || 6,
         availableRows: widgetLayout?.h || 4,
-        timeRange: selectedTimeRange,
       };
     },
   }), [habits, entries, isLoading, selectedTimeRange]);
@@ -80,25 +78,26 @@ const AnalyticsPage = () => {
           </div>
 
           {/* Time Range Selector */}
-          <div className="flex items-center gap-2 mt-6 lg:mt-0">
-            <span className="text-sm font-medium text-[var(--color-text-secondary)] font-outfit mr-2">
+          <div className="flex items-center gap-1 sm:gap-2 mt-6 lg:mt-0">
+            <span className="text-sm font-medium text-[var(--color-text-secondary)] font-outfit mr-2 hidden md:inline">
               Time Range:
             </span>
-            <div className="flex items-center bg-[var(--color-surface-elevated)] rounded-xl p-1">
+            <div className="flex items-center bg-[var(--color-surface-elevated)] rounded-lg sm:rounded-xl p-0.5 sm:p-1">
               {timeRangeOptions.map(option => {
                 const Icon = option.icon;
                 return (
                   <button
                     key={option.value}
                     onClick={() => setSelectedTimeRange(option.value)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 font-outfit text-sm ${
+                    className={`flex items-center gap-1 sm:gap-2 px-1.5 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-md sm:rounded-lg transition-all duration-200 font-outfit text-xs sm:text-sm ${
                       selectedTimeRange === option.value
                         ? 'bg-[var(--color-brand-600)] text-white shadow-md'
                         : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]'
                     }`}
                   >
-                    <Icon className="w-4 h-4" />
-                    {option.label}
+                    <Icon className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">{option.label}</span>
+                    <span className="sm:hidden">{option.label.split(' ')[0]}</span>
                   </button>
                 );
               })}

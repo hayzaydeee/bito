@@ -20,9 +20,11 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const habitRoutes = require('./routes/habits');
 const workspaceRoutes = require('./routes/workspaces');
+const encouragementRoutes = require('./routes/encouragements');
 const testRoutes = require('./routes/test');
-const csvAnalysisRoutes = require('./routes/csvAnalysis');
-const csvRoutes = require('./routes/csv');
+// Temporarily disabled CSV functionality for deployment
+// const csvAnalysisRoutes = require('./routes/csvAnalysis');
+// const csvRoutes = require('./routes/csv');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -263,8 +265,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/habits', habitRoutes);
 app.use('/api/workspaces', workspaceRoutes);
-app.use('/api/csv-analysis', csvAnalysisRoutes);
-app.use('/api/csv', csvRoutes);
+app.use('/api/encouragements', encouragementRoutes);
+// Temporarily disabled CSV functionality for deployment
+// app.use('/api/csv-analysis', csvAnalysisRoutes);
+// app.use('/api/csv', csvRoutes);
 
 // API documentation endpoint
 app.get('/api', (req, res) => {
@@ -292,11 +296,12 @@ app.get('/api', (req, res) => {
         'DELETE /api/habits/:id',
         'POST /api/habits/:id/check',
         'GET /api/habits/stats'
-      ],
-      'csv-analysis': [
-        'POST /api/csv-analysis/analyze',
-        'GET /api/csv-analysis/results'
       ]
+      // Temporarily disabled CSV functionality for deployment
+      // 'csv-analysis': [
+      //   'POST /api/csv-analysis/analyze',
+      //   'GET /api/csv-analysis/results'
+      // ]
     }
   });
 });

@@ -83,7 +83,7 @@ export const HabitGrid = ({
     }
   }, [habits, weekDates, fetchHabitEntries]); // Removed entries to prevent refetch loops
 
-  // DEBUG: Log data to compare views
+  // Note: Debug logging removed to prevent circular reference errors
   // Calculate week statistics
   const weekStats = useMemo(() => {
     let totalCells = habits.length * weekDates.length;
@@ -151,20 +151,13 @@ export const HabitGrid = ({
 
   // Handle habit completion toggle
   const handleToggleCompletion = async (habitId, date) => {
-    // Find the habit name for logging
-    const habit = habits.find(h => h._id === habitId);
-    const habitName = habit?.name || 'Unknown';
-    
-    // Get the day name for the date
-    const dateObj = new Date(date + 'T00:00:00');
-    const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
-    
-    // Check current completion status
-    const habitEntries = entries[habitId];
-    const currentEntry = habitEntries?.[date];
-    const wasCompleted = currentEntry?.completed || false;
-    
-    const result = await toggleHabitCompletion(habitId, date);
+    try {
+      const result = await toggleHabitCompletion(habitId, date);
+      return result;
+    } catch (error) {
+      console.warn('Error toggling habit completion:', error.message);
+      return { success: false, error: error.message };
+    }
   };
 
   // Show loading state
@@ -226,16 +219,31 @@ export const HabitGrid = ({
       {showHeader && <WeekHeader dates={weekDates} />}
 
       <div className="habit-rows space-y-2">
-        {habits.map((habit) => (
-          <HabitRow
-            key={habit._id}
-            habit={habit}
-            weekDates={weekDates}
-            entries={entries[habit._id] || {}}
-            onToggle={handleToggleCompletion}
-            onEditHabit={onEditHabit}
-          />
-        ))}
+        {habits.map((habit, index) => {
+          // Safe key generation to prevent React key errors
+          const safeKey = (() => {
+            try {
+              const id = habit._id || habit.id;
+              if (id && (typeof id === 'string' || typeof id === 'number')) {
+                return `habit-${String(id)}`;
+              }
+              return `habit-index-${index}`;
+            } catch (error) {
+              return `habit-fallback-${index}-${Date.now()}`;
+            }
+          })();
+          
+          return (
+            <HabitRow
+              key={safeKey}
+              habit={habit}
+              weekDates={weekDates}
+              entries={entries[habit._id] || {}}
+              onToggle={handleToggleCompletion}
+              onEditHabit={onEditHabit}
+            />
+          );
+        })}
       </div>
 
       {showStats && <WeekStats stats={weekStats} />}

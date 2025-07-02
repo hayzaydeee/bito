@@ -10,16 +10,14 @@ export const DatabaseHeader = ({
   setViewType,
   filterComponent,
 }) => (
-  <div className="flex flex-col gap-4 mb-6 flex-shrink-0">
+  <div className="flex flex-col gap-3 mb-4 flex-shrink-0">
     {/* Title and Filters Row */}
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <h3 className="text-xl font-bold text-[var(--color-text-primary)] font-dmSerif">
-          {title}
-        </h3>
-      </div>
+    <div className="flex items-center justify-between gap-4">
+      <h3 className="text-xl font-bold text-[var(--color-text-primary)] font-dmSerif flex-shrink-0">
+        {title}
+      </h3>
       {filterComponent && (
-        <div className="flex-shrink-0">{filterComponent}</div>
+        <div className="flex-shrink-0 ml-auto">{filterComponent}</div>
       )}
     </div>
 
@@ -46,7 +44,7 @@ export const DatabaseHeader = ({
           }`}
         >
           <GridIcon className="w-4 h-4" />
-          <span className="text-sm font-outfit font-medium">Cards</span>{" "}
+          <span className="text-sm font-outfit font-medium">Cards</span>
         </button>
       </div>
     </div>

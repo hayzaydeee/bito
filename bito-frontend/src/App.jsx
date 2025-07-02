@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Theme } from "@radix-ui/themes";
 import Layout from "./components/layout/Layout";
@@ -12,7 +11,11 @@ import AnalyticsPage from "./pages/AnalyticsPage";
 import SettingsPage from "./pages/SettingsPage";
 import WorkspaceOverview from "./pages/WorkspaceOverview";
 import WorkspaceDashboard from "./pages/WorkspaceDashboard";
+import WorkspaceSettings from "./pages/WorkspaceSettings";
+import MemberDashboardView from "./pages/MemberDashboardView";
 import GroupSelection from "./pages/GroupSelection";
+import InvitationPage from "./pages/InvitationPage";
+import GroupTrackersPage from "./pages/GroupTrackersPage";
 
 // Import authentication context
 import { AuthProvider } from "./contexts/AuthContext";
@@ -41,6 +44,9 @@ function App() {
               <Route path="/signup" element={<Signup />} />
               <Route path="/auth/callback" element={<OAuthCallback />} />
               
+              {/* Invitation route without layout */}
+              <Route path="/invite/:token" element={<InvitationPage />} />
+              
               {/* App routes with layout */}
               <Route path="/app" element={<Layout />}>
                 <Route index element={<Dashboard />} />
@@ -50,7 +56,11 @@ function App() {
                 <Route path="settings" element={<SettingsPage />} />
                 <Route path="groups" element={<GroupSelection />} />
                 <Route path="groups/:groupId" element={<WorkspaceOverview />} />
-                <Route path="workspaces/:workspaceId/dashboard" element={<WorkspaceDashboard />} />
+                <Route path="groups/:groupId/members/:memberId/dashboard" element={<MemberDashboardView />} />
+                <Route path="groups/:groupId/dashboard" element={<WorkspaceDashboard />} />
+                <Route path="groups/:groupId/trackers" element={<GroupTrackersPage />} />
+                <Route path="groups/:groupId/settings" element={<WorkspaceSettings />} />
+                <Route path="invitations" element={<InvitationPage />} />
               </Route>
             </Routes>
           </div>

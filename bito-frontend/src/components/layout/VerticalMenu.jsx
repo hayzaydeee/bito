@@ -16,7 +16,6 @@ import {
   DotsHorizontalIcon,
   BackpackIcon,
 } from "@radix-ui/react-icons";
-import WorkspaceCreationModal from "../ui/WorkspaceCreationModal";
 import { groupsAPI } from "../../services/api";
 
 const VerticalMenu = ({ isCollapsed }) => {
@@ -25,6 +24,13 @@ const VerticalMenu = ({ isCollapsed }) => {
   const [workspaces, setWorkspaces] = useState([]);
   const [loadingWorkspaces, setLoadingWorkspaces] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [groupsCollapsed, setGroupsCollapsed] = useState(false);
+  const [newGroup, setNewGroup] = useState({
+    name: "",
+    description: "",
+    type: "team",
+    isPublic: false,
+  });
 
   // Fetch user's workspaces
   useEffect(() => {
@@ -39,9 +45,29 @@ const VerticalMenu = ({ isCollapsed }) => {
         setWorkspaces(data.workspaces || []);
       }
     } catch (error) {
-      console.error('Error fetching groups:', error);
+      console.error("Error fetching groups:", error);
     } finally {
       setLoadingWorkspaces(false);
+    }
+  };
+
+  const handleCreateGroup = async () => {
+    try {
+      const response = await groupsAPI.createGroup(newGroup);
+      if (response.success) {
+        setWorkspaces((prev) => [...prev, response.workspace]);
+        setShowCreateModal(false);
+        setNewGroup({
+          name: "",
+          description: "",
+          type: "team",
+          isPublic: false,
+        });
+        // Navigate to the new group
+        navigate(`/app/groups/${response.workspace._id}`);
+      }
+    } catch (error) {
+      console.error("Error creating group:", error);
     }
   };
 
@@ -74,6 +100,14 @@ const VerticalMenu = ({ isCollapsed }) => {
       path: "/app/settings",
     },
   ];
+
+  const groupTypeIcons = {
+    family: HomeIcon,
+    team: BackpackIcon,
+    fitness: HomeIcon, // You can import HeartIcon if available
+    study: CalendarIcon,
+    community: ActivityLogIcon,
+  };
 
   const renderMenuItem = (item, isBottom = false) => {
     const Icon = item.icon;
@@ -158,6 +192,178 @@ const VerticalMenu = ({ isCollapsed }) => {
     );
   };
 
+  const renderGroupsMenuItem = () => {
+    const isGroupsActive = location.pathname.startsWith('/app/groups');
+    
+    if (isCollapsed) {
+      return (
+        <div className="group relative mb-2">
+          <button
+            className={`w-full h-10 rounded-xl transition-all duration-300 flex items-center justify-center relative overflow-hidden ${
+              isGroupsActive
+                ? "bg-gradient-to-r from-purple-500 to-purple-600 shadow-lg shadow-black/20 scale-105"
+                : "hover:bg-[var(--color-surface-hover)] hover:scale-105 bg-transparent"
+            }`}
+            onClick={() => navigate('/app/groups')}
+            title="Groups"
+          >
+            <BackpackIcon
+              className={`w-5 h-5 transition-colors ${
+                isGroupsActive ? "text-white" : "text-[var(--color-text-accent)]"
+              }`}
+            />
+          </button>
+
+          {/* Tooltip for collapsed mode */}
+          <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+            <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)] rounded-lg px-3 py-2 shadow-lg">
+              <Text className="text-sm font-medium font-outfit text-[var(--color-text-primary)]">
+                Groups
+              </Text>
+              <Text className="text-xs font-outfit text-[var(--color-text-tertiary)]">
+                Team workspaces ({workspaces.length})
+              </Text>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="mb-1">
+        {/* Main Groups Button */}
+        <button
+          className={`w-full p-3 rounded-xl transition-all duration-300 flex items-center gap-3 relative overflow-hidden group ${
+            isGroupsActive && location.pathname === '/app/groups'
+              ? "bg-gradient-to-r from-purple-500 to-purple-600 shadow-lg shadow-black/20 transform scale-[1.02]"
+              : "hover:bg-[var(--color-surface-hover)] hover:scale-[1.01] bg-transparent"
+          }`}
+          onClick={() => navigate('/app/groups')}
+        >
+          {/* Background pattern for active state */}
+          {isGroupsActive && location.pathname === '/app/groups' && (
+            <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-white/5 rounded-xl" />
+          )}
+          
+          {/* Icon container */}
+          <div
+            className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 ${
+              isGroupsActive && location.pathname === '/app/groups'
+                ? "bg-white/20 shadow-lg"
+                : "bg-[var(--color-surface-secondary)] group-hover:bg-[var(--color-surface-elevated)]"
+            }`}
+          >
+            <BackpackIcon
+              className={`w-5 h-5 transition-colors ${
+                isGroupsActive && location.pathname === '/app/groups' ? "text-white" : "text-[var(--color-text-accent)]"
+              }`}
+            />
+          </div>
+          
+          {/* Text content */}
+          <div className="flex-1 text-left min-w-0">
+            <Text
+              className={`font-medium text-sm font-outfit transition-colors ${
+                isGroupsActive && location.pathname === '/app/groups' ? "text-white" : "text-[var(--color-text-primary)]"
+              }`}
+            >
+              Groups
+            </Text>
+          </div>
+          
+          {/* Expand/Collapse indicator */}
+          <div className="flex items-center gap-2">
+            <span className={`text-xs font-outfit font-medium ${
+              isGroupsActive && location.pathname === '/app/groups' ? "text-white/70" : "text-[var(--color-text-tertiary)]"
+            }`}>
+              {workspaces.length}
+            </span>
+            <ChevronDownIcon 
+              className={`w-4 h-4 transition-all duration-200 ${
+                isGroupsActive && location.pathname === '/app/groups' ? "text-white/70" : "text-[var(--color-text-tertiary)]"
+              } ${groupsCollapsed ? 'rotate-180' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setGroupsCollapsed(!groupsCollapsed);
+              }}
+            />
+          </div>
+        </button>
+
+        {/* Expandable Groups List */}
+        {!groupsCollapsed && (
+          <div className="mt-2 ml-11 space-y-1">
+            {loadingWorkspaces ? (
+              <div className="flex items-center gap-2 px-3 py-2">
+                <div className="w-5 h-5 rounded-md bg-[var(--color-surface-elevated)] animate-pulse"></div>
+                <div className="flex-1">
+                  <div className="h-3 bg-[var(--color-surface-elevated)] rounded animate-pulse mb-1"></div>
+                  <div className="h-2 bg-[var(--color-surface-elevated)] rounded w-16 animate-pulse"></div>
+                </div>
+              </div>
+            ) : workspaces.length === 0 ? (
+              <div className="px-3 py-2">
+                <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">No groups yet</p>
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="text-xs text-[var(--color-brand-500)] hover:text-[var(--color-brand-600)] font-outfit font-medium mt-1"
+                >
+                  Create your first group
+                </button>
+              </div>
+            ) : (
+              workspaces.slice(0, 5).map((workspace) => {
+                const isActive = location.pathname === `/app/groups/${workspace._id}`;
+                return (
+                  <button
+                    key={workspace._id}
+                    onClick={() => navigate(`/app/groups/${workspace._id}`)}
+                    className={`w-full p-2 rounded-lg text-left transition-all duration-200 flex items-center gap-2 group ${
+                      isActive
+                        ? 'bg-[var(--color-brand-500)] text-white shadow-sm'
+                        : 'hover:bg-[var(--color-surface-hover)] text-[var(--color-text-primary)]'
+                    }`}
+                  >
+                    <div className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold transition-all ${
+                      isActive 
+                        ? 'bg-white/20 text-white' 
+                        : 'bg-gradient-to-br from-[var(--color-brand-400)] to-[var(--color-brand-600)] text-white'
+                    }`}>
+                      {workspace.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-xs font-medium truncate ${
+                        isActive ? 'text-white' : 'text-[var(--color-text-primary)]'
+                      }`}>
+                        {workspace.name}
+                      </p>
+                    </div>
+                    {!isActive && (
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ChevronDownIcon className="w-3 h-3 text-[var(--color-text-tertiary)] rotate-[-90deg]" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })
+            )}
+            
+            {workspaces.length > 5 && (
+              <button
+                onClick={() => navigate('/app/groups')}
+                className="w-full p-2 text-left transition-all duration-200 hover:bg-[var(--color-surface-hover)] rounded-lg"
+              >
+                <p className="text-xs font-medium text-[var(--color-text-tertiary)] hover:text-[var(--color-brand-500)]">
+                  View all {workspaces.length} groups →
+                </p>
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div
       className={`${
@@ -190,166 +396,16 @@ const VerticalMenu = ({ isCollapsed }) => {
         {/* Main Navigation */}
         <div className="flex-1 space-y-1">
           {menuItems.map((item) => renderMenuItem(item))}
+          
+          {/* Expandable Groups Menu Item */}
+          {renderGroupsMenuItem()}
         </div>
 
-        {/* Groups Section */}
-        {!isCollapsed && (
-          <div className="py-4 border-t border-[var(--color-border-secondary)]">
-            {/* Groups Button with Hover Actions */}
-            <div className="group relative mb-3">
-              <div
-                onClick={() => navigate('/app/groups')}
-                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-[var(--color-surface-hover)] transition-all duration-200 cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center shadow-sm">
-                    <BackpackIcon className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-sm font-medium text-[var(--color-text-primary)] font-outfit">
-                    Groups
-                  </span>
-                </div>
-                
-                {/* Hover Actions */}
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-x-2 group-hover:translate-x-0">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowCreateModal(true);
-                    }}
-                    className="p-1.5 hover:bg-[var(--color-surface-elevated)] rounded-lg transition-colors"
-                    title="Create group"
-                  >
-                    <PlusIcon className="w-3.5 h-3.5 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // Add dropdown menu functionality here
-                    }}
-                    className="p-1.5 hover:bg-[var(--color-surface-elevated)] rounded-lg transition-colors"
-                    title="Group options"
-                  >
-                    <DotsHorizontalIcon className="w-3.5 h-3.5 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate('/app/groups');
-                    }}
-                    className="p-1.5 hover:bg-[var(--color-surface-elevated)] rounded-lg transition-colors"
-                    title="Expand groups"
-                  >
-                    <ChevronDownIcon className="w-3.5 h-3.5 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]" />
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            <div className="space-y-1 max-h-32 overflow-y-auto">
-              {loadingWorkspaces ? (
-                <div className="text-xs text-[var(--color-text-tertiary)] px-2 py-1">
-                  Loading...
-                </div>
-              ) : workspaces.length === 0 ? (
-                <div className="text-xs text-[var(--color-text-tertiary)] px-2 py-1">
-                  No groups yet
-                </div>
-              ) : (
-                workspaces.map((workspace) => {
-                  const isActive = location.pathname === `/app/groups/${workspace._id}`;
-                  return (
-                    <button
-                      key={workspace._id}
-                      onClick={() => navigate(`/app/groups/${workspace._id}`)}
-                      className={`w-full p-2 rounded-lg text-left transition-all duration-200 flex items-center gap-2 ${
-                        isActive
-                          ? 'bg-[var(--color-brand-500)] text-white'
-                          : 'hover:bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)]'
-                      }`}
-                    >
-                      <div className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold ${
-                        isActive ? 'bg-white/20' : 'bg-[var(--color-surface-elevated)]'
-                      }`}>
-                        {workspace.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{workspace.name}</p>
-                        <p className={`text-xs truncate ${
-                          isActive ? 'text-white/70' : 'text-[var(--color-text-tertiary)]'
-                        }`}>
-                          {workspace.stats?.activeMemberCount || 0} members
-                        </p>
-                      </div>
-                    </button>
-                  );
-                })
-              )}
-              {workspaces.length > 0 && (
-                <button
-                  onClick={() => navigate('/app/groups')}
-                  className="w-full p-2 mt-1 rounded-lg text-left transition-all duration-200 hover:bg-[var(--color-surface-hover)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
-                >
-                  <p className="text-xs font-medium">View all groups →</p>
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Collapsed Groups */}
-        {isCollapsed && workspaces.length > 0 && (
-          <div className="py-2 border-t border-[var(--color-border-secondary)]">
-            {workspaces.slice(0, 3).map((workspace) => {
-              const isActive = location.pathname === `/app/groups/${workspace._id}`;
-              return (
-                <div key={workspace._id} className="group relative mb-2">
-                  <button
-                    className={`w-full h-10 rounded-xl transition-all duration-300 flex items-center justify-center ${
-                      isActive
-                        ? 'bg-[var(--color-brand-500)] text-white shadow-lg scale-105'
-                        : 'hover:bg-[var(--color-surface-hover)] hover:scale-105 bg-transparent'
-                    }`}
-                    onClick={() => navigate(`/app/groups/${workspace._id}`)}
-                    title={workspace.name}
-                  >
-                    <span className="text-sm font-bold">
-                      {workspace.name.charAt(0).toUpperCase()}
-                    </span>
-                  </button>
-                  
-                  {/* Tooltip */}
-                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-                    <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)] rounded-lg px-3 py-2 shadow-lg">
-                      <Text className="text-sm font-medium font-outfit text-[var(--color-text-primary)]">
-                        {workspace.name}
-                      </Text>
-                      <Text className="text-xs font-outfit text-[var(--color-text-tertiary)]">
-                        {workspace.stats?.activeMemberCount || 0} members
-                      </Text>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Bottom Section */}
-        <div className="border-t border-[var(--color-border-secondary)] pt-3 mt-auto">
+        {/* Bottom Navigation */}
+        <div className="mt-auto">
           {bottomItems.map((item) => renderMenuItem(item, true))}
         </div>
       </div>
-
-      {/* Workspace Creation Modal */}
-      <WorkspaceCreationModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onWorkspaceCreated={(newWorkspace) => {
-          setWorkspaces(prev => [...prev, newWorkspace]);
-          navigate(`/app/groups/${newWorkspace._id}`);
-        }}
-      />
     </div>
   );
 };

@@ -337,18 +337,19 @@ export const ChartWidget = ({
   };
 
   return (
-    <div className="w-full h-full flex flex-col rounded-xl p-4">
+    <div className="w-full h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 px-4 pt-4 flex-shrink-0">
         <h3 className="text-lg font-semibold text-[var(--color-text-primary)] font-outfit">
           {title}
         </h3>
         {filterComponent && (
           <div className="flex items-center gap-2">{filterComponent}</div>
         )}
-      </div>{" "}
+      </div>
+      
       {/* Chart Container */}
-      <div className="flex-1 min-h-0">
+      <div className="widget-content-area px-4 pb-4">
         {finalData && finalData.length > 0 ? (
           <div
             className={`w-full h-full ${

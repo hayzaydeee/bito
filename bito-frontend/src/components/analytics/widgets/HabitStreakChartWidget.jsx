@@ -19,7 +19,7 @@ const HabitStreakChartWidget = ({
     
     return {
       showLegend: !isMobile && !isSmall,
-      maxHabitsDisplayed: isMobile ? 2 : isSmall ? 3 : 5,
+      maxHabitsDisplayed: isMobile ? 2 : 3, // Always max 3 habits
       chartHeight: isMobile ? 240 : isSmall ? 280 : 320,
       showTopStreaks: !isMobile && availableRows >= 4
     };
@@ -37,16 +37,18 @@ const HabitStreakChartWidget = ({
 
   // Return the chart content directly - BaseGridContainer handles the wrapper
   return (
-    <div className="w-full h-full overflow-hidden">
-      <HabitStreakChart 
-        habits={habits}
-        entries={entries}
-        timeRange={timeRange}
-        dateRange={dateRange}
-        widgetMode={true} // Flag to indicate this is in widget mode
-        {...responsiveProps}
-        {...props}
-      />
+    <div className="w-full h-full flex flex-col">
+      <div className="widget-content-area">
+        <HabitStreakChart 
+          habits={habits}
+          entries={entries}
+          timeRange={timeRange}
+          dateRange={dateRange}
+          widgetMode={true} // Flag to indicate this is in widget mode
+          {...responsiveProps}
+          {...props}
+        />
+      </div>
     </div>
   );
 };

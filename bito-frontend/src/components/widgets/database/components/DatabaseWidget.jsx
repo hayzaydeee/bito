@@ -136,7 +136,7 @@ const DatabaseWidget = memo(
           setViewType={setViewType}
           filterComponent={filterComponent}
         />
-        <div className="flex-1 min-h-0 overflow-auto">{renderContent()}</div>
+        <div className="widget-content-area">{renderContent()}</div>
       </div>
     );
   }

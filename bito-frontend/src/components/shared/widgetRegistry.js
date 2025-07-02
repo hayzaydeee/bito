@@ -8,13 +8,7 @@ export const WIDGET_TYPES = {
     defaultProps: { w: 6, h: 4 },
     category: "dashboard"
   },
-  "weekly-progress": {
-    title: "Weekly Progress",
-    icon: "📈",
-    description: "Weekly habit trend analysis",
-    defaultProps: { w: 8, h: 6 },
-    category: "dashboard"
-  },
+
   "habit-list": {
     title: "Habits List",
     icon: "📋",
@@ -147,11 +141,48 @@ export const WIDGET_TYPES = {
     defaultProps: { w: 6, h: 8 },
     category: "settings"
   },
+
+  // Group Accountability widgets
+  "group-overview": {
+    title: "Group Overview",
+    icon: "📊",
+    description: "Key metrics and stats for the group",
+    defaultProps: { w: 4, h: 4 },
+    category: "group-accountability"
+  },
+  "member-progress": {
+    title: "Member Progress",
+    icon: "👥",
+    description: "Track individual member progress and performance",
+    defaultProps: { w: 8, h: 6 },
+    category: "group-accountability"
+  },
+  "encouragement-feed": {
+    title: "Encouragement Feed",
+    icon: "💬",
+    description: "Team encouragements and social interactions",
+    defaultProps: { w: 6, h: 6 },
+    category: "group-accountability"
+  },
+  "group-leaderboard": {
+    title: "Leaderboard",
+    icon: "🏆",
+    description: "Member rankings and performance comparison",
+    defaultProps: { w: 6, h: 6 },
+    category: "group-accountability"
+  },
+  "group-challenges": {
+    title: "Group Challenges",
+    icon: "🎯",
+    description: "Team challenges and milestone tracking",
+    defaultProps: { w: 6, h: 6 },
+    category: "group-accountability"
+  },
 };
 
 // Default widget sets
 export const DEFAULT_WIDGETS = {
-  dashboard: ["habits-overview", "quick-actions", "weekly-progress", "habit-list"],
+  dashboard: ["habits-overview", "quick-actions", "habit-list"],
   analytics: ["overview-cards", "habit-streak-chart", "completion-rate-chart", "weekly-heatmap", "top-habits", "insights-panel"],
   habits: ["habit-stats", "habits-list-widget", "quick-add-habit", "recent-activity"],
   settings: [
@@ -162,50 +193,46 @@ export const DEFAULT_WIDGETS = {
     "data-management-widget",
     "help-support-widget"
   ],
+  groupAccountability: ["group-overview", "member-progress", "encouragement-feed", "group-leaderboard", "group-challenges"],
 };
 
 // Default layouts
 export const DEFAULT_LAYOUTS = {
   dashboard: {
     lg: [
-      { i: "habits-overview", x: 0, y: 0, w: 6, h: 4 },
-      { i: "quick-actions", x: 6, y: 0, w: 6, h: 4 },
-      { i: "weekly-progress", x: 0, y: 4, w: 8, h: 6 },
-      { i: "habit-list", x: 8, y: 4, w: 4, h: 6 },
+      { i: "habits-overview", x: 0, y: 0, w: 8, h: 6},
+      { i: "quick-actions", x: 8, y: 0, w: 4, h: 5 },
+      { i: "habit-list", x: 0, y: 6, w: 12, h: 11  }
     ],
     md: [
       { i: "habits-overview", x: 0, y: 0, w: 6, h: 4 },
       { i: "quick-actions", x: 6, y: 0, w: 6, h: 4 },
-      { i: "weekly-progress", x: 0, y: 4, w: 12, h: 6 },
-      { i: "habit-list", x: 0, y: 10, w: 12, h: 6 },
+      { i: "habit-list", x: 0, y: 4, w: 12, h: 6 }
     ],
     sm: [
       { i: "habits-overview", x: 0, y: 0, w: 12, h: 4 },
       { i: "quick-actions", x: 0, y: 4, w: 12, h: 4 },
-      { i: "weekly-progress", x: 0, y: 8, w: 12, h: 6 },
-      { i: "habit-list", x: 0, y: 14, w: 12, h: 6 },
+      { i: "habit-list", x: 0, y: 8, w: 12, h: 6 }
     ],
     xs: [
-      { i: "habits-overview", x: 0, y: 0, w: 4, h: 3 },
-      { i: "quick-actions", x: 0, y: 3, w: 4, h: 3 },
-      { i: "weekly-progress", x: 0, y: 6, w: 4, h: 4 },
-      { i: "habit-list", x: 0, y: 10, w: 4, h: 6 },
+      { i: "habits-overview", x: 0, y: 0, w: 4, h: 4 },
+      { i: "quick-actions", x: 0, y: 4, w: 4, h: 4 },
+      { i: "habit-list", x: 0, y: 8, w: 4, h: 6 }
     ],
     xxs: [
-      { i: "habits-overview", x: 0, y: 0, w: 2, h: 3 },
-      { i: "quick-actions", x: 0, y: 3, w: 2, h: 3 },
-      { i: "weekly-progress", x: 0, y: 6, w: 2, h: 4 },
-      { i: "habit-list", x: 0, y: 10, w: 2, h: 6 },
+      { i: "habits-overview", x: 0, y: 0, w: 2, h: 4 },
+      { i: "quick-actions", x: 0, y: 4, w: 2, h: 4 },
+      { i: "habit-list", x: 0, y: 8, w: 2, h: 6 }
     ],
   },
   analytics: {
     lg: [
-      { i: "overview-cards", x: 0, y: 0, w: 12, h: 3 },
-      { i: "habit-streak-chart", x: 0, y: 3, w: 6, h: 6 },
-      { i: "completion-rate-chart", x: 6, y: 3, w: 6, h: 6 },
-      { i: "weekly-heatmap", x: 0, y: 9, w: 8, h: 5 },
-      { i: "top-habits", x: 8, y: 9, w: 4, h: 5 },
-      { i: "insights-panel", x: 0, y: 14, w: 12, h: 4 }
+      { i: "overview-cards", x: 0, y: 0, w: 12, h: 4 },
+      { i: "habit-streak-chart", x: 0, y: 4, w: 7, h: 6 },
+      { i: "top-habits", x: 7, y: 4, w: 5, h: 6 },
+      { i: "completion-rate-chart", x: 0, y: 10, w: 6, h: 9 },
+      { i: "weekly-heatmap", x: 6, y: 10, w: 6, h: 8 },
+      { i: "insights-panel", x: 0, y: 19, w: 12, h: 8 }
     ],
     md: [
       { i: "overview-cards", x: 0, y: 0, w: 12, h: 3 },
@@ -274,28 +301,28 @@ export const DEFAULT_LAYOUTS = {
   },
   settings: {
     lg: [
+      { i: "profile-widget", x: 0, y: 0, w: 6, h: 6, moved: false, static: false },
+      { i: "notifications-widget", x: 6, y: 0, w: 6, h: 6, moved: false, static: false },
+      { i: "privacy-widget", x: 0, y: 6, w: 6, h: 6, moved: false, static: false },
+      { i: "appearance-widget", x: 6, y: 6, w: 6, h: 6, moved: false, static: false },
+      { i: "data-management-widget", x: 0, y: 12, w: 6, h: 8, moved: false, static: false },
+      { i: "help-support-widget", x: 6, y: 12, w: 6, h: 8, moved: false, static: false }
+    ],
+    md: [
       { i: "profile-widget", x: 0, y: 0, w: 6, h: 6 },
       { i: "notifications-widget", x: 6, y: 0, w: 6, h: 6 },
       { i: "privacy-widget", x: 0, y: 6, w: 6, h: 6 },
       { i: "appearance-widget", x: 6, y: 6, w: 6, h: 6 },
-      { i: "data-management-widget", x: 0, y: 12, w: 6, h: 8 },
-      { i: "help-support-widget", x: 6, y: 12, w: 6, h: 8 }
-    ],
-    md: [
-      { i: "profile-widget", x: 0, y: 0, w: 8, h: 6 },
-      { i: "notifications-widget", x: 0, y: 6, w: 8, h: 6 },
-      { i: "privacy-widget", x: 0, y: 12, w: 8, h: 6 },
-      { i: "appearance-widget", x: 0, y: 18, w: 8, h: 6 },
-      { i: "data-management-widget", x: 0, y: 24, w: 8, h: 8 },
-      { i: "help-support-widget", x: 0, y: 32, w: 8, h: 8 }
+      { i: "data-management-widget", x: 0, y: 12, w: 12, h: 8 },
+      { i: "help-support-widget", x: 0, y: 20, w: 12, h: 8 }
     ],
     sm: [
-      { i: "profile-widget", x: 0, y: 0, w: 6, h: 6 },
-      { i: "notifications-widget", x: 0, y: 6, w: 6, h: 6 },
-      { i: "privacy-widget", x: 0, y: 12, w: 6, h: 6 },
-      { i: "appearance-widget", x: 0, y: 18, w: 6, h: 6 },
-      { i: "data-management-widget", x: 0, y: 24, w: 6, h: 8 },
-      { i: "help-support-widget", x: 0, y: 32, w: 6, h: 8 }
+      { i: "profile-widget", x: 0, y: 0, w: 12, h: 6 },
+      { i: "notifications-widget", x: 0, y: 6, w: 12, h: 6 },
+      { i: "privacy-widget", x: 0, y: 12, w: 12, h: 6 },
+      { i: "appearance-widget", x: 0, y: 18, w: 12, h: 6 },
+      { i: "data-management-widget", x: 0, y: 24, w: 12, h: 8 },
+      { i: "help-support-widget", x: 0, y: 32, w: 12, h: 8 }
     ],
     xs: [
       { i: "profile-widget", x: 0, y: 0, w: 4, h: 6 },
@@ -312,6 +339,43 @@ export const DEFAULT_LAYOUTS = {
       { i: "appearance-widget", x: 0, y: 18, w: 2, h: 6 },
       { i: "data-management-widget", x: 0, y: 24, w: 2, h: 8 },
       { i: "help-support-widget", x: 0, y: 32, w: 2, h: 8 }
+    ]
+  },
+  groupAccountability: {
+    lg: [
+      { i: "group-overview", x: 0, y: 0, w: 4, h: 4 },
+      { i: "group-leaderboard", x: 4, y: 0, w: 4, h: 6 },
+      { i: "group-challenges", x: 8, y: 0, w: 4, h: 6 },
+      { i: "member-progress", x: 0, y: 4, w: 8, h: 6 },
+      { i: "encouragement-feed", x: 0, y: 10, w: 12, h: 6 }
+    ],
+    md: [
+      { i: "group-overview", x: 0, y: 0, w: 6, h: 4 },
+      { i: "group-leaderboard", x: 6, y: 0, w: 6, h: 6 },
+      { i: "member-progress", x: 0, y: 4, w: 12, h: 6 },
+      { i: "group-challenges", x: 0, y: 10, w: 6, h: 6 },
+      { i: "encouragement-feed", x: 6, y: 10, w: 6, h: 6 }
+    ],
+    sm: [
+      { i: "group-overview", x: 0, y: 0, w: 12, h: 4 },
+      { i: "member-progress", x: 0, y: 4, w: 12, h: 6 },
+      { i: "group-leaderboard", x: 0, y: 10, w: 12, h: 6 },
+      { i: "group-challenges", x: 0, y: 16, w: 12, h: 6 },
+      { i: "encouragement-feed", x: 0, y: 22, w: 12, h: 6 }
+    ],
+    xs: [
+      { i: "group-overview", x: 0, y: 0, w: 4, h: 4 },
+      { i: "member-progress", x: 0, y: 4, w: 4, h: 6 },
+      { i: "group-leaderboard", x: 0, y: 10, w: 4, h: 6 },
+      { i: "group-challenges", x: 0, y: 16, w: 4, h: 6 },
+      { i: "encouragement-feed", x: 0, y: 22, w: 4, h: 6 }
+    ],
+    xxs: [
+      { i: "group-overview", x: 0, y: 0, w: 2, h: 4 },
+      { i: "member-progress", x: 0, y: 4, w: 2, h: 6 },
+      { i: "group-leaderboard", x: 0, y: 10, w: 2, h: 6 },
+      { i: "group-challenges", x: 0, y: 16, w: 2, h: 6 },
+      { i: "encouragement-feed", x: 0, y: 22, w: 2, h: 6 }
     ]
   }
 };
@@ -334,4 +398,16 @@ export const STORAGE_KEYS = {
     layouts: "habitTracker_settingsLayouts",
     widgets: "habitTracker_settingsWidgets"
   },
+  groupAccountability: {
+    layouts: "habitTracker_groupAccountabilityLayouts",
+    widgets: "habitTracker_groupAccountabilityWidgets"
+  }
+};
+
+// Main widget registry export
+export const widgetRegistry = {
+  availableWidgets: WIDGET_TYPES,
+  defaultWidgetSets: DEFAULT_WIDGETS,
+  defaultLayouts: DEFAULT_LAYOUTS,
+  storageKeys: STORAGE_KEYS
 };

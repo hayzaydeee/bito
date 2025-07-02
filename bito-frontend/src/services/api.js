@@ -490,6 +490,168 @@ export const groupsAPI = {
       method: 'DELETE',
     });
   },
+
+  // Dashboard sharing permissions
+  getDashboardPermissions: async (workspaceId) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/dashboard-permissions`);
+  },
+
+  updateDashboardPermissions: async (workspaceId, permissionsData) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/dashboard-permissions`, {
+      method: 'PUT',
+      body: JSON.stringify(permissionsData),
+    });
+  },
+
+  // View member's dashboard (with permission)
+  getMemberDashboard: async (workspaceId, memberId) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/members/${memberId}/dashboard`);
+  },
+
+  // Get shared habits (habits tracked by multiple members)
+  getSharedHabits: async (workspaceId) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/shared-habits`);
+  },
+
+  // New Group Tracking API endpoints
+  
+  // Get group tracker data (all members' progress on shared habits)
+  getGroupTrackers: async (workspaceId) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/group-trackers`);
+  },
+
+  // Get specific member's shared habit stats  
+  getMemberStats: async (workspaceId, memberId) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/member-stats/${memberId}`);
+  },
+
+  // Get overview stats for shared habits across workspace
+  getSharedHabitsOverview: async (workspaceId) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/shared-habits-overview`);
+  },
+
+  // Get encouragements for a workspace (alias for encouragementAPI.getWorkspaceEncouragements)
+  getEncouragements: async (workspaceId, params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/api/encouragements/workspace/${workspaceId}${queryString ? `?${queryString}` : ''}`);
+  },
+
+  // Get leaderboard data for a workspace
+  getLeaderboard: async (workspaceId, params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/api/workspaces/${workspaceId}/leaderboard${queryString ? `?${queryString}` : ''}`);
+  },
+
+  // Get challenges for a workspace
+  getChallenges: async (workspaceId, params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/api/workspaces/${workspaceId}/challenges${queryString ? `?${queryString}` : ''}`);
+  },
+
+  // Create a new challenge
+  createChallenge: async (workspaceId, challengeData) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/challenges`, {
+      method: 'POST',
+      body: JSON.stringify(challengeData),
+    });
+  },
+
+  // Join a challenge
+  joinChallenge: async (workspaceId, challengeId) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/challenges/${challengeId}/join`, {
+      method: 'POST',
+    });
+  },
+
+  // Leave a challenge
+  leaveChallenge: async (workspaceId, challengeId) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/challenges/${challengeId}/leave`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Member interaction endpoints
+  
+  // Send encouragement to a member about a specific habit
+  sendEncouragement: async (workspaceId, memberId, habitId, data) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/members/${memberId}/habits/${habitId}/encourage`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  // Celebrate a member's habit progress
+  celebrateHabit: async (workspaceId, memberId, habitId) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/members/${memberId}/habits/${habitId}/celebrate`, {
+      method: 'POST',
+    });
+  },
+
+  // Report concern or send check-in about a member's habit
+  reportConcern: async (workspaceId, memberId, habitId, data) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/members/${memberId}/habits/${habitId}/check-in`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+};
+
+// Encouragement API
+export const encouragementAPI = {
+  // Send encouragement
+  sendEncouragement: async (encouragementData) => {
+    return apiRequest('/api/encouragements', {
+      method: 'POST',
+      body: JSON.stringify(encouragementData),
+    });
+  },
+
+  // Get received encouragements
+  getReceivedEncouragements: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/api/encouragements/received${queryString ? `?${queryString}` : ''}`);
+  },
+
+  // Get sent encouragements
+  getSentEncouragements: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/api/encouragements/sent${queryString ? `?${queryString}` : ''}`);
+  },
+
+  // Get workspace encouragements (activity feed)
+  getWorkspaceEncouragements: async (workspaceId, params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/api/encouragements/workspace/${workspaceId}${queryString ? `?${queryString}` : ''}`);
+  },
+
+  // Mark encouragement as read
+  markAsRead: async (encouragementId) => {
+    return apiRequest(`/api/encouragements/${encouragementId}/read`, {
+      method: 'PUT',
+    });
+  },
+
+  // Respond to encouragement
+  respondToEncouragement: async (encouragementId, responseMessage) => {
+    return apiRequest(`/api/encouragements/${encouragementId}/respond`, {
+      method: 'PUT',
+      body: JSON.stringify({ message: responseMessage }),
+    });
+  },
+
+  // Mark multiple encouragements as read
+  markMultipleAsRead: async (encouragementIds) => {
+    return apiRequest('/api/encouragements/mark-read', {
+      method: 'PUT',
+      body: JSON.stringify({ encouragementIds }),
+    });
+  },
+
+  // Get encouragement statistics
+  getStats: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/api/encouragements/stats${queryString ? `?${queryString}` : ''}`);
+  },
 };
 
 // Test API

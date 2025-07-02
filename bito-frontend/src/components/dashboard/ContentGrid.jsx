@@ -25,8 +25,9 @@ import {
   ChartFilterControls,
   DatabaseFilterControls,
 } from "../ui/FilterControls";
-import CsvImportModal from "../ui/CsvImportModal";
-import EnhancedCsvImportModal from "../ui/EnhancedCsvImportModal";
+// Temporarily disabled for deployment
+// import CsvImportModal from "../ui/CsvImportModal";
+// import EnhancedCsvImportModal from "../ui/EnhancedCsvImportModal";
 import LLMSettingsModal from "../ui/LLMSettingsModal";
 import CustomHabitEditModal from "../ui/CustomHabitEditModal";
 
@@ -73,12 +74,6 @@ const AVAILABLE_WIDGET_TYPES = {
     description: "Daily habit completion chart",
     defaultProps: { w: 6, h: 4 },
   },
-  "weekly-progress": {
-    title: "Weekly Progress",
-    icon: "📈",
-    description: "Weekly habit trend analysis",
-    defaultProps: { w: 8, h: 6 },
-  },
   "habit-list": {
     title: "Habits List",
     icon: "📋",
@@ -97,41 +92,35 @@ const AVAILABLE_WIDGET_TYPES = {
 const getDefaultActiveWidgets = () => [
   "habits-overview",
   "quick-actions",
-  "weekly-progress",
   "habit-list",
 ];
 
-// Default layouts configuration
+// Default layouts configuration (optimized for better content display)
 const getDefaultLayouts = () => ({
   lg: [
-    { i: "habits-overview", x: 0, y: 0, w: 6, h: 4 },
-    { i: "quick-actions", x: 6, y: 0, w: 6, h: 4 },
-    { i: "weekly-progress", x: 0, y: 4, w: 8, h: 6 },
-    { i: "habit-list", x: 8, y: 4, w: 4, h: 6 },
+    { i: "habits-overview", x: 0, y: 0, w: 8, h: 6, moved: false, static: false },
+    { i: "quick-actions", x: 8, y: 0, w: 4, h: 5, moved: false, static: false },
+    { i: "habit-list", x: 0, y: 6, w: 12, h: 10, moved: false, static: false },
   ],
   md: [
-    { i: "habits-overview", x: 0, y: 0, w: 6, h: 4 },
-    { i: "quick-actions", x: 6, y: 0, w: 6, h: 4 },
-    { i: "weekly-progress", x: 0, y: 4, w: 12, h: 6 },
-    { i: "habit-list", x: 0, y: 10, w: 12, h: 6 },
+    { i: "habits-overview", x: 0, y: 0, w: 6, h: 4, moved: false, static: false },
+    { i: "quick-actions", x: 6, y: 0, w: 6, h: 4, moved: false, static: false },
+    { i: "habit-list", x: 0, y: 4, w: 12, h: 6, moved: false, static: false },
   ],
   sm: [
-    { i: "habits-overview", x: 0, y: 0, w: 12, h: 4 },
-    { i: "quick-actions", x: 0, y: 4, w: 12, h: 4 },
-    { i: "weekly-progress", x: 0, y: 8, w: 12, h: 6 },
-    { i: "habit-list", x: 0, y: 14, w: 12, h: 6 },
+    { i: "habits-overview", x: 0, y: 0, w: 12, h: 4, moved: false, static: false },
+    { i: "quick-actions", x: 0, y: 4, w: 12, h: 4, moved: false, static: false },
+    { i: "habit-list", x: 0, y: 8, w: 12, h: 6, moved: false, static: false },
   ],
   xs: [
-    { i: "habits-overview", x: 0, y: 0, w: 4, h: 3 },
-    { i: "quick-actions", x: 0, y: 3, w: 4, h: 3 },
-    { i: "weekly-progress", x: 0, y: 6, w: 4, h: 4 },
-    { i: "habit-list", x: 0, y: 10, w: 4, h: 6 },
+    { i: "habits-overview", x: 0, y: 0, w: 4, h: 3, moved: false, static: false },
+    { i: "quick-actions", x: 0, y: 3, w: 4, h: 3, moved: false, static: false },
+    { i: "habit-list", x: 0, y: 6, w: 4, h: 6, moved: false, static: false },
   ],
   xxs: [
-    { i: "habits-overview", x: 0, y: 0, w: 2, h: 3 },
-    { i: "quick-actions", x: 0, y: 3, w: 2, h: 3 },
-    { i: "weekly-progress", x: 0, y: 6, w: 2, h: 4 },
-    { i: "habit-list", x: 0, y: 10, w: 2, h: 6 },
+    { i: "habits-overview", x: 0, y: 0, w: 2, h: 3, moved: false, static: false },
+    { i: "quick-actions", x: 0, y: 3, w: 2, h: 3, moved: false, static: false },
+    { i: "habit-list", x: 0, y: 6, w: 2, h: 6, moved: false, static: false },
   ],
 });
 
@@ -388,12 +377,13 @@ const ContentGrid = () => {
         end: endOfMonth,
       };
     } else {
-      // Continuous/all time mode - get a wide range
-      const startOfYear = new Date(currentYear, 0, 1);
-      const endOfYear = new Date(currentYear, 11, 31);
+      // Continuous/all time mode - get a 90-day range
+      const endDate = new Date();
+      const startDate = new Date(endDate);
+      startDate.setDate(endDate.getDate() - 89);
       return {
-        start: startOfYear,
-        end: endOfYear,
+        start: startDate,
+        end: endDate,
       };
     }
   }, []);
@@ -821,7 +811,7 @@ const ContentGrid = () => {
 
   // Remove shared widgetData - each widget will manage its own data independently
 
-  // Independent chart widgets (habits-overview and weekly-progress)
+  // Independent chart widgets (habits-overview)
   const chartWidgets = useMemo(
     () => ({
       "habits-overview": {
@@ -860,25 +850,6 @@ const ContentGrid = () => {
           );
         },
       },
-      "weekly-progress": {
-        title: "Weekly Progress",
-        component: (layout) => {
-          const props = getWidgetProps("weekly-progress", layout);
-          return (
-            <Suspense fallback={<WidgetSkeleton title="Weekly Progress" />}>
-              <ChartWidget
-                title="Weekly Habit Streaks"
-                type="line"
-                chartType="weekly"
-                dateRange={chartDateRange}
-                color="var(--color-brand-400)"
-                onAddHabit={handleAddHabit}
-                {...props}
-              />
-            </Suspense>
-          );
-        },
-      },
     }),
     [
       chartFilters,
@@ -904,7 +875,7 @@ const ContentGrid = () => {
                 entries={entries}
                 onAddHabit={handleAddHabit}
                 onToggleCompletion={handleToggleCompletion}
-                onShowCsvImport={() => setShowEnhancedCsvImport(true)}
+                onShowCsvImport={() => {}} // Disabled for deployment
                 onShowLLMSettings={() => setShowLLMSettings(true)}
                 {...props} 
               />
@@ -1064,6 +1035,7 @@ const ContentGrid = () => {
         isResizable={
           globalEditMode || Object.values(widgetEditStates).some(Boolean)
         }
+        dragHandleClassName="widget-drag-handle"
         margin={[20, 20]}
         containerPadding={[0, 0]}
         useCSSTransforms={true}
@@ -1101,10 +1073,7 @@ const ContentGrid = () => {
                         {/* Drag handle indicator for edit mode - ONLY this should be draggable */}
                         {isInEditMode && (
                           <div 
-                            className="flex flex-col gap-0.5 cursor-move opacity-60 hover:opacity-100 transition-opacity"
-                            onMouseDown={(e) => {
-                              // This allows dragging - don't stop propagation
-                            }}
+                            className="widget-drag-handle flex flex-col gap-0.5 cursor-move opacity-60 hover:opacity-100 transition-opacity"
                             title="Drag to move widget"
                           >
                             <div className="w-1 h-1 bg-[var(--color-text-tertiary)] rounded-full"></div>
@@ -1120,13 +1089,7 @@ const ContentGrid = () => {
                               .breakpoint === "xs"
                               ? "text-sm"
                               : "text-lg"
-                          } ${isInEditMode ? "cursor-move" : ""}`}
-                          onMouseDown={(e) => {
-                            // Title area is also draggable in edit mode
-                            if (!isInEditMode) {
-                              e.stopPropagation();
-                            }
-                          }}
+                          } ${isInEditMode ? "cursor-move widget-drag-handle" : ""}`}
                           title={isInEditMode ? "Drag to move widget" : widget.title}
                         >
                           {widget.title}
@@ -1290,18 +1253,18 @@ const ContentGrid = () => {
           </div>{" "}
         </div>
       )}{" "}
-      {/* CSV Import Modal */}
-      <CsvImportModal
+      {/* CSV Import Modal - Temporarily disabled for deployment */}
+      {/* <CsvImportModal
         isOpen={showCsvImport}
         onClose={() => setShowCsvImport(false)}
         onImport={handleCsvImport}
-      />
-      {/* Enhanced CSV Import Modal */}
-      <EnhancedCsvImportModal
+      /> */}
+      {/* Enhanced CSV Import Modal - Temporarily disabled for deployment */}
+      {/* <EnhancedCsvImportModal
         isOpen={showEnhancedCsvImport}
         onClose={() => setShowEnhancedCsvImport(false)}
         onImportComplete={handleEnhancedCsvImport}
-      />
+      /> */}
       {/* LLM Settings Modal */}
       <LLMSettingsModal
         isOpen={showLLMSettings}

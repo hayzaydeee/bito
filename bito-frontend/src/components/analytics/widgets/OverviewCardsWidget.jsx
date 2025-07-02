@@ -98,13 +98,15 @@ const OverviewCardsWidget = ({
 
   // Return JUST the cards without any wrapper - BaseGridContainer handles the card
   return (
-    <div className="w-full h-full overflow-auto p-2">
-      <OverviewCards 
-        data={analyticsData} 
-        timeRange={timeRange}
-        className={responsiveProps.className}
-        {...props}
-      />
+    <div className="w-full h-full flex flex-col">
+      <div className="widget-content-area p-2">
+        <OverviewCards 
+          data={analyticsData} 
+          timeRange={timeRange}
+          className={responsiveProps.className}
+          {...props}
+        />
+      </div>
     </div>
   );
 };

@@ -82,15 +82,17 @@ const InsightsPanelWidget = ({
   }
 
   return (
-    <div className="w-full h-full overflow-hidden">
-      <InsightsPanel 
-        habits={habits}
-        entries={entries}
-        analyticsData={computedAnalyticsData}
-        timeRange={timeRange}
-        {...responsiveProps}
-        {...props}
-      />
+    <div className="w-full h-full flex flex-col">
+      <div className="widget-content-area">
+        <InsightsPanel 
+          habits={habits}
+          entries={entries}
+          analyticsData={computedAnalyticsData}
+          timeRange={timeRange}
+          {...responsiveProps}
+          {...props}
+        />
+      </div>
     </div>
   );
 };

@@ -372,6 +372,16 @@ export const HabitProvider = ({ children }) => {
     dispatch({ type: actionTypes.CLEAR_ERROR });
   };
 
+  // Helper functions for workspace habits
+  const isWorkspaceHabit = (habit) => habit.source === 'workspace';
+  
+  const getPersonalHabits = () => state.habits.filter(habit => habit.source === 'personal' || !habit.source);
+  
+  const getWorkspaceHabits = () => state.habits.filter(habit => habit.source === 'workspace');
+  
+  const getHabitsByWorkspace = (workspaceId) => 
+    state.habits.filter(habit => habit.workspaceId === workspaceId);
+
   const value = {
     ...state,
     fetchHabits,
@@ -383,6 +393,11 @@ export const HabitProvider = ({ children }) => {
     fetchStats,
     archiveHabit,
     clearError,
+    // Workspace-specific helpers
+    isWorkspaceHabit,
+    getPersonalHabits,
+    getWorkspaceHabits,
+    getHabitsByWorkspace,
   };
 
   return (

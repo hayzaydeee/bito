@@ -22,6 +22,50 @@ const habitSchema = new mongoose.Schema({
     index: true
   },
   
+  // Workspace adoption tracking
+  source: {
+    type: String,
+    enum: ['personal', 'workspace'],
+    default: 'personal'
+  },
+  workspaceId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Workspace',
+    required: function() {
+      return this.source === 'workspace';
+    }
+  },
+  workspaceHabitId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'WorkspaceHabit',
+    required: function() {
+      return this.source === 'workspace';
+    }
+  },
+  adoptedAt: {
+    type: Date,
+    required: function() {
+      return this.source === 'workspace';
+    }
+  },
+  
+  // Workspace privacy settings (only for workspace-sourced habits)
+  workspaceSettings: {
+    shareProgress: {
+      type: String,
+      enum: ['full', 'progress-only', 'streaks-only', 'private'],
+      default: 'progress-only'
+    },
+    allowInteraction: {
+      type: Boolean,
+      default: false // Allow other members to mark completions
+    },
+    shareInActivity: {
+      type: Boolean,
+      default: true // Show completions in workspace activity feed
+    }
+  },
+  
   // Habit configuration
   category: {
     type: String,
@@ -77,7 +121,7 @@ const habitSchema = new mongoose.Schema({
       default: false
     }
   },
-  
+
   // Status
   isActive: {
     type: Boolean,
@@ -132,6 +176,11 @@ habitSchema.index({ userId: 1, createdAt: -1 });
 habitSchema.index({ userId: 1, isActive: 1 });
 habitSchema.index({ userId: 1, category: 1 });
 habitSchema.index({ userId: 1, isArchived: 1 });
+// Workspace-related indexes
+habitSchema.index({ workspaceId: 1, source: 1 });
+habitSchema.index({ workspaceHabitId: 1 });
+habitSchema.index({ userId: 1, workspaceId: 1, source: 1 });
+habitSchema.index({ source: 1, isActive: 1 });
 
 // Virtual for habit entries
 habitSchema.virtual('entries', {
@@ -200,6 +249,143 @@ habitSchema.methods.updateStats = async function() {
   this.stats.completionRate = totalDays > 0 ? Math.round((completedCount / totalDays) * 100) : 0;
   
   await this.save();
+};
+
+// Workspace-specific methods
+habitSchema.methods.isWorkspaceHabit = function() {
+  return this.source === 'workspace';
+};
+
+habitSchema.methods.getVisibleDataForWorkspace = function(viewerRole = 'member', viewerId = null) {
+  // Return data based on privacy settings for workspace viewing
+  const baseData = {
+    _id: this._id,
+    name: this.name,
+    description: this.description,
+    category: this.category,
+    color: this.color,
+    icon: this.icon,
+    userId: this.userId,
+    workspaceId: this.workspaceId,
+    workspaceHabitId: this.workspaceHabitId,
+    isActive: this.isActive,
+    adoptedAt: this.adoptedAt,
+    createdAt: this.createdAt
+  };
+  
+  // If not a workspace habit, return minimal data
+  if (!this.isWorkspaceHabit()) {
+    return baseData;
+  }
+  
+  const shareLevel = this.workspaceSettings?.shareProgress || 'progress-only';
+  const isOwner = this.userId.toString() === viewerId?.toString();
+  
+  // Owner can always see everything
+  if (isOwner) {
+    return this.toObject();
+  }
+  
+  switch (shareLevel) {
+    case 'full':
+      return {
+        ...baseData,
+        target: this.target,
+        schedule: this.schedule,
+        stats: this.stats,
+        workspaceSettings: this.workspaceSettings
+      };
+      
+    case 'progress-only':
+      return {
+        ...baseData,
+        stats: {
+          currentStreak: this.stats.currentStreak,
+          totalChecks: this.stats.totalChecks,
+          completionRate: this.stats.completionRate
+        }
+      };
+      
+    case 'streaks-only':
+      return {
+        ...baseData,
+        stats: {
+          currentStreak: this.stats.currentStreak,
+          longestStreak: this.stats.longestStreak
+        }
+      };
+      
+    case 'private':
+    default:
+      // Only basic info for private habits
+      return {
+        ...baseData,
+        stats: viewerRole === 'owner' ? this.stats : undefined
+      };
+  }
+};
+
+habitSchema.methods.canUserInteract = function(userId, userRole = 'member') {
+  // Owner can always interact
+  if (this.userId.toString() === userId.toString()) {
+    return true;
+  }
+  
+  // Check workspace interaction permissions
+  if (this.isWorkspaceHabit() && this.workspaceSettings?.allowInteraction) {
+    return ['owner', 'admin', 'member'].includes(userRole);
+  }
+  
+  return false;
+};
+
+// Static methods for workspace habits
+habitSchema.statics.findWorkspaceHabits = function(workspaceId, options = {}) {
+  const query = {
+    workspaceId: workspaceId,
+    source: 'workspace',
+    isActive: true
+  };
+  
+  if (options.userId) {
+    query.userId = options.userId;
+  }
+  
+  return this.find(query)
+    .populate('userId', 'name email avatar')
+    .populate('workspaceHabitId', 'name description category icon')
+    .sort({ adoptedAt: -1 });
+};
+
+habitSchema.statics.getWorkspaceStats = function(workspaceId) {
+  return this.aggregate([
+    { 
+      $match: { 
+        workspaceId: new mongoose.Types.ObjectId(workspaceId), 
+        source: 'workspace',
+        isActive: true 
+      } 
+    },
+    {
+      $group: {
+        _id: '$workspaceId',
+        totalAdoptedHabits: { $sum: 1 },
+        totalCompletions: { $sum: '$stats.totalChecks' },
+        avgCompletionRate: { $avg: '$stats.completionRate' },
+        avgCurrentStreak: { $avg: '$stats.currentStreak' },
+        activeMembers: { $addToSet: '$userId' }
+      }
+    },
+    {
+      $project: {
+        totalAdoptedHabits: 1,
+        totalCompletions: 1,
+        avgCompletionRate: { $round: ['$avgCompletionRate', 1] },
+        avgCurrentStreak: { $round: ['$avgCurrentStreak', 1] },
+        activeMemberCount: { $size: '$activeMembers' }
+      }
+    }
+  ]);
 };
 
 module.exports = mongoose.model('Habit', habitSchema);

@@ -26,6 +26,9 @@ import { CSS } from "@dnd-kit/utilities";
  * Sortable Column Header Component
  */
 const SortableColumnHeader = ({ habit, isInEditMode, children }) => {
+  const habitId = habit._id || habit.id;
+  const safeId = habitId ? String(habitId) : `habit-${Math.random()}`;
+  
   const {
     attributes,
     listeners,
@@ -33,7 +36,7 @@ const SortableColumnHeader = ({ habit, isInEditMode, children }) => {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: habit._id || habit.id });
+  } = useSortable({ id: safeId });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -48,37 +51,26 @@ const SortableColumnHeader = ({ habit, isInEditMode, children }) => {
       className={`text-center py-3 px-3 text-xs font-medium text-[var(--color-text-secondary)] font-outfit min-w-[60px] ${
         isInEditMode ? 'cursor-grab active:cursor-grabbing' : ''
       } ${isDragging ? 'z-50' : ''}`}
-      {...(isInEditMode ? { ...attributes, ...listeners } : {})}
+      {...attributes}
+      {...listeners}
     >
       <div className="flex flex-col items-center gap-1">
-        {isInEditMode && (
-          <DragHandleDots2Icon className="w-3 h-3 text-[var(--color-text-tertiary)] opacity-60" />
-        )}
         {children}
       </div>
     </th>
   );
 };
 
-/**
- * Table View Component - Matches the old ProfessionalTableView styling
- */
 export const TableView = ({
-  habits,
-  weekDates,
+  habits = [],
+  weekDates = [],
   completions = new Set(),
   onToggle,
-  weekStats,
-  onEditHabit,
   isInEditMode = false,
   onHabitReorder,
 }) => {
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
+    useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -88,13 +80,24 @@ export const TableView = ({
     const { active, over } = event;
 
     if (active.id !== over?.id && onHabitReorder) {
-      const oldIndex = habits.findIndex((habit) => (habit._id || habit.id) === active.id);
-      const newIndex = habits.findIndex((habit) => (habit._id || habit.id) === over.id);
+      const oldIndex = habits.findIndex((habit) => {
+        const habitId = habit._id || habit.id;
+        return habitId ? String(habitId) === String(active.id) : false;
+      });
+      const newIndex = habits.findIndex((habit) => {
+        const habitId = habit._id || habit.id;
+        return habitId ? String(habitId) === String(over.id) : false;
+      });
       
-      const reorderedHabits = arrayMove(habits, oldIndex, newIndex);
-      // Extract IDs from the reordered habits array
-      const newOrder = reorderedHabits.map(habit => habit._id || habit.id);
-      onHabitReorder(newOrder);
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const reorderedHabits = arrayMove(habits, oldIndex, newIndex);
+        // Extract IDs from the reordered habits array and ensure they're strings
+        const newOrder = reorderedHabits.map(habit => {
+          const habitId = habit._id || habit.id;
+          return habitId ? String(habitId) : null;
+        }).filter(Boolean);
+        onHabitReorder(newOrder);
+      }
     }
   };
 
@@ -114,34 +117,45 @@ export const TableView = ({
                 Day
               </th>
               {isInEditMode ? (
-                <SortableContext items={habits.map(h => h._id || h.id)} strategy={horizontalListSortingStrategy}>
-                  {habits.map((habit) => (
-                    <SortableColumnHeader
-                      key={habit._id || habit.id}
-                      habit={habit}
-                      isInEditMode={isInEditMode}
-                    >
-                      <span className="text-base">{habit.icon}</span>
-                      <span className="truncate max-w-[50px]">
-                        {habit.name}
-                      </span>
-                    </SortableColumnHeader>
-                  ))}
+                <SortableContext items={habits.map(h => {
+                  const habitId = h._id || h.id;
+                  return habitId ? String(habitId) : `habit-${Math.random()}`;
+                })} strategy={horizontalListSortingStrategy}>
+                  {habits.map((habit, index) => {
+                    const habitId = habit._id || habit.id;
+                    const safeKey = habitId ? String(habitId) : `habit-${index}`;
+                    return (
+                      <SortableColumnHeader
+                        key={safeKey}
+                        habit={habit}
+                        isInEditMode={isInEditMode}
+                      >
+                        <span className="text-base">{habit.icon}</span>
+                        <span className="truncate max-w-[50px]">
+                          {habit.name}
+                        </span>
+                      </SortableColumnHeader>
+                    );
+                  })}
                 </SortableContext>
               ) : (
-                habits.map((habit) => (
-                  <th
-                    key={habit._id || habit.id}
-                    className="text-center py-3 px-3 text-xs font-medium text-[var(--color-text-secondary)] font-outfit min-w-[60px]"
-                  >
-                    <div className="flex flex-col items-center gap-1">
-                      <span className="text-base">{habit.icon}</span>
-                      <span className="truncate max-w-[50px]">
-                        {habit.name}
-                      </span>
-                    </div>
-                  </th>
-                ))
+                habits.map((habit, index) => {
+                  const habitId = habit._id || habit.id;
+                  const safeKey = habitId ? String(habitId) : `habit-${index}`;
+                  return (
+                    <th
+                      key={safeKey}
+                      className="text-center py-3 px-3 text-xs font-medium text-[var(--color-text-secondary)] font-outfit min-w-[60px]"
+                    >
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-base">{habit.icon}</span>
+                        <span className="truncate max-w-[50px]">
+                          {habit.name}
+                        </span>
+                      </div>
+                    </th>
+                  );
+                })
               )}
               <th className="text-center py-3 px-4 text-sm font-semibold text-[var(--color-text-secondary)] font-outfit min-w-[80px]">
                 Progress
@@ -159,9 +173,10 @@ export const TableView = ({
               const scheduledHabits = habitUtils.getHabitsForDate(habits, dateObj);
               
               // Calculate completion percentage for this day based on scheduled habits
-              const completedCount = scheduledHabits.filter((habit) =>
-                completions.has(`${date}_${habit._id || habit.id}`)
-              ).length;
+              const completedCount = scheduledHabits.filter((habit) => {
+                const habitId = habit._id || habit.id;
+                return habitId && completions.has(`${date}_${String(habitId)}`);
+              }).length;
 
               const dayCompletion = scheduledHabits.length > 0
                 ? Math.round((completedCount / scheduledHabits.length) * 100)
@@ -174,14 +189,9 @@ export const TableView = ({
                     dayIndex % 2 === 0
                       ? "bg-[var(--color-surface-primary)]/10"
                       : "bg-transparent"
-                  } ${
-                    isToday
-                      ? "bg-[var(--color-brand-500)]/8 border-[var(--color-brand-400)]/30"
-                      : ""
-                  }`}
+                  } ${isToday ? "ring-2 ring-[var(--color-brand-400)]/30" : ""}`}
                 >
-                  {/* Day Label */}
-                  <td className="py-3 px-4">
+                  <td className="py-4 px-4">
                     <div className="flex items-center gap-3">
                       <div className="flex flex-col">
                         <span
@@ -205,45 +215,41 @@ export const TableView = ({
                     </div>
                   </td>
                   {/* Habit Checkboxes */}
-                  {habits.map((habit) => {
-                    const isCompleted = completions.has(
-                      `${date}_${habit._id || habit.id}`
-                    );
+                  {habits.map((habit, habitIndex) => {
+                    const habitId = habit._id || habit.id;
+                    const safeHabitId = habitId ? String(habitId) : null;
+                    const isCompleted = safeHabitId && completions.has(`${date}_${safeHabitId}`);
                     const isScheduled = habitUtils.isHabitScheduledForDate(habit, dateObj);
                     
                     return (
-                      <td key={habit._id || habit.id} className="py-3 px-3">
+                      <td key={safeHabitId || `habit-${habitIndex}`} className="py-3 px-3">
                         <div className="flex items-center justify-center">
                           {isScheduled ? (
                             <button
-                              onClick={() =>
-                                onToggle(habit._id || habit.id, date)
-                              }
+                              onClick={() => safeHabitId && onToggle(safeHabitId, date)}
                               className={`w-7 h-7 rounded-lg transition-all duration-200 flex items-center justify-center hover:scale-110 active:scale-95 ${
                                 isCompleted
                                   ? "shadow-md transform scale-105"
                                   : "hover:shadow-sm"
                               }`}
                               style={{
-                                backgroundColor: isCompleted
-                                  ? habit.color
-                                  : "transparent",
-                                border: `2px solid ${habit.color}`,
-                                boxShadow: isCompleted
-                                  ? `0 2px 6px ${habit.color}30`
-                                  : "none",
+                                backgroundColor: isCompleted ? habit.color : "transparent",
+                                borderWidth: "2px",
+                                borderStyle: "solid",
+                                borderColor: habit.color || "#6366f1",
                               }}
                             >
                               {isCompleted && (
-                                <CheckIcon className="w-4 h-4 text-white font-bold" />
+                                <CheckIcon className="w-4 h-4 text-white" />
                               )}
                             </button>
                           ) : (
                             <div className="w-7 h-7 flex items-center justify-center">
                               <div 
                                 className="w-2 h-2 rounded-full opacity-30"
-                                style={{ backgroundColor: habit.color }}
-                                title="Not scheduled for this day"
+                                style={{
+                                  backgroundColor: habit.color || "#6366f1",
+                                }}
                               />
                             </div>
                           )}
@@ -251,44 +257,35 @@ export const TableView = ({
                       </td>
                     );
                   })}
-                  {/* Progress - Status Badge Style */}
+                  {/* Progress Column */}
                   <td className="py-3 px-4 text-center">
-                    {dayCompletion === null ? (
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold font-outfit border bg-[var(--color-surface-elevated)] text-[var(--color-text-tertiary)] border-[var(--color-border-primary)]">
-                        No habits
-                      </span>
+                    {dayCompletion !== null ? (
+                      <div className="flex items-center justify-center">
+                        <div className="flex items-center gap-2">
+                          <div className="w-16 bg-[var(--color-border-secondary)] rounded-full h-2">
+                            <div
+                              className="h-2 rounded-full transition-all duration-300"
+                              style={{
+                                width: `${dayCompletion}%`,
+                                backgroundColor: dayCompletion > 0 ? "var(--color-brand-400)" : "transparent",
+                              }}
+                            />
+                          </div>
+                          <span className="text-xs font-medium text-[var(--color-text-secondary)] font-outfit">
+                            {dayCompletion}%
+                          </span>
+                        </div>
+                      </div>
                     ) : (
-                      <span
-                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold font-outfit border ${
-                          dayCompletion === 100
-                            ? "bg-[var(--color-success)]/10 text-[var(--color-success)] border-[var(--color-success)]/30"
-                            : dayCompletion >= 75
-                            ? "bg-[var(--color-brand-400)]/10 text-[var(--color-brand-400)] border-[var(--color-brand-400)]/30"
-                            : dayCompletion >= 50
-                            ? "bg-[var(--color-warning)]/10 text-[var(--color-warning)] border-[var(--color-warning)]/30"
-                            : dayCompletion > 0
-                            ? "bg-[var(--color-error)]/10 text-[var(--color-error)] border-[var(--color-error)]/30"
-                            : "bg-[var(--color-text-tertiary)]/10 text-[var(--color-text-tertiary)] border-[var(--color-text-tertiary)]/30"
-                        }`}
-                      >
-                        {dayCompletion === 100 && (
-                          <CheckIcon className="w-3 h-3 mr-1" />
-                        )}
-                        {dayCompletion}%
+                      <span className="text-xs text-[var(--color-text-quaternary)] font-outfit">
+                        No habits
                       </span>
                     )}
                   </td>
-                  {/* Actions */}
+                  {/* Actions Column */}
                   <td className="py-3 px-4 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <button
-                        className="text-xs text-[var(--color-brand-400)] hover:text-[var(--color-brand-300)] font-outfit font-medium transition-colors"
-                        onClick={() => {
-                          /* Handle view day details */
-                        }}
-                      >
-                        View
-                      </button>
+                    <div className="text-xs text-[var(--color-text-quaternary)] font-outfit">
+                      {/* Placeholder for future actions */}
                     </div>
                   </td>
                 </tr>
@@ -300,18 +297,15 @@ export const TableView = ({
     </div>
   );
 
-  // Wrap with DndContext if in edit mode
-  if (isInEditMode && onHabitReorder) {
-    return (
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        {tableContent}
-      </DndContext>
-    );
-  }
-
-  return tableContent;
+  return isInEditMode ? (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
+      {tableContent}
+    </DndContext>
+  ) : (
+    tableContent
+  );
 };
