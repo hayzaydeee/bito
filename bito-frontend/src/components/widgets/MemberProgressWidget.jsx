@@ -44,7 +44,7 @@ const MemberProgressWidget = ({
             No member data available yet
           </h4>
           <p className="text-[var(--color-text-secondary)] font-outfit">
-            Members need to adopt shared habits to appear in group tracking
+            Members need to track habits for their progress to appear here
           </p>
         </div>
       </div>
@@ -88,7 +88,7 @@ const MemberProgressWidget = ({
                       {memberInfo.name}
                     </h4>
                     <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
-                      {member.habits.length} shared habits
+                      {member.habits.length} habits tracked
                     </p>
                   </div>
                 </div>

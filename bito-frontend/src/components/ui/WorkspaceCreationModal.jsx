@@ -1,298 +1,359 @@
-import React, { useState } from 'react';
-import { Cross2Icon, PersonIcon, TargetIcon, ReaderIcon, ActivityLogIcon, HomeIcon, GlobeIcon } from '@radix-ui/react-icons';
-import { groupsAPI } from '../../services/api';
+import React, { useState } from "react";
+import "./DialogAnimation.css";
+import {
+  Flex,
+  Button,
+  Text,
+  Box,
+  Separator,
+  Switch,
+  Tabs,
+} from "@radix-ui/themes";
+import * as Dialog from "@radix-ui/react-dialog";
+import {
+  Cross2Icon,
+  CheckIcon,
+  LockClosedIcon,
+  LockOpen1Icon,
+  InfoCircledIcon,
+  PlusIcon,
+  HomeIcon,
+  PersonIcon,
+  GlobeIcon,
+} from "@radix-ui/react-icons";
 
-const WorkspaceCreationModal = ({ isOpen, onClose, onWorkspaceCreated }) => {
+// Predefined color options for workspace (matching HabitEditModal)
+const colorOptions = [
+  "#4f46e5", // indigo
+  "#0ea5e9", // sky
+  "#10b981", // emerald
+  "#f59e0b", // amber
+  "#ef4444", // red
+  "#8b5cf6", // purple
+  "#ec4899", // pink
+  "#14b8a6", // teal
+];
+
+// Workspace type options with better descriptions
+const WORKSPACE_TYPES = [
+  { 
+    id: "personal", 
+    name: "Personal", 
+    description: "Track your own habits privately", 
+    icon: "PersonIcon"
+  },
+  { 
+    id: "group", 
+    name: "Group", 
+    description: "Collaborate with friends, family, or team", 
+    icon: "GlobeIcon"
+  },
+  { 
+    id: "work", 
+    name: "Work", 
+    description: "Track professional goals and team habits", 
+    icon: "HomeIcon"
+  },
+];
+
+const WorkspaceCreationModal = ({ isOpen, onClose, onSave }) => {
+  const [activeTab, setActiveTab] = useState("details");
+  const [errors, setErrors] = useState({});
+  
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    type: 'personal',
-    settings: {
-      isPublic: false,
-      allowInvites: true,
-      requireApproval: true,
-      privacyLevel: 'invite-only'
-    }
+    name: "",
+    description: "",
+    color: "#4f46e5", // Default color
+    type: "group", // Default type
+    isPrivate: false,
   });
-  const [isCreating, setIsCreating] = useState(false);
-  const [error, setError] = useState('');
 
-  const workspaceTypes = [
-    {
-      id: 'personal',
-      name: 'Personal',
-      description: 'For individual habit tracking',
-      icon: TargetIcon,
-      color: 'text-blue-500'
-    },
-    {
-      id: 'family',
-      name: 'Family',
-      description: 'Track habits with family members',
-      icon: PersonIcon,
-      color: 'text-green-500'
-    },
-    {
-      id: 'team',
-      name: 'Team',
-      description: 'Work team productivity habits',
-      icon: HomeIcon,
-      color: 'text-purple-500'
-    },
-    {
-      id: 'fitness',
-      name: 'Fitness',
-      description: 'Workout and health tracking',
-      icon: ActivityLogIcon,
-      color: 'text-red-500'
-    },
-    {
-      id: 'study',
-      name: 'Study',
-      description: 'Learning and academic habits',
-      icon: ReaderIcon,
-      color: 'text-yellow-500'
-    },
-    {
-      id: 'community',
-      name: 'Community',
-      description: 'Public community workspace',
-      icon: GlobeIcon,
-      color: 'text-indigo-500'
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: "" }));
     }
-  ];
+  };
 
-  const handleSubmit = async (e) => {
+  const handleTypeSelect = (type) => {
+    setFormData((prev) => ({
+      ...prev,
+      type,
+    }));
+  };
+
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setError('');
-    setIsCreating(true);
-
-    try {
-      const data = await groupsAPI.createGroup(formData);
-      
-      if (data.success) {
-        onWorkspaceCreated(data.workspace);
-        onClose();
-        // Reset form
-        setFormData({
-          name: '',
-          description: '',
-          type: 'personal',
-          settings: {
-            isPublic: false,
-            allowInvites: true,
-            requireApproval: true,
-            privacyLevel: 'invite-only'
-          }
-        });
-      } else {
-        setError(data.error || 'Failed to create workspace');
-      }
-    } catch (error) {
-      console.error('Error creating workspace:', error);
-      setError('Failed to create workspace. Please try again.');
-    } finally {
-      setIsCreating(false);
+    
+    // Validation
+    const newErrors = {};
+    if (!formData.name.trim()) {
+      newErrors.name = "Group name is required";
     }
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    
+    onSave(formData);
+    onClose();
   };
 
-  const handleInputChange = (field, value) => {
-    if (field.includes('.')) {
-      const [parent, child] = field.split('.');
-      setFormData(prev => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent],
-          [child]: value
-        }
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [field]: value
-      }));
-    }
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      description: "",
+      color: "#4f46e5",
+      type: "group",
+      isPrivate: false,
+    });
+    setErrors({});
+    setActiveTab("details");
   };
 
-  if (!isOpen) return null;
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Create New Workspace</h2>
-            <p className="text-gray-600 mt-1">Set up a collaborative space for habit tracking</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <Cross2Icon className="w-5 h-5 text-gray-500" />
-          </button>
-        </div>
+    <Dialog.Root open={isOpen} onOpenChange={handleClose}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm animate-fade-in" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-md w-full bg-[var(--color-surface-primary)] rounded-xl p-6 shadow-xl border border-[var(--color-border-primary)] animate-zoom-in">
+          <Flex direction="column" gap="5">
+            <Dialog.Title className="text-2xl font-dmSerif gradient-text">
+              Create New Group
+            </Dialog.Title>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-              {error}
-            </div>
-          )}
+            <Tabs.Root defaultValue="details" value={activeTab} onValueChange={setActiveTab}>
+              <Tabs.List>
+                <Tabs.Trigger value="details">Details</Tabs.Trigger>
+                <Tabs.Trigger value="appearance">Appearance</Tabs.Trigger>
+                <Tabs.Trigger value="settings">Settings</Tabs.Trigger>
+              </Tabs.List>
+              
+              <Box pt="4">
+                <Tabs.Content value="details">
+                  <form onSubmit={handleSubmit}>
+                    <Flex direction="column" gap="4">
+                      <div>
+                        <Text as="label" size="2" weight="bold" htmlFor="name">
+                          Group Name *
+                        </Text>
+                        <input
+                          id="name"
+                          name="name"
+                          value={formData.name}
+                          onChange={handleChange}
+                          placeholder="e.g., Fitness Squad"
+                          autoFocus
+                          className="w-full px-3 py-2 border border-[var(--color-border-primary)] rounded-md bg-[var(--color-surface-primary)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-9)] focus:border-transparent"
+                        />
+                        {errors.name && (
+                          <Text color="red" size="1">
+                            {errors.name}
+                          </Text>
+                        )}
+                      </div>
+                      
+                      <div>
+                        <Text as="label" size="2" weight="bold" htmlFor="description">
+                          Description
+                        </Text>
+                        <textarea
+                          id="description"
+                          name="description"
+                          value={formData.description}
+                          onChange={handleChange}
+                          placeholder="What's this group about?"
+                          rows="4"
+                          className="w-full px-3 py-2 border border-[var(--color-border-primary)] rounded-md bg-[var(--color-surface-primary)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-9)] focus:border-transparent resize-none"
+                        />
+                      </div>
 
-          {/* Workspace Name */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Workspace Name *
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="e.g., Johnson Family Habits, Dev Team Wellness..."
-              maxLength={100}
-            />
-          </div>
+                      <div>
+                        <Text as="label" size="2" weight="bold" mb="1" display="block">
+                          Group Type
+                        </Text>
+                        <Text as="p" size="1" color="gray" mb="2">
+                          Choose the type that best fits your group's purpose
+                        </Text>
+                        
+                        <Flex direction="column" gap="2">
+                          {WORKSPACE_TYPES.map((type) => {
+                            const getIcon = (iconName) => {
+                              switch (iconName) {
+                                case "PersonIcon":
+                                  return <PersonIcon />;
+                                case "GlobeIcon":
+                                  return <GlobeIcon />;
+                                case "HomeIcon":
+                                  return <HomeIcon />;
+                                default:
+                                  return <GlobeIcon />;
+                              }
+                            };
+                            
+                            return (
+                              <Box
+                                key={type.id}
+                                className={`p-3 border rounded-md cursor-pointer transition-all ${
+                                  formData.type === type.id 
+                                    ? 'border-[var(--accent-9)] bg-[var(--accent-3)]' 
+                                    : 'border-[var(--color-border-primary)] hover:border-[var(--accent-6)]'
+                                }`}
+                                onClick={() => handleTypeSelect(type.id)}
+                              >
+                                <Flex align="center" gap="2">
+                                  <Box className="text-[var(--accent-9)]">
+                                    {getIcon(type.icon)}
+                                  </Box>
+                                  <Box>
+                                    <Text weight="bold">{type.name}</Text>
+                                    <Text size="1" color="gray">{type.description}</Text>
+                                  </Box>
+                                  {formData.type === type.id && (
+                                    <CheckIcon className="ml-auto text-[var(--accent-9)]" />
+                                  )}
+                                </Flex>
+                              </Box>
+                            );
+                          })}
+                        </Flex>
+                      </div>
+                    </Flex>
+                  </form>
+                </Tabs.Content>
 
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description (Optional)
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="What's this workspace for?"
-              rows={3}
-              maxLength={500}
-            />
-          </div>
+                <Tabs.Content value="appearance">
+                  <Flex direction="column" gap="4">
+                    <div>
+                      <Text as="label" size="2" weight="bold" mb="1" display="block">
+                        Group Color
+                      </Text>
+                      <Text as="p" size="1" color="gray" mb="2">
+                        Pick a color that represents your group's theme
+                      </Text>
+                      
+                      <Flex gap="2" wrap="wrap">
+                        {colorOptions.map((color) => (
+                          <Button
+                            key={color}
+                            type="button"
+                            variant="ghost"
+                            onClick={() => setFormData({...formData, color})}
+                            className="w-12 h-12 rounded-full p-0"
+                            style={{ 
+                              backgroundColor: color,
+                              border: formData.color === color ? "3px solid white" : "none",
+                              outline: formData.color === color ? `2px solid ${color}` : "none"
+                            }}
+                          />
+                        ))}
+                      </Flex>
 
-          {/* Workspace Type */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Workspace Type
-            </label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {workspaceTypes.map((type) => {
-                const Icon = type.icon;
-                const isSelected = formData.type === type.id;
-                return (
-                  <button
-                    key={type.id}
-                    type="button"
-                    onClick={() => handleInputChange('type', type.id)}
-                    className={`p-4 border-2 rounded-lg transition-all duration-200 text-left ${
-                      isSelected
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    <Icon className={`w-6 h-6 mb-2 ${type.color}`} />
-                    <h3 className={`font-medium ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
-                      {type.name}
-                    </h3>
-                    <p className={`text-sm ${isSelected ? 'text-blue-700' : 'text-gray-600'}`}>
-                      {type.description}
-                    </p>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+                      <Box 
+                        mt="4" 
+                        p="3" 
+                        className="rounded-md" 
+                        style={{ 
+                          backgroundColor: formData.color, 
+                          color: "#fff" 
+                        }}
+                      >
+                        <Text weight="bold">Preview: {formData.name || "Your Group Name"}</Text>
+                        <Text size="1">{formData.description || "Group description will appear here"}</Text>
+                      </Box>
+                    </div>
+                  </Flex>
+                </Tabs.Content>
 
-          {/* Privacy Settings */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Privacy Settings
-            </label>
-            <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium text-gray-900">Public Workspace</h4>
-                  <p className="text-sm text-gray-600">Allow anyone to discover and join</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleInputChange('settings.isPublic', !formData.settings.isPublic)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    formData.settings.isPublic ? 'bg-blue-600' : 'bg-gray-300'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      formData.settings.isPublic ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
+                <Tabs.Content value="settings">
+                  <Flex direction="column" gap="4">
+                    <Box>
+                      <Flex justify="between" align="center" mb="2">
+                        <div>
+                          <Text as="label" size="2" weight="bold" htmlFor="isPrivate">
+                            Private Group
+                          </Text>
+                          <Text as="p" size="1" color="gray">
+                            Only invited members can join
+                          </Text>
+                        </div>
+                        <Switch
+                          id="isPrivate"
+                          checked={formData.isPrivate}
+                          onCheckedChange={(checked) => 
+                            setFormData({...formData, isPrivate: checked})
+                          }
+                        />
+                      </Flex>
+                    </Box>
+                    
+                    <Box className="p-3 border rounded-md bg-[var(--color-surface-secondary)]">
+                      <Flex gap="2" align="center">
+                        <InfoCircledIcon className="text-[var(--color-text-secondary)]" />
+                        <Box>
+                          <Text as="p" size="2" weight="medium">
+                            {formData.isPrivate ? "Private Group" : "Public Group"}
+                          </Text>
+                          <Text as="p" size="1" color="gray">
+                            {formData.isPrivate 
+                              ? "Members need an invitation to join. You can control who has access."
+                              : "Anyone with the link can request to join your group."
+                            }
+                          </Text>
+                        </Box>
+                        {formData.isPrivate ? (
+                          <LockClosedIcon className="ml-auto text-[var(--color-text-secondary)]" />
+                        ) : (
+                          <LockOpen1Icon className="ml-auto text-[var(--color-text-secondary)]" />
+                        )}
+                      </Flex>
+                    </Box>
+                  </Flex>
+                </Tabs.Content>
+              </Box>
+            </Tabs.Root>
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium text-gray-900">Allow Member Invites</h4>
-                  <p className="text-sm text-gray-600">Members can invite others to join</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleInputChange('settings.allowInvites', !formData.settings.allowInvites)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    formData.settings.allowInvites ? 'bg-blue-600' : 'bg-gray-300'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      formData.settings.allowInvites ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium text-gray-900">Require Approval</h4>
-                  <p className="text-sm text-gray-600">New members need admin approval</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleInputChange('settings.requireApproval', !formData.settings.requireApproval)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    formData.settings.requireApproval ? 'bg-blue-600' : 'bg-gray-300'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      formData.settings.requireApproval ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
+            <Separator size="4" />
+            
+            <Flex gap="3" justify="end">
+              <Button 
+                variant="soft" 
+                color="gray" 
+                onClick={handleClose}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSubmit}
+              >
+                <PlusIcon />
+                Create Group
+              </Button>
+            </Flex>
+          </Flex>
+          
+          <Dialog.Close asChild>
+            <Button 
+              variant="ghost" 
+              color="gray" 
+              className="absolute top-[12px] right-[12px]"
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isCreating || !formData.name.trim()}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
-            >
-              {isCreating ? 'Creating...' : 'Create Workspace'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+              <Cross2Icon />
+            </Button>
+          </Dialog.Close>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 };
 

@@ -18,6 +18,7 @@ import {
 } from "@radix-ui/react-icons";
 import { groupsAPI } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
+import WorkspaceCreationModal from "../components/ui/WorkspaceCreationModal";
 
 const GroupSelection = () => {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ const GroupSelection = () => {
     description: "",
     type: "team",
     isPublic: false,
+    color: "#4f46e5", // Added default color for the new modal
   });
 
   useEffect(() => {
@@ -50,9 +52,18 @@ const GroupSelection = () => {
     }
   };
 
-  const handleCreateGroup = async () => {
+  const handleCreateGroup = async (formData) => {
     try {
-      const response = await groupsAPI.createGroup(newGroup);
+      // Transform the formData from WorkspaceCreationModal to the format expected by the API
+      const groupData = {
+        name: formData.name,
+        description: formData.description,
+        type: formData.type || "team",
+        isPublic: !formData.isPrivate, // Convert isPrivate to isPublic
+        color: formData.color
+      };
+      
+      const response = await groupsAPI.createGroup(groupData);
       if (response.success) {
         setGroups((prev) => [...prev, response.workspace]);
         setShowCreateModal(false);
@@ -61,6 +72,7 @@ const GroupSelection = () => {
           description: "",
           type: "team",
           isPublic: false,
+          color: "#4f46e5",
         });
         // Navigate to the new group
         navigate(`/app/groups/${response.workspace._id}`);
@@ -112,10 +124,10 @@ const GroupSelection = () => {
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
           <div>
-            <h1 className="text-4xl font-bold font-dmSerif gradient-text mb-2">
+            <h1 className="text-3xl font-bold font-dmSerif gradient-text mb-2">
               Groups
             </h1>
-            <p className="text-lg text-[var(--color-text-secondary)] font-outfit">
+            <p className="text-md text-[var(--color-text-secondary)] font-outfit">
               Collaborate on habits with your team, family, and community.
             </p>
           </div>
@@ -237,21 +249,14 @@ const GroupSelection = () => {
               <BackpackIcon className="w-16 h-16 text-[var(--color-text-tertiary)]" />
               <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-[var(--color-brand-500)]/10 to-[var(--color-brand-600)]/5 opacity-50"></div>
             </div>
-            <h3 className="text-3xl font-bold text-[var(--color-text-primary)] font-dmSerif mb-4">
+            <h3 className="text-2xl font-bold text-[var(--color-text-primary)] font-dmSerif mb-4">
               No groups yet
             </h3>
-            <p className="text-lg text-[var(--color-text-secondary)] font-outfit mb-8 max-w-lg mx-auto leading-relaxed">
+            <p className="text-md text-[var(--color-text-secondary)] font-outfit mb-8 max-w-lg mx-auto leading-relaxed">
               Create your first group to start collaborating on habits with your
               team, family, or community. Build accountability together and
               achieve your goals faster.
             </p>
-            <Button
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-3 h-14 px-8 bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-brand-600)] hover:from-[var(--color-brand-600)] hover:to-[var(--color-brand-700)] text-white rounded-2xl transition-all duration-200 shadow-xl hover:shadow-2xl font-outfit font-semibold mx-auto hover:scale-105"
-            >
-              <PlusIcon className="w-5 h-5" />
-              Create Your First Group
-            </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -384,106 +389,11 @@ const GroupSelection = () => {
         )}
 
         {/* Create Group Modal */}
-        {showCreateModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-[var(--color-surface-primary)] rounded-3xl shadow-2xl border border-[var(--color-border-primary)]/20 max-w-md w-full p-8">
-              <div className="space-y-6">
-                <div className="text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center mx-auto mb-4">
-                    <PlusIcon className="w-8 h-8 text-white" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-[var(--color-text-primary)] font-dmSerif mb-2">
-                    Create Group
-                  </h2>
-                  <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
-                    Start collaborating on habits with your team
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-[var(--color-text-primary)] font-outfit mb-2">
-                      Group Name
-                    </label>
-                    <input
-                      type="text"
-                      value={newGroup.name}
-                      onChange={(e) =>
-                        setNewGroup((prev) => ({
-                          ...prev,
-                          name: e.target.value,
-                        }))
-                      }
-                      className="w-full px-4 py-3 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/40 rounded-xl text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)] focus:border-transparent transition-all duration-200"
-                      placeholder="e.g., Smith Family Habits"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-[var(--color-text-primary)] font-outfit mb-2">
-                      Description (optional)
-                    </label>
-                    <textarea
-                      value={newGroup.description}
-                      onChange={(e) =>
-                        setNewGroup((prev) => ({
-                          ...prev,
-                          description: e.target.value,
-                        }))
-                      }
-                      className="w-full px-4 py-3 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/40 rounded-xl text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)] focus:border-transparent transition-all duration-200 resize-none"
-                      rows="3"
-                      placeholder="What habits will you track together?"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-[var(--color-text-primary)] font-outfit mb-2">
-                      Group Type
-                    </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {Object.entries(groupTypeIcons).map(([type, Icon]) => (
-                        <button
-                          key={type}
-                          onClick={() =>
-                            setNewGroup((prev) => ({ ...prev, type }))
-                          }
-                          className={`flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 ${
-                            newGroup.type === type
-                              ? "bg-[var(--color-brand-500)]/10 border-[var(--color-brand-500)]/40 text-[var(--color-brand-600)]"
-                              : "bg-[var(--color-surface-elevated)] border-[var(--color-border-primary)]/40 text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]"
-                          }`}
-                        >
-                          <Icon className="w-4 h-4" />
-                          <span className="text-sm font-outfit font-medium capitalize">
-                            {type}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 pt-4">
-                  <Button
-                    onClick={() => setShowCreateModal(false)}
-                    variant="soft"
-                    className="flex-1 h-12 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/40 text-[var(--color-text-primary)] rounded-xl transition-all duration-200 font-outfit font-medium"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleCreateGroup}
-                    disabled={!newGroup.name.trim()}
-                    className="flex-1 h-12 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] disabled:bg-[var(--color-surface-elevated)] disabled:text-[var(--color-text-tertiary)] text-white rounded-xl transition-all duration-200 font-outfit font-semibold shadow-lg"
-                  >
-                    Create Group
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <WorkspaceCreationModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onSave={handleCreateGroup}
+        />
       </div>
     </div>
   );

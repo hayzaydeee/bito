@@ -1,5 +1,6 @@
 import React, { useMemo, memo, useCallback } from 'react';
 import { PlusIcon, GearIcon, ResetIcon, CheckIcon, UploadIcon } from '@radix-ui/react-icons';
+import { EmptyStateWithAddHabit } from '../habitGrid/EmptyStateWithAddHabit';
 
 const QuickActionsWidget = memo(({
   breakpoint = 'lg',
@@ -164,19 +165,7 @@ const QuickActionsWidget = memo(({
     <div className="w-full h-full flex flex-col">
       <div className="widget-content-area">
         {habits.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center text-center p-4">
-            <div className="text-[var(--color-text-secondary)]">
-              <PlusIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm mb-4">No habits yet. Create your first habit!</p>
-              <button
-                onClick={handleAddHabit}
-                className="bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2 mx-auto"
-              >
-                <PlusIcon className="w-4 h-4" />
-                Add Habit
-              </button>
-            </div>
-          </div>
+          <EmptyStateWithAddHabit onAddHabit={handleAddHabit} />
         ) : (
           <div 
             className="grid gap-4 flex-1"

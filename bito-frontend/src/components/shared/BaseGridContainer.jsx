@@ -76,7 +76,10 @@ const BaseGridContainer = ({
   defaultWidgets = [],
   defaultLayouts = {},
   storageKeys = {},
-  className = ''
+  className = '',
+  
+  // Read-only mode
+  readOnly = false
 }) => {
   
   // State management (same as ContentGrid)
@@ -238,6 +241,7 @@ const BaseGridContainer = ({
                 habits={habits}
                 entries={entries}
                 onAddHabit={onAddHabit}
+                readOnly={readOnly}
                 filterComponent={
                   ChartFilterControls ? (
                     <ChartFilterControls
@@ -271,6 +275,7 @@ const BaseGridContainer = ({
                 onToggleCompletion={onToggleCompletion}
                 onShowCsvImport={onShowEnhancedCsvImport}
                 onShowLLMSettings={onShowLLMSettings}
+                readOnly={readOnly}
                 {...props} 
               />
             </Suspense>
@@ -296,6 +301,7 @@ const BaseGridContainer = ({
                 dateRange={databaseDateRange}
                 mode="week"
                 isInEditMode={isInEditMode}
+                readOnly={readOnly}
                 filterComponent={
                   DatabaseFilterControls ? (
                     <DatabaseFilterControls
@@ -331,49 +337,51 @@ const BaseGridContainer = ({
 
   return (
     <div className={`w-full h-full ${className}`}>
-      {/* Header Controls (same as ContentGrid) */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 text-sm text-[var(--color-text-tertiary)] font-outfit">
-            <span>View:</span>
-            <span className="px-2 py-1 bg-[var(--color-brand-500)]/10 text-[var(--color-brand-400)] rounded-md text-xs font-medium border border-[var(--color-brand-500)]/20">
-              {currentBreakpoint.toUpperCase()}
-            </span>
+      {/* Header Controls - Hide in read-only mode */}
+      {!readOnly && (
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-2 text-sm text-[var(--color-text-tertiary)] font-outfit">
+              <span>View:</span>
+              <span className="px-2 py-1 bg-[var(--color-brand-500)]/10 text-[var(--color-brand-400)] rounded-md text-xs font-medium border border-[var(--color-brand-500)]/20">
+                {currentBreakpoint.toUpperCase()}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Global edit mode toggle */}
+            <label className="flex items-center gap-2 text-sm font-outfit text-[var(--color-text-secondary)]">
+              <input
+                type="checkbox"
+                checked={globalEditMode}
+                onChange={(e) => setGlobalEditMode(e.target.checked)}
+                className="w-4 h-4 rounded border border-[var(--color-border-primary)] bg-[var(--color-surface-elevated)] text-[var(--color-brand-500)] focus:ring-[var(--color-brand-500)] focus:ring-2 focus:ring-opacity-50"
+              />
+              <span>Edit All</span>
+            </label>
+
+            {/* Add widget button */}
+            <button
+              onClick={() => setShowWidgetPicker(!showWidgetPicker)}
+              className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg text-sm transition-all duration-200 font-outfit"
+            >
+              <PlusIcon className="w-4 h-4" />
+              Add Widget
+            </button>
+
+            {/* Reset button */}
+            {(globalEditMode || Object.values(widgetEditStates).some(Boolean)) && (
+              <button
+                onClick={resetLayouts}
+                className="px-3 py-1.5 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] rounded-lg text-sm transition-all duration-200 font-outfit border border-[var(--color-border-primary)]"
+              >
+                Reset Layout
+              </button>
+            )}
           </div>
         </div>
-
-        <div className="flex items-center gap-3">
-          {/* Global edit mode toggle */}
-          <label className="flex items-center gap-2 text-sm font-outfit text-[var(--color-text-secondary)]">
-            <input
-              type="checkbox"
-              checked={globalEditMode}
-              onChange={(e) => setGlobalEditMode(e.target.checked)}
-              className="w-4 h-4 rounded border border-[var(--color-border-primary)] bg-[var(--color-surface-elevated)] text-[var(--color-brand-500)] focus:ring-[var(--color-brand-500)] focus:ring-2 focus:ring-opacity-50"
-            />
-            <span>Edit All</span>
-          </label>
-
-          {/* Add widget button */}
-          <button
-            onClick={() => setShowWidgetPicker(!showWidgetPicker)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg text-sm transition-all duration-200 font-outfit"
-          >
-            <PlusIcon className="w-4 h-4" />
-            Add Widget
-          </button>
-
-          {/* Reset button */}
-          {(globalEditMode || Object.values(widgetEditStates).some(Boolean)) && (
-            <button
-              onClick={resetLayouts}
-              className="px-3 py-1.5 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] rounded-lg text-sm transition-all duration-200 font-outfit border border-[var(--color-border-primary)]"
-            >
-              Reset Layout
-            </button>
-          )}
-        </div>
-      </div>
+      )}
 
       {/* Grid Layout (same as ContentGrid) */}
       <ResponsiveGridLayout
@@ -384,8 +392,8 @@ const BaseGridContainer = ({
         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
         cols={{ lg: 12, md: 12, sm: 12, xs: 4, xxs: 2 }}
         rowHeight={60}
-        isDraggable={globalEditMode || Object.values(widgetEditStates).some(Boolean)}
-        isResizable={globalEditMode || Object.values(widgetEditStates).some(Boolean)}
+        isDraggable={!readOnly && (globalEditMode || Object.values(widgetEditStates).some(Boolean))}
+        isResizable={!readOnly && (globalEditMode || Object.values(widgetEditStates).some(Boolean))}
         dragHandleClassName="widget-drag-handle"
         margin={[20, 20]}
         containerPadding={[0, 0]}
@@ -410,11 +418,11 @@ const BaseGridContainer = ({
                 }`}
               >
                 <div className="h-full flex flex-col">
-                  {/* Widget Header (same as ContentGrid) */}
+                  {/* Widget Header - Hide edit controls in read-only mode */}
                   <div className="px-4 py-3 bg-[var(--color-surface-elevated)]/50 backdrop-blur-sm border-b border-[var(--color-border-primary)]/30">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        {isInEditMode && (
+                        {!readOnly && isInEditMode && (
                           <div className="widget-drag-handle flex flex-col gap-0.5 cursor-move opacity-60 hover:opacity-100 transition-opacity" title="Drag to move widget">
                             {[...Array(4)].map((_, i) => (
                               <div key={i} className="w-1 h-1 bg-[var(--color-text-tertiary)] rounded-full"></div>
@@ -422,39 +430,41 @@ const BaseGridContainer = ({
                           </div>
                         )}
                         <h3 className={`font-semibold text-[var(--color-text-primary)] truncate font-dmSerif text-lg ${
-                          isInEditMode ? "cursor-move widget-drag-handle" : ""
-                        }`} title={isInEditMode ? "Drag to move widget" : widget.title}>
+                          !readOnly && isInEditMode ? "cursor-move widget-drag-handle" : ""
+                        }`} title={!readOnly && isInEditMode ? "Drag to move widget" : widget.title}>
                           {widget.title}
                         </h3>
                       </div>
 
-                      <div className="flex items-center gap-2" onMouseDown={e => e.stopPropagation()}>
-                        {/* Edit toggle */}
-                        <button
-                          onClick={() => toggleWidgetEditMode(widgetId)}
-                          className={`p-1.5 rounded-md transition-all duration-200 hover:bg-[var(--color-surface-hover)] ${
-                            widgetEditStates[widgetId]
-                              ? 'text-[var(--color-brand-500)] bg-[var(--color-brand-500)]/10 border border-[var(--color-brand-500)]/30'
-                              : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]'
-                          }`}
-                        >
-                          <Pencil1Icon className="w-4 h-4" />
-                        </button>
-
-                        {/* Remove button */}
-                        {isInEditMode && (
+                      {!readOnly && (
+                        <div className="flex items-center gap-2" onMouseDown={e => e.stopPropagation()}>
+                          {/* Edit toggle */}
                           <button
-                            onClick={() => {
-                              if (window.confirm(`Remove "${widget.title}" widget?`)) {
-                                removeWidget(widgetId);
-                              }
-                            }}
-                            className="p-1.5 rounded-md transition-all duration-200 text-red-400 border border-red-400"
+                            onClick={() => toggleWidgetEditMode(widgetId)}
+                            className={`p-1.5 rounded-md transition-all duration-200 hover:bg-[var(--color-surface-hover)] ${
+                              widgetEditStates[widgetId]
+                                ? 'text-[var(--color-brand-500)] bg-[var(--color-brand-500)]/10 border border-[var(--color-brand-500)]/30'
+                                : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]'
+                            }`}
                           >
-                            <TrashIcon className="w-4 h-4" />
+                            <Pencil1Icon className="w-4 h-4" />
                           </button>
-                        )}
-                      </div>
+
+                          {/* Remove button */}
+                          {isInEditMode && (
+                            <button
+                              onClick={() => {
+                                if (window.confirm(`Remove "${widget.title}" widget?`)) {
+                                  removeWidget(widgetId);
+                                }
+                              }}
+                              className="p-1.5 rounded-md transition-all duration-200 text-red-400 border border-red-400"
+                            >
+                              <TrashIcon className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -468,8 +478,8 @@ const BaseGridContainer = ({
           })}
       </ResponsiveGridLayout>
 
-      {/* Widget Picker Modal */}
-      {showWidgetPicker && (
+      {/* Widget Picker Modal - Hide in read-only mode */}
+      {!readOnly && showWidgetPicker && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowWidgetPicker(false)}>
           <div className="glass-card rounded-xl shadow-xl p-6 m-4 max-w-2xl w-full max-h-[80vh] overflow-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">

@@ -65,13 +65,13 @@ const GroupLeaderboardWidget = ({
       </div>
 
       <div className="space-y-3">
-        {leaderboardData.slice(0, 5).map((member, index) => {
+        {leaderboardData.filter(member => member && (member.memberId || member.id)).slice(0, 5).map((member, index) => {
           const position = index + 1;
           const isTopThree = position <= 3;
           
           return (
             <div
-              key={member.memberId}
+              key={member.memberId || member.id || `member-${index}`}
               className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
                 isTopThree 
                   ? 'bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border border-yellow-200 dark:border-yellow-800' 
@@ -94,10 +94,10 @@ const GroupLeaderboardWidget = ({
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center text-white font-bold font-dmSerif text-xs">
-                    {member.memberName.charAt(0).toUpperCase()}
+                    {(member.memberName || member.name || 'U').charAt(0).toUpperCase()}
                   </div>
                   <span className="text-sm font-semibold text-[var(--color-text-primary)] font-dmSerif">
-                    {member.memberName}
+                    {member.memberName || member.name || 'Unknown User'}
                   </span>
                 </div>
                 

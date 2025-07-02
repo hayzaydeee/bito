@@ -86,56 +86,45 @@ const LandingPage = () => {
   ];
   return (
     <div className="min-h-screen bg-gradient-to-br from-[var(--color-bg-primary)] via-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] overflow-hidden">
-      {/* Navigation Bar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[var(--color-surface-primary)]/80 backdrop-blur-xl border-b border-[var(--color-border-primary)]/30">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+      {/* Navigation Bar - Minimalist */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[var(--color-surface-primary)]/80 backdrop-blur-sm border-b border-[var(--color-border-primary)]/10">
+        <div className="max-w-5xl mx-auto px-4 py-2">
           <Flex justify="between" align="center">
             {/* Logo */}
-            <Flex align="center" gap="3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center">
-                <TargetIcon className="w-6 h-6 text-white" />
+            <Flex align="center" gap="1">
+              <div className="w-6 h-6 rounded-md bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center">
+                <TargetIcon className="w-3.5 h-3.5 text-white" />
               </div>
-              <Text className="text-2xl font-bold font-dmSerif gradient-text">
+              <Text className="text-sm font-medium font-dmSerif gradient-text">
                 Bito
               </Text>
             </Flex>
 
-            {/* Navigation Links */}
-            <Flex align="center" gap="8" className="hidden md:flex">
-              <Text className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer transition-colors font-outfit">
+            {/* Navigation Links - More Compact */}
+            <Flex align="center" gap="4" className="hidden md:flex">
+              <Text className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer transition-colors font-outfit">
                 Features
               </Text>
-              <Text className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer transition-colors font-outfit">
+              <Text className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer transition-colors font-outfit">
                 Pricing
               </Text>
-              <Text className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer transition-colors font-outfit">
+              <Text className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer transition-colors font-outfit">
                 About
-              </Text>
-              <Text className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer transition-colors font-outfit">
-                Support
               </Text>
             </Flex>
 
-            {/* Auth Buttons */}
-            <Flex align="center" gap="3">
+            {/* Auth Buttons - Simplified */}
+            <Flex align="center" gap="2">
               <Button 
                 variant="ghost" 
-                className="btn btn-ghost btn-md hover-lift"
-                style={{ 
-                  color: 'var(--color-text-secondary)',
-                  padding: '0.5rem 1rem'
-                }}
                 onClick={() => navigate('/login')}
+                className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors font-outfit text-xs px-2 py-1"
               >
-                Log In
+                Sign In
               </Button>
               <Button 
-                className="btn btn-primary btn-md hover-lift"
-                style={{ 
-                  background: 'linear-gradient(135deg, var(--color-brand-600) 0%, var(--color-brand-700) 100%)',
-                  padding: '0.5rem 1.5rem'
-                }}
                 onClick={() => navigate('/signup')}
+                className="bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded text-xs px-3 py-1 transition-all font-outfit"
               >
                 Sign Up
               </Button>
@@ -144,113 +133,112 @@ const LandingPage = () => {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center px-6 pt-24">
-        {/* Background Effects */}
+      {/* Hero Section - Inspired by WelcomeCard */}
+      <section className="relative min-h-[70vh] flex items-center justify-center px-6 pt-16">
+        {/* Background Effects - Similar to Dashboard */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-20 left-20 w-72 h-72 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full blur-3xl animate-float" />
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-gradient-to-r from-indigo-500/10 to-pink-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-[var(--color-brand-500)]/5 to-[var(--color-brand-700)]/5 rounded-full blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-brand-500)]/5 via-[var(--color-brand-400)]/3 to-transparent"></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[var(--color-brand-400)]/10 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-[var(--color-brand-600)]/10 to-transparent rounded-full translate-y-16 -translate-x-16"></div>
         </div>
 
-        <div className={`relative z-10 text-center max-w-6xl mx-auto transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card mb-8 animate-glow">
-            <StarIcon className="w-4 h-4 text-[var(--color-brand-400)]" />
-            <Text className="text-sm font-medium text-[var(--color-text-secondary)]">
-              Transform Your Life, One Habit at a Time
-            </Text>
+        <div className={`relative z-10 max-w-3xl mx-auto transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
+          {/* Hero Glass Card - Inspired by WelcomeCard */}
+          <div className="glass-card p-6 rounded-2xl relative overflow-hidden mb-6 text-center">
+            {/* Subtle Background Pattern */}
+            <div className="absolute inset-0">
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-brand-500)]/3 via-[var(--color-brand-400)]/2 to-transparent"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[var(--color-brand-400)]/8 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
+            </div>
+
+            <div className="relative z-10">
+              {/* Badge - Dashboard Style */}
+              <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--color-surface-elevated)]/70 border border-[var(--color-border-primary)]/20 mb-4">
+                <StarIcon className="w-3 h-3 text-[var(--color-brand-400)]" />
+                <Text className="text-xs font-medium text-[var(--color-text-secondary)] font-outfit">
+                  Build lasting habits
+                </Text>
+              </div>
+
+              {/* Main Headline - Using Dashboard Style */}
+              <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-brand-400)] bg-clip-text text-transparent font-dmSerif mb-3 leading-tight">
+                Build Better Habits With Bito
+              </h1>
+
+              {/* Subtitle */}
+              <Text className="text-sm text-[var(--color-text-secondary)] mb-5 max-w-xl mx-auto leading-relaxed font-outfit">
+                Track, analyze, and optimize your daily routines with beautiful insights.
+              </Text>
+
+              {/* CTA Buttons - Dashboard Style */}
+              <Flex gap="2" justify="center" className="mb-6">
+                <Button 
+                  onClick={() => navigate('/signup')}
+                  className="bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-brand-600)] text-white rounded text-xs px-4 py-1.5 transition-all font-outfit flex items-center gap-1 group shadow-sm"
+                >
+                  <PlayIcon className="w-3 h-3 group-hover:scale-110 transition-transform" />
+                  Get Started
+                </Button>
+                
+                <Button 
+                  variant="soft" 
+                  className="bg-[var(--color-surface-elevated)]/50 hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/20 text-xs px-3 py-1.5 font-outfit rounded shadow-sm"
+                >
+                  Watch Demo
+                </Button>
+              </Flex>
+            </div>
           </div>
 
-          {/* Main Headline */}
-          <h1 className="text-5xl md:text-7xl font-bold font-dmSerif mb-6 leading-tight">
-            Build Better
-            <span className="block gradient-text">Habits</span>
-            <span className="block">With Bito</span>
-          </h1>
-
-          {/* Subtitle */}
-          <Text className="text-xl md:text-2xl text-[var(--color-text-secondary)] mb-12 max-w-3xl mx-auto leading-relaxed font-outfit">
-            The intelligent habit tracking platform that helps you build lasting positive changes. 
-            Track, analyze, and optimize your daily routines with beautiful insights and powerful automation.
-          </Text>
-
-          {/* CTA Buttons */}
-          <Flex gap="4" justify="center" className="mb-16">            <Button 
-              size="4" 
-              className="btn btn-primary btn-lg hover-lift group landing-cta-button"
-              style={{ 
-                background: 'linear-gradient(135deg, var(--color-brand-600) 0%, var(--color-brand-700) 100%)',
-                padding: '1rem 2.5rem',
-                fontSize: '1.125rem'
-              }}
-              onClick={() => navigate('/app')}
-            >
-              <PlayIcon className="w-5 h-5 group-hover:scale-110 transition-transform" />
-              Get Started Free
-              <ArrowRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
-            
-            <Button 
-              size="4" 
-              variant="soft" 
-              className="btn btn-secondary btn-lg hover-lift"
-              style={{
-                background: 'var(--color-surface-elevated)',
-                border: '1px solid var(--color-border-primary)',
-                padding: '1rem 2.5rem',
-                fontSize: '1.125rem'
-              }}
-            >
-              Watch Demo
-            </Button>
-          </Flex>
-
-          {/* Hero Stats */}
-          <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto">
-            <div className="text-center">
-              <div className="text-3xl font-bold font-dmSerif gradient-text mb-2">10K+</div>
-              <Text className="text-sm text-[var(--color-text-tertiary)]">Active Users</Text>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold font-dmSerif gradient-text mb-2">500K+</div>
-              <Text className="text-sm text-[var(--color-text-tertiary)]">Habits Tracked</Text>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold font-dmSerif gradient-text mb-2">98%</div>
-              <Text className="text-sm text-[var(--color-text-tertiary)]">Success Rate</Text>
+          {/* Hero Stats - Card Style */}
+          <div className="glass-card p-4 rounded-xl border border-[var(--color-border-primary)]/10">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center">
+                <div className="text-xl font-bold font-dmSerif bg-gradient-to-r from-[var(--color-brand-400)] to-[var(--color-brand-500)] bg-clip-text text-transparent mb-1">10K+</div>
+                <Text className="text-xs text-[var(--color-text-tertiary)] font-outfit">Users</Text>
+              </div>
+              <div className="text-center">
+                <div className="text-xl font-bold font-dmSerif bg-gradient-to-r from-[var(--color-brand-400)] to-[var(--color-brand-500)] bg-clip-text text-transparent mb-1">500K+</div>
+                <Text className="text-xs text-[var(--color-text-tertiary)] font-outfit">Habits</Text>
+              </div>
+              <div className="text-center">
+                <div className="text-xl font-bold font-dmSerif bg-gradient-to-r from-[var(--color-brand-400)] to-[var(--color-brand-500)] bg-clip-text text-transparent mb-1">98%</div>
+                <Text className="text-xs text-[var(--color-text-tertiary)] font-outfit">Success</Text>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-24 px-6 relative">
-        <div className="max-w-7xl mx-auto">
-          {/* Section Header */}
-          <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-5xl font-bold font-dmSerif mb-6">
-              Everything You Need to
-              <span className="block gradient-text">Succeed</span>
-            </h2>
-            <Text className="text-xl text-[var(--color-text-secondary)] max-w-3xl mx-auto">
-              Powerful features designed to make habit building effortless, engaging, and effective.
-            </Text>
-          </div>          {/* Features Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+      {/* Features Section - Dashboard Style */}
+      <section className="py-8 px-6 relative">
+        <div className="max-w-4xl mx-auto">
+          {/* Section Header - Dashboard Style */}
+          <div className="glass-card p-4 rounded-xl border border-[var(--color-border-primary)]/10 mb-6">
+            <div className="text-center">
+              <h2 className="text-xl font-bold font-dmSerif bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-brand-400)] bg-clip-text text-transparent mb-2">
+                Everything You Need to Succeed
+              </h2>
+              <Text className="text-sm text-[var(--color-text-secondary)] max-w-xl mx-auto font-outfit">
+                Powerful features designed for effective habit building
+              </Text>
+            </div>
+          </div>
+          
+          {/* Features Grid - Dashboard Style Cards */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             {features.map((feature, index) => (
               <div 
                 key={index}
-                className="glass-card p-8 rounded-2xl hover-lift group landing-feature-card"
-                style={{ animationDelay: `${index * 150}ms` }}
+                className="glass-card p-4 rounded-xl border border-[var(--color-border-primary)]/10 transition-all hover:border-[var(--color-brand-500)]/20 hover:shadow-sm"
               >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <div className="w-10 h-10 rounded-lg bg-[var(--color-brand-500)]/10 text-[var(--color-brand-500)] flex items-center justify-center mb-3">
                   {feature.icon}
                 </div>
-                <h3 className="text-xl font-semibold font-dmSerif mb-4 text-[var(--color-text-primary)]">
+                <h3 className="text-sm font-bold font-dmSerif mb-1.5 text-[var(--color-text-primary)]">
                   {feature.title}
                 </h3>
-                <Text className="text-[var(--color-text-secondary)] leading-relaxed">
+                <Text className="text-xs text-[var(--color-text-secondary)] leading-relaxed font-outfit">
                   {feature.description}
                 </Text>
               </div>
@@ -259,41 +247,55 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-24 px-6 bg-gradient-to-r from-[var(--color-surface-primary)]/30 to-[var(--color-surface-secondary)]/30">
-        <div className="max-w-7xl mx-auto">
-          {/* Section Header */}
-          <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-5xl font-bold font-dmSerif mb-6">
-              Loved by
-              <span className="gradient-text"> Thousands</span>
-            </h2>
-            <Text className="text-xl text-[var(--color-text-secondary)] max-w-3xl mx-auto">
-              Join the community of people who have transformed their lives with Bito.
-            </Text>
+      {/* Testimonials Section - Dashboard Style */}
+      <section className="py-8 px-6 relative">
+        <div className="max-w-4xl mx-auto">
+          {/* Section Header - Dashboard Style */}
+          <div className="glass-card p-4 rounded-xl border border-[var(--color-border-primary)]/10 mb-6">
+            <div className="text-center">
+              <h2 className="text-xl font-bold font-dmSerif bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-brand-400)] bg-clip-text text-transparent mb-2">
+                Loved by Our Community
+              </h2>
+              <Text className="text-sm text-[var(--color-text-secondary)] max-w-xl mx-auto font-outfit">
+                Join people who transformed their habits with Bito
+              </Text>
+            </div>
           </div>
 
-          {/* Testimonials Grid */}
-          <div className="grid md:grid-cols-3 gap-8">            {testimonials.map((testimonial, index) => (
+          {/* Testimonials Grid - Dashboard Style */}
+          <div className="grid md:grid-cols-3 gap-4">
+            {testimonials.map((testimonial, index) => (
               <div 
                 key={index}
-                className="glass-card p-8 rounded-2xl hover-lift testimonial-card"
+                className="glass-card p-4 rounded-xl border border-[var(--color-border-primary)]/10 transition-all hover:border-[var(--color-brand-500)]/20 hover:shadow-sm relative overflow-hidden"
               >
-                <div className="flex gap-1 mb-6">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <StarIcon key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                  ))}
+                {/* Subtle Background Pattern */}
+                <div className="absolute inset-0">
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-[var(--color-brand-400)]/5 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
                 </div>
-                <Text className="text-[var(--color-text-secondary)] mb-6 leading-relaxed text-lg">
-                  "{testimonial.content}"
-                </Text>
-                <div>
-                  <div className="font-semibold text-[var(--color-text-primary)] mb-1">
-                    {testimonial.name}
+                
+                <div className="relative z-10">
+                  <div className="flex gap-0.5 mb-2">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <StarIcon key={i} className="w-3 h-3 text-yellow-400 fill-current" />
+                    ))}
                   </div>
-                  <Text className="text-sm text-[var(--color-text-tertiary)]">
-                    {testimonial.role}
+                  <Text className="text-[var(--color-text-secondary)] mb-3 text-xs leading-relaxed">
+                    "{testimonial.content}"
                   </Text>
+                  <div className="flex items-center">
+                    <div className="w-6 h-6 rounded-full bg-[var(--color-brand-500)]/10 text-[var(--color-brand-500)] flex items-center justify-center mr-2">
+                      <Text className="text-[10px] font-bold">{testimonial.name.charAt(0)}</Text>
+                    </div>
+                    <div>
+                      <div className="font-medium text-sm text-[var(--color-text-primary)]">
+                        {testimonial.name}
+                      </div>
+                      <Text className="text-xs text-[var(--color-text-tertiary)]">
+                        {testimonial.role}
+                      </Text>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
@@ -301,70 +303,81 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-24 px-6 relative overflow-hidden">
-        {/* Background Effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-brand-600)]/10 to-[var(--color-brand-800)]/10" />
-        
-        <div className="relative z-10 max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl md:text-6xl font-bold font-dmSerif mb-6">
-            Ready to
-            <span className="gradient-text"> Transform</span>
-            <span className="block">Your Life?</span>
-          </h2>
-          
-          <Text className="text-xl text-[var(--color-text-secondary)] mb-12 max-w-2xl mx-auto">
-            Start building better habits today. Join thousands of users who have already transformed their lives with Bito.
-          </Text>
+      {/* CTA Section - Dashboard Style */}
+      <section className="py-8 px-6 relative">
+        <div className="max-w-4xl mx-auto">
+          <div className="glass-card p-6 rounded-2xl relative overflow-hidden">
+            {/* Subtle Background Pattern - Like WelcomeCard */}
+            <div className="absolute inset-0">
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-brand-500)]/5 via-[var(--color-brand-400)]/3 to-transparent"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[var(--color-brand-400)]/8 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-[var(--color-brand-500)]/8 to-transparent rounded-full translate-y-16 -translate-x-16"></div>
+            </div>
+            
+            <div className="relative z-10 text-center">
+              <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-brand-400)] bg-clip-text text-transparent font-dmSerif mb-3">
+                Ready to Transform Your Habits?
+              </h2>
+              
+              <Text className="text-sm text-[var(--color-text-secondary)] mb-5 max-w-xl mx-auto">
+                Start building better habits today with Bito
+              </Text>
 
-          <Flex gap="4" justify="center" className="mb-8">            <Button 
-              size="4" 
-              className="btn btn-primary btn-lg hover-lift group landing-cta-button"
-              style={{ 
-                background: 'linear-gradient(135deg, var(--color-brand-600) 0%, var(--color-brand-700) 100%)',
-                padding: '1.25rem 3rem',
-                fontSize: '1.25rem'
-              }}
-              onClick={() => navigate('/app')}
-            >
-              <PlayIcon className="w-5 h-5 group-hover:scale-110 transition-transform" />
-              Start Your Journey
-              <ArrowRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
-          </Flex>
+              <Flex gap="2" justify="center" className="mb-4">
+                <Button 
+                  className="bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-brand-600)] text-white rounded text-xs px-6 py-2 transition-all font-outfit flex items-center gap-2 group shadow-sm"
+                  onClick={() => navigate('/signup')}
+                >
+                  <PlayIcon className="w-3 h-3 group-hover:scale-110 transition-transform" />
+                  Start Your Journey
+                  <ArrowRightIcon className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                </Button>
+              </Flex>
 
-          <Text className="text-sm text-[var(--color-text-tertiary)]">
-            No credit card required • Free 14-day trial • Cancel anytime
-          </Text>
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-1.5 h-1.5 bg-[var(--color-success)] rounded-full"></div>
+                <Text className="text-xs text-[var(--color-text-tertiary)]">
+                  No credit card required • Free trial • Cancel anytime
+                </Text>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-12 px-6 border-t border-[var(--color-border-primary)]/30">
-        <div className="max-w-7xl mx-auto">
-          <Flex justify="between" align="center" className="mb-8">
-            <div>
-              <h3 className="text-2xl font-bold font-dmSerif gradient-text mb-2">Bito</h3>
-              <Text className="text-[var(--color-text-secondary)]">
-                Build better habits, build a better life.
-              </Text>
-            </div>
-            
-            <Flex gap="6">
-              <Text className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] cursor-pointer transition-colors">
-                Privacy
-              </Text>
-              <Text className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] cursor-pointer transition-colors">
-                Terms
-              </Text>
-              <Text className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] cursor-pointer transition-colors">
-                Support
-              </Text>
+      {/* Footer - Dashboard Style */}
+      <footer className="py-6 px-6 border-t border-[var(--color-border-primary)]/10">
+        <div className="max-w-4xl mx-auto">
+          <div className="glass-card p-4 rounded-xl border border-[var(--color-border-primary)]/10 mb-4">
+            <Flex justify="between" align="center" wrap="wrap" gap="2">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-md bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center">
+                  <TargetIcon className="w-3.5 h-3.5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium font-dmSerif bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-brand-400)] bg-clip-text text-transparent">Bito</h3>
+                  <Text className="text-xs text-[var(--color-text-secondary)]">
+                    Build better habits, build a better life.
+                  </Text>
+                </div>
+              </div>
+              
+              <Flex gap="4">
+                <Text className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] cursor-pointer transition-colors">
+                  Privacy
+                </Text>
+                <Text className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] cursor-pointer transition-colors">
+                  Terms
+                </Text>
+                <Text className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] cursor-pointer transition-colors">
+                  Support
+                </Text>
+              </Flex>
             </Flex>
-          </Flex>
+          </div>
           
-          <div className="pt-8 border-t border-[var(--color-border-primary)]/30">
-            <Text className="text-center text-[var(--color-text-tertiary)]">
+          <div className="text-center">
+            <Text className="text-xs text-[var(--color-text-tertiary)]">
               © 2025 Bito. All rights reserved.
             </Text>
           </div>

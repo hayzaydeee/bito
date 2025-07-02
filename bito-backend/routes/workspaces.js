@@ -9,6 +9,7 @@ const Workspace = require('../models/Workspace');
 const WorkspaceHabit = require('../models/WorkspaceHabit');
 const MemberHabit = require('../models/MemberHabit');
 const Habit = require('../models/Habit');
+const HabitEntry = require('../models/HabitEntry');
 const Activity = require('../models/Activity');
 const User = require('../models/User');
 const Invitation = require('../models/Invitation');
@@ -1558,10 +1559,37 @@ router.get('/:workspaceId/habits', authenticateJWT, async (req, res) => {
           status: 'active'
         });
 
+        // Get list of users who have adopted this habit
+        const adoptedByUsers = await MemberHabit.find({
+          workspaceHabitId: habit._id,
+          status: 'active'
+        })
+        .populate('userId', 'name email')
+        .select('userId');
+
+        // Also check the new unified habits model
+        const adoptedByUsersUnified = await Habit.find({
+          workspaceHabitId: habit._id,
+          isActive: true
+        })
+        .populate('userId', 'name email')
+        .select('userId');
+
+        // Combine both adoption sources
+        const allAdoptedBy = [
+          ...adoptedByUsers.map(member => member.userId),
+          ...adoptedByUsersUnified.map(habit => habit.userId)
+        ];
+
+        // Remove duplicates
+        const uniqueAdoptedBy = allAdoptedBy.filter((user, index, self) => 
+          index === self.findIndex(u => u._id.toString() === user._id.toString())
+        );
+
         return {
           ...habit.toObject(),
           adoptionCount,
-          isAdoptedByUser: false // Will be set by frontend if needed
+          adoptedBy: uniqueAdoptedBy
         };
       })
     );
@@ -2134,30 +2162,92 @@ router.get('/:workspaceId/members/:memberId/dashboard', authenticateJWT, async (
       });
     }
 
-    // Check permissions
+    // Get target user for basic info (name, avatar, etc.)
     const targetUser = await User.findById(memberId);
-    const dashboardPermission = targetUser.dashboardSharingPermissions.find(
-      perm => perm.workspaceId.toString() === workspaceId
-    );
-
-    const hasPermission = dashboardPermission && (
-      dashboardPermission.isPublicToWorkspace ||
-      dashboardPermission.allowedMembers.some(id => id.toString() === userId)
-    );
-
-    if (!hasPermission) {
-      return res.status(403).json({
+    
+    if (!targetUser) {
+      return res.status(404).json({
         success: false,
-        error: 'Access denied. Member has not shared their dashboard with you.'
+        error: 'Target user not found'
       });
     }
+    
+    // SIMPLIFIED PERMISSION MODEL:
+    // Being in the same workspace automatically grants permission to view dashboards
+    // No additional permission checks needed
+    console.log(`Member dashboard access granted: ${userId} viewing ${memberId}'s dashboard in workspace ${workspaceId}`);
+    
+    // Permission is automatic - if you're in the same workspace, you can see each other's dashboards
+    const hasPermission = true;
 
-    // Get member's habits in this workspace (only non-private ones)
-    const memberHabits = await MemberHabit.find({
-      workspaceId,
-      userId: memberId,
-      'personalSettings.isPrivate': { $ne: true }
-    }).populate('workspaceHabitId');
+    // Get ALL habits for the member (regardless of workspace association)
+    // This is the key change - we're getting their FULL personal dashboard
+    const allMemberHabits = await Habit.find({
+      userId: memberId
+    });
+    
+    console.log(`Found ${allMemberHabits.length} total Habits for user ${memberId} - their complete dashboard`);
+    
+    // For debugging, let's also see how many are workspace-related vs personal
+    const workspaceHabits = allMemberHabits.filter(h => h.workspaceId);
+    const personalHabits = allMemberHabits.filter(h => !h.workspaceId);
+    
+    console.log(`Habit breakdown for ${memberId}: ${workspaceHabits.length} workspace-related, ${personalHabits.length} personal habits`);
+    
+    // We don't need MemberHabit lookup anymore as we're showing ALL habits directly
+    // This simplifies our approach and provides a true dashboard mirror
+    
+    // We now work directly with the member's habits - true mirroring of their dashboard
+    const processedHabits = [];
+    const habitIdToEntryMap = {};
+    
+    // Process each habit directly from the user's personal collection
+    for (const habit of allMemberHabits) {
+      try {
+        // Process each habit directly - no need for complex mapping
+        const processedHabit = {
+          ...habit.toObject(),
+          _id: habit._id, // Keep the original Habit ID
+          habitId: habit._id, // For consistency with frontend expectations
+          isGroupHabit: !!habit.workspaceId, // Flag if it's associated with a workspace
+        };
+        
+        // Ensure essential fields have defaults if missing
+        if (!processedHabit.name) processedHabit.name = 'Unnamed habit';
+        if (!processedHabit.category) processedHabit.category = 'general';
+        if (!processedHabit.frequency) processedHabit.frequency = { days: [1,2,3,4,5,6,0] };
+        
+        // Add to our processed habits collection
+        processedHabits.push(processedHabit);
+        
+        // Track this habit ID for entry lookup
+        habitIdToEntryMap[habit._id.toString()] = habit._id.toString();
+      } catch (error) {
+        console.error(`Error processing habit ${habit._id}:`, error);
+      }
+    }
+    
+    // Get habit IDs to fetch entries for - now simply all the user's habit IDs
+    const habitIds = Object.keys(habitIdToEntryMap).map(id => mongoose.Types.ObjectId(id));
+    
+    // Get ALL the member's habit entries for any habit they track
+    const habitEntries = await HabitEntry.find({
+      habitId: { $in: habitIds },
+      userId: memberId
+    });
+    
+    console.log(`Found ${habitEntries.length} entries for ${habitIds.length} habits`);
+
+    // Format entries as an object keyed by habit ID - much simpler now
+    const entriesMap = {};
+    habitEntries.forEach(entry => {
+      const habitId = entry.habitId.toString();
+      
+      if (!entriesMap[habitId]) {
+        entriesMap[habitId] = [];
+      }
+      entriesMap[habitId].push(entry);
+    });
 
     // Get basic member info
     const memberInfo = {
@@ -2166,10 +2256,40 @@ router.get('/:workspaceId/members/:memberId/dashboard', authenticateJWT, async (
       avatar: targetUser.avatar
     };
 
+    // Log summary for debugging
+    console.log('Member dashboard summary:', {
+      memberId,
+      memberName: memberInfo.name,
+      workspaceId,
+      habitsCount: processedHabits.length,
+      entriesCount: Object.values(entriesMap).flat().length,
+      habitIdsMapped: Object.values(memberHabitToHabitMap).length,
+    });
+    
+    // Check if we have no habits and provide additional debug info
+    if (processedHabits.length === 0) {
+      console.warn('No habits found for member dashboard - Additional context:');
+      
+      // Check user account status and other data
+      const userDetails = await User.findById(memberId, 'name email createdAt lastLogin');
+      
+      // Log detailed information
+      console.log({
+        message: "User has no habits tracked at all",
+        memberId,
+        userSince: userDetails?.createdAt,
+        lastActive: userDetails?.lastLogin,
+        accountExists: !!userDetails
+      });
+      
+      // We'll handle empty states in the frontend
+    }
+
     res.json({
       success: true,
       member: memberInfo,
-      habits: memberHabits,
+      habits: processedHabits,
+      entries: entriesMap,
       workspace: {
         id: workspace._id,
         name: workspace.name

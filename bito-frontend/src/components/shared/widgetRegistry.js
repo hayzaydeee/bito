@@ -210,8 +210,8 @@ export const DEFAULT_LAYOUTS = {
       { i: "habit-list", x: 0, y: 4, w: 12, h: 6 }
     ],
     sm: [
-      { i: "habits-overview", x: 0, y: 0, w: 12, h: 4 },
-      { i: "quick-actions", x: 0, y: 4, w: 12, h: 4 },
+      { i: "habits-overview", x: 0, y: 0, w: 12, h: 12 },
+      { i: "quick-actions", x: 0, y: 4, w: 12, h: 8 },
       { i: "habit-list", x: 0, y: 8, w: 12, h: 6 }
     ],
     xs: [
@@ -301,12 +301,12 @@ export const DEFAULT_LAYOUTS = {
   },
   settings: {
     lg: [
-      { i: "profile-widget", x: 0, y: 0, w: 6, h: 6, moved: false, static: false },
-      { i: "notifications-widget", x: 6, y: 0, w: 6, h: 6, moved: false, static: false },
-      { i: "privacy-widget", x: 0, y: 6, w: 6, h: 6, moved: false, static: false },
-      { i: "appearance-widget", x: 6, y: 6, w: 6, h: 6, moved: false, static: false },
-      { i: "data-management-widget", x: 0, y: 12, w: 6, h: 8, moved: false, static: false },
-      { i: "help-support-widget", x: 6, y: 12, w: 6, h: 8, moved: false, static: false }
+      { i: "profile-widget", x: 0, y: 0, w: 6, h: 6,},
+      { i: "notifications-widget", x: 6, y: 0, w: 6, h: 6, },
+      { i: "privacy-widget", x: 0, y: 6, w: 6, h: 6,  },
+      { i: "appearance-widget", x: 6, y: 6, w: 6, h: 6, },
+      { i: "data-management-widget", x: 0, y: 12, w: 6, h: 8, },
+      { i: "help-support-widget", x: 6, y: 12, w: 6, h: 8, }
     ],
     md: [
       { i: "profile-widget", x: 0, y: 0, w: 6, h: 6 },

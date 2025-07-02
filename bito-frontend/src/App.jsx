@@ -10,7 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import SettingsPage from "./pages/SettingsPage";
 import WorkspaceOverview from "./pages/WorkspaceOverview";
-import WorkspaceDashboard from "./pages/WorkspaceDashboard";
+
 import WorkspaceSettings from "./pages/WorkspaceSettings";
 import MemberDashboardView from "./pages/MemberDashboardView";
 import GroupSelection from "./pages/GroupSelection";
@@ -54,10 +54,10 @@ function App() {
                 {/* <Route path="habits" element={<HabitsPage />} /> */}
                 <Route path="analytics" element={<AnalyticsPage />} />
                 <Route path="settings" element={<SettingsPage />} />
+                <Route path="settings/habit-privacy/:habitId" element={<SettingsPage section="habit-privacy" />} />
                 <Route path="groups" element={<GroupSelection />} />
                 <Route path="groups/:groupId" element={<WorkspaceOverview />} />
                 <Route path="groups/:groupId/members/:memberId/dashboard" element={<MemberDashboardView />} />
-                <Route path="groups/:groupId/dashboard" element={<WorkspaceDashboard />} />
                 <Route path="groups/:groupId/trackers" element={<GroupTrackersPage />} />
                 <Route path="groups/:groupId/settings" element={<WorkspaceSettings />} />
                 <Route path="invitations" element={<InvitationPage />} />

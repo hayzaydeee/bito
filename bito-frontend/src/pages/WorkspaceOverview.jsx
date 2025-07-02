@@ -65,6 +65,9 @@ const WorkspaceOverview = () => {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showAddHabitModal, setShowAddHabitModal] = useState(false);
   const [showMembersModal, setShowMembersModal] = useState(false);
+  
+  // Notification states
+  const [notification, setNotification] = useState(null);
 
   // Form states
   const [inviteForm, setInviteForm] = useState({
@@ -90,6 +93,12 @@ const WorkspaceOverview = () => {
   // Modal UI states
   const [activeTab, setActiveTab] = useState('details');
   const [emojiCategory, setEmojiCategory] = useState('common');
+
+  // Show notification helper
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 4000); // Auto-hide after 4 seconds
+  };
 
   useEffect(() => {
     fetchGroupData();
@@ -164,11 +173,15 @@ const WorkspaceOverview = () => {
       if (response.success) {
         setShowInviteModal(false);
         setInviteForm({ email: '', role: 'member', message: '' });
+        // Show success notification
+        showNotification(`Invitation sent to ${inviteForm.email} successfully!`);
         // Refresh group data
         fetchGroupData();
       }
     } catch (error) {
       console.error('Error inviting member:', error);
+      // Show error notification
+      showNotification('Failed to send invitation. Please try again.', 'error');
     }
   };
 
@@ -193,11 +206,15 @@ const WorkspaceOverview = () => {
         });
         setActiveTab('details');
         setEmojiCategory('common');
+        // Show success notification
+        showNotification(`Group habit "${habitForm.name}" created successfully!`);
         // Refresh group data
         fetchGroupData();
       }
     } catch (error) {
       console.error('Error adding habit:', error);
+      // Show error notification
+      showNotification('Failed to create habit. Please try again.', 'error');
     }
   };
 
@@ -472,63 +489,369 @@ const WorkspaceOverview = () => {
       description: "Habits available for all group members to adopt",
       category: "collaboration",
       defaultProps: { w: 6, h: 4 },
-      component: () => (
-        <div className="h-full glass-card-minimal p-6 rounded-2xl flex flex-col">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="flex-1">
-              <h3 className="text-lg font-bold font-dmSerif text-[var(--color-text-primary)]">Group Habits</h3>
-              <p className="text-sm text-[var(--color-text-secondary)] font-outfit">{groupHabits.length} habits available</p>
+      component: () => {
+        const [showAdoptModal, setShowAdoptModal] = useState(false);
+        const [selectedHabit, setSelectedHabit] = useState(null);
+        const [privacySettings, setPrivacySettings] = useState({
+          shareProgress: 'progress-only',
+          allowInteraction: true,
+          shareInActivity: true
+        });
+
+        const handleAdoptHabit = async () => {
+          try {
+            if (!selectedHabit) return;
+            
+            console.log('Adopting habit:', selectedHabit);
+            console.log('Privacy settings:', privacySettings);
+            
+            // Pass the privacy settings to the API
+            await groupsAPI.adoptWorkspaceHabit(groupId, selectedHabit._id, {
+              personalSettings: {
+                ...privacySettings
+              }
+            });
+            
+            // Refresh the group data to update the adoption status
+            await fetchGroupData();
+            
+            // Close modal and reset settings
+            setShowAdoptModal(false);
+            setSelectedHabit(null);
+            setPrivacySettings({
+              shareProgress: 'progress-only',
+              allowInteraction: true,
+              shareInActivity: true
+            });
+            
+            // Show success notification
+            showNotification(`Successfully adopted "${selectedHabit.name}" habit!`);
+          } catch (error) {
+            console.error('Error adopting habit:', error);
+            // Show error notification
+            showNotification('Failed to adopt habit. You may have already adopted it.', 'error');
+          }
+        };
+        
+        const openAdoptModal = (habit) => {
+          setSelectedHabit(habit);
+          setShowAdoptModal(true);
+        };
+
+        // Check if a habit is already adopted by the current user
+        const isHabitAdopted = (habit) => {
+          if (!habit.adoptedBy || !Array.isArray(habit.adoptedBy) || habit.adoptedBy.length === 0 || !user) {
+            return false;
+          }
+
+          return habit.adoptedBy.some(adoptedUser => {
+            // Extract user ID from the adoptedUser object
+            const adoptedUserId = adoptedUser?._id || 
+                                 (adoptedUser?.userId && (typeof adoptedUser.userId === 'object' ? adoptedUser.userId._id : adoptedUser.userId)) || 
+                                 adoptedUser;
+                                 
+            // Extract current user ID
+            const currentUserId = user?._id || user?.id;
+            
+            // Compare as strings to avoid reference comparison issues
+            return adoptedUserId && currentUserId && 
+                   adoptedUserId.toString() === currentUserId.toString();
+          });
+        };
+
+        return (
+          <div className="h-full glass-card-minimal p-6 rounded-2xl flex flex-col">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="flex-1">
+                <h3 className="text-lg font-bold font-dmSerif text-[var(--color-text-primary)]">Group Habits</h3>
+                <p className="text-sm text-[var(--color-text-secondary)] font-outfit">{groupHabits.length} habits available</p>
+              </div>
+              {canManageGroup && (
+                <button 
+                  onClick={() => setShowAddHabitModal(true)}
+                  size="2"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg text-sm transition-all duration-200 font-outfit"
+                >
+                  <PlusIcon className="w-4 h-4" />
+                  Add Habit
+                </button>
+              )}
             </div>
-            {canManageGroup && (
-              <button 
-                onClick={() => setShowAddHabitModal(true)}
-                size="2"
-                className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg text-sm transition-all duration-200 font-outfit"
-              >
-                <PlusIcon className="w-4 h-4" />
-                Add Habit
-              </button>
-            )}
-          </div>
-          
-          <div className="flex-1 space-y-4 overflow-y-auto">
-            {groupHabits.length > 0 ? (
-              groupHabits.map((habit) => (
-                <div key={`habit-${habit._id}`} className="p-4 rounded-lg bg-[var(--color-surface-primary)] border border-[var(--color-border-primary)]/10">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-[var(--color-text-primary)] font-outfit">
-                        {habit.name}
-                      </h4>
-                      <p className="text-sm text-[var(--color-text-secondary)] font-outfit mt-1">
-                        {habit.description}
-                      </p>
-                      {habit.settings?.defaultTarget && (
-                        <p className="text-xs text-[var(--color-text-tertiary)] font-outfit mt-2">
-                          Default: {habit.settings.defaultTarget.value} {habit.settings.defaultTarget.unit}
-                        </p>
-                      )}
+            
+            <div className="flex-1 space-y-4 overflow-y-auto">
+              {groupHabits.length > 0 ? (
+                groupHabits.map((habit) => {
+                  const isAdopted = isHabitAdopted(habit);
+                  
+                  // Debug logging to help troubleshoot adoption status
+                  console.log(`Habit: ${habit.name}, Adopted: ${isAdopted}`, {
+                    habitId: habit._id,
+                    adoptedBy: habit.adoptedBy,
+                    currentUser: user?._id || user?.id
+                  });
+                  
+                  return (
+                    <div 
+                      key={`habit-${habit._id}`} 
+                      className={`p-4 rounded-lg border transition-all duration-200 cursor-pointer hover:shadow-sm ${
+                        isAdopted 
+                          ? 'bg-[var(--color-success)]/5 border-[var(--color-success)]/20' 
+                          : 'bg-[var(--color-surface-primary)] border-[var(--color-border-primary)]/10 hover:border-[var(--color-brand-500)]/30'
+                      }`}
+                      onClick={() => !isAdopted && openAdoptModal(habit)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h4 className="font-semibold text-[var(--color-text-primary)] font-outfit">
+                              {habit.name}
+                            </h4>
+                            {isAdopted && (
+                              <CheckCircledIcon className="w-4 h-4 text-[var(--color-success)]" />
+                            )}
+                          </div>
+                          <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
+                            {habit.description}
+                          </p>
+                          {habit.settings?.defaultTarget && (
+                            <p className="text-xs text-[var(--color-text-tertiary)] font-outfit mt-2">
+                              Default: {habit.settings.defaultTarget.value} {habit.settings.defaultTarget.unit}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <span className="text-xs px-2 py-1 rounded-lg bg-purple-100 text-purple-600 font-outfit font-medium">
+                            {habit.adoptionCount || 0} members
+                          </span>
+                          {isAdopted ? (
+                            <div className="flex flex-col gap-1">
+                              <span className="text-xs px-2 py-1 rounded-lg bg-[var(--color-success)]/10 text-[var(--color-success)] font-outfit font-medium">
+                                Adopted
+                              </span>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/app/settings/habit-privacy/${habit._id}`);
+                                }}
+                                className="text-xs px-2 py-1 rounded-lg bg-gray-100 text-gray-600 font-outfit font-medium flex items-center gap-1"
+                              >
+                                <GearIcon className="w-3 h-3" />
+                                Privacy
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-xs px-2 py-1 rounded-lg bg-[var(--color-brand-500)]/10 text-[var(--color-brand-500)] font-outfit font-medium">
+                              Click to adopt
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <span className="text-xs px-2 py-1 rounded-lg bg-purple-100 text-purple-600 font-outfit font-medium">
-                      {habit.adoptionCount || 0} members
-                    </span>
+                  );
+                })
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <TargetIcon className="w-12 h-12 text-[var(--color-text-tertiary)] mb-3" />
+                  <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
+                    No group habits yet
+                  </p>
+                  <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">
+                    {canManageGroup ? 'Add the first habit to get started' : 'Admins can add habits for the group'}
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            {/* Adoption Modal with Privacy Settings */}
+            {showAdoptModal && selectedHabit && (
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                <div className="bg-[var(--color-surface-elevated)] max-w-md w-full rounded-2xl p-6 animate-fade-in">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-dmSerif font-bold text-[var(--color-text-primary)]">
+                      Adopt "{selectedHabit.name}"
+                    </h3>
+                    <button 
+                      onClick={() => setShowAdoptModal(false)}
+                      className="p-1 rounded-lg hover:bg-[var(--color-surface-hover)] text-[var(--color-text-tertiary)]"
+                    >
+                      <Cross2Icon className="w-5 h-5" />
+                    </button>
+                  </div>
+                  
+                  <p className="text-sm text-[var(--color-text-secondary)] font-outfit mb-6">
+                    Choose privacy settings for this habit to control what's shared with your group.
+                  </p>
+                  
+                  <div className="space-y-6">
+                    {/* Share Progress Setting */}
+                    <div>
+                      <h4 className="text-sm font-dmSerif font-semibold text-[var(--color-text-primary)] mb-3">
+                        Share Progress Level
+                      </h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div 
+                          className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                            privacySettings.shareProgress === 'full' 
+                              ? 'bg-[var(--color-brand-500)]/10 border-[var(--color-brand-500)]' 
+                              : 'border-[var(--color-border-primary)] hover:bg-[var(--color-surface-hover)]'
+                          }`}
+                          onClick={() => setPrivacySettings({...privacySettings, shareProgress: 'full'})}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <h5 className="text-sm font-dmSerif font-semibold text-[var(--color-text-primary)]">
+                              Full Details
+                            </h5>
+                            {privacySettings.shareProgress === 'full' && (
+                              <CheckCircledIcon className="w-4 h-4 text-[var(--color-brand-500)]" />
+                            )}
+                          </div>
+                          <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
+                            Show complete habit history and all stats to group members
+                          </p>
+                        </div>
+                        <div 
+                          className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                            privacySettings.shareProgress === 'progress-only' 
+                              ? 'bg-[var(--color-brand-500)]/10 border-[var(--color-brand-500)]' 
+                              : 'border-[var(--color-border-primary)] hover:bg-[var(--color-surface-hover)]'
+                          }`}
+                          onClick={() => setPrivacySettings({...privacySettings, shareProgress: 'progress-only'})}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <h5 className="text-sm font-dmSerif font-semibold text-[var(--color-text-primary)]">
+                              Progress Only
+                            </h5>
+                            {privacySettings.shareProgress === 'progress-only' && (
+                              <CheckCircledIcon className="w-4 h-4 text-[var(--color-brand-500)]" />
+                            )}
+                          </div>
+                          <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
+                            Show completion statistics but hide specific details
+                          </p>
+                        </div>
+                        <div 
+                          className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                            privacySettings.shareProgress === 'streaks-only' 
+                              ? 'bg-[var(--color-brand-500)]/10 border-[var(--color-brand-500)]' 
+                              : 'border-[var(--color-border-primary)] hover:bg-[var(--color-surface-hover)]'
+                          }`}
+                          onClick={() => setPrivacySettings({...privacySettings, shareProgress: 'streaks-only'})}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <h5 className="text-sm font-dmSerif font-semibold text-[var(--color-text-primary)]">
+                              Streaks Only
+                            </h5>
+                            {privacySettings.shareProgress === 'streaks-only' && (
+                              <CheckCircledIcon className="w-4 h-4 text-[var(--color-brand-500)]" />
+                            )}
+                          </div>
+                          <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
+                            Only show streak counts, hide other details
+                          </p>
+                        </div>
+                        <div 
+                          className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                            privacySettings.shareProgress === 'private' 
+                              ? 'bg-[var(--color-brand-500)]/10 border-[var(--color-brand-500)]' 
+                              : 'border-[var(--color-border-primary)] hover:bg-[var(--color-surface-hover)]'
+                          }`}
+                          onClick={() => setPrivacySettings({...privacySettings, shareProgress: 'private'})}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <h5 className="text-sm font-dmSerif font-semibold text-[var(--color-text-primary)]">
+                              Private
+                            </h5>
+                            {privacySettings.shareProgress === 'private' && (
+                              <CheckCircledIcon className="w-4 h-4 text-[var(--color-brand-500)]" />
+                            )}
+                          </div>
+                          <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
+                            Keep all progress private from group members
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Allow Interaction Toggle */}
+                    <div className="flex items-center justify-between p-4 border border-[var(--color-border-primary)] rounded-lg">
+                      <div>
+                        <h4 className="text-sm font-dmSerif font-semibold text-[var(--color-text-primary)]">
+                          Allow Encouragements
+                        </h4>
+                        <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
+                          Let group members send you encouragements
+                        </p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={privacySettings.allowInteraction}
+                          onChange={(e) => setPrivacySettings({...privacySettings, allowInteraction: e.target.checked})}
+                          className="sr-only"
+                        />
+                        <div className={`w-11 h-6 rounded-full transition-colors ${
+                          privacySettings.allowInteraction 
+                            ? 'bg-[var(--color-brand-500)]' 
+                            : 'bg-gray-300'
+                        }`}>
+                          <div className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${
+                            privacySettings.allowInteraction ? 'translate-x-5' : 'translate-x-0'
+                          } mt-0.5 ml-0.5`} />
+                        </div>
+                      </label>
+                    </div>
+                    
+                    {/* Activity Feed Toggle */}
+                    <div className="flex items-center justify-between p-4 border border-[var(--color-border-primary)] rounded-lg">
+                      <div>
+                        <h4 className="text-sm font-dmSerif font-semibold text-[var(--color-text-primary)]">
+                          Show in Activity Feed
+                        </h4>
+                        <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
+                          Share completions in the group activity feed
+                        </p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={privacySettings.shareInActivity}
+                          onChange={(e) => setPrivacySettings({...privacySettings, shareInActivity: e.target.checked})}
+                          className="sr-only"
+                        />
+                        <div className={`w-11 h-6 rounded-full transition-colors ${
+                          privacySettings.shareInActivity 
+                            ? 'bg-[var(--color-brand-500)]' 
+                            : 'bg-gray-300'
+                        }`}>
+                          <div className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${
+                            privacySettings.shareInActivity ? 'translate-x-5' : 'translate-x-0'
+                          } mt-0.5 ml-0.5`} />
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 mt-6 pt-4 border-t border-[var(--color-border-primary)]">
+                    <button
+                      onClick={() => setShowAdoptModal(false)}
+                      className="flex-1 h-10 bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] rounded-lg font-medium font-outfit"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleAdoptHabit}
+                      className="flex-1 h-10 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg font-semibold font-outfit flex items-center justify-center gap-2"
+                    >
+                      <CheckIcon className="w-4 h-4" />
+                      Adopt Habit
+                    </button>
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <TargetIcon className="w-12 h-12 text-[var(--color-text-tertiary)] mb-3" />
-                <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
-                  No group habits yet
-                </p>
-                <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">
-                  {canManageGroup ? 'Add the first habit to get started' : 'Admins can add habits for the group'}
-                </p>
               </div>
             )}
           </div>
-        </div>
-      )
+        );
+      }
     },
 
     'shared-habits-widget': {
@@ -742,28 +1065,44 @@ const WorkspaceOverview = () => {
   // Default widget layouts (excluding header)
   const defaultLayouts = {
     lg: [
-      { i: 'team-stats-widget', x: 0, y: 0, w: 7, h: 7 },
-      { i: 'recent-activity-widget', x: 7, y: 0, w: 5, h: 5 },
-      { i: 'group-streaks-widget', x: 1, y: 7, w: 10, h: 7 },
-      { i: 'group-habits-widget', x: 0, y: 14, w: 4, h: 5 },
-      { i: 'shared-habits-widget', x: 4, y: 14, w: 4, h: 5 },
-      { i: 'team-members-widget', x: 8, y: 14, w: 4, h: 5 }
+      { w: 7, h: 7, x: 0, y: 0, i: "team-stats-widget", moved: false, static: false },
+      { w: 10, h: 7, x: 1, y: 7, i: "group-streaks-widget", moved: false, static: false },
+      { w: 5, h: 5, x: 7, y: 0, i: "recent-activity-widget", moved: false, static: false },
+      { w: 4, h: 5, x: 0, y: 14, i: "group-habits-widget", moved: false, static: false },
+      { w: 4, h: 5, x: 4, y: 14, i: "shared-habits-widget", moved: false, static: false },
+      { w: 4, h: 5, x: 8, y: 14, i: "team-members-widget", moved: false, static: false }
     ],
     md: [
-      { i: 'team-stats-widget', x: 0, y: 0, w: 4, h: 4 },
-      { i: 'recent-activity-widget', x: 4, y: 0, w: 4, h: 4 },
-      { i: 'group-habits-widget', x: 0, y: 4, w: 4, h: 5 },
-      { i: 'team-members-widget', x: 4, y: 4, w: 4, h: 5 },
-      { i: 'shared-habits-widget', x: 0, y: 9, w: 4, h: 5 },
-      { i: 'group-streaks-widget', x: 0, y: 14, w: 6, h: 4 }
+      { i: "team-stats-widget", x: 0, y: 0, w: 4, h: 4 },
+      { i: "recent-activity-widget", x: 4, y: 0, w: 4, h: 4 },
+      { i: "group-habits-widget", x: 0, y: 4, w: 4, h: 5 },
+      { i: "team-members-widget", x: 4, y: 4, w: 4, h: 5 },
+      { i: "shared-habits-widget", x: 0, y: 9, w: 4, h: 5 },
+      { i: "group-streaks-widget", x: 0, y: 14, w: 6, h: 4 }
     ],
     sm: [
-      { i: 'team-stats-widget', x: 0, y: 0, w: 4, h: 4 },
-      { i: 'recent-activity-widget', x: 0, y: 4, w: 4, h: 5 },
-      { i: 'group-habits-widget', x: 0, y: 9, w: 4, h: 5 },
-      { i: 'shared-habits-widget', x: 0, y: 14, w: 4, h: 5 },
-      { i: 'team-members-widget', x: 0, y: 19, w: 4, h: 5 },
-      { i: 'group-streaks-widget', x: 0, y: 24, w: 6, h: 4 }
+      { w: 4, h: 4, x: 0, y: 0, i: "team-stats-widget", moved: false, static: false },
+      { w: 6, h: 4, x: 0, y: 24, i: "group-streaks-widget", moved: false, static: false },
+      { w: 4, h: 5, x: 0, y: 4, i: "recent-activity-widget", moved: false, static: false },
+      { w: 4, h: 5, x: 0, y: 9, i: "group-habits-widget", moved: false, static: false },
+      { w: 4, h: 5, x: 0, y: 14, i: "shared-habits-widget", moved: false, static: false },
+      { w: 4, h: 5, x: 0, y: 19, i: "team-members-widget", moved: false, static: false }
+    ],
+    xs: [
+      { w: 4, h: 4, x: 0, y: 0, i: "team-stats-widget", moved: false, static: false },
+      { w: 4, h: 4, x: 0, y: 4, i: "recent-activity-widget", moved: false, static: false },
+      { w: 4, h: 5, x: 0, y: 8, i: "group-habits-widget", moved: false, static: false },
+      { w: 4, h: 5, x: 0, y: 13, i: "shared-habits-widget", moved: false, static: false },
+      { w: 4, h: 5, x: 0, y: 18, i: "team-members-widget", moved: false, static: false },
+      { w: 4, h: 4, x: 0, y: 23, i: "group-streaks-widget", moved: false, static: false }
+    ],
+    xxs: [
+      { w: 2, h: 3, x: 0, y: 0, i: "team-stats-widget", moved: false, static: false },
+      { w: 2, h: 3, x: 0, y: 3, i: "recent-activity-widget", moved: false, static: false },
+      { w: 2, h: 4, x: 0, y: 6, i: "group-habits-widget", moved: false, static: false },
+      { w: 2, h: 4, x: 0, y: 10, i: "shared-habits-widget", moved: false, static: false },
+      { w: 2, h: 4, x: 0, y: 14, i: "team-members-widget", moved: false, static: false },
+      { w: 2, h: 3, x: 0, y: 18, i: "group-streaks-widget", moved: false, static: false }
     ]
   };
 
@@ -822,6 +1161,30 @@ const WorkspaceOverview = () => {
 
   return (
     <div className="min-h-screen page-container p-6">
+      {/* Success/Error Notification */}
+      {notification && (
+        <div className={`fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 max-w-sm p-4 rounded-lg shadow-lg border transition-all duration-300 ${
+          notification.type === 'success' 
+            ? 'bg-green-50 border-green-200 text-green-800' 
+            : 'bg-red-50 border-red-200 text-red-800'
+        }`}>
+          <div className="flex items-center gap-3">
+            {notification.type === 'success' ? (
+              <CheckCircledIcon className="w-5 h-5 text-green-600" />
+            ) : (
+              <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
+            )}
+            <p className="text-sm font-medium font-outfit">{notification.message}</p>
+            <button
+              onClick={() => setNotification(null)}
+              className="ml-auto p-1 hover:bg-black/5 rounded"
+            >
+              <Cross2Icon className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto">
         {/* Group Header - Outside of the widget grid */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">

@@ -62,25 +62,27 @@ const GroupChallengesWidget = ({
         </div>
       ) : (
         <div className="space-y-4 max-h-80 overflow-y-auto">
-          {challenges.slice(0, 4).map((challenge) => (
+          {challenges.filter(challenge => challenge && challenge._id).slice(0, 4).map((challenge, index) => (
             <div
-              key={challenge._id}
+              key={challenge._id || `challenge-${index}`}
               className="p-4 rounded-xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-primary)] hover:bg-[var(--color-surface-hover)] transition-all"
             >
               {/* Header */}
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <h4 className="text-sm font-bold text-[var(--color-text-primary)] font-dmSerif mb-1">
-                    {challenge.title}
+                    {challenge.title || 'Untitled Challenge'}
                   </h4>
                   <div className="flex items-center gap-2">
                     <span className={`px-2 py-1 rounded-lg text-xs font-medium ${getChallengeStatusColor(challenge.status)}`}>
-                      {challenge.status}
+                      {challenge.status || 'pending'}
                     </span>
-                    <div className="flex items-center gap-1 text-xs text-[var(--color-text-tertiary)] font-outfit">
-                      <CalendarIcon className="w-3 h-3" />
-                      {formatDate(challenge.startDate)} - {formatDate(challenge.endDate)}
-                    </div>
+                    {challenge.startDate && challenge.endDate && (
+                      <div className="flex items-center gap-1 text-xs text-[var(--color-text-tertiary)] font-outfit">
+                        <CalendarIcon className="w-3 h-3" />
+                        {formatDate(challenge.startDate)} - {formatDate(challenge.endDate)}
+                      </div>
+                    )}
                   </div>
                 </div>
                 
@@ -95,9 +97,11 @@ const GroupChallengesWidget = ({
               </div>
 
               {/* Description */}
-              <p className="text-xs text-[var(--color-text-secondary)] font-outfit mb-3 line-clamp-2">
-                {challenge.description}
-              </p>
+              {challenge.description && (
+                <p className="text-xs text-[var(--color-text-secondary)] font-outfit mb-3 line-clamp-2">
+                  {challenge.description}
+                </p>
+              )}
 
               {/* Progress */}
               <div className="mb-3">

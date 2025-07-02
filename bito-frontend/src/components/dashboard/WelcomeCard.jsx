@@ -227,16 +227,8 @@ const WelcomeCard = memo(({ userName = "User" }) => {
               Ready to start your journey?
             </h3>
             <p className="text-sm text-[var(--color-text-secondary)] font-outfit mb-4">
-              You haven't added any habits yet. Click "Add Habit" to get
-              started!
+              You haven't added any habits yet. Add one using one of the widgets below!
             </p>
-            <button
-              onClick={handleAddHabit}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg transition-all duration-200 hover:scale-105 font-outfit text-sm"
-            >
-              <PlusIcon className="w-4 h-4" />
-              Add Your First Habit
-            </button>
           </div>
         ) : (
           // Normal progress display when habits exist
