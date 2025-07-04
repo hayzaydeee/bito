@@ -88,7 +88,11 @@ class EmailService {
       throw new Error('Email service not initialized');
     }
 
-    const inviteUrl = `${process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173'}/invite/${invitation.token}`;
+    // Get base URL and normalize to remove www
+    let baseUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173';
+    baseUrl = baseUrl.replace('://www.', '://'); // Remove www if present
+    
+    const inviteUrl = `${baseUrl}/invite/${invitation.token}`;
     
     const mailOptions = {
       from: process.env.EMAIL_FROM || '"Bito Team" <noreply@bito.app>',
