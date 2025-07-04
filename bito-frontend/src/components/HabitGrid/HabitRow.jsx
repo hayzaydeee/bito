@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import { HabitCheckbox } from './HabitCheckbox.jsx';
 import { IconButton } from '@radix-ui/themes';
 import { Pencil1Icon } from '@radix-ui/react-icons';
-import { useHabits } from '../../contexts/HabitContext';
+import { useHabits } from '../../contexts/HabitContext.jsx';
 
 export const HabitRow = memo(({ 
   habit, 
