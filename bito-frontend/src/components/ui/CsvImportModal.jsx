@@ -94,7 +94,7 @@ const CsvImportModal = ({ isOpen, onClose, onImport }) => {
 
     setImportStep('importing');
     try {
-      console.log('🚀 Starting CSV import to backend...');
+
       
       // Use the new backend integration
       const results = await executeImportWithBackend(importPreview, habitContext);
@@ -107,7 +107,7 @@ const CsvImportModal = ({ isOpen, onClose, onImport }) => {
         onImport(results);
       }
       
-      console.log('✅ CSV Import completed successfully:', results);    } catch (err) {
+    } catch (err) {
       console.error('❌ CSV Import failed:', err);
       setError(`Import failed: ${err.message}`);
       setImportStep('preview');

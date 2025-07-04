@@ -412,6 +412,7 @@ const WidgetRenderer = ({
         <Suspense fallback={<WidgetSkeleton title="Habit Streaks" />}>
           <HabitStreakChartWidget 
             timeRange="30d"
+            onAddHabit={onAddHabit}
             {...commonProps}
           />
         </Suspense>

@@ -29,7 +29,7 @@ const GroupSelection = () => {
   const [newGroup, setNewGroup] = useState({
     name: "",
     description: "",
-    type: "team",
+    type: "team", // Using valid type from backend enum
     isPublic: false,
     color: "#4f46e5", // Added default color for the new modal
   });
@@ -58,7 +58,7 @@ const GroupSelection = () => {
       const groupData = {
         name: formData.name,
         description: formData.description,
-        type: formData.type || "team",
+        type: formData.type || "team", // Using a valid type from backend enum
         isPublic: !formData.isPrivate, // Convert isPrivate to isPublic
         color: formData.color
       };

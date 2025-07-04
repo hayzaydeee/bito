@@ -501,14 +501,19 @@ const BaseGridContainer = ({
                 .filter(([type, config]) => !config.category || config.category === mode)
                 .map(([type, config]) => {
                   const isActive = activeWidgets.includes(type);
+                  const isComingSoon = type === 'group-challenges';
+                  const isDisabled = isActive || isComingSoon;
+                  
                   return (
                     <button
                       key={type}
-                      onClick={() => addWidget(type)}
-                      disabled={isActive}
+                      onClick={() => !isComingSoon && addWidget(type)}
+                      disabled={isDisabled}
                       className={`p-4 text-left border rounded-lg transition-all duration-200 group ${
                         isActive
                           ? 'border-[var(--color-success)] bg-[var(--color-success)]/10 cursor-not-allowed opacity-60'
+                          : isComingSoon
+                          ? 'border-[var(--color-warning)] bg-[var(--color-warning)]/10 cursor-not-allowed opacity-75'
                           : 'border-[var(--color-border-primary)] hover:border-[var(--color-brand-400)] hover:bg-[var(--color-surface-hover)]'
                       }`}
                     >
@@ -517,7 +522,11 @@ const BaseGridContainer = ({
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <h4 className={`font-medium transition-colors ${
-                              isActive ? 'text-[var(--color-success)]' : 'text-[var(--color-text-primary)] group-hover:text-[var(--color-brand-500)]'
+                              isActive 
+                                ? 'text-[var(--color-success)]' 
+                                : isComingSoon
+                                ? 'text-[var(--color-warning)]'
+                                : 'text-[var(--color-text-primary)] group-hover:text-[var(--color-brand-500)]'
                             }`}>
                               {config.title}
                             </h4>
@@ -526,9 +535,14 @@ const BaseGridContainer = ({
                                 Active
                               </span>
                             )}
+                            {isComingSoon && (
+                              <span className="text-xs bg-[var(--color-warning)] text-white px-2 py-1 rounded-full">
+                                Coming Soon
+                              </span>
+                            )}
                           </div>
                           <p className="text-sm text-[var(--color-text-tertiary)] mt-1">
-                            {config.description}
+                            {isComingSoon ? 'Group challenges feature is coming soon!' : config.description}
                           </p>
                         </div>
                       </div>

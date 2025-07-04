@@ -49,45 +49,11 @@ const GroupStreaksChart = ({
   timeRange = 'week',
   className = '' 
 }) => {
-  console.log('GroupStreaksChart render:', { 
-    membersCount: members.length, 
-    dataCount: completionData.length,
-    completionSample: completionData.slice(0, 2),
-    membersSample: members.slice(0, 2).map(m => ({
-      id: m.userId?._id || m.userId || m.id,
-      name: m.name,
-      userIdType: m.userId ? typeof m.userId : 'undefined',
-      key: getMemberKey(m, members.indexOf(m))
-    }))
-  });
+
 
   // Generate chart data for the week using real completion data
   const chartData = useMemo(() => {
-    console.log('GroupStreaksChart - Starting chart data generation with:', {
-      membersCount: members.length,
-      completionDataCount: completionData.length
-    });
-
     // For debugging: Dump first few entries of each array
-    if (members.length > 0) {
-      console.log('GroupStreaksChart - Members sample:', 
-        members.slice(0, 3).map(m => ({
-          id: m.id || m._id,
-          userId: m.userId ? (typeof m.userId === 'object' ? m.userId._id : m.userId) : 'none',
-          name: m.name || (m.userId && m.userId.name) || 'unnamed'
-        }))
-      );
-    }
-    
-    if (completionData.length > 0) {
-      console.log('GroupStreaksChart - Completion data sample:', 
-        completionData.slice(0, 3).map(entry => ({
-          userId: entry.userId ? (typeof entry.userId === 'object' ? entry.userId._id : entry.userId) : 'none',
-          date: entry.date,
-          habitId: entry.habitId
-        }))
-      );
-    }
 
     if (!members.length) return [];
 
@@ -138,11 +104,7 @@ const GroupStreaksChart = ({
       });
     });
     
-    console.log('GroupStreaksChart - Created member map with keys:', 
-      Array.from(memberMap.keys()).slice(0, 5));
 
-    console.log('GroupStreaksChart - Created member map with keys:', 
-      Array.from(memberMap.keys()).slice(0, 5));
 
     // Set up weekly data structure
     const today = new Date();
@@ -190,8 +152,6 @@ const GroupStreaksChart = ({
                 (entry.userId ? entry.userId.toString() : 'none')
       }));
       
-      console.log('Completion data userIds sample:', sampleUserIds);
-      
       // Process each completion entry
       completionData.forEach(entry => {
         // Skip if no date or not completed
@@ -203,7 +163,6 @@ const GroupStreaksChart = ({
         
         // Skip if not in current week
         if (!dayData) {
-          console.log(`Date not in current week: ${dateKey}`);
           return;
         }
         
@@ -262,14 +221,11 @@ const GroupStreaksChart = ({
           }
         }
         
-        if (!matched && matchCount < 3) {
-          console.log('No match found for entry:', entry);
-        }
+
       });
     }
     
-    console.log(`GroupStreaksChart - Final processing: matched ${matchCount}/${completionData.length} completion entries`);
-    console.log('GroupStreaksChart - Final chart data structure:', weekData);
+
     
     
 

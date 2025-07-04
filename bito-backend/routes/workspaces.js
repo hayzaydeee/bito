@@ -13,6 +13,7 @@ const HabitEntry = require('../models/HabitEntry');
 const Activity = require('../models/Activity');
 const User = require('../models/User');
 const Invitation = require('../models/Invitation');
+const Challenge = require('../models/Challenge');
 const emailService = require('../services/emailService');
 
 // Debug middleware to log all requests to this router
@@ -2616,51 +2617,52 @@ router.get('/:workspaceId/challenges', authenticateJWT, async (req, res) => {
       });
     }
 
-    // For now, return mock challenges data
-    // In the future, this would be connected to a Challenge model
-    const challenges = [
-      {
-        id: '1',
+    // Build query based on filters
+    const { status } = req.query;
+    const query = { workspaceId };
+    if (status) {
+      query.status = status;
+    }
+
+    // Find challenges from database
+    let challenges = await Challenge.find(query)
+      .populate('createdBy', 'name email')
+      .populate('habitIds', 'name icon')
+      .sort({ createdAt: -1 });
+    
+    // If no challenges exist yet, seed with default challenge
+    if (challenges.length === 0) {
+      // Create a default challenge for new workspaces
+      const defaultChallenge = new Challenge({
+        workspaceId,
         title: '7-Day Consistency Challenge',
         description: 'Complete all your habits for 7 consecutive days',
         type: 'streak',
         target: 7,
-        startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        status: 'active',
-        participants: workspace.members.length,
-        reward: '🏆 Consistency Champion Badge'
-      },
-      {
-        id: '2',
-        title: 'Team Goal Crusher',
-        description: 'Collectively complete 100 habit entries this week',
-        type: 'collective',
-        target: 100,
-        current: Math.floor(Math.random() * 80) + 20,
-        startDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-        endDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
-        status: 'active',
-        participants: workspace.members.length,
-        reward: '🎯 Team Achievement Badge'
-      },
-      {
-        id: '3',
-        title: 'Perfect Week',
-        description: 'Achieve 100% completion rate for one week',
-        type: 'completion',
-        target: 100,
-        startDate: new Date(Date.now()),
+        startDate: new Date(),
         endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         status: 'upcoming',
-        participants: 0,
-        reward: '⭐ Perfect Week Star'
-      }
-    ];
+        reward: '🏆 Consistency Champion Badge',
+        createdBy: req.user.id,
+      });
+      
+      await defaultChallenge.save();
+      challenges = [defaultChallenge];
+    }
+
+    // Format response with participant counts
+    const formattedChallenges = challenges.map(challenge => {
+      const { _id, ...rest } = challenge.toObject();
+      return {
+        id: _id,
+        ...rest,
+        participantsCount: challenge.participants ? challenge.participants.length : 0
+      };
+    });
 
     res.json({
       success: true,
-      challenges
+      challenges: formattedChallenges
     });
 
   } catch (error) {
@@ -2715,25 +2717,47 @@ router.post('/:workspaceId/challenges', authenticateJWT, [
       });
     }
 
-    // For now, return a mock created challenge
-    // In the future, this would save to a Challenge model
-    const newChallenge = {
-      id: Date.now().toString(),
+    // Create a new challenge in the database
+    const { reward, habitIds, startDate, endDate } = req.body;
+    
+    const newChallenge = new Challenge({
+      workspaceId,
       title,
       description,
       type,
       target,
-      startDate: new Date(),
-      endDate: new Date(Date.now() + duration * 24 * 60 * 60 * 1000),
-      status: 'active',
-      participants: 1,
+      startDate: startDate || new Date(),
+      endDate: endDate || new Date(Date.now() + duration * 24 * 60 * 60 * 1000),
+      status: 'upcoming',
       createdBy: req.user.id,
-      reward: '🎉 Challenge Completion Badge'
-    };
+      reward: reward || '🎉 Challenge Completion Badge',
+      habitIds: habitIds || [],
+      participants: [{ userId: req.user.id }] // Creator joins by default
+    });
+    
+    await newChallenge.save();
+    
+    // Create an activity for this challenge creation
+    const activity = new Activity({
+      workspaceId,
+      userId: req.user.id,
+      type: 'challenge_created',
+      data: {
+        challengeId: newChallenge._id,
+        challengeName: newChallenge.title,
+        type: newChallenge.type
+      }
+    });
+    
+    await activity.save();
 
     res.status(201).json({
       success: true,
-      challenge: newChallenge
+      challenge: {
+        ...newChallenge.toObject(),
+        id: newChallenge._id,
+        participantsCount: 1
+      }
     });
 
   } catch (error) {
@@ -2741,6 +2765,143 @@ router.post('/:workspaceId/challenges', authenticateJWT, [
     res.status(500).json({
       success: false,
       error: 'Failed to create challenge',
+      details: error.message
+    });
+  }
+});
+
+// @route   POST /api/workspaces/:workspaceId/challenges/:challengeId/join
+// @desc    Join a workspace challenge
+// @access  Private
+router.post('/:workspaceId/challenges/:challengeId/join', authenticateJWT, async (req, res) => {
+  try {
+    const { workspaceId, challengeId } = req.params;
+    
+    // Verify workspace membership
+    const workspace = await Workspace.findById(workspaceId);
+    if (!workspace) {
+      return res.status(404).json({
+        success: false,
+        error: 'Workspace not found'
+      });
+    }
+
+    const isMember = workspace.members.some(member => 
+      member.userId.toString() === req.user.id && member.status === 'active'
+    );
+
+    if (!isMember) {
+      return res.status(403).json({
+        success: false,
+        error: 'Not authorized to access this workspace'
+      });
+    }
+    
+    // Find the challenge
+    const challenge = await Challenge.findOne({ _id: challengeId, workspaceId });
+    
+    if (!challenge) {
+      return res.status(404).json({
+        success: false,
+        error: 'Challenge not found'
+      });
+    }
+    
+    // Check if user has already joined
+    const alreadyJoined = challenge.participants.some(
+      participant => participant.userId.toString() === req.user.id
+    );
+    
+    if (alreadyJoined) {
+      return res.status(400).json({
+        success: false,
+        error: 'You have already joined this challenge'
+      });
+    }
+    
+    // Add user to participants
+    challenge.participants.push({
+      userId: req.user.id,
+      joinedAt: new Date(),
+      progress: 0,
+      completed: false
+    });
+    
+    await challenge.save();
+    
+    // Create an activity for joining the challenge
+    const activity = new Activity({
+      workspaceId,
+      userId: req.user.id,
+      type: 'challenge_joined',
+      data: {
+        challengeId: challenge._id,
+        challengeName: challenge.title
+      }
+    });
+    
+    await activity.save();
+    
+    res.json({
+      success: true,
+      message: 'Successfully joined the challenge',
+      participantsCount: challenge.participants.length
+    });
+    
+  } catch (error) {
+    console.error('Error joining challenge:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to join challenge',
+      details: error.message
+    });
+  }
+});
+
+// @route   POST /api/workspaces/:workspaceId/challenges/:challengeId/leave
+// @desc    Leave a workspace challenge
+// @access  Private
+router.post('/:workspaceId/challenges/:challengeId/leave', authenticateJWT, async (req, res) => {
+  try {
+    const { workspaceId, challengeId } = req.params;
+    
+    // Find the challenge
+    const challenge = await Challenge.findOne({ _id: challengeId, workspaceId });
+    
+    if (!challenge) {
+      return res.status(404).json({
+        success: false,
+        error: 'Challenge not found'
+      });
+    }
+    
+    // Check if user is a participant
+    const participantIndex = challenge.participants.findIndex(
+      participant => participant.userId.toString() === req.user.id
+    );
+    
+    if (participantIndex === -1) {
+      return res.status(400).json({
+        success: false,
+        error: 'You are not a participant in this challenge'
+      });
+    }
+    
+    // Remove user from participants
+    challenge.participants.splice(participantIndex, 1);
+    await challenge.save();
+    
+    res.json({
+      success: true,
+      message: 'Successfully left the challenge',
+      participantsCount: challenge.participants.length
+    });
+    
+  } catch (error) {
+    console.error('Error leaving challenge:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to leave challenge',
       details: error.message
     });
   }

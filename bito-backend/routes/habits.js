@@ -2,6 +2,7 @@ const express = require('express');
 const Habit = require('../models/Habit');
 const HabitEntry = require('../models/HabitEntry');
 const { authenticateJWT } = require('../middleware/auth');
+const { processChallengeProgress } = require('../controllers/challengeController');
 const {
   validateHabitCreation,
   validateHabitUpdate,
@@ -307,10 +308,19 @@ router.post('/:id/check', [validateObjectId('id'), validateHabitEntry], async (r
       }
     );
 
+    // Process challenge progress if this is a completion
+    let challengeResult = null;
+    if (completed && habit.workspaceId) {
+      challengeResult = await processChallengeProgress(req.user._id, habit.workspaceId, habit._id);
+    }
+
     res.json({
       success: true,
       message: `Habit ${completed ? 'checked' : 'unchecked'} successfully`,
-      data: { entry }
+      data: { 
+        entry,
+        challengeProgress: challengeResult?.processed ? challengeResult.updates : null
+      }
     });
   } catch (error) {
     console.error('Habit check error:', error);

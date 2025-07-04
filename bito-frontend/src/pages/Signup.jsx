@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Flex, Text, Button } from '@radix-ui/themes';
-import { 
-  EnvelopeClosedIcon, 
-  LockClosedIcon, 
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { Flex, Text, Button } from "@radix-ui/themes";
+import {
+  EnvelopeClosedIcon,
+  LockClosedIcon,
   EyeOpenIcon,
   EyeNoneIcon,
   ArrowLeftIcon,
@@ -11,24 +11,31 @@ import {
   GitHubLogoIcon,
   PersonIcon,
   CheckIcon,
-  ExclamationTriangleIcon
-} from '@radix-ui/react-icons';
-import { useAuth } from '../contexts/AuthContext';
-import { oauthAPI } from '../services/api';
+  ExclamationTriangleIcon,
+} from "@radix-ui/react-icons";
+import { useAuth } from "../contexts/AuthContext";
+import { oauthAPI } from "../services/api";
 
 const Signup = () => {
   const navigate = useNavigate();
-  const { register, isAuthenticated, isLoading, error: authError, clearError, user } = useAuth();
+  const {
+    register,
+    isAuthenticated,
+    isLoading,
+    error: authError,
+    clearError,
+    user,
+  } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
 
   // Debug: log auth state and render tracking
@@ -38,104 +45,107 @@ const Signup = () => {
   // Form validation
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.firstName.trim()) {
-      newErrors.firstName = 'First name is required';
+      newErrors.firstName = "First name is required";
     } else if (formData.firstName.trim().length < 2) {
-      newErrors.firstName = 'First name must be at least 2 characters';
+      newErrors.firstName = "First name must be at least 2 characters";
     }
-    
+
     if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
+      newErrors.lastName = "Last name is required";
     } else if (formData.lastName.trim().length < 2) {
-      newErrors.lastName = 'Last name must be at least 2 characters';
+      newErrors.lastName = "Last name must be at least 2 characters";
     }
-    
+
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = "Please enter a valid email address";
     }
-    
+
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
     } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
+      newErrors.password = "Password must be at least 8 characters";
     } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      newErrors.password = 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
+      newErrors.password =
+        "Password must contain at least one uppercase letter, one lowercase letter, and one number";
     }
-    
+
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
+      newErrors.confirmPassword = "Please confirm your password";
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = "Passwords do not match";
     }
-    
+
     if (!acceptTerms) {
-      newErrors.terms = 'You must accept the terms and conditions';
+      newErrors.terms = "You must accept the terms and conditions";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
-    
+
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [field]: ''
+        [field]: "",
       }));
     }
   };
   const handleSignup = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     // Clear any previous auth errors
     clearError();
-    
+
     try {
       const result = await register(formData);
-      
+
       if (result.success) {
-        navigate('/app/dashboard');
+        navigate("/app/dashboard");
       } else {
         setErrors({ general: result.error });
       }
     } catch (error) {
-      console.error('Signup error:', error);
-      setErrors({ general: 'Failed to create account. Please try again.' });
+      console.error("Signup error:", error);
+      setErrors({ general: "Failed to create account. Please try again." });
     }
   };
 
   const handleSocialSignup = async (provider) => {
     try {
-      if (provider === 'google') {
+      if (provider === "google") {
         window.location.href = oauthAPI.getGoogleLoginUrl();
-      } else if (provider === 'github') {
+      } else if (provider === "github") {
         window.location.href = oauthAPI.getGithubLoginUrl();
       }
     } catch (error) {
-      setErrors({ general: `Failed to sign up with ${provider}. Please try again.` });
+      setErrors({
+        general: `Failed to sign up with ${provider}. Please try again.`,
+      });
     }
   };
   // Auto-focus first name field on mount
   useEffect(() => {
-    const firstNameInput = document.getElementById('firstName-input');
+    const firstNameInput = document.getElementById("firstName-input");
     if (firstNameInput) firstNameInput.focus();
   }, []);
 
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/app');
+      navigate("/app");
     }
   }, [isAuthenticated, navigate]);
 
@@ -153,14 +163,29 @@ const Signup = () => {
       {/* Enhanced Animated Background */}
       <div className="absolute inset-0">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-[var(--color-brand-500)]/20 to-[var(--color-brand-600)]/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-r from-purple-500/15 to-pink-500/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-3/4 left-1/2 w-64 h-64 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }} />
-        
+        <div
+          className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-r from-purple-500/15 to-pink-500/15 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "2s" }}
+        />
+        <div
+          className="absolute top-3/4 left-1/2 w-64 h-64 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "4s" }}
+        />
+
         {/* Floating particles */}
         <div className="absolute top-20 left-20 w-2 h-2 bg-[var(--color-brand-400)]/30 rounded-full animate-float" />
-        <div className="absolute top-40 right-32 w-3 h-3 bg-purple-400/20 rounded-full animate-float" style={{ animationDelay: '1s' }} />
-        <div className="absolute bottom-32 left-32 w-2 h-2 bg-blue-400/25 rounded-full animate-float" style={{ animationDelay: '3s' }} />
-        <div className="absolute bottom-20 right-20 w-1 h-1 bg-cyan-400/30 rounded-full animate-float" style={{ animationDelay: '5s' }} />
+        <div
+          className="absolute top-40 right-32 w-3 h-3 bg-purple-400/20 rounded-full animate-float"
+          style={{ animationDelay: "1s" }}
+        />
+        <div
+          className="absolute bottom-32 left-32 w-2 h-2 bg-blue-400/25 rounded-full animate-float"
+          style={{ animationDelay: "3s" }}
+        />
+        <div
+          className="absolute bottom-20 right-20 w-1 h-1 bg-cyan-400/30 rounded-full animate-float"
+          style={{ animationDelay: "5s" }}
+        />
       </div>
 
       {/* Enhanced Navigation */}
@@ -168,18 +193,20 @@ const Signup = () => {
         <Flex justify="between" align="center">
           <Button
             variant="ghost"
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             className="flex items-center gap-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-all duration-200 hover:scale-105"
           >
             <ArrowLeftIcon className="w-4 h-4" />
             Back to Home
           </Button>
-          
+
           <Flex align="center" gap="3" className="animate-fade-in">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center shadow-lg">
               <TargetIcon className="w-5 h-5 text-white" />
             </div>
-            <Text className="text-xl font-bold font-dmSerif gradient-text">Bito</Text>
+            <Text className="text-xl font-bold font-dmSerif gradient-text">
+              Bito
+            </Text>
           </Flex>
         </Flex>
       </nav>
@@ -188,21 +215,23 @@ const Signup = () => {
       <div className="relative z-10 flex items-center justify-center min-h-[calc(100vh-120px)] px-6">
         <div className="w-full max-w-md">
           {/* Enhanced Header */}
-          <div className="text-center mb-8">
-            <Text className="text-4xl font-bold font-dmSerif gradient-text mb-3">
-              Join Bito
+          <div className="text-center mb-2">
+            <Text className="text-3xl font-bold font-dmSerif gradient-text mb-3">
+              Welcome!
             </Text>
-            <Text className="text-lg text-[var(--color-text-secondary)]">
-              Start building better habits today
+          </div>
+          <div className="text-center mb-6">
+            <Text className="text-md text-[var(--color-text-secondary)] font-outfit">
+              Start your habit-building journey
             </Text>
-          </div>          {/* Error Message */}
+          </div>{" "}
+          {/* Error Message */}
           {(errors.general || authError) && (
             <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-400 animate-shake">
               <ExclamationTriangleIcon className="w-5 h-5 flex-shrink-0" />
               <Text className="text-sm">{errors.general || authError}</Text>
             </div>
           )}
-
           {/* Enhanced Signup Card */}
           <div className="bg-[var(--color-surface-primary)] border border-[var(--color-border-primary)]/20 rounded-2xl p-8 shadow-xl backdrop-blur-sm max-w-md mx-auto">
             <Flex direction="column" gap="6">
@@ -225,7 +254,7 @@ const Signup = () => {
               </Flex> */}
 
               {/* Divider */}
-              <div className="relative">
+              {/* <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-[var(--color-border-primary)]/30"></div>
                 </div>
@@ -234,7 +263,7 @@ const Signup = () => {
                     or
                   </span>
                 </div>
-              </div>
+              </div> */}
 
               {/* Signup Form */}
               <form onSubmit={handleSignup}>
@@ -242,16 +271,24 @@ const Signup = () => {
                   {/* Name Fields */}
                   <Flex gap="3">
                     <div className="flex-1">
-                      <Text as="label" size="2" weight="bold" htmlFor="firstName" className="font-outfit">
+                      <Text
+                        as="label"
+                        size="2"
+                        weight="bold"
+                        htmlFor="firstName"
+                        className="font-outfit"
+                      >
                         First Name
                       </Text>
                       <input
                         id="firstName-input"
                         type="text"
                         value={formData.firstName}
-                        onChange={(e) => handleInputChange('firstName', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("firstName", e.target.value)
+                        }
                         className={`w-full px-3 py-2 mt-1 border border-[var(--color-border-primary)] rounded-md bg-[var(--color-surface-primary)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)] focus:border-transparent font-outfit transition-all duration-200 ${
-                          errors.firstName ? 'border-red-500' : ''
+                          errors.firstName ? "border-red-500" : ""
                         }`}
                         placeholder="John"
                         disabled={isLoading}
@@ -264,15 +301,23 @@ const Signup = () => {
                       )}
                     </div>
                     <div className="flex-1">
-                      <Text as="label" size="2" weight="bold" htmlFor="lastName" className="font-outfit">
+                      <Text
+                        as="label"
+                        size="2"
+                        weight="bold"
+                        htmlFor="lastName"
+                        className="font-outfit"
+                      >
                         Last Name
                       </Text>
                       <input
                         type="text"
                         value={formData.lastName}
-                        onChange={(e) => handleInputChange('lastName', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("lastName", e.target.value)
+                        }
                         className={`w-full px-3 py-2 mt-1 border border-[var(--color-border-primary)] rounded-md bg-[var(--color-surface-primary)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)] focus:border-transparent font-outfit transition-all duration-200 ${
-                          errors.lastName ? 'border-red-500' : ''
+                          errors.lastName ? "border-red-500" : ""
                         }`}
                         placeholder="Doe"
                         disabled={isLoading}
@@ -288,15 +333,23 @@ const Signup = () => {
 
                   {/* Email Field */}
                   <div>
-                    <Text as="label" size="2" weight="bold" htmlFor="email" className="font-outfit">
+                    <Text
+                      as="label"
+                      size="2"
+                      weight="bold"
+                      htmlFor="email"
+                      className="font-outfit"
+                    >
                       Email Address
                     </Text>
                     <input
                       type="email"
                       value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("email", e.target.value)
+                      }
                       className={`w-full px-3 py-2 mt-1 border border-[var(--color-border-primary)] rounded-md bg-[var(--color-surface-primary)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)] focus:border-transparent font-outfit transition-all duration-200 ${
-                        errors.email ? 'border-red-500' : ''
+                        errors.email ? "border-red-500" : ""
                       }`}
                       placeholder="Enter your email address"
                       disabled={isLoading}
@@ -311,16 +364,24 @@ const Signup = () => {
 
                   {/* Password Field */}
                   <div>
-                    <Text as="label" size="2" weight="bold" htmlFor="password" className="font-outfit">
+                    <Text
+                      as="label"
+                      size="2"
+                      weight="bold"
+                      htmlFor="password"
+                      className="font-outfit"
+                    >
                       Password
                     </Text>
                     <div className="relative mt-1">
                       <input
-                        type={showPassword ? 'text' : 'password'}
+                        type={showPassword ? "text" : "password"}
                         value={formData.password}
-                        onChange={(e) => handleInputChange('password', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("password", e.target.value)
+                        }
                         className={`w-full px-3 py-2 pr-10 border border-[var(--color-border-primary)] rounded-md bg-[var(--color-surface-primary)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)] focus:border-transparent font-outfit transition-all duration-200 ${
-                          errors.password ? 'border-red-500' : ''
+                          errors.password ? "border-red-500" : ""
                         }`}
                         placeholder="Create a strong password"
                         disabled={isLoading}
@@ -332,7 +393,11 @@ const Signup = () => {
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors duration-200"
                         disabled={isLoading}
                       >
-                        {showPassword ? <EyeNoneIcon className="w-4 h-4" /> : <EyeOpenIcon className="w-4 h-4" />}
+                        {showPassword ? (
+                          <EyeNoneIcon className="w-4 h-4" />
+                        ) : (
+                          <EyeOpenIcon className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
                     {errors.password && (
@@ -344,16 +409,24 @@ const Signup = () => {
 
                   {/* Confirm Password Field */}
                   <div>
-                    <Text as="label" size="2" weight="bold" htmlFor="confirmPassword" className="font-outfit">
+                    <Text
+                      as="label"
+                      size="2"
+                      weight="bold"
+                      htmlFor="confirmPassword"
+                      className="font-outfit"
+                    >
                       Confirm Password
                     </Text>
                     <div className="relative mt-1">
                       <input
-                        type={showConfirmPassword ? 'text' : 'password'}
+                        type={showConfirmPassword ? "text" : "password"}
                         value={formData.confirmPassword}
-                        onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("confirmPassword", e.target.value)
+                        }
                         className={`w-full px-3 py-2 pr-10 border border-[var(--color-border-primary)] rounded-md bg-[var(--color-surface-primary)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)] focus:border-transparent font-outfit transition-all duration-200 ${
-                          errors.confirmPassword ? 'border-red-500' : ''
+                          errors.confirmPassword ? "border-red-500" : ""
                         }`}
                         placeholder="Confirm your password"
                         disabled={isLoading}
@@ -361,11 +434,17 @@ const Signup = () => {
                       />
                       <button
                         type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors duration-200"
                         disabled={isLoading}
                       >
-                        {showConfirmPassword ? <EyeNoneIcon className="w-4 h-4" /> : <EyeOpenIcon className="w-4 h-4" />}
+                        {showConfirmPassword ? (
+                          <EyeNoneIcon className="w-4 h-4" />
+                        ) : (
+                          <EyeOpenIcon className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
                     {errors.confirmPassword && (
@@ -385,30 +464,34 @@ const Signup = () => {
                           onChange={(e) => {
                             setAcceptTerms(e.target.checked);
                             if (errors.terms) {
-                              setErrors(prev => ({ ...prev, terms: '' }));
+                              setErrors((prev) => ({ ...prev, terms: "" }));
                             }
                           }}
                           className="sr-only"
                           disabled={isLoading}
                         />
-                        <div className={`w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center ${
-                          acceptTerms 
-                            ? 'bg-[var(--color-brand-500)] border-[var(--color-brand-500)]' 
-                            : 'border-[var(--color-border-primary)]'
-                        }`}>
-                          {acceptTerms && <CheckIcon className="w-3 h-3 text-white" />}
+                        <div
+                          className={`w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center ${
+                            acceptTerms
+                              ? "bg-[var(--color-brand-500)] border-[var(--color-brand-500)]"
+                              : "border-[var(--color-border-primary)]"
+                          }`}
+                        >
+                          {acceptTerms && (
+                            <CheckIcon className="w-3 h-3 text-white" />
+                          )}
                         </div>
                       </div>
                       <Text className="text-sm text-[var(--color-text-secondary)] leading-relaxed font-outfit">
-                        I agree to the{' '}
+                        I agree to the{" "}
                         <button
                           type="button"
                           className="text-[var(--color-brand-500)] hover:text-[var(--color-brand-600)] transition-colors duration-200"
                           disabled={isLoading}
                         >
                           Terms of Service
-                        </button>
-                        {' '}and{' '}
+                        </button>{" "}
+                        and{" "}
                         <button
                           type="button"
                           className="text-[var(--color-brand-500)] hover:text-[var(--color-brand-600)] transition-colors duration-200"
@@ -444,13 +527,12 @@ const Signup = () => {
               </form>
             </Flex>
           </div>
-
           {/* Bottom Link */}
           <div className="text-center mt-8">
             <Text className="text-sm text-[var(--color-text-secondary)] font-outfit">
-              Already have an account?{' '}
+              Already have an account?{" "}
               <button
-                onClick={() => navigate('/login')}
+                onClick={() => navigate("/login")}
                 className="text-[var(--color-brand-500)] hover:text-[var(--color-brand-600)] font-medium transition-colors duration-200"
                 disabled={isLoading}
               >

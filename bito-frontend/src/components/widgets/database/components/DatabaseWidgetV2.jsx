@@ -247,6 +247,8 @@ const DatabaseWidgetV2 = memo(
                 entries={completionsProps} // Use completions from props as entries
                 isInEditMode={isInEditMode}
                 onHabitReorder={handleHabitReorder}
+                onAddHabit={onAddHabit}
+                onEditHabit={onEditHabit}
               />
             );
           case "gallery":

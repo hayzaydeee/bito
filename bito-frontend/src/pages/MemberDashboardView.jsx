@@ -371,9 +371,6 @@ const MemberDashboardView = () => {
           .filter(h => !processedEntries[h._id.toString()])
           .map(h => h._id.toString());
         
-        if (habitsWithNoEntries.length > 0) {
-          console.info('Habits with no entries:', habitsWithNoEntries);
-        }
         
         setMemberData({
           ...response,

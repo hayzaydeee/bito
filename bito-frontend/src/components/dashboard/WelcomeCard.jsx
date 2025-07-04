@@ -13,6 +13,12 @@ import { habitUtils as habitLogic } from "../../utils/habitLogic";
 const WelcomeCard = memo(({ userName = "User" }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
 
+  // Extract first name from the full name
+  const firstName = useMemo(() => {
+    if (!userName || userName === "User") return "User";
+    return userName.split(' ')[0];
+  }, [userName]);
+
   // Get habit data from context
   const { habits, entries, isLoading } = useHabits();
 
@@ -177,7 +183,7 @@ const WelcomeCard = memo(({ userName = "User" }) => {
           <div>
             {" "}
             <h1 className="text-2xl font-bold bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-brand-400)] bg-clip-text text-transparent font-dmSerif leading-tight mb-1">
-              {timeData.greeting}, {userName}!
+              {timeData.greeting}, {firstName}!
             </h1>
             <div className="flex items-center gap-3 text-sm">
               <div className="flex items-center gap-1.5">

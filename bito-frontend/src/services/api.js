@@ -471,6 +471,13 @@ export const groupsAPI = {
     });
   },
 
+  // Delete group habit
+  deleteGroupHabit: async (groupId, habitId) => {
+    return apiRequest(`/api/workspaces/workspace-habits/${habitId}`, {
+      method: 'DELETE',
+    });
+  },
+
   // Get member habits (user's adopted habits in workspace)
   getMemberHabits: async (workspaceId) => {
     return apiRequest(`/api/workspaces/${workspaceId}/member-habits`);

@@ -1,25 +1,16 @@
-import React, { useState } from "react";
-import "./DialogAnimation.css";
-import {
-  Flex,
-  Button,
-  Text,
-  Box,
-  Separator,
-  Switch,
-  Tabs,
-} from "@radix-ui/themes";
-import * as Dialog from "@radix-ui/react-dialog";
+import React, { useState, useRef } from "react";
+import { createPortal } from "react-dom";
+import "./ModalAnimation.css";
 import {
   Cross2Icon,
   CheckIcon,
   LockClosedIcon,
   LockOpen1Icon,
-  InfoCircledIcon,
-  PlusIcon,
+  BackpackIcon,
   HomeIcon,
   PersonIcon,
   GlobeIcon,
+  InfoCircledIcon,
 } from "@radix-ui/react-icons";
 
 // Predefined color options for workspace (matching HabitEditModal)
@@ -43,28 +34,48 @@ const WORKSPACE_TYPES = [
     icon: "PersonIcon"
   },
   { 
-    id: "group", 
-    name: "Group", 
-    description: "Collaborate with friends, family, or team", 
+    id: "team", 
+    name: "Team", 
+    description: "Collaborate with your work team", 
+    icon: "BackpackIcon"
+  },
+  { 
+    id: "family", 
+    name: "Family", 
+    description: "Track habits with your family members", 
+    icon: "HomeIcon"
+  },
+  { 
+    id: "fitness", 
+    name: "Fitness", 
+    description: "Track health and fitness goals together", 
+    icon: "PersonIcon"
+  },
+  { 
+    id: "study", 
+    name: "Study", 
+    description: "Academic and learning habits", 
     icon: "GlobeIcon"
   },
   { 
-    id: "work", 
-    name: "Work", 
-    description: "Track professional goals and team habits", 
-    icon: "HomeIcon"
+    id: "community", 
+    name: "Community", 
+    description: "Larger group for community initiatives", 
+    icon: "GlobeIcon"
   },
 ];
 
 const WorkspaceCreationModal = ({ isOpen, onClose, onSave }) => {
-  const [activeTab, setActiveTab] = useState("details");
+  const modalRef = useRef();
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeSection, setActiveSection] = useState('details');
   
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     color: "#4f46e5", // Default color
-    type: "group", // Default type
+    type: "team", // Default type - using a valid value from backend enum
     isPrivate: false,
   });
 
@@ -87,7 +98,21 @@ const WorkspaceCreationModal = ({ isOpen, onClose, onSave }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleColorSelect = (color) => {
+    setFormData((prev) => ({
+      ...prev,
+      color,
+    }));
+  };
+
+  const handlePrivacyToggle = () => {
+    setFormData((prev) => ({
+      ...prev,
+      isPrivate: !prev.isPrivate,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Validation
@@ -101,259 +126,299 @@ const WorkspaceCreationModal = ({ isOpen, onClose, onSave }) => {
       return;
     }
     
-    onSave(formData);
-    onClose();
+    setIsSubmitting(true);
+    try {
+      await onSave(formData);
+      onClose();
+    } catch (error) {
+      console.error("Error creating group:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      description: "",
-      color: "#4f46e5",
-      type: "group",
-      isPrivate: false,
-    });
-    setErrors({});
-    setActiveTab("details");
+  // Helper function to render the appropriate icon
+  const getIcon = (iconName) => {
+    switch (iconName) {
+      case "PersonIcon":
+        return <PersonIcon className="w-4 h-4" />;
+      case "GlobeIcon":
+        return <GlobeIcon className="w-4 h-4" />;
+      case "HomeIcon":
+        return <HomeIcon className="w-4 h-4" />;
+      case "BackpackIcon":
+        return <BackpackIcon className="w-4 h-4" />;
+      default:
+        return <GlobeIcon className="w-4 h-4" />;
+    }
   };
 
-  const handleClose = () => {
-    resetForm();
-    onClose();
-  };
+  if (!isOpen) return null;
 
-  return (
-    <Dialog.Root open={isOpen} onOpenChange={handleClose}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm animate-fade-in" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-md w-full bg-[var(--color-surface-primary)] rounded-xl p-6 shadow-xl border border-[var(--color-border-primary)] animate-zoom-in">
-          <Flex direction="column" gap="5">
-            <Dialog.Title className="text-2xl font-dmSerif gradient-text">
+  return createPortal(
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-200" 
+        onClick={onClose}
+      />
+      
+      {/* Modal */}
+      <div 
+        ref={modalRef}
+        className="relative bg-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)] shadow-xl p-6 w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto z-10 transform transition-all duration-200 scale-100"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="space-y-5">
+          {/* Close button */}
+          <button 
+            className="absolute top-4 right-4 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+            onClick={onClose}
+          >
+            <Cross2Icon className="w-5 h-5" />
+          </button>
+          
+          {/* Header */}
+          <div className="text-center">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center mx-auto mb-4">
+              <BackpackIcon className="w-8 h-8 text-white" />
+            </div>
+            <div className="text-2xl font-dmSerif gradient-text mb-2">
               Create New Group
-            </Dialog.Title>
+            </div>
+            <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
+              Set up a workspace to collaborate on habits with others
+            </p>
+          </div>
+          
+          {/* Section Tabs */}
+          <div className="border-b border-[var(--color-border-primary)]/20">
+            <div className="flex space-x-4">
+              <button
+                type="button"
+                className={`py-2 px-1 text-sm font-medium border-b-2 transition-colors ${
+                  activeSection === 'details' 
+                    ? 'border-[var(--color-brand-500)] text-[var(--color-text-primary)]' 
+                    : 'border-transparent text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]'
+                }`}
+                onClick={() => setActiveSection('details')}
+              >
+                Details
+              </button>
+              <button
+                type="button"
+                className={`py-2 px-1 text-sm font-medium border-b-2 transition-colors ${
+                  activeSection === 'appearance' 
+                    ? 'border-[var(--color-brand-500)] text-[var(--color-text-primary)]' 
+                    : 'border-transparent text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]'
+                }`}
+                onClick={() => setActiveSection('appearance')}
+              >
+                Appearance
+              </button>
+              <button
+                type="button"
+                className={`py-2 px-1 text-sm font-medium border-b-2 transition-colors ${
+                  activeSection === 'settings' 
+                    ? 'border-[var(--color-brand-500)] text-[var(--color-text-primary)]' 
+                    : 'border-transparent text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]'
+                }`}
+                onClick={() => setActiveSection('settings')}
+              >
+                Settings
+              </button>
+            </div>
+          </div>
 
-            <Tabs.Root defaultValue="details" value={activeTab} onValueChange={setActiveTab}>
-              <Tabs.List>
-                <Tabs.Trigger value="details">Details</Tabs.Trigger>
-                <Tabs.Trigger value="appearance">Appearance</Tabs.Trigger>
-                <Tabs.Trigger value="settings">Settings</Tabs.Trigger>
-              </Tabs.List>
-              
-              <Box pt="4">
-                <Tabs.Content value="details">
-                  <form onSubmit={handleSubmit}>
-                    <Flex direction="column" gap="4">
-                      <div>
-                        <Text as="label" size="2" weight="bold" htmlFor="name">
-                          Group Name *
-                        </Text>
-                        <input
-                          id="name"
-                          name="name"
-                          value={formData.name}
-                          onChange={handleChange}
-                          placeholder="e.g., Fitness Squad"
-                          autoFocus
-                          className="w-full px-3 py-2 border border-[var(--color-border-primary)] rounded-md bg-[var(--color-surface-primary)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-9)] focus:border-transparent"
-                        />
-                        {errors.name && (
-                          <Text color="red" size="1">
-                            {errors.name}
-                          </Text>
-                        )}
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Details Section */}
+            {activeSection === 'details' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-[var(--color-text-primary)] font-outfit block mb-2">
+                    Group Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="e.g., Fitness Squad"
+                    className="w-full px-3 py-2 rounded-lg border border-[var(--color-border-primary)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] font-outfit text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)] focus:border-transparent"
+                    autoFocus
+                  />
+                  {errors.name && (
+                    <p className="mt-1 text-xs text-red-500">{errors.name}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-[var(--color-text-primary)] font-outfit block mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    rows={3}
+                    placeholder="What's this group about?"
+                    className="w-full px-3 py-2 rounded-lg border border-[var(--color-border-primary)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] font-outfit text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)] focus:border-transparent resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-[var(--color-text-primary)] font-outfit block mb-2">
+                    Group Type
+                  </label>
+                  <p className="text-xs text-[var(--color-text-secondary)] mb-3">
+                    Choose the type that best fits your group's purpose
+                  </p>
+                  
+                  <div className="space-y-2">
+                    {WORKSPACE_TYPES.map((type) => (
+                      <div
+                        key={type.id}
+                        className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                          formData.type === type.id 
+                            ? 'border-[var(--color-brand-500)] bg-[var(--color-brand-50)]' 
+                            : 'border-[var(--color-border-primary)] hover:border-[var(--color-brand-300)]'
+                        }`}
+                        onClick={() => handleTypeSelect(type.id)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="text-[var(--color-brand-500)]">
+                            {getIcon(type.icon)}
+                          </div>
+                          <div>
+                            <div className="font-medium text-[var(--color-text-primary)]">{type.name}</div>
+                            <div className="text-xs text-[var(--color-text-secondary)]">{type.description}</div>
+                          </div>
+                          {formData.type === type.id && (
+                            <CheckIcon className="ml-auto text-[var(--color-brand-500)]" />
+                          )}
+                        </div>
                       </div>
-                      
-                      <div>
-                        <Text as="label" size="2" weight="bold" htmlFor="description">
-                          Description
-                        </Text>
-                        <textarea
-                          id="description"
-                          name="description"
-                          value={formData.description}
-                          onChange={handleChange}
-                          placeholder="What's this group about?"
-                          rows="4"
-                          className="w-full px-3 py-2 border border-[var(--color-border-primary)] rounded-md bg-[var(--color-surface-primary)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-9)] focus:border-transparent resize-none"
-                        />
-                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
-                      <div>
-                        <Text as="label" size="2" weight="bold" mb="1" display="block">
-                          Group Type
-                        </Text>
-                        <Text as="p" size="1" color="gray" mb="2">
-                          Choose the type that best fits your group's purpose
-                        </Text>
-                        
-                        <Flex direction="column" gap="2">
-                          {WORKSPACE_TYPES.map((type) => {
-                            const getIcon = (iconName) => {
-                              switch (iconName) {
-                                case "PersonIcon":
-                                  return <PersonIcon />;
-                                case "GlobeIcon":
-                                  return <GlobeIcon />;
-                                case "HomeIcon":
-                                  return <HomeIcon />;
-                                default:
-                                  return <GlobeIcon />;
-                              }
-                            };
-                            
-                            return (
-                              <Box
-                                key={type.id}
-                                className={`p-3 border rounded-md cursor-pointer transition-all ${
-                                  formData.type === type.id 
-                                    ? 'border-[var(--accent-9)] bg-[var(--accent-3)]' 
-                                    : 'border-[var(--color-border-primary)] hover:border-[var(--accent-6)]'
-                                }`}
-                                onClick={() => handleTypeSelect(type.id)}
-                              >
-                                <Flex align="center" gap="2">
-                                  <Box className="text-[var(--accent-9)]">
-                                    {getIcon(type.icon)}
-                                  </Box>
-                                  <Box>
-                                    <Text weight="bold">{type.name}</Text>
-                                    <Text size="1" color="gray">{type.description}</Text>
-                                  </Box>
-                                  {formData.type === type.id && (
-                                    <CheckIcon className="ml-auto text-[var(--accent-9)]" />
-                                  )}
-                                </Flex>
-                              </Box>
-                            );
-                          })}
-                        </Flex>
-                      </div>
-                    </Flex>
-                  </form>
-                </Tabs.Content>
-
-                <Tabs.Content value="appearance">
-                  <Flex direction="column" gap="4">
-                    <div>
-                      <Text as="label" size="2" weight="bold" mb="1" display="block">
-                        Group Color
-                      </Text>
-                      <Text as="p" size="1" color="gray" mb="2">
-                        Pick a color that represents your group's theme
-                      </Text>
-                      
-                      <Flex gap="2" wrap="wrap">
-                        {colorOptions.map((color) => (
-                          <Button
-                            key={color}
-                            type="button"
-                            variant="ghost"
-                            onClick={() => setFormData({...formData, color})}
-                            className="w-12 h-12 rounded-full p-0"
-                            style={{ 
-                              backgroundColor: color,
-                              border: formData.color === color ? "3px solid white" : "none",
-                              outline: formData.color === color ? `2px solid ${color}` : "none"
-                            }}
-                          />
-                        ))}
-                      </Flex>
-
-                      <Box 
-                        mt="4" 
-                        p="3" 
-                        className="rounded-md" 
+            {/* Appearance Section */}
+            {activeSection === 'appearance' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-[var(--color-text-primary)] font-outfit block mb-2">
+                    Group Color
+                  </label>
+                  <p className="text-xs text-[var(--color-text-secondary)] mb-3">
+                    Pick a color that represents your group's theme
+                  </p>
+                  
+                  <div className="flex gap-2 flex-wrap">
+                    {colorOptions.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => handleColorSelect(color)}
+                        className="w-10 h-10 rounded-full p-0 flex items-center justify-center"
                         style={{ 
-                          backgroundColor: formData.color, 
-                          color: "#fff" 
+                          backgroundColor: color
                         }}
                       >
-                        <Text weight="bold">Preview: {formData.name || "Your Group Name"}</Text>
-                        <Text size="1">{formData.description || "Group description will appear here"}</Text>
-                      </Box>
-                    </div>
-                  </Flex>
-                </Tabs.Content>
-
-                <Tabs.Content value="settings">
-                  <Flex direction="column" gap="4">
-                    <Box>
-                      <Flex justify="between" align="center" mb="2">
-                        <div>
-                          <Text as="label" size="2" weight="bold" htmlFor="isPrivate">
-                            Private Group
-                          </Text>
-                          <Text as="p" size="1" color="gray">
-                            Only invited members can join
-                          </Text>
-                        </div>
-                        <Switch
-                          id="isPrivate"
-                          checked={formData.isPrivate}
-                          onCheckedChange={(checked) => 
-                            setFormData({...formData, isPrivate: checked})
-                          }
-                        />
-                      </Flex>
-                    </Box>
-                    
-                    <Box className="p-3 border rounded-md bg-[var(--color-surface-secondary)]">
-                      <Flex gap="2" align="center">
-                        <InfoCircledIcon className="text-[var(--color-text-secondary)]" />
-                        <Box>
-                          <Text as="p" size="2" weight="medium">
-                            {formData.isPrivate ? "Private Group" : "Public Group"}
-                          </Text>
-                          <Text as="p" size="1" color="gray">
-                            {formData.isPrivate 
-                              ? "Members need an invitation to join. You can control who has access."
-                              : "Anyone with the link can request to join your group."
-                            }
-                          </Text>
-                        </Box>
-                        {formData.isPrivate ? (
-                          <LockClosedIcon className="ml-auto text-[var(--color-text-secondary)]" />
-                        ) : (
-                          <LockOpen1Icon className="ml-auto text-[var(--color-text-secondary)]" />
+                        {formData.color === color && (
+                          <CheckIcon className="w-4 h-4 text-white" />
                         )}
-                      </Flex>
-                    </Box>
-                  </Flex>
-                </Tabs.Content>
-              </Box>
-            </Tabs.Root>
+                      </button>
+                    ))}
+                  </div>
 
-            <Separator size="4" />
-            
-            <Flex gap="3" justify="end">
-              <Button 
-                variant="soft" 
-                color="gray" 
-                onClick={handleClose}
+                  <div 
+                    className="mt-4 p-3 rounded-md" 
+                    style={{ 
+                      backgroundColor: formData.color, 
+                      color: "#fff" 
+                    }}
+                  >
+                    <div className="font-bold">Preview: {formData.name || "Your Group Name"}</div>
+                    <div className="text-sm opacity-90">{formData.description || "Group description will appear here"}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Settings Section */}
+            {activeSection === 'settings' && (
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <div>
+                      <label className="text-sm font-medium text-[var(--color-text-primary)] font-outfit block">
+                        Private Group
+                      </label>
+                      <p className="text-xs text-[var(--color-text-secondary)]">
+                        Only invited members can join
+                      </p>
+                    </div>
+                    <label className="inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={formData.isPrivate}
+                        onChange={handlePrivacyToggle}
+                        className="sr-only peer"
+                      />
+                      <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-[var(--color-surface-secondary)] peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[var(--color-brand-500)]"></div>
+                    </label>
+                  </div>
+                </div>
+                
+                <div className="p-3 border rounded-md bg-[var(--color-surface-secondary)]">
+                  <div className="flex gap-2 items-center">
+                    <InfoCircledIcon className="text-[var(--color-text-secondary)] w-4 h-4" />
+                    <div>
+                      <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                        {formData.isPrivate ? "Private Group" : "Public Group"}
+                      </div>
+                      <div className="text-xs text-[var(--color-text-secondary)]">
+                        {formData.isPrivate 
+                          ? "Members need an invitation to join. You can control who has access."
+                          : "Anyone with the link can request to join your group."
+                        }
+                      </div>
+                    </div>
+                    {formData.isPrivate ? (
+                      <LockClosedIcon className="ml-auto text-[var(--color-text-secondary)] w-4 h-4" />
+                    ) : (
+                      <LockOpen1Icon className="ml-auto text-[var(--color-text-secondary)] w-4 h-4" />
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Action buttons */}
+            <div className="flex gap-3 pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-4 py-2 rounded-lg border border-[var(--color-border-primary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-all duration-200 font-outfit text-sm"
               >
                 Cancel
-              </Button>
-              <Button 
-                onClick={handleSubmit}
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting || !formData.name}
+                className="flex-1 px-4 py-2 rounded-lg bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white transition-all duration-200 font-outfit text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <PlusIcon />
-                Create Group
-              </Button>
-            </Flex>
-          </Flex>
-          
-          <Dialog.Close asChild>
-            <Button 
-              variant="ghost" 
-              color="gray" 
-              className="absolute top-[12px] right-[12px]"
-            >
-              <Cross2Icon />
-            </Button>
-          </Dialog.Close>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+                {isSubmitting ? "Creating..." : "Create Group"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 };
 

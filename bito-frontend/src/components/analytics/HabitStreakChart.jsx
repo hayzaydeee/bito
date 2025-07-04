@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
   Legend
 } from 'recharts';
+import { StarIcon } from '@radix-ui/react-icons';
 
 const HabitStreakChart = ({ 
   habits = [], 
@@ -19,7 +20,8 @@ const HabitStreakChart = ({
   showLegend = true,
   maxHabitsDisplayed = 3,
   chartHeight = 320,
-  showTopStreaks = true
+  showTopStreaks = true,
+  onAddHabit
 }) => {
   // Calculate streak data for the time period
   const { chartData, topHabits } = useMemo(() => {
@@ -80,8 +82,6 @@ const HabitStreakChart = ({
       const day = String(d.getDate()).padStart(2, '0');
       const dateStr = `${year}-${month}-${day}`;
       
-      // Debug the generated date string
-      console.log('Generated dateStr:', dateStr, 'from date:', d);
       
       const dayData = {
         date: dateStr,
@@ -137,17 +137,12 @@ const HabitStreakChart = ({
   const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload || !payload.length) return null;
 
-    // Debug the label value
-    console.log('Tooltip label:', label, typeof label);
-    console.log('Payload:', payload);
-
     let dateDisplay = label; // fallback to the label itself
     
     // The label is actually the formattedDate (like "Jul 4"), not the full date
     // We need to get the actual date from the payload data
     if (payload[0] && payload[0].payload && payload[0].payload.date) {
       const fullDateStr = payload[0].payload.date;
-      console.log('Full date from payload:', fullDateStr);
       
       try {
         if (fullDateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
@@ -201,10 +196,15 @@ const HabitStreakChart = ({
 
   if (!habits.length) {
     return (
-      <div className="w-full h-full flex items-center justify-center">
-        <div className="text-center text-[var(--color-text-secondary)]">
-          <div className="text-lg font-semibold mb-2">No Habits Yet</div>
-          <div className="text-sm">Add some habits to see your streak progress</div>
+      <div className="glass-card p-6 rounded-2xl">
+        <h3 className="text-xl font-semibold font-dmSerif text-[var(--color-text-primary)] mb-4">
+          Habit Streaks
+        </h3>
+        <div className="text-center py-12">
+          <StarIcon className="w-12 h-12 text-[var(--color-text-tertiary)] mx-auto mb-4" />
+          <p className="text-[var(--color-text-secondary)] font-outfit">
+            Your top 3 habits streaks will appear here
+          </p>
         </div>
       </div>
     );

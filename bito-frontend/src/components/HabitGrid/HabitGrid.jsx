@@ -14,6 +14,7 @@ export const HabitGrid = ({
   showHeader = true,
   tableStyle = false,
   onEditHabit = null,
+  onAddHabit = null,
   habits: propHabits = null, // Habits passed from parent (for reordering)
   entries: propEntries = null, // Entries passed from parent (to avoid context usage)
   isInEditMode = false,
@@ -201,7 +202,7 @@ export const HabitGrid = ({
   }
   // Show empty state if no habits
   if (habits.length === 0) {
-    return <EmptyStateWithAddHabit className={className} />;
+    return <EmptyStateWithAddHabit className={className} onAddHabit={onAddHabit} />;
   }
   // If table style is requested, use the TableView component
   if (tableStyle) {
@@ -217,6 +218,7 @@ export const HabitGrid = ({
           onEditHabit={onEditHabit}
           isInEditMode={isInEditMode}
           onHabitReorder={onHabitReorder}
+          onAddHabit={onAddHabit}
         />
         {showStats && <WeekStats stats={weekStats} />}
       </div>

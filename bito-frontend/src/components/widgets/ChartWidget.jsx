@@ -17,6 +17,7 @@ import {
   AreaChart,
 } from "recharts";
 import { useChartData } from "../../globalHooks/useChartData";
+import { EmptyStateWithAddHabit } from "../../components/habitGrid/EmptyStateWithAddHabit";
 import "./widgets.css";
 
 // Helper function to generate chart data from props (for member dashboards)
@@ -447,21 +448,8 @@ export const ChartWidget = ({
             {renderChart()}
           </div>
         ) : (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center text-[var(--color-text-secondary)]">
-              <div className="text-sm mb-3">No habit data available</div>
-              {onAddHabit && (
-                <button
-                  onClick={onAddHabit}
-                  className="px-4 py-2 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg transition-colors duration-200 text-sm flex items-center gap-2 mx-auto"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Add Habit
-                </button>
-              )}
-            </div>
+          <div className="h-full flex items-center justify-center">
+            <EmptyStateWithAddHabit onAddHabit={onAddHabit} className="max-w-md" />
           </div>
         )}
       </div>

@@ -90,7 +90,7 @@ const CustomHabitEditModal = ({
   // Update form when habit changes
   useEffect(() => {
     if (habit) {
-      console.log('Loading habit for edit:', JSON.stringify(habit, null, 2));
+
       setFormData({
         name: habit.name || "",
         icon: habit.icon || "✅",
@@ -163,7 +163,7 @@ const CustomHabitEditModal = ({
       return;
     }
     
-    console.log('Submitting habit data (full):', JSON.stringify(formData, null, 2));
+
     
     // Determine if this is a create or update operation
     const isUpdate = !!habit && !!habit._id;
@@ -211,7 +211,7 @@ const CustomHabitEditModal = ({
       };
     }
     
-    console.log('Final submit data:', JSON.stringify(submitData, null, 2));
+
     
     onSave(submitData);
     onClose();

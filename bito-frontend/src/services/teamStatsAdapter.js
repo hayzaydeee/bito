@@ -97,20 +97,6 @@ export class TeamStatsAdapter {
       
     }
 
-    console.log('TeamStatsAdapter: Extracted arrays:', {
-      leaderboardDataLength: leaderboardData.length,
-      trackerDataLength: trackerData.length,
-      activityDataLength: activityData.length,
-      overviewTeamStats: overviewData.teamStats,
-      leaderboardSample: leaderboardData[0],
-      trackerSample: trackerData[0],
-      activitySample: activityData[0],
-      // More detailed structure logging
-      leaderboardFields: leaderboardData[0] ? Object.keys(leaderboardData[0]) : [],
-      trackerFields: trackerData[0] ? Object.keys(trackerData[0]) : [],
-      trackerStatsFields: trackerData[0]?.stats ? Object.keys(trackerData[0].stats) : []
-    });
-
     // Calculate real completion rate
     const completionRate = this.calculateCompletionRate(trackerData, leaderboardData);
 
@@ -215,21 +201,12 @@ export class TeamStatsAdapter {
   }
 
   calculateTeamScore(leaderboardData, trackerData, activityData) {
-    console.log('TeamStatsAdapter: calculateTeamScore called with:', {
-      leaderboardDataLength: leaderboardData.length,
-      trackerDataLength: trackerData.length,
-      activityDataLength: activityData.length,
-      leaderboardSample: leaderboardData[0],
-      trackerSample: trackerData[0]
-    });
-    
     // Count total completions from various sources
     let totalCompletions = 0;
     
     // From leaderboard - using completedDays (most accurate)
     leaderboardData.forEach(member => {
       const completions = member.completedDays || 0;
-      console.log('TeamStatsAdapter: Member completions:', completions, 'from member:', member.userId);
       totalCompletions += completions;
     });
 
@@ -240,12 +217,10 @@ export class TeamStatsAdapter {
         if (tracker.habits) {
           tracker.habits.forEach(habit => {
             const habitCompletions = habit.stats?.completedDays || 0;
-            console.log('TeamStatsAdapter: Habit completions:', habitCompletions);
             totalCompletions += habitCompletions;
           });
         }
       });
-      console.log('TeamStatsAdapter: Total completions from tracker data:', totalCompletions);
     }
     
     // From recent activity (habit_completed events) as fallback
@@ -253,7 +228,6 @@ export class TeamStatsAdapter {
       const recentCompletions = activityData.filter(activity => 
         activity.type === 'habit_completed'
       ).length;
-      console.log('TeamStatsAdapter: Recent completions from activity:', recentCompletions);
       totalCompletions = recentCompletions;
     }
     
@@ -319,22 +293,16 @@ export class LeaderboardAdapter {
     if (this.cache.has(cacheKey)) {
       const cached = this.cache.get(cacheKey);
       if (Date.now() - cached.timestamp < this.cacheTimeout) {
-        console.log('LeaderboardAdapter: Using cached data');
         return cached.data;
       }
     }
 
-    console.log('LeaderboardAdapter: Fetching fresh data for group:', this.groupId);
-
     try {
       const response = await groupsAPI.getLeaderboard(this.groupId, dateRange);
-      console.log('LeaderboardAdapter: Raw API response:', response);
       
       const leaderboardData = response.leaderboard || response.data || response || [];
-      console.log('LeaderboardAdapter: Extracted leaderboard data:', leaderboardData);
       
       const processedData = this.processLeaderboardData(leaderboardData, limit);
-      console.log('LeaderboardAdapter: Processed data:', processedData);
       
       this.cache.set(cacheKey, {
         data: processedData,
@@ -349,8 +317,6 @@ export class LeaderboardAdapter {
   }
 
   processLeaderboardData(rawData, limit) {
-    console.log('LeaderboardAdapter: processLeaderboardData input:', { rawData, limit });
-    
     const processed = rawData
       .slice(0, limit)
       .map((entry, index) => {
@@ -365,18 +331,13 @@ export class LeaderboardAdapter {
           position: index + 1
         };
         
-        console.log('LeaderboardAdapter: Mapped entry:', { original: entry, mapped: result });
         return result;
       })
       .filter(entry => {
         const hasName = !!entry.name;
-        if (!hasName) {
-          console.log('LeaderboardAdapter: Filtering out entry without name:', entry);
-        }
         return hasName;
       });
       
-    console.log('LeaderboardAdapter: Final processed data:', processed);
     return processed;
   }
 

@@ -68,6 +68,7 @@ export const TableView = ({
   onToggle,
   isInEditMode = false,
   onHabitReorder,
+  onAddHabit,
 }) => {
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -103,7 +104,7 @@ export const TableView = ({
 
   // Empty state when no habits are available
   if (!habits || habits.length === 0) {
-    return <EmptyStateWithAddHabit />;
+    return <EmptyStateWithAddHabit onAddHabit={onAddHabit} />;
   }
 
   const tableContent = (

@@ -140,9 +140,6 @@ const VerticalMenu = ({ isCollapsed }) => {
               <Text className="text-sm font-medium font-outfit text-[var(--color-text-primary)]">
                 {item.label}
               </Text>
-              <Text className="text-xs font-outfit text-[var(--color-text-tertiary)]">
-                {item.description}
-              </Text>
             </div>
           </div>
         </div>
@@ -219,9 +216,6 @@ const VerticalMenu = ({ isCollapsed }) => {
             <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)] rounded-lg px-3 py-2 shadow-lg">
               <Text className="text-sm font-medium font-outfit text-[var(--color-text-primary)]">
                 Groups
-              </Text>
-              <Text className="text-xs font-outfit text-[var(--color-text-tertiary)]">
-                Team workspaces ({workspaces.length})
               </Text>
             </div>
           </div>

@@ -783,7 +783,7 @@ const SettingsPage = ({ section }) => {
                       <div className="space-y-3">
                         {workspaces.map((workspace) => {
                           const permissions = dashboardPermissions[workspace._id] || {};
-                          const isPublic = permissions.isPublicToWorkspace || false;
+                          const isPublic = permissions.isPublicToWorkspace || true;
                           
                           return (
                             <div 
@@ -1119,38 +1119,12 @@ const SettingsPage = ({ section }) => {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
           <div className="flex items-center gap-4 mb-6 lg:mb-0">
             <div>
-              <h1 className="text-4xl font-bold font-dmSerif gradient-text mb-2">
+              <h1 className="text-3xl font-bold font-dmSerif gradient-text mb-2">
                 Settings
               </h1>
-              <p className="text-lg text-[var(--color-text-secondary)] font-outfit">
+              <p className="text-md text-[var(--color-text-secondary)] font-outfit">
                 Customize your app preferences and manage your account.
               </p>
-            </div>
-          </div>
-
-          {/* Category Filter */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-[var(--color-text-secondary)] font-outfit mr-2">
-              Filter:
-            </span>
-            <div className="flex items-center bg-[var(--color-surface-elevated)] rounded-xl p-1 shadow-sm border border-[var(--color-border-primary)]/20">
-              {categoryOptions.slice(0, 4).map(option => {
-                const Icon = option.icon;
-                return (
-                  <button
-                    key={option.value}
-                    onClick={() => setSelectedCategory(option.value)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 font-outfit text-sm ${
-                      selectedCategory === option.value
-                        ? 'bg-[var(--color-brand-600)] text-white shadow-md'
-                        : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {option.label}
-                  </button>
-                );
-              })}
             </div>
           </div>
         </div>

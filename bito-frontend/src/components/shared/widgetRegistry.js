@@ -235,28 +235,28 @@ export const DEFAULT_LAYOUTS = {
       { i: "insights-panel", x: 0, y: 19, w: 12, h: 8 }
     ],
     md: [
-      { i: "overview-cards", x: 0, y: 0, w: 12, h: 3 },
-      { i: "habit-streak-chart", x: 0, y: 3, w: 12, h: 6 },
-      { i: "completion-rate-chart", x: 0, y: 9, w: 12, h: 6 },
-      { i: "weekly-heatmap", x: 0, y: 15, w: 12, h: 5 },
-      { i: "top-habits", x: 0, y: 20, w: 12, h: 5 },
-      { i: "insights-panel", x: 0, y: 25, w: 12, h: 4 }
+      { i: "overview-cards", x: 1, y: 0, w: 10, h: 4 },
+      { i: "habit-streak-chart", x: 1, y: 3, w: 10, h: 6 },
+      { i: "completion-rate-chart", x: 1, y: 9, w: 10, h: 6 },
+      { i: "weekly-heatmap", x: 1, y: 15, w: 10, h: 6 },
+      { i: "top-habits", x: 1, y: 20, w: 12, h: 5 },
+      { i: "insights-panel", x: 1, y: 25, w: 10, h: 7 }
     ],
     sm: [
-      { i: "overview-cards", x: 0, y: 0, w: 12, h: 4 },
-      { i: "habit-streak-chart", x: 0, y: 4, w: 12, h: 7 },
+      { i: "overview-cards", x: 0, y: 0, w: 12, h: 6 },
+      { i: "habit-streak-chart", x: 0, y: 4, w: 12, h: 6 },
       { i: "completion-rate-chart", x: 0, y: 11, w: 12, h: 7 },
       { i: "weekly-heatmap", x: 0, y: 18, w: 12, h: 6 },
       { i: "top-habits", x: 0, y: 24, w: 12, h: 6 },
-      { i: "insights-panel", x: 0, y: 30, w: 12, h: 5 }
+      { i: "insights-panel", x: 0, y: 30, w: 12, h: 6 }
     ],
     xs: [
-      { i: "overview-cards", x: 0, y: 0, w: 4, h: 4 },
-      { i: "habit-streak-chart", x: 0, y: 4, w: 4, h: 7 },
+      { i: "overview-cards", x: 0, y: 0, w: 4, h: 6 },
+      { i: "habit-streak-chart", x: 0, y: 4, w: 4, h: 6 },
       { i: "completion-rate-chart", x: 0, y: 11, w: 4, h: 7 },
       { i: "weekly-heatmap", x: 0, y: 18, w: 4, h: 6 },
       { i: "top-habits", x: 0, y: 24, w: 4, h: 6 },
-      { i: "insights-panel", x: 0, y: 30, w: 4, h: 5 }
+      { i: "insights-panel", x: 0, y: 30, w: 4, h: 6 }
     ],
     xxs: [
       { i: "overview-cards", x: 0, y: 0, w: 2, h: 4 },
@@ -302,35 +302,35 @@ export const DEFAULT_LAYOUTS = {
   settings: {
     lg: [
       { i: "profile-widget", x: 0, y: 0, w: 6, h: 6,},
-      { i: "notifications-widget", x: 6, y: 0, w: 6, h: 6, },
-      { i: "privacy-widget", x: 0, y: 6, w: 6, h: 6,  },
-      { i: "appearance-widget", x: 6, y: 6, w: 6, h: 6, },
-      { i: "data-management-widget", x: 0, y: 12, w: 6, h: 8, },
-      { i: "help-support-widget", x: 6, y: 12, w: 6, h: 8, }
+      { i: "notifications-widget", x: 6, y: 0, w: 6, h: 8, },
+      { i: "privacy-widget", x: 0, y: 6, w: 6, h: 8,  },
+      { i: "appearance-widget", x: 6, y: 6, w: 6, h: 8, },
+      { i: "data-management-widget", x: 0, y: 12, w: 6, h: 4, },
+      { i: "help-support-widget", x: 6, y: 12, w: 6, h: 6, }
     ],
     md: [
       { i: "profile-widget", x: 0, y: 0, w: 6, h: 6 },
-      { i: "notifications-widget", x: 6, y: 0, w: 6, h: 6 },
-      { i: "privacy-widget", x: 0, y: 6, w: 6, h: 6 },
-      { i: "appearance-widget", x: 6, y: 6, w: 6, h: 6 },
-      { i: "data-management-widget", x: 0, y: 12, w: 12, h: 8 },
-      { i: "help-support-widget", x: 0, y: 20, w: 12, h: 8 }
+      { i: "notifications-widget", x: 6, y: 0, w: 6, h: 8 },
+      { i: "privacy-widget", x: 0, y: 6, w: 6, h: 8 },
+      { i: "appearance-widget", x: 6, y: 6, w: 6, h: 8 },
+      { i: "data-management-widget", x: 0, y: 12, w: 12, h: 4 },
+      { i: "help-support-widget", x: 0, y: 20, w: 12, h: 6 }
     ],
     sm: [
       { i: "profile-widget", x: 0, y: 0, w: 12, h: 6 },
-      { i: "notifications-widget", x: 0, y: 6, w: 12, h: 6 },
-      { i: "privacy-widget", x: 0, y: 12, w: 12, h: 6 },
-      { i: "appearance-widget", x: 0, y: 18, w: 12, h: 6 },
-      { i: "data-management-widget", x: 0, y: 24, w: 12, h: 8 },
-      { i: "help-support-widget", x: 0, y: 32, w: 12, h: 8 }
+      { i: "notifications-widget", x: 0, y: 6, w: 12, h: 8 },
+      { i: "privacy-widget", x: 0, y: 12, w: 12, h: 8 },
+      { i: "appearance-widget", x: 0, y: 18, w: 12, h: 8 },
+      { i: "data-management-widget", x: 0, y: 24, w: 12, h: 4 },
+      { i: "help-support-widget", x: 0, y: 32, w: 12, h: 6 }
     ],
     xs: [
       { i: "profile-widget", x: 0, y: 0, w: 4, h: 6 },
-      { i: "notifications-widget", x: 0, y: 6, w: 4, h: 6 },
-      { i: "privacy-widget", x: 0, y: 12, w: 4, h: 6 },
-      { i: "appearance-widget", x: 0, y: 18, w: 4, h: 6 },
-      { i: "data-management-widget", x: 0, y: 24, w: 4, h: 8 },
-      { i: "help-support-widget", x: 0, y: 32, w: 4, h: 8 }
+      { i: "notifications-widget", x: 0, y: 6, w: 4, h: 8 },
+      { i: "privacy-widget", x: 0, y: 12, w: 4, h: 8 },
+      { i: "appearance-widget", x: 0, y: 18, w: 4, h: 8 },
+      { i: "data-management-widget", x: 0, y: 24, w: 4, h: 4 },
+      { i: "help-support-widget", x: 0, y: 32, w: 4, h: 6 }
     ],
     xxs: [
       { i: "profile-widget", x: 0, y: 0, w: 2, h: 6 },

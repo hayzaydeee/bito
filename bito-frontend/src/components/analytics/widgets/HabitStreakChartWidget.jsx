@@ -8,6 +8,7 @@ const HabitStreakChartWidget = ({
   breakpoint,
   availableColumns,
   availableRows,
+  onAddHabit = null,
   ...props 
 }) => {
   const { habits, entries, isLoading } = useHabits();
@@ -45,6 +46,7 @@ const HabitStreakChartWidget = ({
           timeRange={timeRange}
           dateRange={dateRange}
           widgetMode={true} // Flag to indicate this is in widget mode
+          onAddHabit={onAddHabit} // Pass through the onAddHabit prop
           {...responsiveProps}
           {...props}
         />

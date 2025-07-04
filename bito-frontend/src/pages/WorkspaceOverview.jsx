@@ -1,28 +1,22 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button, Text } from "@radix-ui/themes";
 import {
   PersonIcon,
   GearIcon,
   PlusIcon,
-  BarChartIcon,
   ActivityLogIcon,
   StarIcon,
   TargetIcon,
   CalendarIcon,
-  DotsHorizontalIcon,
   HomeIcon,
   BackpackIcon,
   HeartIcon,
   ChevronRightIcon,
   CheckCircledIcon,
   ArrowLeftIcon,
-  EnvelopeClosedIcon,
   Cross2Icon,
-  CheckIcon,
   ExclamationTriangleIcon,
-  InfoCircledIcon,
-  RocketIcon, // Add for challenges
 } from "@radix-ui/react-icons";
 import BaseGridContainer from "../components/shared/BaseGridContainer";
 import { groupsAPI } from "../services/api";
@@ -31,6 +25,7 @@ import GroupInviteModal from "../components/ui/GroupInviteModal";
 import EncouragementModal from "../components/shared/EncouragementModal";
 import MemberProgressWidget from "../components/widgets/MemberProgressWidget";
 import EncouragementFeedWidget from "../components/widgets/EncouragementFeedWidget";
+import ChallengeWidget from "../components/widgets/ChallengeWidget";
 import GroupHabitModal from "../components/ui/GroupHabitModal";
 import HabitAdoptModal from "../components/ui/HabitAdoptModal";
 import "../components/ui/ModalAnimation.css";
@@ -175,7 +170,7 @@ const WorkspaceOverview = () => {
 
   // Adopt modal states
   const [adoptingHabit, setAdoptingHabit] = useState(null);
-  const [adoptingPrivacyLevel, setAdoptingPrivacyLevel] = useState("public");
+  // Privacy settings removed
   const [showAdoptModal, setShowAdoptModal] = useState(false);
 
   // Group tracker data (from GroupTrackersPage)
@@ -184,7 +179,7 @@ const WorkspaceOverview = () => {
   const [encouragementModal, setEncouragementModal] = useState({
     isOpen: false,
     targetUser: null,
-    habitId: null
+    habitId: null,
   });
 
   // Show notification helper
@@ -215,31 +210,24 @@ const WorkspaceOverview = () => {
         setOverview(overviewData.overview);
       }
 
-      // Fetch challenges data
-      fetchChallengesData();
-
-      // Fetch group tracker data (from GroupTrackersPage)
-      try {
-        const trackersResponse = await groupsAPI.getGroupTrackers(groupId);
-        setGroupTrackerData(trackersResponse.memberTrackers || []);
-      } catch (err) {
-        console.warn('Failed to fetch group trackers:', err);
-        setGroupTrackerData([]);
-      }
-
-      // Fetch encouragements
-      try {
-        const encouragementsResponse = await groupsAPI.getEncouragements(groupId);
-        setEncouragements(encouragementsResponse.data || []);
-      } catch (err) {
-        console.warn('Failed to fetch encouragements:', err);
-        setEncouragements([]);
-      }
-
       // Fetch group habits
-      const habitsData = await groupsAPI.getGroupHabits(groupId);
-      if (habitsData.success) {
-        setGroupHabits(habitsData.habits);
+      try {
+        const habitsResponse = await groupsAPI.getGroupHabits(groupId);
+        if (habitsResponse.success) {
+          setGroupHabits(habitsResponse.habits || []);
+        }
+      } catch (err) {
+        console.warn("Failed to fetch group habits:", err);
+        setGroupHabits([]);
+      }
+
+      // Fetch challenges data
+      try {
+        const challengesResponse = await groupsAPI.getChallenges(groupId);
+        setChallenges(challengesResponse.challenges || []);
+      } catch (err) {
+        console.warn("Failed to fetch challenges:", err);
+        setChallenges([]);
       }
 
       // Fetch group tracking data which includes completions
@@ -268,10 +256,11 @@ const WorkspaceOverview = () => {
           ...prev,
           trackers: groupTrackers.trackers || [],
           entries: groupTrackers.entries || {}, // For member dashboard compatibility
-          habits: groupHabits || [],
+          habits: groupTrackers.habits || [], // Use the habits from tracker data if available
         }));
 
-
+        // Also set the group tracker data for the member progress widget
+        setGroupTrackerData(groupTrackers);
       }
 
       // Fetch recent activities
@@ -285,22 +274,6 @@ const WorkspaceOverview = () => {
       console.error("Error fetching group data:", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchChallengesData = async () => {
-    try {
-      // Fetch challenges data
-      const challengesResponse = await groupsAPI.getChallenges(groupId);
-      if (challengesResponse.success) {
-        setChallenges(challengesResponse.challenges || []);
-      } else {
-        console.warn("Failed to fetch challenges:", challengesResponse.message);
-        setChallenges([]);
-      }
-    } catch (err) {
-      console.warn("Failed to fetch challenges:", err);
-      setChallenges([]);
     }
   };
 
@@ -431,14 +404,29 @@ const WorkspaceOverview = () => {
     }
   };
 
+  const handleDeleteHabit = async (habitId) => {
+    try {
+      const response = await groupsAPI.deleteGroupHabit(groupId, habitId);
+      if (response.success) {
+        setShowEditHabitModal(false);
+        showNotification("Group habit deleted successfully!");
+        // Refresh group data
+        fetchGroupData();
+      }
+    } catch (error) {
+      console.error("Error deleting habit:", error);
+      showNotification("Failed to delete habit. Please try again.", "error");
+    }
+  };
+
   const handleAdoptHabit = async () => {
     try {
       if (!adoptingHabit) return;
 
-      // Pass the privacy settings to the API
+      // Adopt the habit (privacy settings removed)
       await groupsAPI.adoptWorkspaceHabit(groupId, adoptingHabit._id, {
         personalSettings: {
-          shareProgress: adoptingPrivacyLevel,
+          shareProgress: "full", // Default to full sharing (using valid value)
         },
       });
 
@@ -446,9 +434,7 @@ const WorkspaceOverview = () => {
       await fetchGroupData();
 
       // Show success notification
-      showNotification(
-        `Successfully adopted "${adoptingHabit.name}" habit!`
-      );
+      showNotification(`Successfully adopted "${adoptingHabit.name}" habit!`);
     } catch (error) {
       console.error("Error adopting habit:", error);
       showNotification(
@@ -467,7 +453,7 @@ const WorkspaceOverview = () => {
     setEncouragementModal({
       isOpen: true,
       targetUser,
-      habitId
+      habitId,
     });
   };
 
@@ -475,15 +461,16 @@ const WorkspaceOverview = () => {
     setEncouragementModal({
       isOpen: false,
       targetUser: null,
-      habitId: null
+      habitId: null,
     });
   };
 
   const handleEncouragementSent = () => {
     // Refresh encouragements data
-    groupsAPI.getEncouragements(groupId)
-      .then(response => setEncouragements(response.data || []))
-      .catch(err => console.warn('Failed to refresh encouragements:', err));
+    groupsAPI
+      .getEncouragements(groupId)
+      .then((response) => setEncouragements(response.data || []))
+      .catch((err) => console.warn("Failed to refresh encouragements:", err));
   };
 
   const handleCreateChallenge = async (challengeData) => {
@@ -493,7 +480,7 @@ const WorkspaceOverview = () => {
       const challengesResponse = await groupsAPI.getChallenges(groupId);
       setChallenges(challengesResponse.challenges || []);
     } catch (err) {
-      console.error('Failed to create challenge:', err);
+      console.error("Failed to create challenge:", err);
     }
   };
 
@@ -518,6 +505,13 @@ const WorkspaceOverview = () => {
   // Widget definitions (excluding header which is now standalone)
   const groupWidgets = useMemo(
     () => ({
+      "challenges-widget": {
+        title: "Group Challenges",
+        description: "Team challenges and accountability",
+        category: "collaboration",
+        defaultProps: { w: 12, h: 5 },
+        component: () => <ChallengeWidget workspaceId={groupId} />,
+      },
       "recent-activity-widget": {
         title: "Recent Activity",
         description: "Latest team updates and member activities",
@@ -674,7 +668,6 @@ const WorkspaceOverview = () => {
 
           const openAdoptModal = (habit) => {
             setAdoptingHabit(habit);
-            setAdoptingPrivacyLevel("private");
             setShowAdoptModal(true);
           };
 
@@ -931,15 +924,19 @@ const WorkspaceOverview = () => {
                           </p>
                         </div>
                       </div>
-                      {(member.userId?._id || member.userId || member.id) && 
-                       (member.userId?._id || member.userId || member.id).toString() !== user?.id && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-[var(--color-text-tertiary)] group-hover:text-[var(--color-text-primary)] font-outfit opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            view dashboard
-                          </span>
-                          <ChevronRightIcon className="w-4 h-4 text-[var(--color-text-tertiary)] group-hover:text-[var(--color-text-primary)]" />
-                        </div>
-                      )}
+                      {(member.userId?._id || member.userId || member.id) &&
+                        (
+                          member.userId?._id ||
+                          member.userId ||
+                          member.id
+                        ).toString() !== user?.id && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-[var(--color-text-tertiary)] group-hover:text-[var(--color-text-primary)] font-outfit opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                              view dashboard
+                            </span>
+                            <ChevronRightIcon className="w-4 h-4 text-[var(--color-text-tertiary)] group-hover:text-[var(--color-text-primary)]" />
+                          </div>
+                        )}
                     </div>
                   </div>
                 );
@@ -948,147 +945,6 @@ const WorkspaceOverview = () => {
           </div>
         ),
       },
-
-      "group-challenges-widget": {
-        title: "Group Challenges",
-        description: "Active and upcoming challenges for the team",
-        category: "collaboration",
-        defaultProps: { w: 6, h: 4 },
-        component: () => {
-          const getChallengeStatusColor = (status) => {
-            switch (status) {
-              case "active":
-                return "text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30";
-              case "completed":
-                return "text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30";
-              case "upcoming":
-                return "text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30";
-              default:
-                return "text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/30";
-            }
-          };
-
-          const formatDate = (date) => {
-            return new Date(date).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-            });
-          };
-
-          const handleCreateChallenge = () => {
-            // Placeholder for challenge creation
-            // You can implement a modal here or navigate to a challenge creation page
-          };
-
-          if (!challenges || challenges.length === 0) {
-            return (
-              <div className="h-full glass-card-minimal p-6 rounded-2xl flex flex-col">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center">
-                      <RocketIcon className="w-5 h-5 text-white" />
-                    </div>
-                    <h3 className="text-lg font-bold text-[var(--color-text-primary)] font-dmSerif">
-                      Group Challenges
-                    </h3>
-                  </div>
-                  {canManageGroup && (
-                    <button
-                      onClick={handleCreateChallenge}
-                      className="px-3 py-2 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-xl font-outfit font-medium text-sm transition-all duration-200"
-                    >
-                      Create
-                    </button>
-                  )}
-                </div>
-
-                <div className="text-center py-8 flex-1 flex flex-col items-center justify-center">
-                  <div className="w-12 h-12 rounded-xl bg-[var(--color-surface-hover)] flex items-center justify-center mx-auto mb-3">
-                    <TargetIcon className="w-6 h-6 text-[var(--color-text-tertiary)]" />
-                  </div>
-                  <h4 className="text-sm font-semibold text-[var(--color-text-primary)] font-dmSerif mb-2">
-                    No active challenges
-                  </h4>
-                  <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
-                    Create a challenge to motivate your team
-                  </p>
-                </div>
-              </div>
-            );
-          }
-
-          return (
-            <div className="h-full glass-card-minimal p-6 rounded-2xl flex flex-col">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center">
-                    <RocketIcon className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="text-lg font-bold text-[var(--color-text-primary)] font-dmSerif">
-                    Group Challenges
-                  </h3>
-                </div>
-                {canManageGroup && (
-                  <button
-                    onClick={handleCreateChallenge}
-                    className="px-3 py-2 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-xl font-outfit font-medium text-sm transition-all duration-200"
-                  >
-                    Create
-                  </button>
-                )}
-              </div>
-
-              <div className="flex-1 overflow-y-auto scrollbar-thin">
-                <div className="space-y-4">
-                  {challenges.map((challenge) => (
-                    <div
-                      key={challenge._id || challenge.id}
-                      className="p-4 rounded-xl bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/10"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="text-base font-semibold text-[var(--color-text-primary)]">
-                          {challenge.title}
-                        </h4>
-                        <span
-                          className={`text-xs px-2 py-1 rounded-md ${getChallengeStatusColor(
-                            challenge.status
-                          )}`}
-                        >
-                          {challenge.status || "active"}
-                        </span>
-                      </div>
-                      <p className="text-sm text-[var(--color-text-secondary)] mb-3">
-                        {challenge.description || "No description available"}
-                      </p>
-                      <div className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2">
-                          <CalendarIcon className="w-3.5 h-3.5 text-[var(--color-text-tertiary)]" />
-                          <span className="text-[var(--color-text-tertiary)]">
-                            {challenge.startDate
-                              ? formatDate(challenge.startDate)
-                              : "No date"}{" "}
-                            -
-                            {challenge.endDate
-                              ? formatDate(challenge.endDate)
-                              : "Ongoing"}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <PersonIcon className="w-3.5 h-3.5 text-[var(--color-text-tertiary)]" />
-                          <span className="text-[var(--color-text-tertiary)]">
-                            {challenge.participants?.length || 0} participants
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          );
-        },
-      },
-
       "member-progress-widget": {
         title: "Member Progress",
         description: "Track individual member progress and performance",
@@ -1106,7 +962,7 @@ const WorkspaceOverview = () => {
       "encouragement-feed-widget": {
         title: "Encouragement Feed",
         description: "Team encouragements and social interactions",
-        category: "collaboration", 
+        category: "collaboration",
         defaultProps: { w: 6, h: 6 },
         component: () => (
           <EncouragementFeedWidget
@@ -1138,98 +994,27 @@ const WorkspaceOverview = () => {
   // Default widget layouts (excluding header)
   const defaultLayouts = {
     lg: [
-      {
-        w: 5,
-        h: 5,
-        x: 0,
-        y: 0,
-        i: "recent-activity-widget",
-        moved: false,
-        static: false,
-      },
-      {
-        w: 3,
-        h: 5,
-        x: 9,
-        y: 0,
-        i: "group-challenges-widget",
-        moved: false,
-        static: false,
-      },
-      {
-        w: 8,
-        h: 6,
-        x: 0,
-        y: 5,
-        i: "member-progress-widget",
-        moved: false,
-        static: false,
-      },
-      {
-        w: 4,
-        h: 6,
-        x: 8,
-        y: 5,
-        i: "encouragement-feed-widget",
-        moved: false,
-        static: false,
-      },
-      {
-        w: 4,
-        h: 5,
-        x: 0,
-        y: 11,
-        i: "group-habits-widget",
-        moved: false,
-        static: false,
-      },
-      {
-        w: 4,
-        h: 5,
-        x: 4,
-        y: 11,
-        i: "shared-habits-widget",
-        moved: false,
-        static: false,
-      },
-      {
-        w: 4,
-        h: 5,
-        x: 8,
-        y: 11,
-        i: "team-members-widget",
-        moved: false,
-        static: false,
-      },
+      { i: "recent-activity-widget", x: 3, y: 6, w: 6, h: 7 },
+      { i: "group-habits-widget", x: 6, y: 0, w: 6, h: 6 },
+      { i: "team-members-widget", x: 0, y: 0, w: 6, h: 6 },
     ],
     md: [
-      { i: "recent-activity-widget", x: 0, y: 0, w: 4, h: 4 },
-      { i: "group-challenges-widget", x: 0, y: 4, w: 4, h: 5 },
-      { i: "group-habits-widget", x: 4, y: 5, w: 4, h: 5 },
-      { i: "team-members-widget", x: 0, y: 9, w: 4, h: 5 },
-      { i: "shared-habits-widget", x: 4, y: 10, w: 4, h: 5 },
+      { i: "recent-activity-widget", x: 3, y: 6, w: 6, h: 5 },
+      { i: "group-habits-widget", x: 6, y: 0, w: 6, h: 5 },
+      { i: "team-members-widget", x: 0, y: 0, w: 6, h: 5 },
     ],
     sm: [
       {
-        w: 4,
-        h: 5,
+        w: 12,
+        h: 6,
         x: 0,
-        y: 0,
+        y: 20,
         i: "recent-activity-widget",
         moved: false,
         static: false,
       },
       {
-        w: 4,
-        h: 5,
-        x: 0,
-        y: 5,
-        i: "group-challenges-widget",
-        moved: false,
-        static: false,
-      },
-      {
-        w: 4,
+        w: 12,
         h: 5,
         x: 0,
         y: 10,
@@ -1237,20 +1022,12 @@ const WorkspaceOverview = () => {
         moved: false,
         static: false,
       },
+
       {
-        w: 4,
+        w: 12,
         h: 5,
         x: 0,
-        y: 15,
-        i: "shared-habits-widget",
-        moved: false,
-        static: false,
-      },
-      {
-        w: 4,
-        h: 5,
-        x: 0,
-        y: 20,
+        y: 0,
         i: "team-members-widget",
         moved: false,
         static: false,
@@ -1259,9 +1036,18 @@ const WorkspaceOverview = () => {
     xs: [
       {
         w: 4,
-        h: 4,
+        h: 5,
         x: 0,
-        y: 0,
+        y: 5,
+        i: "challenges-widget",
+        moved: false,
+        static: false,
+      },
+      {
+        w: 4,
+        h: 7,
+        x: 0,
+        y: 14,
         i: "recent-activity-widget",
         moved: false,
         static: false,
@@ -1279,16 +1065,7 @@ const WorkspaceOverview = () => {
         w: 4,
         h: 5,
         x: 0,
-        y: 9,
-        i: "shared-habits-widget",
-        moved: false,
-        static: false,
-      },
-      {
-        w: 4,
-        h: 5,
-        x: 0,
-        y: 14,
+        y: 0,
         i: "team-members-widget",
         moved: false,
         static: false,
@@ -1297,9 +1074,18 @@ const WorkspaceOverview = () => {
     xxs: [
       {
         w: 2,
-        h: 3,
+        h: 5,
         x: 0,
         y: 0,
+        i: "challenges-widget",
+        moved: false,
+        static: false,
+      },
+      {
+        w: 2,
+        h: 3,
+        x: 0,
+        y: 5,
         i: "recent-activity-widget",
         moved: false,
         static: false,
@@ -1335,13 +1121,10 @@ const WorkspaceOverview = () => {
   };
 
   const defaultWidgets = [
-    "recent-activity-widget", 
+    "recent-activity-widget",
     "group-habits-widget",
     "shared-habits-widget",
     "team-members-widget",
-    "member-progress-widget",
-    "group-challenges-widget",
-    "encouragement-feed-widget",
   ];
 
   const storageKeys = {
@@ -1438,10 +1221,10 @@ const WorkspaceOverview = () => {
                 <GroupIcon className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold font-dmSerif gradient-text mb-1">
+                <h1 className="text-3xl font-bold font-dmSerif gradient-text mb-1">
                   {group.name}
                 </h1>
-                <p className="text-lg text-[var(--color-text-secondary)] font-outfit">
+                <p className="text-md text-[var(--color-text-secondary)] font-outfit">
                   {group.description ||
                     `${group.type} group • ${members.length} members`}
                 </p>
@@ -1453,7 +1236,7 @@ const WorkspaceOverview = () => {
             {canManageGroup && (
               <button
                 onClick={() => navigate(`/app/groups/${groupId}/settings`)}
-                className="flex items-center justify-center w-12 h-12 rounded-2xl bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/40 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-all duration-200"
+                className="flex items-center justify-center w-12 h-12 rounded-2xl bg-[var(--color-surface-elevated] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/40 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-all duration-200"
               >
                 <GearIcon className="w-5 h-5" />
               </button>
@@ -1538,6 +1321,7 @@ const WorkspaceOverview = () => {
               setActiveTab("details");
             }}
             mode="edit"
+            habit={selectedHabit}
             groupId={groupId}
             habitForm={habitForm}
             setHabitForm={setHabitForm}
@@ -1546,6 +1330,7 @@ const WorkspaceOverview = () => {
             emojiCategory={emojiCategory}
             setEmojiCategory={setEmojiCategory}
             onSave={handleUpdateHabit}
+            onDelete={handleDeleteHabit}
             onSuccess={() => {
               setShowEditHabitModal(false);
               showNotification("Group habit updated successfully!");
@@ -1560,11 +1345,8 @@ const WorkspaceOverview = () => {
             onClose={() => {
               setShowAdoptModal(false);
               setAdoptingHabit(null);
-              setAdoptingPrivacyLevel("private");
             }}
             habit={adoptingHabit}
-            privacyLevel={adoptingPrivacyLevel}
-            setPrivacyLevel={setAdoptingPrivacyLevel}
             onAdopt={handleAdoptHabit}
             onSuccess={() => {
               setShowAdoptModal(false);

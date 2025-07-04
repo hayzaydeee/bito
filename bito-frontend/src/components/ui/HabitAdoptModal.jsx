@@ -11,8 +11,6 @@ const HabitAdoptModal = ({
   isOpen, 
   onClose, 
   habit,
-  adoptingPrivacyLevel,
-  setAdoptingPrivacyLevel,
   onAdopt
 }) => {
   const modalRef = useRef();
@@ -82,50 +80,6 @@ const HabitAdoptModal = ({
           </div>
 
           <div className="space-y-3">
-            <label className="text-sm font-medium text-[var(--color-text-primary)] font-outfit block">
-              Privacy Level
-            </label>
-            
-            <div className="space-y-2">
-              <label className="flex items-start gap-3 p-3 rounded-lg border border-[var(--color-border-primary)] hover:bg-[var(--color-surface-hover)] cursor-pointer">
-                <input
-                  type="radio"
-                  name="privacy"
-                  value="public"
-                  checked={adoptingPrivacyLevel === "public"}
-                  onChange={(e) => setAdoptingPrivacyLevel(e.target.value)}
-                  className="mt-0.5 text-[var(--color-brand-500)] focus:ring-[var(--color-brand-500)]"
-                />
-                <div>
-                  <div className="font-medium text-[var(--color-text-primary)] font-outfit text-sm">
-                    Public
-                  </div>
-                  <div className="text-xs text-[var(--color-text-secondary)] font-outfit">
-                    Your progress will be visible to all group members
-                  </div>
-                </div>
-              </label>
-
-              <label className="flex items-start gap-3 p-3 rounded-lg border border-[var(--color-border-primary)] hover:bg-[var(--color-surface-hover)] cursor-pointer">
-                <input
-                  type="radio"
-                  name="privacy"
-                  value="private"
-                  checked={adoptingPrivacyLevel === "private"}
-                  onChange={(e) => setAdoptingPrivacyLevel(e.target.value)}
-                  className="mt-0.5 text-[var(--color-brand-500)] focus:ring-[var(--color-brand-500)]"
-                />
-                <div>
-                  <div className="font-medium text-[var(--color-text-primary)] font-outfit text-sm">
-                    Private
-                  </div>
-                  <div className="text-xs text-[var(--color-text-secondary)] font-outfit">
-                    Only you can see your progress for this habit
-                  </div>
-                </div>
-              </label>
-            </div>
-
             {habit.isRequired && (
               <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
                 <ExclamationTriangleIcon className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />

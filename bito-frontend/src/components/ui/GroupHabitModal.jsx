@@ -5,6 +5,8 @@ import {
   TargetIcon,
   Cross2Icon,
   CheckIcon,
+  TrashIcon,
+  InfoCircledIcon,
 } from "@radix-ui/react-icons";
 
 // Emoji categories for the picker
@@ -25,6 +27,12 @@ const COLOR_OPTIONS = [
   "#ef4444", // red
   "#8b5cf6", // purple
   "#ec4899", // pink
+  "#06b6d4", // cyan
+  "#84cc16", // lime
+  "#f97316", // orange
+  "#e11d48", // rose
+  "#059669", // green
+  "#dc2626", // red-600
 ];
 
 const GroupHabitModal = ({ 
@@ -35,6 +43,7 @@ const GroupHabitModal = ({
   habitForm,
   setHabitForm,
   onSave,
+  onDelete, // Add delete handler
   activeTab,
   setActiveTab,
   emojiCategory,
@@ -42,6 +51,7 @@ const GroupHabitModal = ({
 }) => {
   const modalRef = useRef();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const isEditing = Boolean(habit);
 
@@ -97,6 +107,23 @@ const GroupHabitModal = ({
         }
       };
     });
+  };
+
+  const handleDelete = async () => {
+    if (!showDeleteConfirm) {
+      setShowDeleteConfirm(true);
+      // Reset confirmation after 3 seconds
+      setTimeout(() => setShowDeleteConfirm(false), 3000);
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await onDelete(habit._id);
+    } finally {
+      setIsSubmitting(false);
+      setShowDeleteConfirm(false);
+    }
   };
 
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -175,6 +202,19 @@ const GroupHabitModal = ({
               >
                 Settings
               </button>
+              {isEditing && (
+                <button
+                  type="button"
+                  className={`px-3 py-2 font-medium text-xs ${
+                    activeTab === "manage"
+                      ? "text-[var(--color-brand-600)] border-b-2 border-[var(--color-brand-600)]"
+                      : "text-[var(--color-text-secondary)]"
+                  }`}
+                  onClick={() => setActiveTab("manage")}
+                >
+                  Manage
+                </button>
+              )}
             </div>
           </div>
 
@@ -388,6 +428,30 @@ const GroupHabitModal = ({
               </div>
             )}
 
+            {/* Manage Tab */}
+            {activeTab === "manage" && isEditing && (
+              <div className="space-y-4">
+                <div className="p-4 border border-amber-300 rounded-lg bg-amber-50">
+                  <div className="flex gap-2 items-center">
+                    <InfoCircledIcon className="text-amber-600" />
+                    <p className="text-sm text-amber-700 font-outfit">
+                      The actions below can't be undone. Please be certain.
+                    </p>
+                  </div>
+                </div>
+                
+                <button
+                  type="button"
+                  className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-outfit text-sm"
+                  onClick={handleDelete}
+                  disabled={isSubmitting}
+                >
+                  <TrashIcon className="w-4 h-4" />
+                  {showDeleteConfirm ? "Are you sure? Click again to delete" : "Delete Group Habit"}
+                </button>
+              </div>
+            )}
+
             {/* Action buttons */}
             <div className="flex gap-3 pt-4">
               <button
@@ -413,6 +477,8 @@ const GroupHabitModal = ({
               </button>
             </div>
           </form>
+
+
         </div>
       </div>
     </div>,
