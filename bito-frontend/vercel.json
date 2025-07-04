@@ -7,7 +7,13 @@
   ],
   "redirects": [
     {
-      "source": "https://www.bito.works/(.*)",
+      "source": "/(.+)",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.bito.works"
+        }
+      ],
       "destination": "https://bito.works/$1",
       "permanent": true
     }
