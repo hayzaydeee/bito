@@ -9,10 +9,14 @@ import {
   HeartIcon,
   CalendarIcon,
   ActivityLogIcon,
-  ReloadIcon
+  ReloadIcon,
+  EnvelopeClosedIcon,
+  EyeOpenIcon,
+  LockClosedIcon
 } from '@radix-ui/react-icons';
 import { groupsAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import '../components/ui/ModalAnimation.css';
 
 const InvitationPage = () => {
   const { token } = useParams();
@@ -135,21 +139,34 @@ const InvitationPage = () => {
 
   const getWorkspaceColor = (type) => {
     const colors = {
-      family: 'from-blue-500 to-blue-600',
-      team: 'from-purple-500 to-purple-600',
-      fitness: 'from-red-500 to-red-600',
-      study: 'from-green-500 to-green-600',
-      community: 'from-orange-500 to-orange-600'
+      family: 'var(--color-blue-500), var(--color-blue-600)',
+      team: 'var(--color-purple-500), var(--color-purple-600)',
+      fitness: 'var(--color-red-500), var(--color-red-600)',
+      study: 'var(--color-green-500), var(--color-green-600)',
+      community: 'var(--color-orange-500), var(--color-orange-600)'
     };
-    return colors[type] || 'from-gray-500 to-gray-600';
+    return colors[type] || 'var(--color-gray-500), var(--color-gray-600)';
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)]">
-        <div className="text-center">
-          <ReloadIcon className="w-8 h-8 animate-spin text-[var(--color-brand-600)] mx-auto mb-4" />
-          <p className="text-[var(--color-text-secondary)] font-outfit">Loading invitation...</p>
+      <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center p-4">
+        {/* Backdrop */}
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm" />
+        
+        {/* Loading Modal */}
+        <div className="relative bg-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)] shadow-xl p-8 w-full max-w-md mx-auto z-10 animate-zoom-in">
+          <div className="text-center">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center mx-auto mb-4">
+              <ReloadIcon className="w-8 h-8 animate-spin text-white" />
+            </div>
+            <div className="text-xl font-dmSerif gradient-text mb-2">
+              Loading Invitation
+            </div>
+            <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
+              Please wait while we verify your invitation...
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -157,110 +174,132 @@ const InvitationPage = () => {
 
   if (error || !invitation) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)] p-6">
-        <div className="max-w-md mx-auto text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CrossCircledIcon className="w-8 h-8 text-red-600" />
+      <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center p-4">
+        {/* Backdrop */}
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm" />
+        
+        {/* Error Modal */}
+        <div className="relative bg-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)] shadow-xl p-8 w-full max-w-md mx-auto z-10 animate-zoom-in">
+          <div className="text-center">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center mx-auto mb-4">
+              <CrossCircledIcon className="w-8 h-8 text-white" />
+            </div>
+            <div className="text-xl font-dmSerif gradient-text mb-2">
+              {error === 'This invitation has expired' ? 'Invitation Expired' : 'Invalid Invitation'}
+            </div>
+            <p className="text-sm text-[var(--color-text-secondary)] font-outfit mb-6">
+              {error || 'This invitation link is no longer valid.'}
+            </p>
+            <button
+              onClick={() => navigate('/')}
+              className="w-full py-3 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-xl font-outfit font-semibold transition-all duration-200"
+            >
+              Go to Bito
+            </button>
           </div>
-          <h1 className="text-2xl font-bold text-[var(--color-text-primary)] font-dmSerif mb-4">
-            {error === 'This invitation has expired' ? 'Invitation Expired' : 'Invalid Invitation'}
-          </h1>
-          <p className="text-[var(--color-text-secondary)] font-outfit mb-8">
-            {error || 'This invitation link is no longer valid.'}
-          </p>
-          <button
-            onClick={() => navigate('/')}
-            className="px-6 py-3 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white rounded-xl font-outfit font-semibold transition-all duration-200"
-          >
-            Go to Bito
-          </button>
         </div>
       </div>
     );
   }
 
   const WorkspaceIcon = getWorkspaceIcon(invitation.workspace.type);
-  const colorClass = getWorkspaceColor(invitation.workspace.type);
 
   return (
-    <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center p-6">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-[var(--color-surface-primary)] rounded-3xl shadow-2xl border border-[var(--color-border-primary)]/20 overflow-hidden">
+    <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
+      
+      {/* Main Invitation Modal */}
+      <div className="relative bg-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)] shadow-xl w-full max-w-lg mx-auto max-h-[90vh] overflow-y-auto z-10 animate-zoom-in">
+        <div className="space-y-6">
           {/* Header */}
-          <div className={`bg-gradient-to-r ${colorClass} px-8 py-12 text-center text-white`}>
-            <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
-              <WorkspaceIcon className="w-10 h-10" />
+          <div className="text-center p-6 pb-0">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center mx-auto mb-4">
+              <EnvelopeClosedIcon className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-3xl font-bold font-dmSerif mb-3">
-              You're invited to join
-            </h1>
-            <h2 className="text-2xl font-semibold font-outfit mb-2">
-              {invitation.workspace.name}
-            </h2>
-            <p className="text-white/80 font-outfit">
-              {invitation.workspace.description}
+            <div className="text-2xl font-dmSerif gradient-text mb-2">
+              You're Invited!
+            </div>
+            <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
+              Join {invitation.workspace.name} and start tracking habits together
             </p>
           </div>
 
-          {/* Content */}
-          <div className="p-8">
-            <div className="text-center mb-8">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-[var(--color-brand-100)] rounded-full flex items-center justify-center">
-                  <PersonIcon className="w-6 h-6 text-[var(--color-brand-600)]" />
+          {/* Workspace Info Card */}
+          <div className="mx-6">
+            <div className="bg-[var(--color-surface-elevated)] rounded-xl p-4 border border-[var(--color-border-primary)]/50">
+              <div className="flex items-center gap-3 mb-3">
+                <div 
+                  className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
+                  style={{ background: `linear-gradient(135deg, ${getWorkspaceColor(invitation.workspace.type)})` }}
+                >
+                  <WorkspaceIcon className="w-6 h-6" />
                 </div>
-                <div className="text-left">
-                  <p className="font-semibold text-[var(--color-text-primary)] font-outfit">
-                    Invited by {invitation.invitedBy.name}
-                  </p>
-                  <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
-                    as {invitation.role}
+                <div className="flex-1">
+                  <h3 className="font-semibold text-[var(--color-text-primary)] font-outfit">
+                    {invitation.workspace.name}
+                  </h3>
+                  <p className="text-xs text-[var(--color-text-secondary)] font-outfit capitalize">
+                    {invitation.workspace.type} • {invitation.role}
                   </p>
                 </div>
               </div>
-
-              {invitation.message && (
-                <div className="bg-[var(--color-surface-secondary)] rounded-2xl p-6 mb-6">
-                  <p className="text-[var(--color-text-primary)] font-outfit italic">
-                    "{invitation.message}"
-                  </p>
-                </div>
+              
+              {invitation.workspace.description && (
+                <p className="text-sm text-[var(--color-text-secondary)] font-outfit mb-3">
+                  {invitation.workspace.description}
+                </p>
               )}
 
-              <div className="grid grid-cols-2 gap-4 mb-8">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-[var(--color-text-primary)] font-dmSerif">
-                    {invitation.workspace.type}
-                  </div>
-                  <div className="text-sm text-[var(--color-text-secondary)] font-outfit">
-                    Workspace Type
-                  </div>
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2 text-[var(--color-text-tertiary)]">
+                  <PersonIcon className="w-3 h-3" />
+                  <span>Invited by {invitation.invitedBy.name}</span>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-[var(--color-text-primary)] font-dmSerif">
-                    {invitation.role}
-                  </div>
-                  <div className="text-sm text-[var(--color-text-secondary)] font-outfit">
-                    Your Role
-                  </div>
+                <div className="flex items-center gap-1">
+                  {invitation.workspace.type === 'family' && <LockClosedIcon className="w-3 h-3 text-blue-500" />}
+                  {invitation.workspace.type === 'team' && <EyeOpenIcon className="w-3 h-3 text-purple-500" />}
+                  <span className="text-[var(--color-text-tertiary)] capitalize">{invitation.workspace.type}</span>
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Login Form (if not authenticated) */}
-            {!user && showLoginForm && (
-              <div className="mb-8 p-6 bg-[var(--color-surface-secondary)] rounded-2xl">
-                <h3 className="text-lg font-semibold text-[var(--color-text-primary)] font-outfit mb-4">
-                  Login to accept invitation
-                </h3>
-                <form onSubmit={handleLogin} className="space-y-4">
+          {/* Personal Message */}
+          {invitation.message && (
+            <div className="mx-6">
+              <div className="bg-[var(--color-surface-secondary)] rounded-xl p-4 border-l-4 border-[var(--color-brand-500)]">
+                <p className="text-xs font-medium text-[var(--color-text-tertiary)] font-outfit mb-1">
+                  Personal message from {invitation.invitedBy.name}:
+                </p>
+                <p className="text-sm text-[var(--color-text-primary)] font-outfit italic">
+                  "{invitation.message}"
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Login Form (if not authenticated) */}
+          {!user && showLoginForm && (
+            <div className="mx-6">
+              <div className="bg-[var(--color-surface-secondary)] rounded-xl p-4 space-y-4">
+                <div className="text-center">
+                  <h3 className="text-sm font-semibold text-[var(--color-text-primary)] font-outfit mb-1">
+                    Login to Accept Invitation
+                  </h3>
+                  <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
+                    Sign in to your Bito account to join the workspace
+                  </p>
+                </div>
+                
+                <form onSubmit={handleLogin} className="space-y-3">
                   <div>
                     <input
                       type="email"
                       value={loginData.email}
                       onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
-                      placeholder="Email"
-                      className="w-full px-4 py-3 bg-[var(--color-surface-primary)] border border-[var(--color-border-primary)]/40 rounded-xl text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)] focus:border-transparent"
+                      placeholder="Email address"
+                      className="w-full px-3 py-2 bg-[var(--color-surface-primary)] border border-[var(--color-border-primary)] rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] font-outfit text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)] focus:border-transparent"
                       required
                     />
                   </div>
@@ -270,37 +309,40 @@ const InvitationPage = () => {
                       value={loginData.password}
                       onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
                       placeholder="Password"
-                      className="w-full px-4 py-3 bg-[var(--color-surface-primary)] border border-[var(--color-border-primary)]/40 rounded-xl text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)] focus:border-transparent"
+                      className="w-full px-3 py-2 bg-[var(--color-surface-primary)] border border-[var(--color-border-primary)] rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] font-outfit text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)] focus:border-transparent"
                       required
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={processing}
-                    className="w-full py-3 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] disabled:opacity-50 text-white rounded-xl font-outfit font-semibold transition-all duration-200"
+                    className="w-full py-2 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] disabled:opacity-50 text-white rounded-lg font-outfit font-medium text-sm transition-all duration-200"
                   >
                     {processing ? 'Logging in...' : 'Login & Join Workspace'}
                   </button>
                 </form>
-                <p className="text-center text-sm text-[var(--color-text-secondary)] font-outfit mt-4">
-                  Don't have an account? <a href="/signup" className="text-[var(--color-brand-600)] hover:underline">Sign up here</a>
+                
+                <p className="text-center text-xs text-[var(--color-text-secondary)] font-outfit">
+                  Don't have an account? <a href="/signup" className="text-[var(--color-brand-600)] hover:underline font-medium">Sign up here</a>
                 </p>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Action Buttons */}
-            <div className="flex gap-4">
+          {/* Action Buttons */}
+          <div className="p-6 pt-0">
+            <div className="flex gap-3">
               <button
                 onClick={handleDeclineInvitation}
                 disabled={processing}
-                className="flex-1 py-3 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/40 text-[var(--color-text-primary)] rounded-xl font-outfit font-medium transition-all duration-200"
+                className="flex-1 py-3 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] rounded-lg font-outfit font-medium text-sm transition-all duration-200"
               >
                 Decline
               </button>
               <button
                 onClick={handleAcceptInvitation}
                 disabled={processing}
-                className="flex-1 py-3 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] disabled:opacity-50 text-white rounded-xl font-outfit font-semibold transition-all duration-200 flex items-center justify-center gap-2"
+                className="flex-1 py-3 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] disabled:opacity-50 text-white rounded-lg font-outfit font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2"
               >
                 {processing ? (
                   <>
@@ -317,8 +359,8 @@ const InvitationPage = () => {
             </div>
 
             {error && (
-              <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-                <p className="text-red-600 font-outfit text-sm">{error}</p>
+              <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <p className="text-red-600 dark:text-red-400 font-outfit text-xs">{error}</p>
               </div>
             )}
           </div>

@@ -847,3 +847,107 @@ h1, h2, h3, h4, h5, h6 {
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     inset 0 -1px 0 rgba(0, 0, 0, 0.1);
 }
+
+/* ========================================
+   INTERACTIVE ONBOARDING STYLES
+   ======================================== */
+
+/* Success animation when user completes an onboarding step */
+.onboarding-success {
+  animation: onboarding-pulse 0.6s ease-in-out;
+}
+
+@keyframes onboarding-pulse {
+  0% { 
+    transform: scale(1); 
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  }
+  50% { 
+    transform: scale(1.05); 
+    box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+  }
+  100% { 
+    transform: scale(1); 
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+/* Improved Joyride spotlight styling */
+.joyride-spotlight {
+  border-radius: 12px !important;
+}
+
+/* Onboarding highlight effect for interactive elements */
+[data-tour] {
+  position: relative;
+}
+
+/* Subtle glow effect for tour targets */
+.onboarding-highlight {
+  animation: gentle-glow 2s ease-in-out infinite;
+}
+
+@keyframes gentle-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(99, 102, 241, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
+  }
+}
+
+/* Interactive state indicator */
+.onboarding-waiting {
+  position: relative;
+}
+
+.onboarding-waiting::after {
+  content: '👆';
+  position: absolute;
+  top: -30px;
+  right: -10px;
+  font-size: 20px;
+  animation: bounce-pointer 1s ease-in-out infinite;
+  z-index: 1000;
+}
+
+@keyframes bounce-pointer {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Override Joyride default styles to match Bito theme */
+.__floater__arrow {
+  border-color: rgb(30 41 59) !important;
+}
+
+.__floater__body {
+  background: rgb(15 23 42) !important;
+  border: 1px solid rgba(99, 102, 241, 0.2) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Onboarding modal specific overrides */
+.onboarding-modal {
+  z-index: 10001 !important;
+}
+
+/* Ensure tour targets are visible during onboarding */
+[data-tour] {
+  transition: all 0.3s ease;
+}
+
+/* Add subtle border to tour targets when onboarding is active */
+body.onboarding-active [data-tour] {
+  border: 2px solid transparent;
+  transition: border-color 0.3s ease;
+}
+
+body.onboarding-active [data-tour]:hover {
+  border-color: rgba(99, 102, 241, 0.4);
+}

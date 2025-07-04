@@ -353,7 +353,7 @@ const BaseGridContainer = ({
 
           <div className="flex items-center gap-3">
             {/* Global edit mode toggle */}
-            <label className="flex items-center gap-2 text-sm font-outfit text-[var(--color-text-secondary)]">
+            <label className="flex items-center gap-2 text-sm font-outfit text-[var(--color-text-secondary)]" data-tour="edit-mode-toggle">
               <input
                 type="checkbox"
                 checked={globalEditMode}
@@ -367,6 +367,7 @@ const BaseGridContainer = ({
             <button
               onClick={() => setShowWidgetPicker(!showWidgetPicker)}
               className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg text-sm transition-all duration-200 font-outfit"
+              data-tour="add-widget-btn"
             >
               <PlusIcon className="w-4 h-4" />
               Add Widget
@@ -415,6 +416,7 @@ const BaseGridContainer = ({
               <div
                 key={widgetId}
                 data-edit-mode={isInEditMode}
+                data-grid-widget={widgetId}
                 className={`glass-card rounded-xl overflow-hidden transition-all duration-200 ${
                   isInEditMode ? 'hover:shadow-xl hover:border-[var(--color-brand-400)]/50 edit-mode' : ''
                 }`}

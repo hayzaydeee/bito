@@ -176,7 +176,7 @@ const QuickActionsWidget = memo(
     };
 
     return (
-      <div className="w-full h-full flex flex-col">
+      <div className="w-full h-full flex flex-col" data-tour="quick-actions">
         <div className="widget-content-area">
           {habits.length === 0 ? (
             <EmptyStateWithAddHabit onAddHabit={handleAddHabit} />
@@ -201,6 +201,7 @@ const QuickActionsWidget = memo(
                     (action.id === "quick-complete" && habits.length === 0) ||
                     action.id === "csv-import"
                   }
+                  data-tour={action.id === "add-habit" ? "add-habit-btn" : undefined}
                 >
                   <div className="flex-shrink-0">
                     {React.cloneElement(action.icon, {
