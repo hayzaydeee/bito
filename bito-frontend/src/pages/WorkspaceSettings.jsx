@@ -143,6 +143,39 @@ const WorkspaceSettings = () => {
     }
   };
 
+  const handleDeleteWorkspace = async () => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this workspace? This action cannot be undone and all workspace data will be permanently lost."
+      )
+    ) {
+      return;
+    }
+
+    // Double confirmation for deletion
+    if (
+      !confirm(
+        "This is your final warning! Deleting this workspace will permanently remove all data, habits, and member progress. Type 'DELETE' in the next prompt to confirm."
+      )
+    ) {
+      return;
+    }
+
+    const userConfirmation = prompt("Type 'DELETE' to confirm workspace deletion:");
+    if (userConfirmation !== "DELETE") {
+      setError("Workspace deletion cancelled - confirmation text did not match.");
+      return;
+    }
+
+    try {
+      await workspacesAPI.deleteWorkspace(groupId);
+      navigate("/app/groups");
+    } catch (error) {
+      console.error("Error deleting workspace:", error);
+      setError("Failed to delete workspace");
+    }
+  };
+
   // Category options
   const categoryOptions = [
     { value: "all", label: "All Settings", icon: GearIcon },
@@ -395,11 +428,11 @@ const WorkspaceSettings = () => {
                     <Button
                       variant="solid"
                       color="red"
-                      disabled={true}
+                      onClick={handleDeleteWorkspace}
                       className="font-outfit"
                     >
                       <TrashIcon className="w-4 h-4 mr-2" />
-                      Delete (Coming Soon)
+                      Delete Workspace
                     </Button>
                   </div>
                 )}
@@ -417,6 +450,7 @@ const WorkspaceSettings = () => {
       isOwner,
       handleSettingChange,
       handleLeaveWorkspace,
+      handleDeleteWorkspace,
       navigate,
       groupId,
     ]

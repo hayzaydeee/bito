@@ -1061,11 +1061,42 @@ router.delete('/:id/members/:userId', authenticateJWT, async (req, res) => {
       });
     }
     
-    // Can't remove owner
-    if (workspace.ownerId.toString() === req.params.userId) {
+    // Can't remove owner unless they're removing themselves
+    if (workspace.ownerId.toString() === req.params.userId && !isRemovingSelf) {
       return res.status(400).json({
         success: false,
-        error: 'Cannot remove workspace owner'
+        error: 'Cannot remove workspace owner. Only the owner can leave/delete the workspace.'
+      });
+    }
+
+    // If owner is removing themselves, delete the entire workspace
+    if (workspace.ownerId.toString() === req.params.userId && isRemovingSelf) {
+      console.log(`🗑️ Owner leaving workspace, initiating workspace deletion...`);
+      
+      // Delete all related data (same as in the DELETE /:id endpoint)
+      const workspaceHabits = await WorkspaceHabit.find({ workspaceId: workspace._id });
+      const workspaceHabitIds = workspaceHabits.map(h => h._id);
+      
+      await HabitEntry.deleteMany({
+        habitId: { $in: workspaceHabitIds }
+      });
+
+      const memberHabits = await MemberHabit.find({ workspaceId: workspace._id });
+      const memberHabitIds = memberHabits.map(h => h._id);
+      
+      await HabitEntry.deleteMany({
+        habitId: { $in: memberHabitIds }
+      });
+      await MemberHabit.deleteMany({ workspaceId: workspace._id });
+      await WorkspaceHabit.deleteMany({ workspaceId: workspace._id });
+      await Challenge.deleteMany({ workspaceId: workspace._id });
+      await Activity.deleteMany({ workspaceId: workspace._id });
+      await Invitation.deleteMany({ workspaceId: workspace._id });
+      await Workspace.findByIdAndDelete(workspace._id);
+
+      return res.json({
+        success: true,
+        message: 'Workspace deleted successfully'
       });
     }
     
@@ -2003,15 +2034,18 @@ router.delete('/workspace-habits/:id', authenticateJWT, async (req, res) => {
   }
 });
 
-// @route   GET /api/workspaces/:workspaceId/dashboard-permissions
-// @desc    Get user's dashboard sharing permissions for a workspace
-// @access  Private
-router.get('/:workspaceId/dashboard-permissions', authenticateJWT, async (req, res) => {
+// @route   DELETE /api/workspaces/:id
+// @desc    Delete entire workspace
+// @route   DELETE /api/workspaces/:id
+// @access  Private (Owner only)
+router.delete('/:id', authenticateJWT, async (req, res) => {
   try {
-    const { workspaceId } = req.params;
+    const workspaceId = req.params.id;
     const userId = req.user.id;
 
-    // Verify user is a member of this workspace
+    console.log(`🗑️ DELETE WORKSPACE REQUEST: Workspace ${workspaceId}, User ${userId}`);
+
+    // Get the workspace and verify ownership
     const workspace = await Workspace.findById(workspaceId);
     if (!workspace) {
       return res.status(404).json({
@@ -2020,1101 +2054,71 @@ router.get('/:workspaceId/dashboard-permissions', authenticateJWT, async (req, r
       });
     }
 
-    const member = workspace.members.find(m => m.userId.toString() === userId);
-    if (!member) {
-      return res.status(403).json({
-        success: false,
-        error: 'Not a member of this workspace'
-      });
-    }
-
-    // Get user's dashboard sharing permissions for this workspace
-    const user = await User.findById(userId);
-    const dashboardPermission = user.dashboardSharingPermissions.find(
-      perm => perm.workspaceId.toString() === workspaceId
+    // Check if user is the owner
+    const member = workspace.members.find(
+      (m) => m.userId.toString() === userId
     );
 
-    res.json({
-      success: true,
-      permissions: dashboardPermission || {
-        workspaceId,
-        allowedMembers: [],
-        isPublicToWorkspace: false
-      }
-    });
-
-  } catch (error) {
-    console.error('Error getting dashboard permissions:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get dashboard permissions',
-      details: error.message
-    });
-  }
-});
-
-// @route   PUT /api/workspaces/:workspaceId/dashboard-permissions
-// @desc    Update user's dashboard sharing permissions for a workspace
-// @access  Private
-router.put('/:workspaceId/dashboard-permissions', [
-  authenticateJWT,
-  body('isPublicToWorkspace').optional().isBoolean(),
-  body('allowedMembers').optional().isArray()
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        error: 'Validation failed',
-        details: errors.array()
-      });
-    }
-
-    const { workspaceId } = req.params;
-    const userId = req.user.id;
-    const { isPublicToWorkspace, allowedMembers } = req.body;
-
-    // Verify user is a member of this workspace
-    const workspace = await Workspace.findById(workspaceId);
-    if (!workspace) {
-      return res.status(404).json({
-        success: false,
-        error: 'Workspace not found'
-      });
-    }
-
-    const member = workspace.members.find(m => m.userId.toString() === userId);
-    if (!member) {
+    if (!member || member.role !== 'owner') {
       return res.status(403).json({
         success: false,
-        error: 'Not a member of this workspace'
+        error: 'You do not have permission to delete this workspace'
       });
     }
 
-    // Validate allowedMembers are actual workspace members
-    if (allowedMembers && allowedMembers.length > 0) {
-      const validMembers = allowedMembers.filter(memberId =>
-        workspace.members.some(m => m.userId.toString() === memberId)
-      );
-      
-      if (validMembers.length !== allowedMembers.length) {
-        return res.status(400).json({
-          success: false,
-          error: 'Some specified members are not part of this workspace'
-        });
-      }
-    }
+    console.log(`🗑️ Confirmed ownership, proceeding with deletion...`);
 
-    // Update user's dashboard sharing permissions
-    const user = await User.findById(userId);
-    const existingPermissionIndex = user.dashboardSharingPermissions.findIndex(
-      perm => perm.workspaceId.toString() === workspaceId
-    );
-
-    const permissionData = {
-      workspaceId,
-      allowedMembers: allowedMembers || [],
-      isPublicToWorkspace: isPublicToWorkspace !== undefined ? isPublicToWorkspace : false,
-      updatedAt: new Date()
-    };
-
-    if (existingPermissionIndex >= 0) {
-      user.dashboardSharingPermissions[existingPermissionIndex] = permissionData;
-    } else {
-      user.dashboardSharingPermissions.push(permissionData);
-    }
-
-    await user.save();
-
-    res.json({
-      success: true,
-      permissions: permissionData,
-      message: 'Dashboard sharing permissions updated successfully'
-    });
-
-  } catch (error) {
-    console.error('Error updating dashboard permissions:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to update dashboard permissions',
-      details: error.message
-    });
-  }
-});
-
-// @route   GET /api/workspaces/:workspaceId/members/:memberId/dashboard
-// @desc    View another member's dashboard (with permission)
-// @access  Private
-router.get('/:workspaceId/members/:memberId/dashboard', authenticateJWT, async (req, res) => {
-  try {
-    const { workspaceId, memberId } = req.params;
-    const userId = req.user.id;
-
-    // Verify workspace exists and user is a member
-    const workspace = await Workspace.findById(workspaceId);
-    if (!workspace) {
-      return res.status(404).json({
-        success: false,
-        error: 'Workspace not found'
-      });
-    }
-
-    const requestingMember = workspace.members.find(m => m.userId.toString() === userId);
-    if (!requestingMember) {
-      return res.status(403).json({
-        success: false,
-        error: 'Not a member of this workspace'
-      });
-    }
-
-    // Verify target member exists in workspace
-    const targetMember = workspace.members.find(m => m.userId.toString() === memberId);
-    if (!targetMember) {
-      return res.status(404).json({
-        success: false,
-        error: 'Target member not found in this workspace'
-      });
-    }
-
-    // Get target user for basic info (name, avatar, etc.)
-    const targetUser = await User.findById(memberId);
+    // Delete all related data in the correct order to avoid reference errors
     
-    if (!targetUser) {
-      return res.status(404).json({
-        success: false,
-        error: 'Target user not found'
-      });
-    }
-    
-    // SIMPLIFIED PERMISSION MODEL:
-    // Being in the same workspace automatically grants permission to view dashboards
-    // No additional permission checks needed
-    console.log(`Member dashboard access granted: ${userId} viewing ${memberId}'s dashboard in workspace ${workspaceId}`);
-    
-    // Permission is automatic - if you're in the same workspace, you can see each other's dashboards
-    const hasPermission = true;
-
-    // Get ALL habits for the member (regardless of workspace association)
-    // This is the key change - we're getting their FULL personal dashboard
-    const allMemberHabits = await Habit.find({
-      userId: memberId
-    });
-    
-    console.log(`Found ${allMemberHabits.length} total Habits for user ${memberId} - their complete dashboard`);
-    
-    // For debugging, let's also see how many are workspace-related vs personal
-    const workspaceHabits = allMemberHabits.filter(h => h.workspaceId);
-    const personalHabits = allMemberHabits.filter(h => !h.workspaceId);
-    
-    console.log(`Habit breakdown for ${memberId}: ${workspaceHabits.length} workspace-related, ${personalHabits.length} personal habits`);
-    
-    // We don't need MemberHabit lookup anymore as we're showing ALL habits directly
-    // This simplifies our approach and provides a true dashboard mirror
-    
-    // We now work directly with the member's habits - true mirroring of their dashboard
-    const processedHabits = [];
-    const habitIdToEntryMap = {};
-    
-    // Process each habit directly from the user's personal collection
-    for (const habit of allMemberHabits) {
-      try {
-        // Process each habit directly - no need for complex mapping
-        const processedHabit = {
-          ...habit.toObject(),
-          _id: habit._id, // Keep the original Habit ID
-          habitId: habit._id, // For consistency with frontend expectations
-          isGroupHabit: !!habit.workspaceId, // Flag if it's associated with a workspace
-        };
-        
-        // Ensure essential fields have defaults if missing
-        if (!processedHabit.name) processedHabit.name = 'Unnamed habit';
-        if (!processedHabit.category) processedHabit.category = 'general';
-        if (!processedHabit.frequency) processedHabit.frequency = { days: [1,2,3,4,5,6,0] };
-        
-        // Add to our processed habits collection
-        processedHabits.push(processedHabit);
-        
-        // Track this habit ID for entry lookup
-        habitIdToEntryMap[habit._id.toString()] = habit._id.toString();
-      } catch (error) {
-        console.error(`Error processing habit ${habit._id}:`, error);
-      }
-    }
-    
-    // Get habit IDs to fetch entries for - now simply all the user's habit IDs
-    const habitIds = Object.keys(habitIdToEntryMap).map(id => new mongoose.Types.ObjectId(id));
-    
-    // Get ALL the member's habit entries for any habit they track
-    const habitEntries = await HabitEntry.find({
-      habitId: { $in: habitIds },
-      userId: memberId
-    });
-    
-    console.log(`Found ${habitEntries.length} entries for ${habitIds.length} habits`);
-
-    // Format entries as an object keyed by habit ID - much simpler now
-    const entriesMap = {};
-    habitEntries.forEach(entry => {
-      const habitId = entry.habitId.toString();
-      
-      if (!entriesMap[habitId]) {
-        entriesMap[habitId] = [];
-      }
-      entriesMap[habitId].push(entry);
-    });
-
-    // Get basic member info
-    const memberInfo = {
-      id: targetUser._id,
-      name: targetUser.name,
-      avatar: targetUser.avatar
-    };
-
-    // Log summary for debugging
-    console.log('Member dashboard summary:', {
-      memberId,
-      memberName: memberInfo.name,
-      workspaceId,
-      habitsCount: processedHabits.length,
-      entriesCount: Object.values(entriesMap).flat().length,
-      habitIdsMapped: Object.keys(habitIdToEntryMap).length,
-    });
-    
-    // Check if we have no habits and provide additional debug info
-    if (processedHabits.length === 0) {
-      console.warn('No habits found for member dashboard - Additional context:');
-      
-      // Check user account status and other data
-      const userDetails = await User.findById(memberId, 'name email createdAt lastLogin');
-      
-      // Log detailed information
-      console.log({
-        message: "User has no habits tracked at all",
-        memberId,
-        userSince: userDetails?.createdAt,
-        lastActive: userDetails?.lastLogin,
-        accountExists: !!userDetails
-      });
-      
-      // We'll handle empty states in the frontend
-    }
-
-    res.json({
-      success: true,
-      member: memberInfo,
-      habits: processedHabits,
-      entries: entriesMap,
-      workspace: {
-        id: workspace._id,
-        name: workspace.name
-      }
-    });
-
-  } catch (error) {
-    console.error('Error accessing member dashboard:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to access member dashboard',
-      details: error.message
-    });
-  }
-});
-
-// @route   GET /api/workspaces/:workspaceId/shared-habits
-// @desc    Get habits that multiple members are tracking
-// @access  Private
-router.get('/:workspaceId/shared-habits', authenticateJWT, async (req, res) => {
-  try {
-    const { workspaceId } = req.params;
-    const userId = req.user.id;
-
-    // Verify user is a member of this workspace
-    const workspace = await Workspace.findById(workspaceId);
-    if (!workspace) {
-      return res.status(404).json({
-        success: false,
-        error: 'Workspace not found'
-      });
-    }
-
-    const member = workspace.members.find(m => m.userId.toString() === userId);
-    if (!member) {
-      return res.status(403).json({
-        success: false,
-        error: 'Not a member of this workspace'
-      });
-    }
-
-    // Get all workspace habits with adoption counts
+    // 1. Delete all habit entries for workspace habits
     const workspaceHabits = await WorkspaceHabit.find({ workspaceId });
+    const workspaceHabitIds = workspaceHabits.map(h => h._id);
     
-    const sharedHabits = await Promise.all(
-      workspaceHabits.map(async (habit) => {
-        // Count non-private adoptions
-        const adoptions = await MemberHabit.find({
-          workspaceId,
-          workspaceHabitId: habit._id,
-          'personalSettings.isPrivate': { $ne: true }
-        }).populate('userId', 'name avatar');
+    await HabitEntry.deleteMany({
+      habitId: { $in: workspaceHabitIds }
+    });
+    console.log(`🗑️ Deleted habit entries for workspace habits`);
 
-        return {
-          ...habit.toObject(),
-          adoptedBy: adoptions.map(adoption => ({
-            userId: adoption.userId._id,
-            name: adoption.userId.name,
-            avatar: adoption.userId.avatar,
-            personalSettings: adoption.personalSettings
-          })),
-          adoptionCount: adoptions.length,
-          isShared: adoptions.length > 1
-        };
-      })
-    );
+    // 2. Delete all member habits for this workspace
+    const memberHabits = await MemberHabit.find({ workspaceId });
+    const memberHabitIds = memberHabits.map(h => h._id);
+    
+    await HabitEntry.deleteMany({
+      habitId: { $in: memberHabitIds }
+    });
+    await MemberHabit.deleteMany({ workspaceId });
+    console.log(`🗑️ Deleted member habits and their entries`);
 
-    // Filter to only habits that are shared by multiple members
-    const filteredSharedHabits = sharedHabits.filter(habit => habit.isShared);
+    // 3. Delete workspace habits
+    await WorkspaceHabit.deleteMany({ workspaceId });
+    console.log(`🗑️ Deleted workspace habits`);
+
+    // 4. Delete challenges
+    await Challenge.deleteMany({ workspaceId });
+    console.log(`🗑️ Deleted challenges`);
+
+    // 5. Delete activities
+    await Activity.deleteMany({ workspaceId });
+    console.log(`🗑️ Deleted activities`);
+
+    // 6. Delete invitations
+    await Invitation.deleteMany({ workspaceId });
+    console.log(`🗑️ Deleted invitations`);
+
+    // 7. Finally delete the workspace itself
+    await Workspace.findByIdAndDelete(workspaceId);
+    console.log(`🗑️ Deleted workspace`);
 
     res.json({
       success: true,
-      sharedHabits: filteredSharedHabits,
-      totalSharedHabits: filteredSharedHabits.length
+      message: 'Workspace and all related data deleted successfully'
     });
 
   } catch (error) {
-    console.error('Error getting shared habits:', error);
+    console.error('Error deleting workspace:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to get shared habits',
-      details: error.message
-    });
-  }
-});
-
-// ==============================================
-// GROUP TRACKING APIs (For Accountability)
-// ==============================================
-
-// @route   GET /api/workspaces/:workspaceId/group-trackers
-// @desc    Get all members' progress on shared habits for group accountability
-// @access  Private
-router.get('/:workspaceId/group-trackers', authenticateJWT, async (req, res) => {
-  try {
-    const { workspaceId } = req.params;
-    const userId = req.user.id;
-
-    // Verify user has access to workspace
-    const workspace = await Workspace.findById(workspaceId);
-    if (!workspace) {
-      return res.status(404).json({
-        success: false,
-        error: 'Workspace not found'
-      });
-    }
-
-    const isMember = workspace.members.some(member => 
-      member.userId.toString() === userId
-    );
-
-    if (!isMember) {
-      return res.status(403).json({
-        success: false,
-        error: 'Access denied. You are not a member of this workspace.'
-      });
-    }
-
-    // Get all workspace members
-    const memberIds = workspace.members
-      .filter(member => member.status === 'active')
-      .map(member => member.userId);
-
-    // Get all workspace habits that have been adopted by members
-    const memberHabits = await Habit.find({
-      source: 'workspace',
-      workspaceId: workspaceId,
-      userId: { $in: memberIds },
-      isActive: true
-    })
-    .populate('userId', 'name email avatar')
-    .populate('workspaceHabitId', 'name description category icon color')
-    .sort({ adoptedAt: -1 });
-
-    // Group habits by member for the tracker widgets
-    const memberTrackers = {};
-    
-    memberHabits.forEach(habit => {
-      const memberId = habit.userId._id.toString();
-      if (!memberTrackers[memberId]) {
-        memberTrackers[memberId] = {
-          member: habit.userId,
-          habits: [],
-          stats: {
-            totalHabits: 0,
-            activeStreaks: 0,
-            completionRate: 0
-          }
-        };
-      }
-      
-      // Apply privacy filters
-      const visibleData = habit.getVisibleDataForWorkspace('member', userId.toString());
-      if (visibleData) {
-        memberTrackers[memberId].habits.push(visibleData);
-        memberTrackers[memberId].stats.totalHabits++;
-        if (habit.stats.currentStreak > 0) {
-          memberTrackers[memberId].stats.activeStreaks++;
-        }
-      }
-    });
-
-    // Calculate completion rates for each member
-    for (const [memberId, tracker] of Object.entries(memberTrackers)) {
-      if (tracker.habits.length > 0) {
-        const totalCompletionRate = tracker.habits.reduce((sum, habit) => {
-          return sum + (habit.stats?.completionRate || 0);
-        }, 0);
-        tracker.stats.completionRate = Math.round(totalCompletionRate / tracker.habits.length);
-      }
-    }
-
-    res.json({
-      success: true,
-      memberTrackers: Object.values(memberTrackers)
-    });
-
-  } catch (error) {
-    console.error('Error fetching group trackers:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch group trackers',
-      details: error.message
-    });
-  }
-});
-
-// @route   GET /api/workspaces/:workspaceId/leaderboard
-// @desc    Get workspace leaderboard for group accountability
-// @access  Private
-router.get('/:workspaceId/leaderboard', authenticateJWT, async (req, res) => {
-  try {
-    const { workspaceId } = req.params;
-
-    // Verify workspace membership
-    const workspace = await Workspace.findById(workspaceId);
-    if (!workspace) {
-
-      return res.status(404).json({
-        success: false,
-        error: 'Workspace not found'
-      });
-    }
-
-    const isMember = workspace.members.some(member => 
-      member.userId.toString() === req.user.id && member.status === 'active'
-    );
-
-    if (!isMember) {
-      return res.status(403).json({
-        success: false,
-        error: 'Not authorized to access this workspace'
-      });
-    }
-
-    // Get all workspace habits adopted by members
-    const workspaceHabits = await Habit.find({
-      source: 'workspace',
-      workspaceId: workspaceId
-    }).populate('userId', 'username email firstName lastName');
-
-    // Calculate leaderboard stats
-    const memberStats = {};
-    for (const habit of workspaceHabits) {
-      const userId = habit.userId._id.toString();
-      if (!memberStats[userId]) {
-        memberStats[userId] = {
-          userId: userId,
-          user: {
-            id: habit.userId._id,
-            username: habit.userId.username,
-            firstName: habit.userId.firstName,
-            lastName: habit.userId.lastName
-          },
-          totalHabits: 0,
-          currentStreak: 0,
-          longestStreak: 0,
-          completionRate: 0,
-          score: 0,
-          completedDays: 0,
-          totalPossibleDays: 0
-        };
-      }
-
-      const stats = memberStats[userId];
-      stats.totalHabits++;
-      stats.currentStreak += habit.streak || 0;
-      stats.longestStreak += habit.longestStreak || 0;
-      stats.completedDays += habit.completedDays || 0;
-      stats.totalPossibleDays += habit.totalDays || habit.completedDays || 0;
-    }
-
-    // Calculate final scores and completion rates
-    const leaderboard = Object.values(memberStats)
-      .map(stats => {
-        stats.completionRate = stats.totalPossibleDays > 0 
-          ? Math.round((stats.completedDays / stats.totalPossibleDays) * 100)
-          : 0;
-        
-        // Score calculation: completion rate * total habits + current streak bonus
-        stats.score = Math.round(
-          (stats.completionRate * stats.totalHabits) + 
-          (stats.currentStreak * 2) +
-          (stats.longestStreak * 0.5)
-        );
-        
-        return stats;
-      })
-      .sort((a, b) => b.score - a.score);
-
-    res.json({
-      success: true,
-      leaderboard
-    });
-
-  } catch (error) {
-    console.error('Error fetching leaderboard:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch leaderboard',
-      details: error.message
-    });
-  }
-});
-
-// @route   GET /api/workspaces/:workspaceId/challenges
-// @desc    Get workspace challenges for group accountability
-// @access  Private
-router.get('/:workspaceId/challenges', authenticateJWT, async (req, res) => {
-  try {
-    const { workspaceId } = req.params;
-
-    // Verify workspace membership
-    const workspace = await Workspace.findById(workspaceId);
-    if (!workspace) {
-      return res.status(404).json({
-        success: false,
-        error: 'Workspace not found'
-      });
-    }
-
-    const isMember = workspace.members.some(member => 
-      member.userId.toString() === req.user.id && member.status === 'active'
-    );
-
-    if (!isMember) {
-      return res.status(403).json({
-        success: false,
-        error: 'Not authorized to access this workspace'
-      });
-    }
-
-    // Build query based on filters
-    const { status } = req.query;
-    const query = { workspaceId };
-    if (status) {
-      query.status = status;
-    }
-
-    // Find challenges from database
-    let challenges = await Challenge.find(query)
-      .populate('createdBy', 'name email')
-      .populate('habitIds', 'name icon')
-      .sort({ createdAt: -1 });
-    
-    // If no challenges exist yet, seed with default challenge
-    if (challenges.length === 0) {
-      // Create a default challenge for new workspaces
-      const defaultChallenge = new Challenge({
-        workspaceId,
-        title: '7-Day Consistency Challenge',
-        description: 'Complete all your habits for 7 consecutive days',
-        type: 'streak',
-        target: 7,
-        startDate: new Date(),
-        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        status: 'upcoming',
-        reward: '🏆 Consistency Champion Badge',
-        createdBy: req.user.id,
-      });
-      
-      await defaultChallenge.save();
-      challenges = [defaultChallenge];
-    }
-
-    // Format response with participant counts
-    const formattedChallenges = challenges.map(challenge => {
-      const { _id, ...rest } = challenge.toObject();
-      return {
-        id: _id,
-        ...rest,
-        participantsCount: challenge.participants ? challenge.participants.length : 0
-      };
-    });
-
-    res.json({
-      success: true,
-      challenges: formattedChallenges
-    });
-
-  } catch (error) {
-    console.error('Error fetching challenges:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch challenges',
-      details: error.message
-    });
-  }
-});
-
-// @route   POST /api/workspaces/:workspaceId/challenges
-// @desc    Create a new workspace challenge
-// @access  Private
-router.post('/:workspaceId/challenges', authenticateJWT, [
-  body('title').notEmpty().withMessage('Title is required'),
-  body('description').notEmpty().withMessage('Description is required'),
-  body('type').isIn(['streak', 'collective', 'completion']).withMessage('Invalid challenge type'),
-  body('target').isNumeric().withMessage('Target must be a number')
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        error: 'Validation failed',
-        details: errors.array()
-      });
-    }
-
-    const { workspaceId } = req.params;
-    const { title, description, type, target, duration = 7 } = req.body;
-
-    // Verify workspace membership and admin role
-    const workspace = await Workspace.findById(workspaceId);
-    if (!workspace) {
-      return res.status(404).json({
-        success: false,
-        error: 'Workspace not found'
-      });
-    }
-
-    const member = workspace.members.find(member => 
-      member.userId.toString() === req.user.id && member.status === 'active'
-    );
-
-    if (!member || member.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        error: 'Not authorized to create challenges in this workspace'
-      });
-    }
-
-    // Create a new challenge in the database
-    const { reward, habitIds, startDate, endDate } = req.body;
-    
-    const newChallenge = new Challenge({
-      workspaceId,
-      title,
-      description,
-      type,
-      target,
-      startDate: startDate || new Date(),
-      endDate: endDate || new Date(Date.now() + duration * 24 * 60 * 60 * 1000),
-      status: 'upcoming',
-      createdBy: req.user.id,
-      reward: reward || '🎉 Challenge Completion Badge',
-      habitIds: habitIds || [],
-      participants: [{ userId: req.user.id }] // Creator joins by default
-    });
-    
-    await newChallenge.save();
-    
-    // Create an activity for this challenge creation
-    const activity = new Activity({
-      workspaceId,
-      userId: req.user.id,
-      type: 'challenge_created',
-      data: {
-        challengeId: newChallenge._id,
-        challengeName: newChallenge.title,
-        type: newChallenge.type
-      }
-    });
-    
-    await activity.save();
-
-    res.status(201).json({
-      success: true,
-      challenge: {
-        ...newChallenge.toObject(),
-        id: newChallenge._id,
-        participantsCount: 1
-      }
-    });
-
-  } catch (error) {
-    console.error('Error creating challenge:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to create challenge',
-      details: error.message
-    });
-  }
-});
-
-// @route   POST /api/workspaces/:workspaceId/challenges/:challengeId/join
-// @desc    Join a workspace challenge
-// @access  Private
-router.post('/:workspaceId/challenges/:challengeId/join', authenticateJWT, async (req, res) => {
-  try {
-    const { workspaceId, challengeId } = req.params;
-    
-    // Verify workspace membership
-    const workspace = await Workspace.findById(workspaceId);
-    if (!workspace) {
-      return res.status(404).json({
-        success: false,
-        error: 'Workspace not found'
-      });
-    }
-
-    const isMember = workspace.members.some(member => 
-      member.userId.toString() === req.user.id && member.status === 'active'
-    );
-
-    if (!isMember) {
-      return res.status(403).json({
-        success: false,
-        error: 'Not authorized to access this workspace'
-      });
-    }
-    
-    // Find the challenge
-    const challenge = await Challenge.findOne({ _id: challengeId, workspaceId });
-    
-    if (!challenge) {
-      return res.status(404).json({
-        success: false,
-        error: 'Challenge not found'
-      });
-    }
-    
-    // Check if user has already joined
-    const alreadyJoined = challenge.participants.some(
-      participant => participant.userId.toString() === req.user.id
-    );
-    
-    if (alreadyJoined) {
-      return res.status(400).json({
-        success: false,
-        error: 'You have already joined this challenge'
-      });
-    }
-    
-    // Add user to participants
-    challenge.participants.push({
-      userId: req.user.id,
-      joinedAt: new Date(),
-      progress: 0,
-      completed: false
-    });
-    
-    await challenge.save();
-    
-    // Create an activity for joining the challenge
-    const activity = new Activity({
-      workspaceId,
-      userId: req.user.id,
-      type: 'challenge_joined',
-      data: {
-        challengeId: challenge._id,
-        challengeName: challenge.title
-      }
-    });
-    
-    await activity.save();
-    
-    res.json({
-      success: true,
-      message: 'Successfully joined the challenge',
-      participantsCount: challenge.participants.length
-    });
-    
-  } catch (error) {
-    console.error('Error joining challenge:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to join challenge',
-      details: error.message
-    });
-  }
-});
-
-// @route   POST /api/workspaces/:workspaceId/challenges/:challengeId/leave
-// @desc    Leave a workspace challenge
-// @access  Private
-router.post('/:workspaceId/challenges/:challengeId/leave', authenticateJWT, async (req, res) => {
-  try {
-    const { workspaceId, challengeId } = req.params;
-    
-    // Find the challenge
-    const challenge = await Challenge.findOne({ _id: challengeId, workspaceId });
-    
-    if (!challenge) {
-      return res.status(404).json({
-        success: false,
-        error: 'Challenge not found'
-      });
-    }
-    
-    // Check if user is a participant
-    const participantIndex = challenge.participants.findIndex(
-      participant => participant.userId.toString() === req.user.id
-    );
-    
-    if (participantIndex === -1) {
-      return res.status(400).json({
-        success: false,
-        error: 'You are not a participant in this challenge'
-      });
-    }
-    
-    // Remove user from participants
-    challenge.participants.splice(participantIndex, 1);
-    await challenge.save();
-    
-    res.json({
-      success: true,
-      message: 'Successfully left the challenge',
-      participantsCount: challenge.participants.length
-    });
-    
-  } catch (error) {
-    console.error('Error leaving challenge:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to leave challenge',
-      details: error.message
-    });
-  }
-});
-
-// @route   GET /api/workspaces/:workspaceId/member-stats/:memberId
-// @desc    Get specific member's shared habit stats in workspace
-// @access  Private
-router.get('/:workspaceId/member-stats/:memberId', authenticateJWT, async (req, res) => {
-  try {
-    const { workspaceId, memberId } = req.params;
-
-    // Verify workspace membership
-    const workspace = await Workspace.findById(workspaceId);
-    if (!workspace) {
-      return res.status(404).json({
-        success: false,
-        error: 'Workspace not found'
-      });
-    }
-
-    const isMember = workspace.members.some(member => 
-      member.userId.toString() === req.user.id && member.status === 'active'
-    );
-
-    if (!isMember) {
-      return res.status(403).json({
-        success: false,
-        error: 'Not authorized to access this workspace'
-      });
-    }
-
-    // Get the target member's workspace habits
-    const memberHabits = await Habit.find({
-      source: 'workspace',
-      workspaceId: workspaceId,
-      userId: memberId
-    }).populate('userId', 'username email firstName lastName')
-      .populate('workspaceHabitId', 'name description category');
-
-    if (memberHabits.length === 0) {
-      return res.json({
-        success: true,
-        memberStats: {
-          member: null,
-          habits: [],
-          summary: {
-            totalHabits: 0,
-            completedDays: 0,
-            currentStreak: 0,
-            longestStreak: 0,
-            completionRate: 0
-          }
-        }
-      });
-    }
-
-    // Calculate member statistics
-    let totalCompletedDays = 0;
-    let totalPossibleDays = 0;
-    let totalCurrentStreak = 0;
-    let totalLongestStreak = 0;
-
-    const habitDetails = memberHabits.map(habit => {
-      totalCompletedDays += habit.completedDays || 0;
-      totalPossibleDays += habit.totalDays || habit.completedDays || 0;
-      totalCurrentStreak += habit.streak || 0;
-      totalLongestStreak += habit.longestStreak || 0;
-
-      return {
-        id: habit._id,
-        name: habit.name,
-        description: habit.description,
-        category: habit.category,
-        completedDays: habit.completedDays || 0,
-        currentStreak: habit.streak || 0,
-        longestStreak: habit.longestStreak || 0,
-        lastCompletedDate: habit.lastCompletedDate,
-        workspaceHabit: habit.workspaceHabitId
-      };
-    });
-
-    const completionRate = totalPossibleDays > 0 
-      ? Math.round((totalCompletedDays / totalPossibleDays) * 100)
-      : 0;
-
-    res.json({
-      success: true,
-      memberStats: {
-        member: {
-          id: memberHabits[0].userId._id,
-          username: memberHabits[0].userId.username,
-          firstName: memberHabits[0].userId.firstName,
-          lastName: memberHabits[0].userId.lastName
-        },
-        habits: habitDetails,
-        summary: {
-          totalHabits: memberHabits.length,
-          completedDays: totalCompletedDays,
-          currentStreak: totalCurrentStreak,
-          longestStreak: totalLongestStreak,
-          completionRate
-        }
-      }
-    });
-
-  } catch (error) {
-    console.error('Error fetching member stats:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch member stats',
-      details: error.message
-    });
-  }
-});
-
-// @route   GET /api/workspaces/:workspaceId/shared-habits-overview
-// @desc    Get overview stats for shared habits across workspace
-// @access  Private
-router.get('/:workspaceId/shared-habits-overview', authenticateJWT, async (req, res) => {
-  try {
-    const { workspaceId } = req.params;
-
-    // Verify workspace membership
-    const workspace = await Workspace.findById(workspaceId);
-    if (!workspace) {
-      return res.status(404).json({
-        success: false,
-        error: 'Workspace not found'
-      });
-    }
-
-    const isMember = workspace.members.some(member => 
-      member.userId.toString() === req.user.id && member.status === 'active'
-    );
-
-    if (!isMember) {
-      return res.status(403).json({
-        success: false,
-        error: 'Not authorized to access this workspace'
-      });
-    }
-
-    // Get all workspace habits adopted by members
-    const workspaceHabits = await Habit.find({
-      source: 'workspace',
-      workspaceId: workspaceId
-    }).populate('userId', 'username email firstName lastName');
-
-    // Calculate overview statistics
-    const totalAdoptions = workspaceHabits.length;
-    const uniqueMembers = new Set(workspaceHabits.map(habit => habit.userId._id.toString())).size;
-    
-    let totalCompletedDays = 0;
-    let totalPossibleDays = 0;
-    let activeStreaks = 0;
-
-    // Aggregate habit statistics
-    for (const habit of workspaceHabits) {
-      totalCompletedDays += habit.completedDays || 0;
-      totalPossibleDays += habit.totalDays || habit.completedDays || 0;
-      
-      if (habit.streak && habit.streak > 0) {
-        activeStreaks++;
-      }
-    }
-
-    const averageCompletionRate = totalPossibleDays > 0 
-      ? Math.round((totalCompletedDays / totalPossibleDays) * 100)
-      : 0;
-
-    // Get popular habits (most adopted workspace habits)
-    const habitStats = {};
-    for (const habit of workspaceHabits) {
-      const habitId = habit.workspaceHabitId.toString();
-      if (!habitStats[habitId]) {
-        habitStats[habitId] = {
-          name: habit.name,
-          adoptionCount: 0,
-          totalCompletions: 0,
-          averageStreak: 0
-        };
-      }
-      
-      habitStats[habitId].adoptionCount++;
-      habitStats[habitId].totalCompletions += habit.completedDays || 0;
-      habitStats[habitId].averageStreak += habit.streak || 0;
-    }
-
-    const popularHabits = Object.values(habitStats)
-      .map(stat => ({
-        ...stat,
-        averageStreak: stat.adoptionCount > 0 ? Math.round(stat.averageStreak / stat.adoptionCount) : 0
-      }))
-      .sort((a, b) => b.adoptionCount - a.adoptionCount)
-      .slice(0, 5);
-
-    res.json({
-      success: true,
-      overview: {
-        totalAdoptions,
-        uniqueMembers,
-        activeStreaks,
-        averageCompletionRate,
-        popularHabits
-      }
-    });
-
-  } catch (error) {
-    console.error('Error fetching shared habits overview:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch overview',
+      error: 'Failed to delete workspace',
       details: error.message
     });
   }
