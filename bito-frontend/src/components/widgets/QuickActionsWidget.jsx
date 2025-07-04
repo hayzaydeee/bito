@@ -6,7 +6,7 @@ import {
   CheckIcon,
   UploadIcon,
 } from "@radix-ui/react-icons";
-import { EmptyStateWithAddHabit } from "../habitGrid/EmptyStateWithAddHabit";
+import { EmptyStateWithAddHabit } from "../habitGrid/EmptyStateWithAddHabit.jsx";
 
 const QuickActionsWidget = memo(
   ({
