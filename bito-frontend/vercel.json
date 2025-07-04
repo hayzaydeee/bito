@@ -4,5 +4,12 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
+  ],
+  "redirects": [
+    {
+      "source": "https://www.bito.works/(.*)",
+      "destination": "https://bito.works/$1",
+      "permanent": true
+    }
   ]
 }
