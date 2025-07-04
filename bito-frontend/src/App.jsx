@@ -15,6 +15,7 @@ import WorkspaceSettings from "./pages/WorkspaceSettings";
 import MemberDashboardView from "./pages/MemberDashboardView";
 import GroupSelection from "./pages/GroupSelection";
 import InvitationPage from "./pages/InvitationPage";
+import { HabitProvider } from "./contexts/HabitContext";
 
 // Import authentication context
 import { AuthProvider } from "./contexts/AuthContext";
