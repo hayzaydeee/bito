@@ -18,8 +18,6 @@ import InvitationPage from "./pages/InvitationPage";
 
 // Import authentication context
 import { AuthProvider } from "./contexts/AuthContext";
-import { HabitProvider } from "./contexts/HabitContext";
-import { OnboardingProvider } from "./contexts/OnboardingContext";
 
 function App() {
 
