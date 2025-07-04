@@ -353,7 +353,7 @@ const BaseGridContainer = ({
 
           <div className="flex items-center gap-3">
             {/* Global edit mode toggle */}
-            <label className="flex items-center gap-2 text-sm font-outfit text-[var(--color-text-secondary)]" data-tour="edit-mode-toggle">
+            <label className="flex items-center gap-2 text-sm font-outfit text-[var(--color-text-secondary)]">
               <input
                 type="checkbox"
                 checked={globalEditMode}
@@ -416,7 +416,6 @@ const BaseGridContainer = ({
               <div
                 key={widgetId}
                 data-edit-mode={isInEditMode}
-                data-grid-widget={widgetId}
                 className={`glass-card rounded-xl overflow-hidden transition-all duration-200 ${
                   isInEditMode ? 'hover:shadow-xl hover:border-[var(--color-brand-400)]/50 edit-mode' : ''
                 }`}

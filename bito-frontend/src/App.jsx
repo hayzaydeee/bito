@@ -26,7 +26,6 @@ function App() {
   return (
     <AuthProvider>
       <HabitProvider>
-        <OnboardingProvider>
         <Theme
           appearance="dark"
           accentColor="indigo"
@@ -66,7 +65,6 @@ function App() {
           </div>
         </Router>
       </Theme>
-        </OnboardingProvider>
     </HabitProvider>
   </AuthProvider>
   );

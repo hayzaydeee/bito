@@ -5,7 +5,6 @@ import { ContextGridAdapter } from '../components/shared';
 import WelcomeCard from '../components/dashboard/WelcomeCard';
 import { ChartFilterControls, DatabaseFilterControls } from '../components/ui/FilterControls';
 import CustomHabitEditModal from '../components/ui/CustomHabitEditModal';
-import OnboardingControls from '../components/shared/OnboardingControls';
 
 // Available widget types (same as ContentGrid)
 const AVAILABLE_WIDGET_TYPES = {
@@ -486,7 +485,7 @@ const Dashboard = () => {
   return (
     <div className="p-6 page-container space-y-8">
       {/* Welcome Section */}
-      <div className="relative" data-tour="welcome-card">
+      <div className="relative">
         <WelcomeCard userName={user?.name || user?.username || 'User'} />
       </div>
       
@@ -546,8 +545,6 @@ const Dashboard = () => {
         onArchive={handleArchiveHabit}
       />
 
-      {/* Onboarding Controls (dev mode only) */}
-      <OnboardingControls />
     </div>
   );
 };
