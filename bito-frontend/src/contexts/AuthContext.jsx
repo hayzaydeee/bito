@@ -100,19 +100,14 @@ export const AuthProvider = ({ children }) => {
   // Load user from localStorage on app start
   useEffect(() => {
     const loadUser = async () => {
-      console.log('🔄 AuthContext: Loading user from localStorage...');
       try {
         const token = localStorage.getItem('token');
         const savedUser = localStorage.getItem('user');
-        
-        console.log('📦 AuthContext: Found in localStorage:', { hasToken: !!token, hasUser: !!savedUser });
 
         if (token && savedUser) {
-          console.log('✅ AuthContext: Verifying token with API...');
           // Verify token is still valid
           const response = await authAPI.getMe();
           
-          console.log('✅ AuthContext: Token verified, setting user as authenticated');
           dispatch({
             type: actionTypes.LOGIN_SUCCESS,
             payload: {
@@ -121,15 +116,12 @@ export const AuthProvider = ({ children }) => {
             },
           });
         } else {
-          console.log('❌ AuthContext: No token/user found, setting as unauthenticated');
           dispatch({ type: actionTypes.SET_LOADING, payload: false });
         }
       } catch (error) {
-        console.error('❌ AuthContext: Failed to load user:', error);
         // Clear invalid data
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        console.log('🧹 AuthContext: Cleared invalid localStorage data');
         dispatch({ type: actionTypes.SET_LOADING, payload: false });
       }
     };
@@ -197,25 +189,18 @@ export const AuthProvider = ({ children }) => {
 
   // Logout function
   const logout = async () => {
-    console.log('😪 AuthContext: Starting logout process...');
     try {
       // Set loading state to prevent flickering
-      console.log('⏳ AuthContext: Setting loading state during logout');
       dispatch({ type: actionTypes.SET_LOADING, payload: true });
       
-      console.log('🔄 AuthContext: Calling logout API...');
       await authAPI.logout();
-      console.log('✅ AuthContext: Logout API call successful');
     } catch (error) {
-      console.error('❌ AuthContext: Logout error:', error);
       // Continue with logout even if API call fails
     } finally {
-      console.log('🧹 AuthContext: Clearing localStorage and state');
       // Clear localStorage and state
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       dispatch({ type: actionTypes.LOGOUT });
-      console.log('✅ AuthContext: Logout complete, user logged out');
     }
   };
 
@@ -243,7 +228,6 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token);
       return token;
     } catch (error) {
-      console.error('Failed to refresh token:', error);
       logout();
       throw error;
     }

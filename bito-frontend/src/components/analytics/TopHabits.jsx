@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { 
   StarIcon, 
   StarFilledIcon, 
@@ -7,7 +7,13 @@ import {
   TargetIcon
 } from '@radix-ui/react-icons';
 
-const TopHabits = ({ habits, entries, timeRange }) => {
+const TopHabits = ({ 
+  habits, 
+  entries, 
+  timeRange,
+  persistenceKey = null, // Optional key for localStorage persistence
+  onCategoryChange = null // Optional callback for category changes
+}) => {
   const habitStats = useMemo(() => {
     if (!habits.length) return [];
 
@@ -85,7 +91,39 @@ const TopHabits = ({ habits, entries, timeRange }) => {
     return { byCompletions, byRate, byStreak };
   }, [habitStats]);
 
-  const [activeCategory, setActiveCategory] = React.useState('completions');
+  const [activeCategory, setActiveCategory] = React.useState(() => {
+    // Try to load from localStorage if persistence key is provided
+    if (persistenceKey) {
+      try {
+        const saved = localStorage.getItem(persistenceKey);
+        if (saved && ['completions', 'rate', 'streak'].includes(saved)) {
+          return saved;
+        }
+      } catch (error) {
+        console.warn('Failed to load top habits category from localStorage:', error);
+      }
+    }
+    return 'completions'; // Default value
+  });
+
+  // Custom handler for category changes with persistence
+  const handleCategoryChange = useCallback((category) => {
+    setActiveCategory(category);
+    
+    // Save to localStorage if persistence key is provided
+    if (persistenceKey) {
+      try {
+        localStorage.setItem(persistenceKey, category);
+      } catch (error) {
+        console.warn('Failed to save top habits category to localStorage:', error);
+      }
+    }
+    
+    // Call the optional callback
+    if (onCategoryChange) {
+      onCategoryChange(category);
+    }
+  }, [persistenceKey, onCategoryChange]);
 
   const categories = [
     {
@@ -146,7 +184,7 @@ const TopHabits = ({ habits, entries, timeRange }) => {
           return (
             <button
               key={category.key}
-              onClick={() => setActiveCategory(category.key)}
+              onClick={() => handleCategoryChange(category.key)}
               className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md transition-all duration-200 text-xs font-outfit ${
                 activeCategory === category.key
                   ? 'bg-[var(--color-brand-600)] text-white shadow-sm'

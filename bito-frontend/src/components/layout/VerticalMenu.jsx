@@ -332,7 +332,7 @@ const VerticalMenu = ({ isCollapsed }) => {
                       {workspace.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-medium truncate ${
+                      <p className={`text-xs font-medium truncate font-outfit ${
                         isActive ? 'text-white' : 'text-[var(--color-text-primary)]'
                       }`}>
                         {workspace.name}

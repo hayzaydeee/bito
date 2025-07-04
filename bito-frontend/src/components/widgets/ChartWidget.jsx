@@ -19,6 +19,83 @@ import {
 import { useChartData } from "../../globalHooks/useChartData";
 import "./widgets.css";
 
+// Helper function to generate chart data from props (for member dashboards)
+const generateChartDataFromProps = (habits, entries, chartType, dateRange) => {
+  if (!habits || habits.length === 0) {
+    return [];
+  }
+
+  const today = new Date();
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - today.getDay());
+  
+  // Default to current week if no date range provided
+  const startDate = dateRange?.start || weekStart;
+  const endDate = dateRange?.end || new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
+
+  switch (chartType) {
+    case 'completion':
+      return generateCompletionChartFromProps(habits, entries, startDate, endDate);
+    default:
+      return generateCompletionChartFromProps(habits, entries, startDate, endDate);
+  }
+};
+
+// Helper function to generate completion chart data from props
+const generateCompletionChartFromProps = (habits, entries, startDate, endDate) => {
+  const data = [];
+  const current = new Date(startDate);
+  
+  while (current <= endDate) {
+    const dateStr = current.toISOString().split('T')[0];
+    
+    let totalHabits = 0;
+    let completedHabits = 0;
+    
+    habits.forEach(habit => {
+      totalHabits++;
+      
+      // Check if there's an entry for this habit on this date
+      const habitEntries = entries[habit._id];
+      let hasCompletedEntry = false;
+      
+      if (habitEntries) {
+        if (Array.isArray(habitEntries)) {
+          // Handle array format (legacy or direct API response)
+          hasCompletedEntry = habitEntries.some(entry => {
+            const entryDate = new Date(entry.date).toISOString().split('T')[0];
+            return entryDate === dateStr && entry.completed;
+          });
+        } else if (typeof habitEntries === 'object') {
+          // Handle object format (HabitContext format with date keys)
+          const dayEntry = habitEntries[dateStr];
+          hasCompletedEntry = dayEntry && dayEntry.completed;
+        }
+      }
+      
+      if (hasCompletedEntry) {
+        completedHabits++;
+      }
+    });
+    
+    const completionRate = totalHabits > 0 ? Math.round((completedHabits / totalHabits) * 100) : 0;
+    
+    data.push({
+      date: dateStr,
+      day: current.toLocaleDateString('en-US', { weekday: 'short' }),
+      completion: completionRate,
+      completed: completedHabits,
+      total: totalHabits,
+      name: current.toLocaleDateString('en-US', { weekday: 'short' }),
+      value: completedHabits
+    });
+    
+    current.setDate(current.getDate() + 1);
+  }
+  
+  return data;
+};
+
 export const ChartWidget = ({
   title,
   type = "bar",
@@ -33,12 +110,22 @@ export const ChartWidget = ({
   filterComponent = null,
   dateRange = null,
   onAddHabit = null,
+  habits = null, // Add habits prop
+  entries = null, // Add entries prop
 }) => {
-  // Get real habit data based on chart type
+  // Get real habit data based on chart type - but only if habits/entries props aren't provided
   const habitChartData = useChartData(chartType, dateRange);
 
-  // Use real data if available, otherwise fall back to provided data or default
+  // Use passed props if available, otherwise use hook data
   const finalData = useMemo(() => {
+    // If habits and entries are provided as props, use them directly
+    if (habits !== null && entries !== null) {
+      // Generate chart data from the provided habits and entries
+      const generatedData = generateChartDataFromProps(habits, entries, chartType, dateRange);
+      return generatedData;
+    }
+    
+    // Otherwise, use the hook data (for regular dashboard usage)
     if (habitChartData && habitChartData.length > 0) {
       return habitChartData;
     }
@@ -48,7 +135,7 @@ export const ChartWidget = ({
     }
 
     // Fallback default data
-    return [
+    const fallbackData = [
       { name: "Mon", value: 0 },
       { name: "Tue", value: 0 },
       { name: "Wed", value: 0 },
@@ -57,7 +144,8 @@ export const ChartWidget = ({
       { name: "Sat", value: 0 },
       { name: "Sun", value: 0 },
     ];
-  }, [habitChartData, data]);
+    return fallbackData;
+  }, [habitChartData, data, habits, entries, chartType, dateRange]);
   const pieData = [
     { name: "Completed", value: 27, color: "var(--color-success)" },
     { name: "Missed", value: 8, color: "var(--color-error)" },

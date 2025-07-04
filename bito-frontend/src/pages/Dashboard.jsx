@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useHabits, habitUtils } from '../contexts/HabitContext';
-import BaseGridContainer from '../components/shared/BaseGridContainer';
+import { ContextGridAdapter } from '../components/shared';
 import WelcomeCard from '../components/dashboard/WelcomeCard';
 import { ChartFilterControls, DatabaseFilterControls } from '../components/ui/FilterControls';
 import CustomHabitEditModal from '../components/ui/CustomHabitEditModal';
@@ -67,7 +67,10 @@ const getDefaultActiveWidgets = () => [
 // Storage keys
 const STORAGE_KEYS = {
   layouts: "habitTracker_dashboardLayouts",
-  widgets: "habitTracker_dashboardWidgets"
+  widgets: "habitTracker_dashboardWidgets",
+  chartFilters: "habitTracker_dashboardChartFilters",
+  databaseFilters: "habitTracker_dashboardDatabaseFilters",
+  databaseViewType: "habitTracker_dashboardDatabaseViewType"
 };
 
 const Dashboard = () => {
@@ -79,6 +82,7 @@ const Dashboard = () => {
     createHabit, 
     updateHabit, 
     deleteHabit, 
+    archiveHabit,
     toggleHabitCompletion 
   } = useHabits();
 
@@ -86,7 +90,7 @@ const Dashboard = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [currentHabit, setCurrentHabit] = useState(null);
 
-  // Filter states (same as ContentGrid)
+  // Filter states with localStorage persistence
   const [chartFilters, setChartFilters] = useState(() => {
     const getCurrentWeekNumber = () => {
       const today = new Date();
@@ -106,6 +110,22 @@ const Dashboard = () => {
       return weekDiff + 1;
     };
 
+    // Try to load from localStorage first
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.chartFilters);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Validate the structure and ensure all required fields exist
+        if (parsed && typeof parsed === 'object' && 
+            parsed.mode && typeof parsed.period === 'number' && typeof parsed.selectedMonth === 'number') {
+          return parsed;
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load chart filters from localStorage:', error);
+    }
+
+    // Default values if no valid localStorage data
     return {
       mode: "week",
       period: getCurrentWeekNumber(),
@@ -130,6 +150,22 @@ const Dashboard = () => {
       return weekDiff + 1;
     };
 
+    // Try to load from localStorage first
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.databaseFilters);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Validate the structure and ensure all required fields exist
+        if (parsed && typeof parsed === 'object' && 
+            typeof parsed.period === 'number' && typeof parsed.selectedMonth === 'number') {
+          return parsed;
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load database filters from localStorage:', error);
+    }
+
+    // Default values if no valid localStorage data
     return {
       period: getCurrentWeekNumber(),
       selectedMonth: new Date().getMonth() + 1,
@@ -254,15 +290,24 @@ const Dashboard = () => {
     };
   }, [chartFilters.selectedMonth, databaseFilters.selectedMonth]);
 
-  // Filter update handlers (same as ContentGrid)
+  // Filter update handlers with localStorage persistence
   const updateChartFilter = useCallback((mode, period) => {
     setChartFilters((prev) => {
       const newPeriod = mode !== prev.mode ? 1 : period;
-      return {
+      const newFilters = {
         ...prev,
         mode: mode,
         period: newPeriod,
       };
+      
+      // Save to localStorage
+      try {
+        localStorage.setItem(STORAGE_KEYS.chartFilters, JSON.stringify(newFilters));
+      } catch (error) {
+        console.warn('Failed to save chart filters to localStorage:', error);
+      }
+      
+      return newFilters;
     });
   }, []);
 
@@ -287,19 +332,39 @@ const Dashboard = () => {
 
       const newPeriod = getCurrentWeekInMonth(month);
 
-      return {
+      const newFilters = {
         ...prev,
         selectedMonth: month,
         period: newPeriod,
       };
+      
+      // Save to localStorage
+      try {
+        localStorage.setItem(STORAGE_KEYS.chartFilters, JSON.stringify(newFilters));
+      } catch (error) {
+        console.warn('Failed to save chart filters to localStorage:', error);
+      }
+      
+      return newFilters;
     });
   }, []);
 
   const updateDatabaseFilter = useCallback((period) => {
-    setDatabaseFilters((prev) => ({
-      ...prev,
-      period: period,
-    }));
+    setDatabaseFilters((prev) => {
+      const newFilters = {
+        ...prev,
+        period: period,
+      };
+      
+      // Save to localStorage
+      try {
+        localStorage.setItem(STORAGE_KEYS.databaseFilters, JSON.stringify(newFilters));
+      } catch (error) {
+        console.warn('Failed to save database filters to localStorage:', error);
+      }
+      
+      return newFilters;
+    });
   }, []);
 
   const updateDatabaseMonth = useCallback((month) => {
@@ -323,11 +388,20 @@ const Dashboard = () => {
 
       const newPeriod = getCurrentWeekInMonth(month);
 
-      return {
+      const newFilters = {
         ...prev,
         selectedMonth: month,
         period: newPeriod,
       };
+      
+      // Save to localStorage
+      try {
+        localStorage.setItem(STORAGE_KEYS.databaseFilters, JSON.stringify(newFilters));
+      } catch (error) {
+        console.warn('Failed to save database filters to localStorage:', error);
+      }
+      
+      return newFilters;
     });
   }, []);
 
@@ -377,6 +451,13 @@ const Dashboard = () => {
     }
   }, [deleteHabit]);
 
+  const handleArchiveHabit = useCallback(async (habit) => {
+    const result = await archiveHabit(habit._id, !habit.isActive);
+    if (!result.success) {
+      console.error("Failed to archive habit:", result.error);
+    }
+  }, [archiveHabit]);
+
   const handleToggleCompletion = useCallback(async (habitId, date) => {
     const result = await toggleHabitCompletion(habitId, date);
     if (!result.success) {
@@ -408,23 +489,18 @@ const Dashboard = () => {
         <WelcomeCard userName={user?.name || user?.username || 'User'} />
       </div>
       
-      {/* Dashboard Grid Container - Direct prop passing like ContentGrid */}
+      {/* Dashboard Grid Container using ContextGridAdapter */}
       <div className="relative">
-        <BaseGridContainer
+        <ContextGridAdapter
           mode="dashboard"
           
-          // Direct data props
-          habits={habits}
-          entries={entries}
-          isLoading={isLoading}
-          
-          // Direct handler props
-          onToggleCompletion={handleToggleCompletion}
+          // Habit handlers for modal integration
           onAddHabit={handleAddHabit}
-          onDeleteHabit={handleDeleteHabit}
           onEditHabit={handleEditHabit}
+          onDeleteHabit={handleDeleteHabit}
+          onToggleCompletion={handleToggleCompletion}
           
-          // Direct filter props
+          // Filter props
           chartFilters={chartFilters}
           databaseFilters={databaseFilters}
           chartDateRange={chartDateRange}
@@ -436,8 +512,8 @@ const Dashboard = () => {
           updateDatabaseMonth={updateDatabaseMonth}
           
           // UI handlers - CSV import temporarily disabled for deployment
-          onShowEnhancedCsvImport={() => console.log('CSV import disabled for deployment')}
-          onShowLLMSettings={() => console.log('LLM settings')}
+          onShowEnhancedCsvImport={() => {/* CSV import disabled for deployment */}}
+          onShowLLMSettings={() => {/* LLM settings disabled for deployment */}}
           
           // Filter components
           ChartFilterControls={ChartFilterControls}
@@ -465,6 +541,8 @@ const Dashboard = () => {
         onClose={handleCloseHabitModal}
         habit={currentHabit}
         onSave={handleSaveHabit}
+        onDelete={handleDeleteHabit}
+        onArchive={handleArchiveHabit}
       />
     </div>
   );

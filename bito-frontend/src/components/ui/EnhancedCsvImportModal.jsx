@@ -316,16 +316,16 @@ const EnhancedCsvImportModal = ({ isOpen, onClose, onImportComplete }) => {
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="glass-card rounded-xl shadow-xl m-4 max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div className="bg-[var(--color-surface-primary)] rounded-xl shadow-xl border border-[var(--color-border-primary)] max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-zoom-in">
           
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-[var(--color-border-primary)]">
             <div>
-              <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
+              <h2 className="text-2xl font-dmSerif gradient-text">
                 {step === 'complete' ? '🎉 Import Complete!' : '📊 Enhanced CSV Import'}
               </h2>
-              <p className="text-[var(--color-text-secondary)] mt-1">
+              <p className="text-[var(--color-text-secondary)] mt-1 font-outfit">
                 {useLLM ? 'AI-powered intelligent CSV analysis' : 'Basic CSV import with pattern matching'}
               </p>
             </div>
@@ -333,7 +333,7 @@ const EnhancedCsvImportModal = ({ isOpen, onClose, onImportComplete }) => {
               {!useLLM && (
                 <button
                   onClick={() => setShowLLMSettings(true)}
-                  className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                  className="px-3 py-1 text-xs bg-[var(--color-info-surface)] text-[var(--color-info-text)] rounded-lg hover:bg-[var(--color-info-hover)] transition-colors font-outfit"
                 >
                   Enable AI Analysis
                 </button>

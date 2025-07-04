@@ -65,13 +65,10 @@ export const habitUtils = {
   },
   
   getWeekDates: (startDate) => {
-    console.log('🔧 habitLogic.js getWeekDates called with:', startDate.toString());
     const dates = [];
     const current = new Date(startDate);
     
     for (let i = 0; i < 7; i++) {
-      console.log(`🔧 habitLogic.js - Iteration ${i}, current:`, current.toString());
-      
       dates.push({
         date: habitUtils.normalizeDate(current),
         dayName: current.toLocaleDateString('en-US', { weekday: 'long' }),
@@ -82,7 +79,6 @@ export const habitUtils = {
       current.setDate(current.getDate() + 1);
     }
     
-    console.log('🔧 habitLogic.js - Final result:', dates.map(d => `${d.date} (${d.dayName})`));
     return dates;
   },
   

@@ -388,7 +388,9 @@ export const STORAGE_KEYS = {
   },
   analytics: {
     layouts: "habitTracker_analyticsLayouts", 
-    widgets: "habitTracker_analyticsWidgets"
+    widgets: "habitTracker_analyticsWidgets",
+    timeRange: "habitTracker_analyticsTimeRange",
+    topHabitsCategory: "habitTracker_analyticsTopHabitsCategory"
   },
   habits: {
     layouts: "habitTracker_habitsLayouts",

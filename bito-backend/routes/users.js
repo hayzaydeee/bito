@@ -3,6 +3,8 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Habit = require('../models/Habit');
 const HabitEntry = require('../models/HabitEntry');
+const Workspace = require('../models/Workspace');
+const Activity = require('../models/Activity');
 const { authenticateJWT } = require('../middleware/auth');
 const { validateUserUpdate } = require('../middleware/validation');
 
@@ -366,6 +368,148 @@ router.post('/export-data', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to export data'
+    });
+  }
+});
+
+// @route   GET /api/users/notifications
+// @desc    Get user notifications (activities across all workspaces)
+// @access  Private
+router.get('/notifications', async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { limit = 20, offset = 0, types } = req.query;
+
+    // Get all workspaces the user belongs to
+    const workspaces = await Workspace.find({
+      'members.userId': userId
+    }).select('_id name');
+
+    const workspaceIds = workspaces.map(w => w._id);
+
+    // Build activity query
+    const query = {
+      workspaceId: { $in: workspaceIds },
+      userId: { $ne: userId } // Don't include user's own activities
+    };
+
+    // Filter by activity types if specified
+    if (types) {
+      const typeArray = types.split(',');
+      query.type = { $in: typeArray };
+    }
+
+    // Get activities from all user's workspaces
+    const activities = await Activity.find(query)
+      .populate('userId', 'name email')
+      .populate('workspaceId', 'name')
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit))
+      .skip(parseInt(offset))
+      .lean();
+
+    // Add workspace name to each activity for easier frontend handling
+    const activitiesWithWorkspace = activities.map(activity => ({
+      ...activity,
+      workspaceId: activity.workspaceId?._id?.toString() || activity.workspaceId?.toString(), // Ensure workspaceId is a string
+      workspaceName: activity.workspaceId?.name,
+      userName: activity.userId?.name
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        notifications: activitiesWithWorkspace,
+        hasMore: activities.length === parseInt(limit)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch notifications'
+    });
+  }
+});
+
+// @route   GET /api/users/notifications/unread-count
+// @desc    Get count of unread notifications
+// @access  Private
+router.get('/notifications/unread-count', async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Get all workspaces the user belongs to
+    const workspaces = await Workspace.find({
+      'members.userId': userId
+    }).select('_id');
+
+    const workspaceIds = workspaces.map(w => w._id);
+
+    // Count recent activities (last 24 hours) from all workspaces
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const count = await Activity.countDocuments({
+      workspaceId: { $in: workspaceIds },
+      userId: { $ne: userId }, // Don't include user's own activities
+      createdAt: { $gte: yesterday },
+      type: { 
+        $in: ['habit_completed', 'habit_adopted', 'streak_milestone', 'member_joined', 'badge_earned'] 
+      }
+    });
+
+    res.json({
+      success: true,
+      data: {
+        count: Math.min(count, 99) // Cap at 99 for display purposes
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching notification count:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch notification count'
+    });
+  }
+});
+
+// @route   PUT /api/users/notifications/:notificationId/read
+// @desc    Mark a notification as read
+// @access  Private
+router.put('/notifications/:notificationId/read', async (req, res) => {
+  try {
+    // For now, we'll just return success since we don't have read status tracking
+    // In a full implementation, you'd update the activity or maintain a separate read status table
+    res.json({
+      success: true,
+      message: 'Notification marked as read'
+    });
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to mark notification as read'
+    });
+  }
+});
+
+// @route   PUT /api/users/notifications/read-all
+// @desc    Mark all notifications as read
+// @access  Private
+router.put('/notifications/read-all', async (req, res) => {
+  try {
+    // For now, we'll just return success since we don't have read status tracking
+    // In a full implementation, you'd update all activities or maintain a separate read status table
+    res.json({
+      success: true,
+      message: 'All notifications marked as read'
+    });
+  } catch (error) {
+    console.error('Error marking all notifications as read:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to mark all notifications as read'
     });
   }
 });

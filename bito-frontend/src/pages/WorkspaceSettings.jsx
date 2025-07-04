@@ -48,9 +48,7 @@ const WorkspaceSettings = () => {
     const fetchWorkspace = async () => {
       try {
         setLoading(true);
-        console.log('Fetching workspace:', groupId);
         const response = await workspacesAPI.getWorkspace(groupId);
-        console.log('Workspace response:', response);
         
         if (response.success) {
           const workspaceData = response.workspace;
@@ -110,7 +108,6 @@ const WorkspaceSettings = () => {
           ...prev,
           ...response.workspace
         }));
-        console.log('Settings saved successfully');
       }
     } catch (error) {
       console.error('Error saving settings:', error);

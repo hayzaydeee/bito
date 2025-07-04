@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useHabits } from '../../../contexts/HabitContext';
 import TopHabits from '../TopHabits';
+import { STORAGE_KEYS } from '../../shared/widgetRegistry';
 
 const TopHabitsWidget = ({ 
   timeRange = '30d',
@@ -40,6 +41,7 @@ const TopHabitsWidget = ({
           habits={habits}
           entries={entries}
           timeRange={timeRange}
+          persistenceKey={STORAGE_KEYS.analytics.topHabitsCategory}
           {...responsiveProps}
           {...props}
         />

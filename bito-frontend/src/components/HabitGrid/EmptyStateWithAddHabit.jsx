@@ -23,13 +23,27 @@ export const EmptyStateWithAddHabit = ({ className = "", onAddHabit = null }) =>
   const handleAddHabit = async () => {
     if (!newHabitName.trim()) return;
     
+    // Ensure clean data object with only primitive values
     const newHabit = {
-      name: newHabitName.trim(),
-      color: '#3B82F6', // Use a standard hex color instead of CSS variable
-      icon: '⭐', // Default icon
+      name: String(newHabitName.trim()),
+      color: '#3B82F6',
+      icon: '⭐',
+      category: 'other',
+      description: '',
+      frequency: 'daily',
+      target: {
+        value: 1,
+        unit: 'times'
+      },
+      schedule: {
+        days: [0, 1, 2, 3, 4, 5, 6], // All days
+        reminderTime: '',
+        reminderEnabled: false
+      }
     };
     
     try {
+      console.log('Creating habit with data:', newHabit);
       const result = await createHabit(newHabit);
       if (result.success) {
         setNewHabitName("");

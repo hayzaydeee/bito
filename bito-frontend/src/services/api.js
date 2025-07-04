@@ -463,6 +463,14 @@ export const groupsAPI = {
     });
   },
 
+  // Update group habit
+  updateGroupHabit: async (groupId, habitId, habitData) => {
+    return apiRequest(`/api/workspaces/workspace-habits/${habitId}`, {
+      method: 'PUT',
+      body: JSON.stringify(habitData),
+    });
+  },
+
   // Get member habits (user's adopted habits in workspace)
   getMemberHabits: async (workspaceId) => {
     return apiRequest(`/api/workspaces/${workspaceId}/member-habits`);
@@ -516,8 +524,94 @@ export const groupsAPI = {
   // New Group Tracking API endpoints
   
   // Get group tracker data (all members' progress on shared habits)
-  getGroupTrackers: async (workspaceId) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/group-trackers`);
+  getGroupTrackers: async (workspaceId, dateRange) => {
+    let endpoint = `/api/workspaces/${workspaceId}/group-trackers`;
+    
+    // Add date range parameters if provided
+    if (dateRange) {
+      const params = new URLSearchParams();
+      if (dateRange.startDate) params.append('startDate', dateRange.startDate);
+      if (dateRange.endDate) params.append('endDate', dateRange.endDate);
+      if (params.toString()) {
+        endpoint += `?${params.toString()}`;
+      }
+    }
+    
+    // Get the data from the backend
+    const response = await apiRequest(endpoint);
+    
+    // Process the data to extract completion information in a format suitable for charts
+    if (response.success && response.trackers) {
+      console.log('API - Raw tracker data:', response.trackers.slice(0, 2));
+      
+      // Extract completion data from trackers - format matching the member dashboard entries
+      const completionData = [];
+      const entriesByHabit = {};
+      
+      // Process each tracker to extract completion information
+      response.trackers.forEach(tracker => {
+        // Log the first few trackers in detail
+        if (completionData.length < 5) {
+          console.log('API - Processing tracker:', {
+            userId: tracker.userId,
+            userIdType: typeof tracker.userId,
+            habitId: tracker.habitId,
+            entriesCount: tracker.entries?.length || 0
+          });
+        }
+        
+        if (tracker.entries && tracker.entries.length > 0) {
+          // For completion data in chart-friendly format
+          tracker.entries.forEach(entry => {
+            if (entry.completed) {
+              const completionEntry = {
+                userId: tracker.userId,
+                date: entry.date.split('T')[0], // Ensure date is in YYYY-MM-DD format
+                habitId: tracker.habitId,
+                habitName: tracker.habitName,
+                completed: entry.completed,
+                value: entry.value
+              };
+              
+              // Log the first few completion entries
+              if (completionData.length < 5) {
+                console.log('API - Created completion entry:', completionEntry);
+              }
+              
+              completionData.push(completionEntry);
+            }
+          });
+          
+          // Also organize entries in the same format as member dashboards
+          // This creates the same data structure used by member dashboard
+          if (!entriesByHabit[tracker.habitId]) {
+            entriesByHabit[tracker.habitId] = {};
+          }
+          
+          tracker.entries.forEach(entry => {
+            const dateKey = entry.date.split('T')[0];
+            entriesByHabit[tracker.habitId][dateKey] = {
+              ...entry,
+              _id: entry._id || `${tracker.habitId}_${dateKey}`,
+              habitId: tracker.habitId,
+              date: dateKey
+            };
+          });
+        }
+      });
+      
+      // Add the processed completion data to the response
+      response.completionData = completionData;
+      response.entries = entriesByHabit; // Same format as member dashboard
+      
+      console.log('API - Final processed data:', {
+        completionDataLength: completionData.length,
+        entriesHabitCount: Object.keys(entriesByHabit).length,
+        completionSample: completionData.slice(0, 3)
+      });
+    }
+    
+    return response;
   },
 
   // Get specific member's shared habit stats  
@@ -702,4 +796,43 @@ export const handleAPIError = (error) => {
   }
   
   return error.message || 'An unexpected error occurred.';
+};
+
+// Notifications API
+export const notificationsAPI = {
+  // Get notifications for user across all workspaces
+  getNotifications: async (params = {}) => {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        searchParams.append(key, value);
+      }
+    });
+    
+    const queryString = searchParams.toString();
+    const endpoint = queryString 
+      ? `/api/users/notifications?${queryString}` 
+      : `/api/users/notifications`;
+    
+    return apiRequest(endpoint);
+  },
+
+  // Mark notification as read
+  markAsRead: async (notificationId) => {
+    return apiRequest(`/api/users/notifications/${notificationId}/read`, {
+      method: 'PUT',
+    });
+  },
+
+  // Mark all notifications as read
+  markAllAsRead: async () => {
+    return apiRequest('/api/users/notifications/read-all', {
+      method: 'PUT',
+    });
+  },
+
+  // Get unread notification count
+  getUnreadCount: async () => {
+    return apiRequest('/api/users/notifications/unread-count');
+  },
 };

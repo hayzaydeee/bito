@@ -15,6 +15,7 @@ export const HabitGrid = ({
   tableStyle = false,
   onEditHabit = null,
   habits: propHabits = null, // Habits passed from parent (for reordering)
+  entries: propEntries = null, // Entries passed from parent (to avoid context usage)
   isInEditMode = false,
   onHabitReorder = null,
 }) => {
@@ -26,7 +27,7 @@ export const HabitGrid = ({
   // Get data from habit context
   const {
     habits: contextHabits,
-    entries,
+    entries: contextEntries,
     isLoading,
     error,
     toggleHabitCompletion,
@@ -35,6 +36,9 @@ export const HabitGrid = ({
 
   // Use propHabits if provided (for reordering), otherwise use context habits
   const habits = propHabits || contextHabits;
+  
+  // Use propEntries if provided (to avoid API calls in member dashboard), otherwise use context entries
+  const entries = propEntries || contextEntries;
 
   // Calculate week dates
   const weekDates = useMemo(() => {
@@ -61,7 +65,13 @@ export const HabitGrid = ({
     return dates;
   }, [memoizedStartDate, endDate]);
   // Fetch entries for visible habits and date range
+  // Only fetch if we're using context entries (not if entries are passed as props)
   useEffect(() => {
+    // Skip fetching if entries are provided as props (e.g., in member dashboard)
+    if (propEntries !== null) {
+      return;
+    }
+    
     if (habits.length > 0 && weekDates.length > 0) {
       const startDateObj = weekDates[0].dateObj;
       const endDateObj = weekDates[weekDates.length - 1].dateObj;
@@ -81,7 +91,7 @@ export const HabitGrid = ({
         }
       });
     }
-  }, [habits, weekDates, fetchHabitEntries]); // Removed entries to prevent refetch loops
+  }, [habits, weekDates, fetchHabitEntries, propEntries]); // Added propEntries to dependencies
 
   // Note: Debug logging removed to prevent circular reference errors
   // Calculate week statistics

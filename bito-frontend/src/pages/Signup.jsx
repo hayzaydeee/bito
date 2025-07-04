@@ -34,7 +34,6 @@ const Signup = () => {
   // Debug: log auth state and render tracking
   const renderRef = useRef(0);
   renderRef.current += 1;
-  console.log(`🔄 Signup.jsx render #${renderRef.current}:`, { isLoading, isAuthenticated, user, hasAuthError: !!authError });
 
   // Form validation
   const validateForm = () => {
@@ -106,7 +105,6 @@ const Signup = () => {
       const result = await register(formData);
       
       if (result.success) {
-        console.log('Signup successful:', result.user);
         navigate('/app/dashboard');
       } else {
         setErrors({ general: result.error });
@@ -209,7 +207,7 @@ const Signup = () => {
           <div className="bg-[var(--color-surface-primary)] border border-[var(--color-border-primary)]/20 rounded-2xl p-8 shadow-xl backdrop-blur-sm max-w-md mx-auto">
             <Flex direction="column" gap="6">
               {/* Social Signup */}
-              <Flex direction="column" gap="3">
+              {/* <Flex direction="column" gap="3">
                 <Button
                   onClick={() => handleSocialSignup('Google')}
                   disabled={isLoading}
@@ -224,7 +222,7 @@ const Signup = () => {
                   </svg>
                   <Text className="text-sm font-medium font-outfit">Continue with Google</Text>
                 </Button>
-              </Flex>
+              </Flex> */}
 
               {/* Divider */}
               <div className="relative">

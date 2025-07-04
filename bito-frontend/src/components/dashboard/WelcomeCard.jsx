@@ -63,13 +63,6 @@ const WelcomeCard = memo(({ userName = "User" }) => {
 
   // Calculate real stats from backend data - respecting habit scheduling
   const stats = useMemo(() => {
-    console.log("🎯 WelcomeCard: Recalculating stats", {
-      isLoading,
-      habitsCount: habits.length,
-      entriesKeys: Object.keys(entries),
-      currentDate: dateCalculations.currentDateString,
-    });
-
     if (isLoading || !habits.length) {
       return {
         completed: 0,
@@ -83,14 +76,8 @@ const WelcomeCard = memo(({ userName = "User" }) => {
     const todayStr = dateCalculations.currentDateString;
     const baseDate = dateCalculations.baseDate;
 
-    console.log("🎯 WelcomeCard: Today string for stats:", todayStr);
-
     // Get only habits that are scheduled for today
     const todaysHabits = habitLogic.getTodaysHabits(habits);
-    console.log(
-      "🎯 WelcomeCard: Todays scheduled habits:",
-      todaysHabits.map((h) => h.name)
-    );
 
     // Calculate today's completed habits (only among scheduled ones)
     let completedToday = 0;
@@ -101,13 +88,6 @@ const WelcomeCard = memo(({ userName = "User" }) => {
       const todayEntry = habitEntries?.[todayStr];
       // Use the same logic as HabitGrid: entry exists AND is completed
       const isCompleted = todayEntry && todayEntry.completed;
-
-      console.log(
-        `🎯 WelcomeCard: Habit ${habit.name} - today entry:`,
-        todayEntry,
-        "completed:",
-        isCompleted
-      );
 
       if (isCompleted) {
         completedToday++;
@@ -155,7 +135,6 @@ const WelcomeCard = memo(({ userName = "User" }) => {
       todayTotal: todayTotal,
     };
 
-    console.log("🎯 WelcomeCard: Final stats:", finalStats);
     return finalStats;
   }, [habits, entries, isLoading, dateCalculations]); // Only depends on actual data and date changes
 

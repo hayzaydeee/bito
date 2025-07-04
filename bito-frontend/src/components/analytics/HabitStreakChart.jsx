@@ -46,7 +46,11 @@ const HabitStreakChart = ({
       let totalCompletions = 0;
 
       for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        const dateStr = d.toISOString().split('T')[0];
+        // Use local timezone date string to avoid UTC conversion issues
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
         const entry = habitEntries[dateStr];
         if (entry && entry.completed) {
           totalCompletions++;
@@ -70,7 +74,15 @@ const HabitStreakChart = ({
     // Generate chart data for each day
     const data = [];
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-      const dateStr = d.toISOString().split('T')[0];
+      // Use local timezone date string to avoid UTC conversion issues
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+      
+      // Debug the generated date string
+      console.log('Generated dateStr:', dateStr, 'from date:', d);
+      
       const dayData = {
         date: dateStr,
         formattedDate: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -83,7 +95,11 @@ const HabitStreakChart = ({
         
         // Calculate streak up to this date
         for (let streakDate = new Date(d); streakDate >= startDate; streakDate.setDate(streakDate.getDate() - 1)) {
-          const streakDateStr = streakDate.toISOString().split('T')[0];
+          // Use local timezone date string to avoid UTC conversion issues
+          const year = streakDate.getFullYear();
+          const month = String(streakDate.getMonth() + 1).padStart(2, '0');
+          const day = String(streakDate.getDate()).padStart(2, '0');
+          const streakDateStr = `${year}-${month}-${day}`;
           const entry = habitEntries[streakDateStr];
           
           if (entry && entry.completed) {
@@ -121,6 +137,36 @@ const HabitStreakChart = ({
   const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload || !payload.length) return null;
 
+    // Debug the label value
+    console.log('Tooltip label:', label, typeof label);
+    console.log('Payload:', payload);
+
+    let dateDisplay = label; // fallback to the label itself
+    
+    // The label is actually the formattedDate (like "Jul 4"), not the full date
+    // We need to get the actual date from the payload data
+    if (payload[0] && payload[0].payload && payload[0].payload.date) {
+      const fullDateStr = payload[0].payload.date;
+      console.log('Full date from payload:', fullDateStr);
+      
+      try {
+        if (fullDateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          const [year, month, day] = fullDateStr.split('-').map(Number);
+          const date = new Date(year, month - 1, day); // month is 0-indexed
+          
+          if (!isNaN(date.getTime())) {
+            dateDisplay = date.toLocaleDateString('en-US', { 
+              weekday: 'short', 
+              month: 'short', 
+              day: 'numeric' 
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Date parsing error:', error);
+      }
+    }
+
     return (
       <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-secondary)] rounded-lg p-3 shadow-lg"
            style={{
@@ -130,11 +176,7 @@ const HabitStreakChart = ({
            }}>
         <p className="text-sm font-medium text-[var(--color-text-secondary)] mb-2" 
            style={{ fontSize: "11px", marginBottom: "4px" }}>
-          {new Date(label).toLocaleDateString('en-US', { 
-            weekday: 'short', 
-            month: 'short', 
-            day: 'numeric' 
-          })}
+          {dateDisplay}
         </p>
         {payload.map((entry, index) => {
           const habit = topHabits.find(h => h.habit._id === entry.dataKey);

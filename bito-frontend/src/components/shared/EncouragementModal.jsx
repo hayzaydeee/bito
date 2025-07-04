@@ -92,17 +92,17 @@ const EncouragementModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-[var(--color-surface-elevated)] rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto border border-[var(--color-border-primary)]/20">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+      <div className="bg-[var(--color-surface-primary)] rounded-xl shadow-xl border border-[var(--color-border-primary)] w-full max-w-md max-h-[90vh] overflow-y-auto animate-zoom-in">
         {/* Header */}
-        <div className="p-6 border-b border-[var(--color-border-primary)]/20">
+        <div className="p-6 border-b border-[var(--color-border-primary)]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center">
                 <HeartIcon className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-[var(--color-text-primary)] font-dmSerif">
+                <h2 className="text-xl font-dmSerif gradient-text">
                   Send Encouragement
                 </h2>
                 <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
@@ -112,7 +112,7 @@ const EncouragementModal = ({
             </div>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-lg bg-[var(--color-surface-hover)] hover:bg-[var(--color-surface-primary)] flex items-center justify-center transition-colors"
+              className="w-8 h-8 rounded-lg hover:bg-[var(--color-surface-hover)] flex items-center justify-center transition-colors"
             >
               <CrossCircledIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
             </button>

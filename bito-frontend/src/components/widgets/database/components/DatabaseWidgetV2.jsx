@@ -8,16 +8,56 @@ const DatabaseWidgetV2 = memo(
   ({
     title = "Habit Tracker",
     viewType: initialViewType = "table",
+    onViewTypeChange = null, // Callback for view type changes
+    persistenceKey = null, // Key for localStorage persistence
     breakpoint = "lg",
     filterComponent = null,
     dateRange = null,
     mode = "week",
+    habits: habitsProps = null, // Add habits prop
+    completions: completionsProps = null, // Add completions prop
+    entries: entriesProps = null, // Add entries prop for HabitGrid
     onAddHabit = null,
     onEditHabit = null,
     isInEditMode = false,
   }) => {
-    const [viewType, setViewType] = useState(initialViewType);
-    const { habits } = useHabits();
+    const [viewType, setViewType] = useState(() => {
+      // Try to load from localStorage if persistence key is provided
+      if (persistenceKey) {
+        try {
+          const saved = localStorage.getItem(persistenceKey);
+          if (saved && (saved === "table" || saved === "gallery")) {
+            return saved;
+          }
+        } catch (error) {
+          console.warn('Failed to load view type from localStorage:', error);
+        }
+      }
+      return initialViewType;
+    });
+
+    // Custom setViewType function that handles persistence and callbacks
+    const handleViewTypeChange = useCallback((newViewType) => {
+      setViewType(newViewType);
+      
+      // Save to localStorage if persistence key is provided
+      if (persistenceKey) {
+        try {
+          localStorage.setItem(persistenceKey, newViewType);
+        } catch (error) {
+          console.warn('Failed to save view type to localStorage:', error);
+        }
+      }
+      
+      // Call the optional callback
+      if (onViewTypeChange) {
+        onViewTypeChange(newViewType);
+      }
+    }, [persistenceKey, onViewTypeChange]);
+    const { habits: contextHabits } = useHabits();
+    
+    // Use props if provided, otherwise use context (for backwards compatibility)
+    const habits = habitsProps !== null ? habitsProps : contextHabits;
     
     // Safe habit ID extraction
     const safeGetHabitId = useCallback((habit) => {
@@ -204,6 +244,7 @@ const DatabaseWidgetV2 = memo(
                 showHeader={true}
                 tableStyle={true}
                 habits={orderedHabits}
+                entries={completionsProps} // Use completions from props as entries
                 isInEditMode={isInEditMode}
                 onHabitReorder={handleHabitReorder}
               />
@@ -218,6 +259,7 @@ const DatabaseWidgetV2 = memo(
                 onAddHabit={onAddHabit}
                 onEditHabit={onEditHabit}
                 habits={orderedHabits}
+                entries={completionsProps} // Use completions from props as entries
                 isInEditMode={isInEditMode}
                 onHabitReorder={handleHabitReorder}
               />
@@ -241,7 +283,7 @@ const DatabaseWidgetV2 = memo(
         <DatabaseHeader
           title={displayTitle}
           viewType={viewType}
-          setViewType={setViewType}
+          setViewType={handleViewTypeChange}
           filterComponent={filterComponent}
         />
         <div className="widget-content-area">{renderContent()}</div>

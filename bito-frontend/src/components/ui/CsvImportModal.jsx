@@ -117,15 +117,15 @@ const CsvImportModal = ({ isOpen, onClose, onImport }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+      <div className="bg-[var(--color-surface-primary)] rounded-xl shadow-xl border border-[var(--color-border-primary)] max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-zoom-in">
         <div className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Import Habit Data from CSV</h2>
+            <h2 className="text-2xl font-dmSerif gradient-text">Import Habit Data from CSV</h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 text-xl leading-none"
+              className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] p-1 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
             >
               ×
             </button>
@@ -133,8 +133,8 @@ const CsvImportModal = ({ isOpen, onClose, onImport }) => {
 
           {/* Error Display */}
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-red-700 text-sm">{error}</p>
+            <div className="mb-4 p-3 bg-[var(--color-danger-surface)] border border-[var(--color-danger-border)] rounded-lg">
+              <p className="text-[var(--color-danger-text)] text-sm font-outfit">{error}</p>
             </div>
           )}
 

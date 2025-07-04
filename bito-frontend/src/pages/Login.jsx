@@ -137,12 +137,6 @@ const Login = () => {
   // Debug: log auth state and render tracking
   const renderRef = useRef(0);
   renderRef.current += 1;
-  console.log(`🔄 Login.jsx render #${renderRef.current}:`, {
-    isLoading,
-    isAuthenticated,
-    user,
-    hasAuthError: !!authError,
-  });
 
   // Show loading spinner while auth state is being determined
   if (isLoading) {
@@ -229,7 +223,7 @@ const Login = () => {
           <div className="bg-[var(--color-surface-primary)] border border-[var(--color-border-primary)]/20 rounded-2xl p-8 shadow-xl backdrop-blur-sm max-w-md mx-auto">
             <Flex direction="column" gap="6">
               {/* Social Login */}
-              <Flex direction="column" gap="3">
+              {/* <Flex direction="column" gap="3">
                 <Button
                   onClick={() => handleSocialLogin("Google")}
                   disabled={isLoading}
@@ -258,7 +252,7 @@ const Login = () => {
                     Continue with Google
                   </Text>
                 </Button>
-              </Flex>
+              </Flex> */}
 
               {/* Divider */}
               <div className="relative">

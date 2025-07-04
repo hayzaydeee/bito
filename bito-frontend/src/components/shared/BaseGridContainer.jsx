@@ -293,11 +293,13 @@ const BaseGridContainer = ({
               <DatabaseWidgetBridge
                 habits={habits}
                 completions={entries}
+                entries={entries} // Pass entries for HabitGrid to avoid context usage
                 onToggleCompletion={onToggleCompletion}
                 onAddHabit={onAddHabit}
                 onDeleteHabit={onDeleteHabit}
                 onEditHabit={onEditHabit}
                 viewType="table"
+                persistenceKey={storageKeys?.databaseViewType || "dashboard_databaseViewType"}
                 dateRange={databaseDateRange}
                 mode="week"
                 isInEditMode={isInEditMode}

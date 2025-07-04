@@ -15,7 +15,6 @@ import WorkspaceSettings from "./pages/WorkspaceSettings";
 import MemberDashboardView from "./pages/MemberDashboardView";
 import GroupSelection from "./pages/GroupSelection";
 import InvitationPage from "./pages/InvitationPage";
-import GroupTrackersPage from "./pages/GroupTrackersPage";
 
 // Import authentication context
 import { AuthProvider } from "./contexts/AuthContext";
@@ -58,7 +57,6 @@ function App() {
                 <Route path="groups" element={<GroupSelection />} />
                 <Route path="groups/:groupId" element={<WorkspaceOverview />} />
                 <Route path="groups/:groupId/members/:memberId/dashboard" element={<MemberDashboardView />} />
-                <Route path="groups/:groupId/trackers" element={<GroupTrackersPage />} />
                 <Route path="groups/:groupId/settings" element={<WorkspaceSettings />} />
                 <Route path="invitations" element={<InvitationPage />} />
               </Route>

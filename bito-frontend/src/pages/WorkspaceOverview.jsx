@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Text } from '@radix-ui/themes';
-import { 
-  PersonIcon, 
-  GearIcon, 
-  PlusIcon, 
-  BarChartIcon, 
-  ActivityLogIcon, 
+import React, { useState, useEffect, useMemo } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Button, Text } from "@radix-ui/themes";
+import {
+  PersonIcon,
+  GearIcon,
+  PlusIcon,
+  BarChartIcon,
+  ActivityLogIcon,
   StarIcon,
   TargetIcon,
   CalendarIcon,
@@ -21,20 +21,97 @@ import {
   Cross2Icon,
   CheckIcon,
   ExclamationTriangleIcon,
-  InfoCircledIcon
-} from '@radix-ui/react-icons';
-import BaseGridContainer from '../components/shared/BaseGridContainer';
-import GroupStreaksChart from '../components/analytics/GroupStreaksChart';
-import { groupsAPI } from '../services/api';
-import { useAuth } from '../contexts/AuthContext';
+  InfoCircledIcon,
+  RocketIcon, // Add for challenges
+} from "@radix-ui/react-icons";
+import BaseGridContainer from "../components/shared/BaseGridContainer";
+import { groupsAPI } from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
+import GroupInviteModal from "../components/ui/GroupInviteModal";
+import EncouragementModal from "../components/shared/EncouragementModal";
+import MemberProgressWidget from "../components/widgets/MemberProgressWidget";
+import EncouragementFeedWidget from "../components/widgets/EncouragementFeedWidget";
+import GroupHabitModal from "../components/ui/GroupHabitModal";
+import HabitAdoptModal from "../components/ui/HabitAdoptModal";
+import "../components/ui/ModalAnimation.css";
 
 // Emoji categories for the picker
 const EMOJI_CATEGORIES = {
-  common: ["✅", "🔴", "🔵", "🟢", "⭐", "🎯", "💪", "🧠", "📚", "💧", "🏃", "🥗", "😊"],
-  activity: ["🏋️", "🧘", "🚶", "🏃", "🚴", "🏊", "⚽", "🎮", "🎨", "🎵", "📝", "📚", "💻"],
-  health: ["💧", "🥗", "🍎", "🥦", "💊", "😴", "🧠", "🧘", "❤️", "🦷", "🚭", "🧹", "☀️"],
-  productivity: ["📝", "⏰", "📅", "📚", "💼", "💻", "📱", "✉️", "📊", "🔍", "⚙️", "🏆", "💯"],
-  mindfulness: ["🧘", "😌", "🌱", "🌈", "🌞", "🌙", "💭", "🧠", "❤️", "🙏", "✨", "💫", "🔮"],
+  common: [
+    "✅",
+    "🔴",
+    "🔵",
+    "🟢",
+    "⭐",
+    "🎯",
+    "💪",
+    "🧠",
+    "📚",
+    "💧",
+    "🏃",
+    "🥗",
+    "😊",
+  ],
+  activity: [
+    "🏋️",
+    "🧘",
+    "🚶",
+    "🏃",
+    "🚴",
+    "🏊",
+    "⚽",
+    "🎮",
+    "🎨",
+    "🎵",
+    "📝",
+    "📚",
+    "💻",
+  ],
+  health: [
+    "💧",
+    "🥗",
+    "🍎",
+    "🥦",
+    "💊",
+    "😴",
+    "🧠",
+    "🧘",
+    "❤️",
+    "🦷",
+    "🚭",
+    "🧹",
+    "☀️",
+  ],
+  productivity: [
+    "📝",
+    "⏰",
+    "📅",
+    "📚",
+    "💼",
+    "💻",
+    "📱",
+    "✉️",
+    "📊",
+    "🔍",
+    "⚙️",
+    "🏆",
+    "💯",
+  ],
+  mindfulness: [
+    "🧘",
+    "😌",
+    "🌱",
+    "🌈",
+    "🌞",
+    "🌙",
+    "💭",
+    "🧠",
+    "❤️",
+    "🙏",
+    "✨",
+    "💫",
+    "🔮",
+  ],
 };
 
 // Predefined colors
@@ -52,50 +129,66 @@ const WorkspaceOverview = () => {
   const { groupId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   const [group, setGroup] = useState(null);
   const [overview, setOverview] = useState(null);
   const [activities, setActivities] = useState([]);
   const [groupHabits, setGroupHabits] = useState([]);
-  const [sharedHabits, setSharedHabits] = useState([]);
   const [members, setMembers] = useState([]);
+  const [challenges, setChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Modal states
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showAddHabitModal, setShowAddHabitModal] = useState(false);
+  const [showEditHabitModal, setShowEditHabitModal] = useState(false);
   const [showMembersModal, setShowMembersModal] = useState(false);
-  
+
   // Notification states
   const [notification, setNotification] = useState(null);
+  const [selectedHabit, setSelectedHabit] = useState(null);
 
   // Form states
   const [inviteForm, setInviteForm] = useState({
-    email: '',
-    role: 'member',
-    message: ''
+    email: "",
+    role: "member",
+    message: "",
   });
   const [habitForm, setHabitForm] = useState({
-    name: '',
-    description: '',
-    category: 'health',
-    icon: '🎯',
-    color: '#4f46e5',
-    defaultTarget: { value: 1, unit: 'time' },
+    name: "",
+    description: "",
+    category: "health",
+    icon: "🎯",
+    color: "#4f46e5",
+    defaultTarget: { value: 1, unit: "time" },
     schedule: {
       days: [0, 1, 2, 3, 4, 5, 6], // Default to every day
-      reminderTime: '',
-      reminderEnabled: false
+      reminderTime: "",
+      reminderEnabled: false,
     },
-    isRequired: false
+    isRequired: false,
   });
 
   // Modal UI states
-  const [activeTab, setActiveTab] = useState('details');
-  const [emojiCategory, setEmojiCategory] = useState('common');
+  const [activeTab, setActiveTab] = useState("details");
+  const [emojiCategory, setEmojiCategory] = useState("common");
+
+  // Adopt modal states
+  const [adoptingHabit, setAdoptingHabit] = useState(null);
+  const [adoptingPrivacyLevel, setAdoptingPrivacyLevel] = useState("public");
+  const [showAdoptModal, setShowAdoptModal] = useState(false);
+
+  // Group tracker data (from GroupTrackersPage)
+  const [groupTrackerData, setGroupTrackerData] = useState(null);
+  const [encouragements, setEncouragements] = useState([]);
+  const [encouragementModal, setEncouragementModal] = useState({
+    isOpen: false,
+    targetUser: null,
+    habitId: null
+  });
 
   // Show notification helper
-  const showNotification = (message, type = 'success') => {
+  const showNotification = (message, type = "success") => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 4000); // Auto-hide after 4 seconds
   };
@@ -107,51 +200,107 @@ const WorkspaceOverview = () => {
   const fetchGroupData = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch group details
       const groupData = await groupsAPI.getGroup(groupId);
-      console.log('Group data response:', groupData);
       if (groupData.success) {
         const groupInfo = groupData.group || groupData.workspace;
-        console.log('Group info:', groupInfo);
-        console.log('Members:', groupInfo.members);
         setGroup(groupInfo);
         setMembers(groupInfo.members || []);
       }
-      
+
       // Fetch overview data
       const overviewData = await groupsAPI.getGroupOverview(groupId);
       if (overviewData.success) {
         setOverview(overviewData.overview);
       }
-      
+
+      // Fetch challenges data
+      fetchChallengesData();
+
+      // Fetch group tracker data (from GroupTrackersPage)
+      try {
+        const trackersResponse = await groupsAPI.getGroupTrackers(groupId);
+        setGroupTrackerData(trackersResponse.memberTrackers || []);
+      } catch (err) {
+        console.warn('Failed to fetch group trackers:', err);
+        setGroupTrackerData([]);
+      }
+
+      // Fetch encouragements
+      try {
+        const encouragementsResponse = await groupsAPI.getEncouragements(groupId);
+        setEncouragements(encouragementsResponse.data || []);
+      } catch (err) {
+        console.warn('Failed to fetch encouragements:', err);
+        setEncouragements([]);
+      }
+
       // Fetch group habits
       const habitsData = await groupsAPI.getGroupHabits(groupId);
       if (habitsData.success) {
         setGroupHabits(habitsData.habits);
       }
-      
+
+      // Fetch group tracking data which includes completions
+      // Calculate date range for the current week
+      const now = new Date();
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay()); // Start from Sunday
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      const endOfWeek = new Date(now);
+      endOfWeek.setDate(startOfWeek.getDate() + 6); // End on Saturday
+      endOfWeek.setHours(23, 59, 59, 999);
+
+      const dateRange = {
+        startDate: startOfWeek.toISOString(),
+        endDate: endOfWeek.toISOString(),
+      };
+
+      const groupTrackers = await groupsAPI.getGroupTrackers(
+        groupId,
+        dateRange
+      );
+      if (groupTrackers.success) {
+        // Store tracker data in the overview
+        setOverview((prev) => ({
+          ...prev,
+          trackers: groupTrackers.trackers || [],
+          entries: groupTrackers.entries || {}, // For member dashboard compatibility
+          habits: groupHabits || [],
+        }));
+
+
+      }
+
       // Fetch recent activities
-      const activityData = await groupsAPI.getGroupActivity(groupId, { limit: 10 });
+      const activityData = await groupsAPI.getGroupActivity(groupId, {
+        limit: 10,
+      });
       if (activityData.success) {
         setActivities(activityData.activities);
       }
-
-      // Fetch shared habits
-      try {
-        const sharedHabitsData = await groupsAPI.getSharedHabits(groupId);
-        if (sharedHabitsData.success) {
-          setSharedHabits(sharedHabitsData.sharedHabits);
-        }
-      } catch (error) {
-        console.log('Shared habits not available yet:', error);
-        setSharedHabits([]);
-      }
-      
     } catch (error) {
-      console.error('Error fetching group data:', error);
+      console.error("Error fetching group data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchChallengesData = async () => {
+    try {
+      // Fetch challenges data
+      const challengesResponse = await groupsAPI.getChallenges(groupId);
+      if (challengesResponse.success) {
+        setChallenges(challengesResponse.challenges || []);
+      } else {
+        console.warn("Failed to fetch challenges:", challengesResponse.message);
+        setChallenges([]);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch challenges:", err);
+      setChallenges([]);
     }
   };
 
@@ -162,7 +311,7 @@ const WorkspaceOverview = () => {
       team: BackpackIcon,
       fitness: HeartIcon,
       study: CalendarIcon,
-      community: ActivityLogIcon
+      community: ActivityLogIcon,
     };
     return icons[type] || BackpackIcon;
   };
@@ -172,16 +321,18 @@ const WorkspaceOverview = () => {
       const response = await groupsAPI.inviteMember(groupId, inviteForm);
       if (response.success) {
         setShowInviteModal(false);
-        setInviteForm({ email: '', role: 'member', message: '' });
+        setInviteForm({ email: "", role: "member", message: "" });
         // Show success notification
-        showNotification(`Invitation sent to ${inviteForm.email} successfully!`);
+        showNotification(
+          `Invitation sent to ${inviteForm.email} successfully!`
+        );
         // Refresh group data
         fetchGroupData();
       }
     } catch (error) {
-      console.error('Error inviting member:', error);
+      console.error("Error inviting member:", error);
       // Show error notification
-      showNotification('Failed to send invitation. Please try again.', 'error');
+      showNotification("Failed to send invitation. Please try again.", "error");
     }
   };
 
@@ -191,933 +342,1011 @@ const WorkspaceOverview = () => {
       if (response.success) {
         setShowAddHabitModal(false);
         setHabitForm({
-          name: '',
-          description: '',
-          category: 'health',
-          icon: '🎯',
-          color: '#4f46e5',
-          defaultTarget: { value: 1, unit: 'time' },
+          name: "",
+          description: "",
+          category: "health",
+          icon: "🎯",
+          color: "#4f46e5",
+          defaultTarget: { value: 1, unit: "time" },
           schedule: {
             days: [0, 1, 2, 3, 4, 5, 6],
-            reminderTime: '',
-            reminderEnabled: false
+            reminderTime: "",
+            reminderEnabled: false,
           },
-          isRequired: false
+          isRequired: false,
         });
-        setActiveTab('details');
-        setEmojiCategory('common');
+        setActiveTab("details");
+        setEmojiCategory("common");
         // Show success notification
-        showNotification(`Group habit "${habitForm.name}" created successfully!`);
+        showNotification(
+          `Group habit "${habitForm.name}" created successfully!`
+        );
         // Refresh group data
         fetchGroupData();
       }
     } catch (error) {
-      console.error('Error adding habit:', error);
+      console.error("Error adding habit:", error);
       // Show error notification
-      showNotification('Failed to create habit. Please try again.', 'error');
+      showNotification("Failed to create habit. Please try again.", "error");
+    }
+  };
+
+  const handleEditHabit = (habit) => {
+    // Set the selected habit
+    setSelectedHabit(habit);
+
+    // Populate the form with habit data
+    setHabitForm({
+      name: habit.name || "",
+      description: habit.description || "",
+      category: habit.category || "health",
+      icon: habit.icon || "🎯",
+      color: habit.color || "#4f46e5",
+      defaultTarget: habit.settings?.defaultTarget || {
+        value: 1,
+        unit: "time",
+      },
+      schedule: habit.settings?.schedule || {
+        days: [0, 1, 2, 3, 4, 5, 6],
+        reminderTime: "",
+        reminderEnabled: false,
+      },
+      isRequired: habit.isRequired || false,
+    });
+
+    // Set active tab and show modal
+    setActiveTab("details");
+    setEmojiCategory("common");
+    setShowEditHabitModal(true);
+  };
+
+  const handleUpdateHabit = async () => {
+    try {
+      // Prepare the data with settings properly structured
+      const habitData = {
+        ...habitForm,
+        settings: {
+          defaultTarget: habitForm.defaultTarget,
+          schedule: habitForm.schedule,
+        },
+      };
+
+      const response = await groupsAPI.updateGroupHabit(
+        groupId,
+        selectedHabit._id,
+        habitData
+      );
+
+      if (response.success) {
+        setShowEditHabitModal(false);
+        showNotification(
+          `Group habit "${habitForm.name}" updated successfully!`
+        );
+        // Refresh group data
+        fetchGroupData();
+      }
+    } catch (error) {
+      console.error("Error updating habit:", error);
+      showNotification("Failed to update habit. Please try again.", "error");
+    }
+  };
+
+  const handleAdoptHabit = async () => {
+    try {
+      if (!adoptingHabit) return;
+
+      // Pass the privacy settings to the API
+      await groupsAPI.adoptWorkspaceHabit(groupId, adoptingHabit._id, {
+        personalSettings: {
+          shareProgress: adoptingPrivacyLevel,
+        },
+      });
+
+      // Refresh the group data to update the adoption status
+      await fetchGroupData();
+
+      // Show success notification
+      showNotification(
+        `Successfully adopted "${adoptingHabit.name}" habit!`
+      );
+    } catch (error) {
+      console.error("Error adopting habit:", error);
+      showNotification(
+        "Failed to adopt habit. You may have already adopted it.",
+        "error"
+      );
+    }
+  };
+
+  // Encouragement handlers (from GroupTrackersPage)
+  const handleMemberClick = (memberId) => {
+    navigate(`/app/groups/${groupId}/members/${memberId}/dashboard`);
+  };
+
+  const openEncouragementModal = (targetUser, habitId = null) => {
+    setEncouragementModal({
+      isOpen: true,
+      targetUser,
+      habitId
+    });
+  };
+
+  const closeEncouragementModal = () => {
+    setEncouragementModal({
+      isOpen: false,
+      targetUser: null,
+      habitId: null
+    });
+  };
+
+  const handleEncouragementSent = () => {
+    // Refresh encouragements data
+    groupsAPI.getEncouragements(groupId)
+      .then(response => setEncouragements(response.data || []))
+      .catch(err => console.warn('Failed to refresh encouragements:', err));
+  };
+
+  const handleCreateChallenge = async (challengeData) => {
+    try {
+      await groupsAPI.createChallenge(groupId, challengeData);
+      // Refresh challenges data
+      const challengesResponse = await groupsAPI.getChallenges(groupId);
+      setChallenges(challengesResponse.challenges || []);
+    } catch (err) {
+      console.error('Failed to create challenge:', err);
     }
   };
 
   // Check user permissions with multiple ID format checks
   const currentUserId = user?._id || user?.id;
 
-  const userMember = members.find(m => {
+  const userMember = members.find((m) => {
     const memberUserId = m.userId?._id || m.userId || m.id;
-    const match1 = memberUserId && memberUserId.toString() === currentUserId?.toString();
-    const match2 = memberUserId && memberUserId.toString() === user?.id?.toString();
-    const match3 = memberUserId && memberUserId.toString() === user?._id?.toString();
-    
+    const match1 =
+      memberUserId && memberUserId.toString() === currentUserId?.toString();
+    const match2 =
+      memberUserId && memberUserId.toString() === user?.id?.toString();
+    const match3 =
+      memberUserId && memberUserId.toString() === user?._id?.toString();
+
     return match1 || match2 || match3;
   });
-  
-  const userRole = userMember?.role || 'member';
-  const canManageGroup = userRole === 'owner' || userRole === 'admin'
 
-  console.log('Permission check:', { userRole, canManageGroup });
+  const userRole = userMember?.role || "member";
+  const canManageGroup = userRole === "owner" || userRole === "admin";
 
   // Widget definitions (excluding header which is now standalone)
-  const groupWidgets = useMemo(() => ({
-
-    'team-stats-widget': {
-      title: "Team Statistics",
-      description: "Overview of team performance metrics and completion rates",
-      category: "collaboration",
-      defaultProps: { w: 6, h: 4 },
-      component: () => {
-        const teamCards = [
-          {
-            title: 'Completion Rate',
-            value: overview?.completionRate || 0,
-            icon: CheckCircledIcon,
-            color: 'success',
-            suffix: '%',
-            description: 'team completion rate'
-          },
-          {
-            title: 'Active Members',
-            value: overview?.activeMembers || 0,
-            icon: PersonIcon,
-            color: 'info',
-            suffix: '',
-            description: 'active this week'
-          },
-          {
-            title: 'Total Streaks',
-            value: overview?.totalStreaks || 0,
-            icon: StarIcon,
-            color: 'warning',
-            suffix: '',
-            description: 'combined streaks'
-          },
-          {
-            title: 'Team Score',
-            value: overview?.teamScore || 0,
-            icon: TargetIcon,
-            color: 'brand',
-            suffix: '',
-            description: 'points earned'
-          }
-        ];
-
-        const getColorClasses = (color) => {
-          const colorMap = {
-            brand: {
-              icon: 'text-[var(--color-brand-400)]',
-              bg: 'from-[var(--color-brand-500)]/10 to-[var(--color-brand-600)]/5',
-              border: 'border-[var(--color-brand-400)]/20'
-            },
-            success: {
-              icon: 'text-[var(--color-success)]',
-              bg: 'from-[var(--color-success)]/10 to-[var(--color-success)]/5',
-              border: 'border-[var(--color-success)]/20'
-            },
-            info: {
-              icon: 'text-[var(--color-info)]',
-              bg: 'from-[var(--color-info)]/10 to-[var(--color-info)]/5',
-              border: 'border-[var(--color-info)]/20'
-            },
-            warning: {
-              icon: 'text-[var(--color-warning)]',
-              bg: 'from-[var(--color-warning)]/10 to-[var(--color-warning)]/5',
-              border: 'border-[var(--color-warning)]/20'
-            }
-          };
-          return colorMap[color] || colorMap.brand;
-        };
-
-        return (
+  const groupWidgets = useMemo(
+    () => ({
+      "recent-activity-widget": {
+        title: "Recent Activity",
+        description: "Latest team updates and member activities",
+        category: "collaboration",
+        defaultProps: { w: 6, h: 4 },
+        component: () => (
           <div className="h-full glass-card-minimal p-6 rounded-2xl flex flex-col">
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
-                <BarChartIcon className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg">
+                <ActivityLogIcon className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-bold font-dmSerif text-[var(--color-text-primary)]">Team Progress</h3>
-                <p className="text-sm text-[var(--color-text-secondary)] font-outfit">This week's performance</p>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4 flex-1">
-              {teamCards.map((card, index) => {
-                const Icon = card.icon;
-                const colors = getColorClasses(card.color);
-                
-                return (
-                  <div 
-                    key={card.title}
-                    className="bg-[var(--color-surface-elevated)]/50 backdrop-blur-sm p-4 rounded-xl border border-[var(--color-border-primary)]/30 relative overflow-hidden group hover:scale-105 transition-all duration-300"
-                  >
-                    {/* Background Pattern */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${colors.bg}`}></div>
-                    <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl ${colors.bg} rounded-full -translate-y-12 translate-x-12`}></div>
-                    
-                    <div className="relative z-10">
-                      {/* Icon */}
-                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${colors.bg} border ${colors.border} flex items-center justify-center mb-3`}>
-                        <Icon className={`w-5 h-5 ${colors.icon}`} />
-                      </div>
-
-                      {/* Value */}
-                      <div className="mb-2">
-                        <span className="text-2xl font-bold font-dmSerif text-[var(--color-text-primary)]">
-                          {card.value.toLocaleString()}
-                        </span>
-                        {card.suffix && (
-                          <span className="text-xl font-bold font-dmSerif text-[var(--color-text-secondary)] ml-1">
-                            {card.suffix}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Title */}
-                      <h3 className="text-xs font-semibold text-[var(--color-text-primary)] font-outfit mb-1">
-                        {card.title}
-                      </h3>
-
-                      {/* Description */}
-                      <p className="text-xs text-[var(--color-text-tertiary)] font-outfit leading-tight">
-                        {card.description}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        );
-      }
-    },
-
-    'recent-activity-widget': {
-      title: "Recent Activity",
-      description: "Latest team updates and member activities",
-      category: "collaboration",
-      defaultProps: { w: 6, h: 4 },
-      component: () => (
-        <div className="h-full glass-card-minimal p-6 rounded-2xl flex flex-col">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg">
-              <ActivityLogIcon className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold font-dmSerif text-[var(--color-text-primary)]">Recent Activity</h3>
-              <p className="text-sm text-[var(--color-text-secondary)] font-outfit">Latest team updates</p>
-            </div>
-          </div>
-          
-          <div className="flex-1 space-y-4 overflow-y-auto">
-            {activities.length > 0 ? (
-              activities.map((activity, index) => {
-                console.log(`Activity ${index}:`, activity);
-                
-                // Get user info
-                const userInfo = activity.userId || activity.user || {};
-                const userName = userInfo.name || userInfo.email || 'A member';
-                
-                // Generate activity description based on type
-                let description = '';
-                let icon = CheckCircledIcon;
-                
-                switch (activity.type) {
-                  case 'habit_completed':
-                    description = `${userName} completed ${activity.data?.habitName || 'a habit'}`;
-                    if (activity.data?.streakCount > 1) {
-                      description += ` (${activity.data.streakCount} day streak!)`;
-                    }
-                    icon = CheckCircledIcon;
-                    break;
-                  case 'habit_adopted':
-                    description = `${userName} adopted ${activity.data?.habitName || 'a new habit'}`;
-                    icon = PlusIcon;
-                    break;
-                  case 'streak_milestone':
-                    description = `🔥 ${userName} reached ${activity.data?.streakCount || 0} days on ${activity.data?.habitName || 'a habit'}`;
-                    icon = StarIcon;
-                    break;
-                  case 'member_joined':
-                    description = `${userName} joined the group`;
-                    icon = PersonIcon;
-                    break;
-                  case 'habit_created':
-                    description = `${userName} created ${activity.data?.habitName || 'a new group habit'}`;
-                    icon = TargetIcon;
-                    break;
-                  default:
-                    description = activity.data?.message || activity.description || `${userName} completed an activity`;
-                    icon = CheckCircledIcon;
-                }
-                
-                // Format timestamp
-                let timeDisplay = 'Just now';
-                if (activity.createdAt) {
-                  const activityDate = new Date(activity.createdAt);
-                  const now = new Date();
-                  const diffMs = now - activityDate;
-                  const diffMinutes = Math.floor(diffMs / (1000 * 60));
-                  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-                  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-                  
-                  if (diffMinutes < 1) {
-                    timeDisplay = 'Just now';
-                  } else if (diffMinutes < 60) {
-                    timeDisplay = `${diffMinutes}m ago`;
-                  } else if (diffHours < 24) {
-                    timeDisplay = `${diffHours}h ago`;
-                  } else if (diffDays < 7) {
-                    timeDisplay = `${diffDays}d ago`;
-                  } else {
-                    timeDisplay = activityDate.toLocaleDateString();
-                  }
-                }
-                
-                const ActivityIcon = icon;
-                
-                return (
-                  <div key={`activity-${activity._id || index}`} className="flex items-start gap-3 p-3 rounded-lg hover:bg-[var(--color-surface-hover)]/30 transition-all duration-200">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center flex-shrink-0">
-                      <ActivityIcon className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-[var(--color-text-primary)] font-outfit">
-                        {description}
-                      </p>
-                      <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">
-                        {timeDisplay}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <ActivityLogIcon className="w-12 h-12 text-[var(--color-text-tertiary)] mb-3" />
+                <h3 className="text-lg font-bold font-dmSerif text-[var(--color-text-primary)]">
+                  Recent Activity
+                </h3>
                 <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
-                  No recent activity yet
-                </p>
-                <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">
-                  Start tracking habits to see team activity here
+                  Latest team updates
                 </p>
               </div>
-            )}
-          </div>
-        </div>
-      )
-    },
-
-    'group-habits-widget': {
-      title: "Group Habits",
-      description: "Habits available for all group members to adopt",
-      category: "collaboration",
-      defaultProps: { w: 6, h: 4 },
-      component: () => {
-        const [showAdoptModal, setShowAdoptModal] = useState(false);
-        const [selectedHabit, setSelectedHabit] = useState(null);
-        const [privacySettings, setPrivacySettings] = useState({
-          shareProgress: 'progress-only',
-          allowInteraction: true,
-          shareInActivity: true
-        });
-
-        const handleAdoptHabit = async () => {
-          try {
-            if (!selectedHabit) return;
-            
-            console.log('Adopting habit:', selectedHabit);
-            console.log('Privacy settings:', privacySettings);
-            
-            // Pass the privacy settings to the API
-            await groupsAPI.adoptWorkspaceHabit(groupId, selectedHabit._id, {
-              personalSettings: {
-                ...privacySettings
-              }
-            });
-            
-            // Refresh the group data to update the adoption status
-            await fetchGroupData();
-            
-            // Close modal and reset settings
-            setShowAdoptModal(false);
-            setSelectedHabit(null);
-            setPrivacySettings({
-              shareProgress: 'progress-only',
-              allowInteraction: true,
-              shareInActivity: true
-            });
-            
-            // Show success notification
-            showNotification(`Successfully adopted "${selectedHabit.name}" habit!`);
-          } catch (error) {
-            console.error('Error adopting habit:', error);
-            // Show error notification
-            showNotification('Failed to adopt habit. You may have already adopted it.', 'error');
-          }
-        };
-        
-        const openAdoptModal = (habit) => {
-          setSelectedHabit(habit);
-          setShowAdoptModal(true);
-        };
-
-        // Check if a habit is already adopted by the current user
-        const isHabitAdopted = (habit) => {
-          if (!habit.adoptedBy || !Array.isArray(habit.adoptedBy) || habit.adoptedBy.length === 0 || !user) {
-            return false;
-          }
-
-          return habit.adoptedBy.some(adoptedUser => {
-            // Extract user ID from the adoptedUser object
-            const adoptedUserId = adoptedUser?._id || 
-                                 (adoptedUser?.userId && (typeof adoptedUser.userId === 'object' ? adoptedUser.userId._id : adoptedUser.userId)) || 
-                                 adoptedUser;
-                                 
-            // Extract current user ID
-            const currentUserId = user?._id || user?.id;
-            
-            // Compare as strings to avoid reference comparison issues
-            return adoptedUserId && currentUserId && 
-                   adoptedUserId.toString() === currentUserId.toString();
-          });
-        };
-
-        return (
-          <div className="h-full glass-card-minimal p-6 rounded-2xl flex flex-col">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="flex-1">
-                <h3 className="text-lg font-bold font-dmSerif text-[var(--color-text-primary)]">Group Habits</h3>
-                <p className="text-sm text-[var(--color-text-secondary)] font-outfit">{groupHabits.length} habits available</p>
-              </div>
-              {canManageGroup && (
-                <button 
-                  onClick={() => setShowAddHabitModal(true)}
-                  size="2"
-                  className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg text-sm transition-all duration-200 font-outfit"
-                >
-                  <PlusIcon className="w-4 h-4" />
-                  Add Habit
-                </button>
-              )}
             </div>
-            
+
             <div className="flex-1 space-y-4 overflow-y-auto">
-              {groupHabits.length > 0 ? (
-                groupHabits.map((habit) => {
-                  const isAdopted = isHabitAdopted(habit);
-                  
-                  // Debug logging to help troubleshoot adoption status
-                  console.log(`Habit: ${habit.name}, Adopted: ${isAdopted}`, {
-                    habitId: habit._id,
-                    adoptedBy: habit.adoptedBy,
-                    currentUser: user?._id || user?.id
-                  });
-                  
+              {activities.length > 0 ? (
+                activities.map((activity, index) => {
+                  // Get user info
+                  const userInfo = activity.userId || activity.user || {};
+                  const userName =
+                    userInfo.name || userInfo.email || "A member";
+
+                  // Generate activity description based on type
+                  let description = "";
+                  let icon = CheckCircledIcon;
+
+                  switch (activity.type) {
+                    case "habit_completed":
+                      description = `${userName} completed ${
+                        activity.data?.habitName || "a habit"
+                      }`;
+                      if (activity.data?.streakCount > 1) {
+                        description += ` (${activity.data.streakCount} day streak!)`;
+                      }
+                      icon = CheckCircledIcon;
+                      break;
+                    case "habit_adopted":
+                      description = `${userName} adopted ${
+                        activity.data?.habitName || "a new habit"
+                      }`;
+                      icon = PlusIcon;
+                      break;
+                    case "streak_milestone":
+                      description = `🔥 ${userName} reached ${
+                        activity.data?.streakCount || 0
+                      } days on ${activity.data?.habitName || "a habit"}`;
+                      icon = StarIcon;
+                      break;
+                    case "member_joined":
+                      description = `${userName} joined the group`;
+                      icon = PersonIcon;
+                      break;
+                    case "habit_created":
+                      description = `${userName} created ${
+                        activity.data?.habitName || "a new group habit"
+                      }`;
+                      icon = TargetIcon;
+                      break;
+                    default:
+                      description =
+                        activity.data?.message ||
+                        activity.description ||
+                        `${userName} completed an activity`;
+                      icon = CheckCircledIcon;
+                  }
+
+                  // Format timestamp
+                  let timeDisplay = "Just now";
+                  if (activity.createdAt) {
+                    const activityDate = new Date(activity.createdAt);
+                    const now = new Date();
+                    const diffMs = now - activityDate;
+                    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+                    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+                    if (diffMinutes < 1) {
+                      timeDisplay = "Just now";
+                    } else if (diffMinutes < 60) {
+                      timeDisplay = `${diffMinutes}m ago`;
+                    } else if (diffHours < 24) {
+                      timeDisplay = `${diffHours}h ago`;
+                    } else if (diffDays < 7) {
+                      timeDisplay = `${diffDays}d ago`;
+                    } else {
+                      timeDisplay = activityDate.toLocaleDateString();
+                    }
+                  }
+
+                  const ActivityIcon = icon;
+
                   return (
-                    <div 
-                      key={`habit-${habit._id}`} 
-                      className={`p-4 rounded-lg border transition-all duration-200 cursor-pointer hover:shadow-sm ${
-                        isAdopted 
-                          ? 'bg-[var(--color-success)]/5 border-[var(--color-success)]/20' 
-                          : 'bg-[var(--color-surface-primary)] border-[var(--color-border-primary)]/10 hover:border-[var(--color-brand-500)]/30'
-                      }`}
-                      onClick={() => !isAdopted && openAdoptModal(habit)}
+                    <div
+                      key={`activity-${activity._id || index}`}
+                      className="flex items-start gap-3 p-3 rounded-lg hover:bg-[var(--color-surface-hover)]/30 transition-all duration-200"
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h4 className="font-semibold text-[var(--color-text-primary)] font-outfit">
-                              {habit.name}
-                            </h4>
-                            {isAdopted && (
-                              <CheckCircledIcon className="w-4 h-4 text-[var(--color-success)]" />
-                            )}
-                          </div>
-                          <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
-                            {habit.description}
-                          </p>
-                          {habit.settings?.defaultTarget && (
-                            <p className="text-xs text-[var(--color-text-tertiary)] font-outfit mt-2">
-                              Default: {habit.settings.defaultTarget.value} {habit.settings.defaultTarget.unit}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <span className="text-xs px-2 py-1 rounded-lg bg-purple-100 text-purple-600 font-outfit font-medium">
-                            {habit.adoptionCount || 0} members
-                          </span>
-                          {isAdopted ? (
-                            <div className="flex flex-col gap-1">
-                              <span className="text-xs px-2 py-1 rounded-lg bg-[var(--color-success)]/10 text-[var(--color-success)] font-outfit font-medium">
-                                Adopted
-                              </span>
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigate(`/app/settings/habit-privacy/${habit._id}`);
-                                }}
-                                className="text-xs px-2 py-1 rounded-lg bg-gray-100 text-gray-600 font-outfit font-medium flex items-center gap-1"
-                              >
-                                <GearIcon className="w-3 h-3" />
-                                Privacy
-                              </button>
-                            </div>
-                          ) : (
-                            <span className="text-xs px-2 py-1 rounded-lg bg-[var(--color-brand-500)]/10 text-[var(--color-brand-500)] font-outfit font-medium">
-                              Click to adopt
-                            </span>
-                          )}
-                        </div>
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center flex-shrink-0">
+                        <ActivityIcon className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-[var(--color-text-primary)] font-outfit">
+                          {description}
+                        </p>
+                        <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">
+                          {timeDisplay}
+                        </p>
                       </div>
                     </div>
                   );
                 })
               ) : (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <TargetIcon className="w-12 h-12 text-[var(--color-text-tertiary)] mb-3" />
+                  <ActivityLogIcon className="w-12 h-12 text-[var(--color-text-tertiary)] mb-3" />
                   <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
-                    No group habits yet
+                    No recent activity yet
                   </p>
                   <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">
-                    {canManageGroup ? 'Add the first habit to get started' : 'Admins can add habits for the group'}
+                    Start tracking habits to see team activity here
                   </p>
                 </div>
               )}
             </div>
-            
-            {/* Adoption Modal with Privacy Settings */}
-            {showAdoptModal && selectedHabit && (
-              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                <div className="bg-[var(--color-surface-elevated)] max-w-md w-full rounded-2xl p-6 animate-fade-in">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-dmSerif font-bold text-[var(--color-text-primary)]">
-                      Adopt "{selectedHabit.name}"
-                    </h3>
-                    <button 
-                      onClick={() => setShowAdoptModal(false)}
-                      className="p-1 rounded-lg hover:bg-[var(--color-surface-hover)] text-[var(--color-text-tertiary)]"
-                    >
-                      <Cross2Icon className="w-5 h-5" />
-                    </button>
-                  </div>
-                  
-                  <p className="text-sm text-[var(--color-text-secondary)] font-outfit mb-6">
-                    Choose privacy settings for this habit to control what's shared with your group.
-                  </p>
-                  
-                  <div className="space-y-6">
-                    {/* Share Progress Setting */}
-                    <div>
-                      <h4 className="text-sm font-dmSerif font-semibold text-[var(--color-text-primary)] mb-3">
-                        Share Progress Level
-                      </h4>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div 
-                          className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                            privacySettings.shareProgress === 'full' 
-                              ? 'bg-[var(--color-brand-500)]/10 border-[var(--color-brand-500)]' 
-                              : 'border-[var(--color-border-primary)] hover:bg-[var(--color-surface-hover)]'
-                          }`}
-                          onClick={() => setPrivacySettings({...privacySettings, shareProgress: 'full'})}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <h5 className="text-sm font-dmSerif font-semibold text-[var(--color-text-primary)]">
-                              Full Details
-                            </h5>
-                            {privacySettings.shareProgress === 'full' && (
-                              <CheckCircledIcon className="w-4 h-4 text-[var(--color-brand-500)]" />
-                            )}
-                          </div>
-                          <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
-                            Show complete habit history and all stats to group members
-                          </p>
-                        </div>
-                        <div 
-                          className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                            privacySettings.shareProgress === 'progress-only' 
-                              ? 'bg-[var(--color-brand-500)]/10 border-[var(--color-brand-500)]' 
-                              : 'border-[var(--color-border-primary)] hover:bg-[var(--color-surface-hover)]'
-                          }`}
-                          onClick={() => setPrivacySettings({...privacySettings, shareProgress: 'progress-only'})}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <h5 className="text-sm font-dmSerif font-semibold text-[var(--color-text-primary)]">
-                              Progress Only
-                            </h5>
-                            {privacySettings.shareProgress === 'progress-only' && (
-                              <CheckCircledIcon className="w-4 h-4 text-[var(--color-brand-500)]" />
-                            )}
-                          </div>
-                          <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
-                            Show completion statistics but hide specific details
-                          </p>
-                        </div>
-                        <div 
-                          className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                            privacySettings.shareProgress === 'streaks-only' 
-                              ? 'bg-[var(--color-brand-500)]/10 border-[var(--color-brand-500)]' 
-                              : 'border-[var(--color-border-primary)] hover:bg-[var(--color-surface-hover)]'
-                          }`}
-                          onClick={() => setPrivacySettings({...privacySettings, shareProgress: 'streaks-only'})}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <h5 className="text-sm font-dmSerif font-semibold text-[var(--color-text-primary)]">
-                              Streaks Only
-                            </h5>
-                            {privacySettings.shareProgress === 'streaks-only' && (
-                              <CheckCircledIcon className="w-4 h-4 text-[var(--color-brand-500)]" />
-                            )}
-                          </div>
-                          <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
-                            Only show streak counts, hide other details
-                          </p>
-                        </div>
-                        <div 
-                          className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                            privacySettings.shareProgress === 'private' 
-                              ? 'bg-[var(--color-brand-500)]/10 border-[var(--color-brand-500)]' 
-                              : 'border-[var(--color-border-primary)] hover:bg-[var(--color-surface-hover)]'
-                          }`}
-                          onClick={() => setPrivacySettings({...privacySettings, shareProgress: 'private'})}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <h5 className="text-sm font-dmSerif font-semibold text-[var(--color-text-primary)]">
-                              Private
-                            </h5>
-                            {privacySettings.shareProgress === 'private' && (
-                              <CheckCircledIcon className="w-4 h-4 text-[var(--color-brand-500)]" />
-                            )}
-                          </div>
-                          <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
-                            Keep all progress private from group members
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Allow Interaction Toggle */}
-                    <div className="flex items-center justify-between p-4 border border-[var(--color-border-primary)] rounded-lg">
-                      <div>
-                        <h4 className="text-sm font-dmSerif font-semibold text-[var(--color-text-primary)]">
-                          Allow Encouragements
-                        </h4>
-                        <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
-                          Let group members send you encouragements
-                        </p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={privacySettings.allowInteraction}
-                          onChange={(e) => setPrivacySettings({...privacySettings, allowInteraction: e.target.checked})}
-                          className="sr-only"
-                        />
-                        <div className={`w-11 h-6 rounded-full transition-colors ${
-                          privacySettings.allowInteraction 
-                            ? 'bg-[var(--color-brand-500)]' 
-                            : 'bg-gray-300'
-                        }`}>
-                          <div className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${
-                            privacySettings.allowInteraction ? 'translate-x-5' : 'translate-x-0'
-                          } mt-0.5 ml-0.5`} />
-                        </div>
-                      </label>
-                    </div>
-                    
-                    {/* Activity Feed Toggle */}
-                    <div className="flex items-center justify-between p-4 border border-[var(--color-border-primary)] rounded-lg">
-                      <div>
-                        <h4 className="text-sm font-dmSerif font-semibold text-[var(--color-text-primary)]">
-                          Show in Activity Feed
-                        </h4>
-                        <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
-                          Share completions in the group activity feed
-                        </p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={privacySettings.shareInActivity}
-                          onChange={(e) => setPrivacySettings({...privacySettings, shareInActivity: e.target.checked})}
-                          className="sr-only"
-                        />
-                        <div className={`w-11 h-6 rounded-full transition-colors ${
-                          privacySettings.shareInActivity 
-                            ? 'bg-[var(--color-brand-500)]' 
-                            : 'bg-gray-300'
-                        }`}>
-                          <div className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${
-                            privacySettings.shareInActivity ? 'translate-x-5' : 'translate-x-0'
-                          } mt-0.5 ml-0.5`} />
-                        </div>
-                      </label>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3 mt-6 pt-4 border-t border-[var(--color-border-primary)]">
-                    <button
-                      onClick={() => setShowAdoptModal(false)}
-                      className="flex-1 h-10 bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] rounded-lg font-medium font-outfit"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleAdoptHabit}
-                      className="flex-1 h-10 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg font-semibold font-outfit flex items-center justify-center gap-2"
-                    >
-                      <CheckIcon className="w-4 h-4" />
-                      Adopt Habit
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
-        );
-      }
-    },
+        ),
+      },
 
-    'shared-habits-widget': {
-      title: "Shared Habits",
-      description: "Habits that multiple members are tracking together",
-      category: "collaboration", 
-      defaultProps: { w: 6, h: 4 },
-      component: () => (
-        <div className="h-full glass-card-minimal p-6 rounded-2xl flex flex-col">
-          <div className="flex items-center gap-4 mb-6">
-            <div>
-              <h3 className="text-lg font-bold font-dmSerif text-[var(--color-text-primary)]">Shared Habits</h3>
-              <p className="text-sm text-[var(--color-text-secondary)] font-outfit">Habits multiple members track</p>
-            </div>
-          </div>
-          
-          <div className="flex-1 space-y-4 overflow-y-auto">
-            {sharedHabits.length > 0 ? (
-              sharedHabits.map((habit) => (
-                <div key={`shared-habit-${habit._id}`} className="p-4 rounded-lg bg-[var(--color-surface-primary)] border border-[var(--color-border-primary)]/10">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h4 className="font-semibold text-[var(--color-text-primary)] font-outfit">
-                        {habit.name}
-                      </h4>
-                      <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
-                        {habit.description}
-                      </p>
-                    </div>
-                    <span className="text-xs px-2 py-1 rounded-lg bg-orange-100 text-orange-600 font-outfit font-medium">
-                      {habit.adoptionCount} members
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-[var(--color-text-tertiary)] font-outfit">
-                      Tracked by:
-                    </span>
-                    <div className="flex items-center gap-1">
-                      {habit.adoptedBy.slice(0, 3).map((member, index) => (
-                        <div
-                          key={`${habit._id}-member-${index}`}
-                          className="w-6 h-6 rounded-full bg-gradient-to-br from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center text-white text-xs font-bold"
-                          title={member.name}
-                        >
-                          {member.name?.charAt(0).toUpperCase() || '?'}
-                        </div>
-                      ))}
-                      {habit.adoptedBy.length > 3 && (
-                        <span className="text-xs text-[var(--color-text-tertiary)] font-outfit ml-1">
-                          +{habit.adoptedBy.length - 3}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <StarIcon className="w-12 h-12 text-[var(--color-text-tertiary)] mb-3" />
-                <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
-                  No shared habits yet
-                </p>
-                <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">
-                  Members will see habits here when multiple people track the same ones
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      )
-    },
+      "group-habits-widget": {
+        title: "Group Habits",
+        description: "Habits available for all group members to adopt",
+        category: "collaboration",
+        defaultProps: { w: 6, h: 4 },
+        component: () => {
+          const handleAdoptHabitLocal = async () => {
+            try {
+              if (!adoptingHabit) return;
 
-    'team-members-widget': {
-      title: "Team Members",
-      description: "Active team members with roles and status",
-      category: "collaboration",
-      defaultProps: { w: 6, h: 4 },
-      component: () => (
-        <div className="h-full glass-card-minimal p-6 rounded-2xl flex flex-col">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="flex-1">
-              <h3 className="text-lg font-bold font-dmSerif text-[var(--color-text-primary)]">Team Members</h3>
-              <p className="text-sm text-[var(--color-text-secondary)] font-outfit">{members.length} active members</p>
-            </div>
-            {canManageGroup && (
-              <button 
-                onClick={() => setShowInviteModal(true)}
-                size="2"
-                className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg text-sm transition-all duration-200 font-outfit"
-              >
-                <PlusIcon className="w-4 h-4" />
-                Invite
-              </button>
-            )}
-          </div>
-          
-          <div className="flex-1 space-y-3 overflow-y-auto">
-            {members.map((member, index) => {
-              console.log(`Member ${index}:`, member);
-              const userInfo = member.userId || member.user || member;
-              const displayName = userInfo.name || userInfo.email || `User ${member.userId || member.id}`;
-              const displayEmail = userInfo.email;
-              
-              return (
-                <div key={`member-${(member.userId?._id || member.userId || member.id || index).toString()}`} className="group">
-                  <div 
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-[var(--color-surface-hover)]/30 transition-all duration-200 cursor-pointer"
-                    onClick={() => {
-                      const memberUserId = member.userId?._id || member.userId || member.id;
-                      if (memberUserId && memberUserId.toString() !== user?.id) {
-                        navigate(`/app/groups/${groupId}/members/${memberUserId}/dashboard`);
-                      }
-                    }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center text-white font-bold font-outfit">
-                        {displayName.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="font-medium text-[var(--color-text-primary)] font-outfit">
-                          {displayName}
-                          {((member.userId?._id || member.userId || member.id) && (member.userId?._id || member.userId || member.id).toString() === user?.id) && (
-                            <span className="ml-2 text-xs text-[var(--color-brand-600)] font-outfit">(You)</span>
-                          )}
-                        </p>
-                        {displayEmail && displayEmail !== displayName && (
-                          <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">
-                            {displayEmail}
-                          </p>
-                        )}
-                        <p className="text-xs text-[var(--color-text-tertiary)] font-outfit capitalize">
-                          {member.role}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      {((member.userId?._id || member.userId || member.id) && (member.userId?._id || member.userId || member.id).toString() !== user?.id) && (
-                        <span className="text-xs text-[var(--color-brand-600)] font-outfit opacity-0 group-hover:opacity-100 transition-opacity">
-                          View Dashboard
-                        </span>
-                      )}
-                      <div className={`w-2 h-2 rounded-full ${
-                        member.status === 'active' ? 'bg-green-500' : 
-                        member.status === 'invited' ? 'bg-yellow-500' : 'bg-gray-400'
-                      }`}></div>
-                      <span className="text-xs text-[var(--color-text-tertiary)] font-outfit capitalize">
-                        {member.status || 'active'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              // Use the top-level handleAdoptHabit function
+              await handleAdoptHabit();
+            } catch (error) {
+              console.error("Error adopting habit:", error);
+              showNotification(
+                "Failed to adopt habit. You may have already adopted it.",
+                "error"
               );
-            })}
-          </div>
-        </div>
-      )
-    },
-
-    'group-streaks-widget': {
-      title: "Group Streaks",
-      description: "Visualizes each member's habit completions over the week",
-      category: "collaboration",
-      defaultProps: { w: 6, h: 4 },
-      component: () => {
-        console.log('Rendering Group Streaks widget, members:', members.length);
-        
-        // Generate mock completion data for the chart
-        // In a real app, this would come from the API
-        const completionData = [];
-        const now = new Date();
-        const startOfWeek = new Date(now);
-        startOfWeek.setDate(now.getDate() - now.getDay());
-        
-        // Generate sample data for each day of the week
-        for (let day = 0; day < 7; day++) {
-          const date = new Date(startOfWeek);
-          date.setDate(startOfWeek.getDate() + day);
-          const dateStr = date.toISOString().split('T')[0];
-          
-          // Add random completions for each member
-          members.forEach(member => {
-            const userId = member.userId?._id || member.userId || member.id;
-            const completions = Math.floor(Math.random() * 6); // 0-5 completions per day
-            
-            for (let i = 0; i < completions; i++) {
-              completionData.push({
-                userId,
-                date: dateStr,
-                habitId: `habit_${i}`,
-                habitName: `Habit ${i + 1}`
-              });
             }
-          });
-        }
+          };
 
-        console.log('Generated completion data:', completionData.length, 'entries');
+          const openAdoptModal = (habit) => {
+            setAdoptingHabit(habit);
+            setAdoptingPrivacyLevel("private");
+            setShowAdoptModal(true);
+          };
 
-        return (
-          <GroupStreaksChart 
-            members={members}
-            completionData={completionData}
-            timeRange="week"
+          // Check if a habit is already adopted by the current user
+          const isHabitAdopted = (habit) => {
+            if (
+              !habit.adoptedBy ||
+              !Array.isArray(habit.adoptedBy) ||
+              habit.adoptedBy.length === 0 ||
+              !user
+            ) {
+              return false;
+            }
+
+            return habit.adoptedBy.some((adoptedUser) => {
+              // Extract user ID from the adoptedUser object
+              const adoptedUserId =
+                adoptedUser?._id ||
+                (adoptedUser?.userId &&
+                  (typeof adoptedUser.userId === "object"
+                    ? adoptedUser.userId._id
+                    : adoptedUser.userId)) ||
+                adoptedUser;
+
+              // Extract current user ID
+              const currentUserId = user?._id || user?.id;
+
+              // Compare as strings to avoid reference comparison issues
+              return (
+                adoptedUserId &&
+                currentUserId &&
+                adoptedUserId.toString() === currentUserId.toString()
+              );
+            });
+          };
+
+          return (
+            <div className="h-full glass-card-minimal p-6 rounded-2xl flex flex-col">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold font-dmSerif text-[var(--color-text-primary)]">
+                    Group Habits
+                  </h3>
+                  <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
+                    {groupHabits.length} habits available
+                  </p>
+                </div>
+                {canManageGroup && (
+                  <button
+                    onClick={() => setShowAddHabitModal(true)}
+                    size="2"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg text-sm transition-all duration-200 font-outfit"
+                  >
+                    <PlusIcon className="w-4 h-4" />
+                    Add Habit
+                  </button>
+                )}
+              </div>
+
+              <div className="flex-1 space-y-4 overflow-y-auto">
+                {groupHabits.length > 0 ? (
+                  groupHabits.map((habit) => {
+                    const isAdopted = isHabitAdopted(habit);
+
+                    return (
+                      <div
+                        key={`habit-${habit._id}`}
+                        className={`p-4 rounded-lg border transition-all duration-200 hover:shadow-sm ${
+                          isAdopted
+                            ? "bg-[var(--color-success)]/5 border-[var(--color-success)]/20"
+                            : "bg-[var(--color-surface-primary)] border-[var(--color-border-primary)]/10 hover:border-[var(--color-brand-500)]/30"
+                        }`}
+                        onClick={(e) => {
+                          // Prevent clicking on card when clicking edit button
+                          if (e.target.closest(".edit-button")) return;
+                          !isAdopted && openAdoptModal(habit);
+                        }}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h4 className="font-semibold text-[var(--color-text-primary)] font-outfit">
+                                {habit.name}
+                              </h4>
+                              {isAdopted && (
+                                <CheckCircledIcon className="w-4 h-4 text-[var(--color-success)]" />
+                              )}
+                            </div>
+                            <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
+                              {habit.description}
+                            </p>
+                            {habit.settings?.defaultTarget && (
+                              <p className="text-xs text-[var(--color-text-tertiary)] font-outfit mt-2">
+                                Default: {habit.settings.defaultTarget.value}{" "}
+                                {habit.settings.defaultTarget.unit}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
+                            {canManageGroup && (
+                              <button
+                                className="edit-button p-1 rounded-full hover:bg-[var(--color-surface-hover)] text-[var(--color-text-tertiary)] mb-1"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditHabit(habit);
+                                }}
+                                title="Edit habit"
+                              >
+                                <GearIcon className="w-4 h-4" />
+                              </button>
+                            )}
+                            {isAdopted ? (
+                              <div className="flex flex-col gap-1">
+                                <span className="text-xs px-2 py-1 rounded-lg bg-[var(--color-success)]/10 text-[var(--color-success)] font-outfit font-medium">
+                                  Adopted
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-xs px-2 py-1 rounded-lg bg-[var(--color-brand-500)]/10 text-[var(--color-brand-500)] font-outfit font-medium cursor-pointer">
+                                Click to adopt
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <TargetIcon className="w-12 h-12 text-[var(--color-text-tertiary)] mb-3" />
+                    <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
+                      No group habits yet
+                    </p>
+                    <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">
+                      {canManageGroup
+                        ? "Add the first habit to get started"
+                        : "Admins can add habits for the group"}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        },
+      },
+
+      "team-members-widget": {
+        title: "Team Members",
+        description: "Active team members with roles and status",
+        category: "collaboration",
+        defaultProps: { w: 6, h: 4 },
+        component: () => (
+          <div className="h-full glass-card-minimal p-6 rounded-2xl flex flex-col">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="flex-1">
+                <h3 className="text-lg font-bold font-dmSerif text-[var(--color-text-primary)]">
+                  Team Members
+                </h3>
+                <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
+                  {members.length} active members
+                </p>
+              </div>
+              {canManageGroup && (
+                <button
+                  onClick={() => setShowInviteModal(true)}
+                  size="2"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg text-sm transition-all duration-200 font-outfit"
+                >
+                  <PlusIcon className="w-4 h-4" />
+                  Invite
+                </button>
+              )}
+            </div>
+
+            <div className="flex-1 space-y-3 overflow-y-auto">
+              {members.map((member, index) => {
+                const userInfo = member.userId || member.user || member;
+                const displayName =
+                  userInfo.name ||
+                  userInfo.email ||
+                  `User ${member.userId || member.id}`;
+                const displayEmail = userInfo.email;
+
+                return (
+                  <div
+                    key={`member-${(
+                      member.userId?._id ||
+                      member.userId ||
+                      member.id ||
+                      index
+                    ).toString()}`}
+                    className="group"
+                  >
+                    <div
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-[var(--color-surface-hover)]/30 transition-all duration-200 cursor-pointer"
+                      onClick={() => {
+                        // Debug the member object structure
+                        // More robust member ID extraction
+                        let memberUserId;
+                        if (
+                          member.userId &&
+                          typeof member.userId === "object" &&
+                          member.userId._id
+                        ) {
+                          memberUserId = member.userId._id;
+                        } else if (
+                          member.userId &&
+                          typeof member.userId === "string"
+                        ) {
+                          memberUserId = member.userId;
+                        } else if (member._id) {
+                          memberUserId = member._id;
+                        } else if (member.id) {
+                          memberUserId = member.id;
+                        }
+
+                        if (
+                          memberUserId &&
+                          memberUserId.toString() !== user?.id
+                        ) {
+                          navigate(
+                            `/app/groups/${groupId}/members/${memberUserId}/dashboard`
+                          );
+                        }
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center text-white font-bold font-outfit">
+                          {displayName.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-medium text-[var(--color-text-primary)] font-outfit">
+                            {displayName}
+                            {(member.userId?._id ||
+                              member.userId ||
+                              member.id) &&
+                              (
+                                member.userId?._id ||
+                                member.userId ||
+                                member.id
+                              ).toString() === user?.id && (
+                                <span className="ml-2 text-xs text-[var(--color-brand-600)] font-outfit">
+                                  (You)
+                                </span>
+                              )}
+                          </p>
+                          {displayEmail && displayEmail !== displayName && (
+                            <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">
+                              {displayEmail}
+                            </p>
+                          )}
+                          <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">
+                            {member.role}
+                          </p>
+                        </div>
+                      </div>
+                      {(member.userId?._id || member.userId || member.id) && 
+                       (member.userId?._id || member.userId || member.id).toString() !== user?.id && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-[var(--color-text-tertiary)] group-hover:text-[var(--color-text-primary)] font-outfit opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            view dashboard
+                          </span>
+                          <ChevronRightIcon className="w-4 h-4 text-[var(--color-text-tertiary)] group-hover:text-[var(--color-text-primary)]" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ),
+      },
+
+      "group-challenges-widget": {
+        title: "Group Challenges",
+        description: "Active and upcoming challenges for the team",
+        category: "collaboration",
+        defaultProps: { w: 6, h: 4 },
+        component: () => {
+          const getChallengeStatusColor = (status) => {
+            switch (status) {
+              case "active":
+                return "text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30";
+              case "completed":
+                return "text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30";
+              case "upcoming":
+                return "text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30";
+              default:
+                return "text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/30";
+            }
+          };
+
+          const formatDate = (date) => {
+            return new Date(date).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+            });
+          };
+
+          const handleCreateChallenge = () => {
+            // Placeholder for challenge creation
+            // You can implement a modal here or navigate to a challenge creation page
+          };
+
+          if (!challenges || challenges.length === 0) {
+            return (
+              <div className="h-full glass-card-minimal p-6 rounded-2xl flex flex-col">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center">
+                      <RocketIcon className="w-5 h-5 text-white" />
+                    </div>
+                    <h3 className="text-lg font-bold text-[var(--color-text-primary)] font-dmSerif">
+                      Group Challenges
+                    </h3>
+                  </div>
+                  {canManageGroup && (
+                    <button
+                      onClick={handleCreateChallenge}
+                      className="px-3 py-2 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-xl font-outfit font-medium text-sm transition-all duration-200"
+                    >
+                      Create
+                    </button>
+                  )}
+                </div>
+
+                <div className="text-center py-8 flex-1 flex flex-col items-center justify-center">
+                  <div className="w-12 h-12 rounded-xl bg-[var(--color-surface-hover)] flex items-center justify-center mx-auto mb-3">
+                    <TargetIcon className="w-6 h-6 text-[var(--color-text-tertiary)]" />
+                  </div>
+                  <h4 className="text-sm font-semibold text-[var(--color-text-primary)] font-dmSerif mb-2">
+                    No active challenges
+                  </h4>
+                  <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
+                    Create a challenge to motivate your team
+                  </p>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div className="h-full glass-card-minimal p-6 rounded-2xl flex flex-col">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center">
+                    <RocketIcon className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold text-[var(--color-text-primary)] font-dmSerif">
+                    Group Challenges
+                  </h3>
+                </div>
+                {canManageGroup && (
+                  <button
+                    onClick={handleCreateChallenge}
+                    className="px-3 py-2 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-xl font-outfit font-medium text-sm transition-all duration-200"
+                  >
+                    Create
+                  </button>
+                )}
+              </div>
+
+              <div className="flex-1 overflow-y-auto scrollbar-thin">
+                <div className="space-y-4">
+                  {challenges.map((challenge) => (
+                    <div
+                      key={challenge._id || challenge.id}
+                      className="p-4 rounded-xl bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/10"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="text-base font-semibold text-[var(--color-text-primary)]">
+                          {challenge.title}
+                        </h4>
+                        <span
+                          className={`text-xs px-2 py-1 rounded-md ${getChallengeStatusColor(
+                            challenge.status
+                          )}`}
+                        >
+                          {challenge.status || "active"}
+                        </span>
+                      </div>
+                      <p className="text-sm text-[var(--color-text-secondary)] mb-3">
+                        {challenge.description || "No description available"}
+                      </p>
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <CalendarIcon className="w-3.5 h-3.5 text-[var(--color-text-tertiary)]" />
+                          <span className="text-[var(--color-text-tertiary)]">
+                            {challenge.startDate
+                              ? formatDate(challenge.startDate)
+                              : "No date"}{" "}
+                            -
+                            {challenge.endDate
+                              ? formatDate(challenge.endDate)
+                              : "Ongoing"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <PersonIcon className="w-3.5 h-3.5 text-[var(--color-text-tertiary)]" />
+                          <span className="text-[var(--color-text-tertiary)]">
+                            {challenge.participants?.length || 0} participants
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        },
+      },
+
+      "member-progress-widget": {
+        title: "Member Progress",
+        description: "Track individual member progress and performance",
+        category: "collaboration",
+        defaultProps: { w: 8, h: 6 },
+        component: () => (
+          <MemberProgressWidget
+            memberData={groupTrackerData}
+            onMemberClick={handleMemberClick}
+            onEncourageMember={openEncouragementModal}
           />
-        );
-      }
-    }
-  }), [group, overview, activities, groupHabits, sharedHabits, members, canManageGroup, navigate, groupId, user, setShowInviteModal, setShowAddHabitModal, setShowMembersModal]);
+        ),
+      },
+
+      "encouragement-feed-widget": {
+        title: "Encouragement Feed",
+        description: "Team encouragements and social interactions",
+        category: "collaboration", 
+        defaultProps: { w: 6, h: 6 },
+        component: () => (
+          <EncouragementFeedWidget
+            encouragements={encouragements}
+            onSendEncouragement={openEncouragementModal}
+          />
+        ),
+      },
+    }),
+    [
+      group,
+      overview,
+      activities,
+      groupHabits,
+      members,
+      challenges,
+      canManageGroup,
+      navigate,
+      groupId,
+      user,
+      setShowInviteModal,
+      setShowAddHabitModal,
+      setShowMembersModal,
+      groupTrackerData,
+      encouragements,
+    ]
+  );
 
   // Default widget layouts (excluding header)
   const defaultLayouts = {
     lg: [
-      { w: 7, h: 7, x: 0, y: 0, i: "team-stats-widget", moved: false, static: false },
-      { w: 10, h: 7, x: 1, y: 7, i: "group-streaks-widget", moved: false, static: false },
-      { w: 5, h: 5, x: 7, y: 0, i: "recent-activity-widget", moved: false, static: false },
-      { w: 4, h: 5, x: 0, y: 14, i: "group-habits-widget", moved: false, static: false },
-      { w: 4, h: 5, x: 4, y: 14, i: "shared-habits-widget", moved: false, static: false },
-      { w: 4, h: 5, x: 8, y: 14, i: "team-members-widget", moved: false, static: false }
+      {
+        w: 5,
+        h: 5,
+        x: 0,
+        y: 0,
+        i: "recent-activity-widget",
+        moved: false,
+        static: false,
+      },
+      {
+        w: 3,
+        h: 5,
+        x: 9,
+        y: 0,
+        i: "group-challenges-widget",
+        moved: false,
+        static: false,
+      },
+      {
+        w: 8,
+        h: 6,
+        x: 0,
+        y: 5,
+        i: "member-progress-widget",
+        moved: false,
+        static: false,
+      },
+      {
+        w: 4,
+        h: 6,
+        x: 8,
+        y: 5,
+        i: "encouragement-feed-widget",
+        moved: false,
+        static: false,
+      },
+      {
+        w: 4,
+        h: 5,
+        x: 0,
+        y: 11,
+        i: "group-habits-widget",
+        moved: false,
+        static: false,
+      },
+      {
+        w: 4,
+        h: 5,
+        x: 4,
+        y: 11,
+        i: "shared-habits-widget",
+        moved: false,
+        static: false,
+      },
+      {
+        w: 4,
+        h: 5,
+        x: 8,
+        y: 11,
+        i: "team-members-widget",
+        moved: false,
+        static: false,
+      },
     ],
     md: [
-      { i: "team-stats-widget", x: 0, y: 0, w: 4, h: 4 },
-      { i: "recent-activity-widget", x: 4, y: 0, w: 4, h: 4 },
-      { i: "group-habits-widget", x: 0, y: 4, w: 4, h: 5 },
-      { i: "team-members-widget", x: 4, y: 4, w: 4, h: 5 },
-      { i: "shared-habits-widget", x: 0, y: 9, w: 4, h: 5 },
-      { i: "group-streaks-widget", x: 0, y: 14, w: 6, h: 4 }
+      { i: "recent-activity-widget", x: 0, y: 0, w: 4, h: 4 },
+      { i: "group-challenges-widget", x: 0, y: 4, w: 4, h: 5 },
+      { i: "group-habits-widget", x: 4, y: 5, w: 4, h: 5 },
+      { i: "team-members-widget", x: 0, y: 9, w: 4, h: 5 },
+      { i: "shared-habits-widget", x: 4, y: 10, w: 4, h: 5 },
     ],
     sm: [
-      { w: 4, h: 4, x: 0, y: 0, i: "team-stats-widget", moved: false, static: false },
-      { w: 6, h: 4, x: 0, y: 24, i: "group-streaks-widget", moved: false, static: false },
-      { w: 4, h: 5, x: 0, y: 4, i: "recent-activity-widget", moved: false, static: false },
-      { w: 4, h: 5, x: 0, y: 9, i: "group-habits-widget", moved: false, static: false },
-      { w: 4, h: 5, x: 0, y: 14, i: "shared-habits-widget", moved: false, static: false },
-      { w: 4, h: 5, x: 0, y: 19, i: "team-members-widget", moved: false, static: false }
+      {
+        w: 4,
+        h: 5,
+        x: 0,
+        y: 0,
+        i: "recent-activity-widget",
+        moved: false,
+        static: false,
+      },
+      {
+        w: 4,
+        h: 5,
+        x: 0,
+        y: 5,
+        i: "group-challenges-widget",
+        moved: false,
+        static: false,
+      },
+      {
+        w: 4,
+        h: 5,
+        x: 0,
+        y: 10,
+        i: "group-habits-widget",
+        moved: false,
+        static: false,
+      },
+      {
+        w: 4,
+        h: 5,
+        x: 0,
+        y: 15,
+        i: "shared-habits-widget",
+        moved: false,
+        static: false,
+      },
+      {
+        w: 4,
+        h: 5,
+        x: 0,
+        y: 20,
+        i: "team-members-widget",
+        moved: false,
+        static: false,
+      },
     ],
     xs: [
-      { w: 4, h: 4, x: 0, y: 0, i: "team-stats-widget", moved: false, static: false },
-      { w: 4, h: 4, x: 0, y: 4, i: "recent-activity-widget", moved: false, static: false },
-      { w: 4, h: 5, x: 0, y: 8, i: "group-habits-widget", moved: false, static: false },
-      { w: 4, h: 5, x: 0, y: 13, i: "shared-habits-widget", moved: false, static: false },
-      { w: 4, h: 5, x: 0, y: 18, i: "team-members-widget", moved: false, static: false },
-      { w: 4, h: 4, x: 0, y: 23, i: "group-streaks-widget", moved: false, static: false }
+      {
+        w: 4,
+        h: 4,
+        x: 0,
+        y: 0,
+        i: "recent-activity-widget",
+        moved: false,
+        static: false,
+      },
+      {
+        w: 4,
+        h: 5,
+        x: 0,
+        y: 4,
+        i: "group-habits-widget",
+        moved: false,
+        static: false,
+      },
+      {
+        w: 4,
+        h: 5,
+        x: 0,
+        y: 9,
+        i: "shared-habits-widget",
+        moved: false,
+        static: false,
+      },
+      {
+        w: 4,
+        h: 5,
+        x: 0,
+        y: 14,
+        i: "team-members-widget",
+        moved: false,
+        static: false,
+      },
     ],
     xxs: [
-      { w: 2, h: 3, x: 0, y: 0, i: "team-stats-widget", moved: false, static: false },
-      { w: 2, h: 3, x: 0, y: 3, i: "recent-activity-widget", moved: false, static: false },
-      { w: 2, h: 4, x: 0, y: 6, i: "group-habits-widget", moved: false, static: false },
-      { w: 2, h: 4, x: 0, y: 10, i: "shared-habits-widget", moved: false, static: false },
-      { w: 2, h: 4, x: 0, y: 14, i: "team-members-widget", moved: false, static: false },
-      { w: 2, h: 3, x: 0, y: 18, i: "group-streaks-widget", moved: false, static: false }
-    ]
+      {
+        w: 2,
+        h: 3,
+        x: 0,
+        y: 0,
+        i: "recent-activity-widget",
+        moved: false,
+        static: false,
+      },
+      {
+        w: 2,
+        h: 4,
+        x: 0,
+        y: 3,
+        i: "group-habits-widget",
+        moved: false,
+        static: false,
+      },
+      {
+        w: 2,
+        h: 4,
+        x: 0,
+        y: 7,
+        i: "shared-habits-widget",
+        moved: false,
+        static: false,
+      },
+      {
+        w: 2,
+        h: 4,
+        x: 0,
+        y: 11,
+        i: "team-members-widget",
+        moved: false,
+        static: false,
+      },
+    ],
   };
 
   const defaultWidgets = [
-    'team-stats-widget', 
-    'group-streaks-widget',
-    'recent-activity-widget',
-    'group-habits-widget',
-    'shared-habits-widget',
-    'team-members-widget'
+    "recent-activity-widget", 
+    "group-habits-widget",
+    "shared-habits-widget",
+    "team-members-widget",
+    "member-progress-widget",
+    "group-challenges-widget",
+    "encouragement-feed-widget",
   ];
 
   const storageKeys = {
     widgets: `groupOverviewWidgets_${groupId}`,
-    layouts: `groupOverviewLayouts_${groupId}`
+    layouts: `groupOverviewLayouts_${groupId}`,
   };
 
   if (loading) {
@@ -1128,7 +1357,10 @@ const WorkspaceOverview = () => {
             <div className="h-8 bg-[var(--color-surface-elevated)] rounded w-1/3 mb-8"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-32 bg-[var(--color-surface-elevated)] rounded-2xl"></div>
+                <div
+                  key={i}
+                  className="h-32 bg-[var(--color-surface-elevated)] rounded-2xl"
+                ></div>
               ))}
             </div>
           </div>
@@ -1146,9 +1378,10 @@ const WorkspaceOverview = () => {
               Group Not Found
             </h1>
             <p className="text-[var(--color-text-secondary)] font-outfit mb-6">
-              The group you're looking for doesn't exist or you don't have access to it.
+              The group you're looking for doesn't exist or you don't have
+              access to it.
             </p>
-            <Button onClick={() => navigate('/app/groups')}>
+            <Button onClick={() => navigate("/app/groups")}>
               Back to Groups
             </Button>
           </div>
@@ -1163,18 +1396,22 @@ const WorkspaceOverview = () => {
     <div className="min-h-screen page-container p-6">
       {/* Success/Error Notification */}
       {notification && (
-        <div className={`fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 max-w-sm p-4 rounded-lg shadow-lg border transition-all duration-300 ${
-          notification.type === 'success' 
-            ? 'bg-green-50 border-green-200 text-green-800' 
-            : 'bg-red-50 border-red-200 text-red-800'
-        }`}>
+        <div
+          className={`fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 max-w-sm p-4 rounded-lg shadow-lg border transition-all duration-300 ${
+            notification.type === "success"
+              ? "bg-green-50 border-green-200 text-green-800"
+              : "bg-red-50 border-red-200 text-red-800"
+          }`}
+        >
           <div className="flex items-center gap-3">
-            {notification.type === 'success' ? (
+            {notification.type === "success" ? (
               <CheckCircledIcon className="w-5 h-5 text-green-600" />
             ) : (
               <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
             )}
-            <p className="text-sm font-medium font-outfit">{notification.message}</p>
+            <p className="text-sm font-medium font-outfit">
+              {notification.message}
+            </p>
             <button
               onClick={() => setNotification(null)}
               className="ml-auto p-1 hover:bg-black/5 rounded"
@@ -1190,12 +1427,12 @@ const WorkspaceOverview = () => {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
           <div className="flex items-center gap-6">
             <button
-              onClick={() => navigate('/app/groups')}
+              onClick={() => navigate("/app/groups")}
               className="flex items-center justify-center w-12 h-12 rounded-2xl bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/20 transition-all duration-200 group"
             >
               <ArrowLeftIcon className="w-5 h-5 text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)]" />
             </button>
-            
+
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center shadow-lg">
                 <GroupIcon className="w-8 h-8 text-white" />
@@ -1205,21 +1442,14 @@ const WorkspaceOverview = () => {
                   {group.name}
                 </h1>
                 <p className="text-lg text-[var(--color-text-secondary)] font-outfit">
-                  {group.description || `${group.type} group • ${members.length} members`}
+                  {group.description ||
+                    `${group.type} group • ${members.length} members`}
                 </p>
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-3 mt-6 lg:mt-0">
-            <button
-              onClick={() => navigate(`/app/groups/${groupId}/trackers`)}
-              className="flex items-center gap-3 h-12 px-6 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/40 text-[var(--color-text-primary)] rounded-2xl transition-all duration-200 font-outfit font-semibold"
-            >
-              <ActivityLogIcon className="w-5 h-5" />
-              Group Trackers
-            </button>
-            
             {canManageGroup && (
               <button
                 onClick={() => navigate(`/app/groups/${groupId}/settings`)}
@@ -1233,7 +1463,7 @@ const WorkspaceOverview = () => {
 
         {/* Widget Grid Container */}
         <BaseGridContainer
-          mode="group-overview"
+          mode="collaboration"
           widgets={groupWidgets}
           availableWidgets={groupWidgets}
           defaultWidgets={defaultWidgets}
@@ -1241,448 +1471,118 @@ const WorkspaceOverview = () => {
           storageKeys={storageKeys}
           className="group-overview-grid"
         />
-
-        {/* Invite Member Modal */}
+        {/* Custom Modals */}
         {showInviteModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-[var(--color-surface-primary)] rounded-3xl shadow-2xl border border-[var(--color-border-primary)]/20 max-w-md w-full p-8">
-              <div className="space-y-6">
-                <div className="text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center mx-auto mb-4">
-                    <EnvelopeClosedIcon className="w-8 h-8 text-white" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-[var(--color-text-primary)] font-dmSerif mb-2">
-                    Invite Member
-                  </h2>
-                  <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
-                    Send an invitation to join {group.name}
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-[var(--color-text-primary)] font-outfit block mb-2">
-                      Email Address
-                    </label>
-                    <input
-                      type="email"
-                      value={inviteForm.email}
-                      onChange={(e) => setInviteForm({...inviteForm, email: e.target.value})}
-                      className="w-full h-12 px-4 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/40 rounded-xl text-[var(--color-text-primary)] font-outfit placeholder-[var(--color-text-tertiary)] focus:outline-none focus:border-[var(--color-brand-500)] transition-colors"
-                      placeholder="member@example.com"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-[var(--color-text-primary)] font-outfit block mb-2">
-                      Role
-                    </label>
-                    <select
-                      value={inviteForm.role}
-                      onChange={(e) => setInviteForm({...inviteForm, role: e.target.value})}
-                      className="w-full h-12 px-4 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/40 rounded-xl text-[var(--color-text-primary)] font-outfit focus:outline-none focus:border-[var(--color-brand-500)] transition-colors"
-                    >
-                      <option value="member">Member</option>
-                      {userRole === 'owner' && <option value="admin">Admin</option>}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-[var(--color-text-primary)] font-outfit block mb-2">
-                      Message (Optional)
-                    </label>
-                    <textarea
-                      value={inviteForm.message}
-                      onChange={(e) => setInviteForm({...inviteForm, message: e.target.value})}
-                      className="w-full h-20 px-4 py-3 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/40 rounded-xl text-[var(--color-text-primary)] font-outfit placeholder-[var(--color-text-tertiary)] focus:outline-none focus:border-[var(--color-brand-500)] transition-colors resize-none"
-                      placeholder="Add a personal message..."
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 pt-4">
-                  <button
-                    onClick={() => setShowInviteModal(false)}
-                    className="flex-1 h-12 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/40 text-[var(--color-text-primary)] rounded-xl transition-all duration-200 font-outfit font-medium"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleInviteMember}
-                    disabled={!inviteForm.email}
-                    className="flex-1 h-12 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] disabled:bg-[var(--color-surface-elevated)] disabled:text-[var(--color-text-tertiary)] text-white rounded-xl transition-all duration-200 font-outfit font-semibold"
-                  >
-                    Send Invite
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <GroupInviteModal
+            isOpen={showInviteModal}
+            onClose={() => setShowInviteModal(false)}
+            group={group}
+            inviteForm={inviteForm}
+            setInviteForm={setInviteForm}
+            onInvite={handleInviteMember}
+          />
         )}
 
-        {/* Add Habit Modal */}
         {showAddHabitModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-[var(--color-surface-primary)] rounded-2xl shadow-2xl border border-[var(--color-border-primary)]/20 max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
-              <div className="space-y-4">
-                {/* Header */}
-                <div className="text-center">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center mx-auto mb-3">
-                    <TargetIcon className="w-6 h-6 text-white" />
-                  </div>
-                  <h2 className="text-xl font-bold text-[var(--color-text-primary)] font-dmSerif mb-1">
-                    Add Group Habit
-                  </h2>
-                  <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
-                    Create a new habit template for {group.name}
-                  </p>
-                </div>
-
-                {/* Tabs */}
-                <div className="mb-4">
-                  <div className="flex border-b border-[var(--color-border-primary)] font-outfit">
-                    <button
-                      type="button"
-                      className={`px-3 py-2 font-medium text-xs ${activeTab === "details" ? "text-[var(--color-brand-600)] border-b-2 border-[var(--color-brand-600)]" : "text-[var(--color-text-secondary)]"}`}
-                      onClick={() => setActiveTab("details")}
-                    >
-                      Details
-                    </button>
-                    <button
-                      type="button"
-                      className={`px-3 py-2 font-medium text-xs ${activeTab === "appearance" ? "text-[var(--color-brand-600)] border-b-2 border-[var(--color-brand-600)]" : "text-[var(--color-text-secondary)]"}`}
-                      onClick={() => setActiveTab("appearance")}
-                    >
-                      Style
-                    </button>
-                    <button
-                      type="button"
-                      className={`px-3 py-2 font-medium text-xs ${activeTab === "settings" ? "text-[var(--color-brand-600)] border-b-2 border-[var(--color-brand-600)]" : "text-[var(--color-text-secondary)]"}`}
-                      onClick={() => setActiveTab("settings")}
-                    >
-                      Settings
-                    </button>
-                  </div>
-                </div>
-
-                {/* Tab Content */}
-                <div className="mb-4">
-                  {activeTab === "details" && (
-                    <div className="space-y-3">
-                      {/* Basic Info */}
-                      <div>
-                        <label className="text-xs font-medium text-[var(--color-text-primary)] font-outfit block mb-1">
-                          Habit Name *
-                        </label>
-                        <input
-                          type="text"
-                          value={habitForm.name}
-                          onChange={(e) => setHabitForm({...habitForm, name: e.target.value})}
-                          className="w-full h-10 px-3 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/40 rounded-lg text-[var(--color-text-primary)] font-outfit placeholder-[var(--color-text-tertiary)] focus:outline-none focus:border-[var(--color-brand-500)] transition-colors text-sm"
-                          placeholder="e.g., Daily Exercise"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-xs font-medium text-[var(--color-text-primary)] font-outfit block mb-1">
-                          Description
-                        </label>
-                        <textarea
-                          value={habitForm.description}
-                          onChange={(e) => setHabitForm({...habitForm, description: e.target.value})}
-                          className="w-full h-16 px-3 py-2 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/40 rounded-lg text-[var(--color-text-primary)] font-outfit placeholder-[var(--color-text-tertiary)] focus:outline-none focus:border-[var(--color-brand-500)] transition-colors resize-none"
-                          placeholder="Describe this habit..."
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-xs font-medium text-[var(--color-text-primary)] font-outfit block mb-1">
-                            Category
-                          </label>
-                          <select
-                            value={habitForm.category}
-                            onChange={(e) => setHabitForm({...habitForm, category: e.target.value})}
-                            className="w-full h-10 px-3 bg-[var(--color-surface-elevated] border border-[var(--color-border-primary)]/40 rounded-lg text-[var(--color-text-primary)] font-outfit focus:outline-none focus:border-[var(--color-brand-500)] transition-colors text-sm"
-                          >
-                            <option value="health">Health</option>
-                            <option value="fitness">Fitness</option>
-                            <option value="productivity">Productivity</option>
-                            <option value="learning">Learning</option>
-                            <option value="mindfulness">Mindfulness</option>
-                            <option value="social">Social</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium text-[var(--color-text-primary)] font-outfit block mb-1">
-                            Target
-                          </label>
-                          <div className="flex gap-1">
-                            <input
-                              type="number"
-                              value={habitForm.defaultTarget.value}
-                              onChange={(e) => setHabitForm({
-                                ...habitForm, 
-                                defaultTarget: {...habitForm.defaultTarget, value: parseInt(e.target.value) || 1}
-                              })}
-                              className="w-16 h-10 px-2 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/40 rounded-lg text-[var(--color-text-primary)] font-outfit focus:outline-none focus:border-[var(--color-brand-500)] transition-colors text-sm"
-                              min="1"
-                            />
-                            <select
-                              value={habitForm.defaultTarget.unit}
-                              onChange={(e) => setHabitForm({
-                                ...habitForm, 
-                                defaultTarget: {...habitForm.defaultTarget, unit: e.target.value}
-                              })}
-                              className="flex-1 h-10 px-2 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/40 rounded-lg text-[var(--color-text-primary)] font-outfit focus:outline-none focus:border-[var(--color-brand-500)] transition-colors text-sm"
-                            >
-                              <option value="time">time</option>
-                              <option value="minutes">min</option>
-                              <option value="hours">hrs</option>
-                              <option value="pages">pages</option>
-                              <option value="cups">cups</option>
-                              <option value="steps">steps</option>
-                              <option value="reps">reps</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Schedule */}
-                      <div>
-                        <label className="text-xs font-medium text-[var(--color-text-primary)] font-outfit block mb-2">
-                          Schedule
-                        </label>
-                        <div className="flex flex-wrap gap-1">
-                          {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, index) => {
-                            const dayId = index === 6 ? 0 : index + 1; // Convert to backend format (0=Sunday)
-                            const isSelected = habitForm.schedule?.days?.includes(dayId) ?? true;
-                            
-                            return (
-                              <button
-                                key={index}
-                                type="button"
-                                onClick={() => {
-                                  const currentDays = habitForm.schedule?.days || [0, 1, 2, 3, 4, 5, 6];
-                                  const newDays = isSelected 
-                                    ? currentDays.filter(d => d !== dayId)
-                                    : [...currentDays, dayId].sort();
-                                  
-                                  setHabitForm({
-                                    ...habitForm,
-                                    schedule: {
-                                      ...habitForm.schedule,
-                                      days: newDays
-                                    }
-                                  });
-                                }}
-                                className={`w-8 h-8 rounded-lg text-xs font-medium transition-all duration-200 font-outfit ${
-                                  isSelected
-                                    ? 'bg-[var(--color-brand-500)] text-white'
-                                    : 'bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
-                                }`}
-                              >
-                                {day}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {activeTab === "appearance" && (
-                    <div className="space-y-4">
-                      {/* Icon & Color Preview */}
-                      <div className="flex items-center gap-3 mb-3">
-                        <div
-                          className="w-10 h-10 rounded-lg flex items-center justify-center text-xl text-white"
-                          style={{ backgroundColor: habitForm.color }}
-                        >
-                          {habitForm.icon}
-                        </div>
-                        <span className="text-sm text-[var(--color-text-secondary)] font-outfit">
-                          Preview
-                        </span>
-                      </div>
-                      
-                      {/* Compact Emoji Picker */}
-                      <div>
-                        <label className="text-xs font-medium text-[var(--color-text-primary)] font-outfit block mb-2">Icon</label>                          <div className="flex gap-1 mb-2">
-                            {Object.keys(EMOJI_CATEGORIES).map((category) => (
-                              <button
-                                key={category}
-                                type="button"
-                                className={`px-2 py-1 text-xs rounded transition-colors font-outfit ${
-                                  emojiCategory === category
-                                    ? "bg-[var(--color-brand-500)] text-white"
-                                    : "bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)]"
-                                }`}
-                                onClick={() => setEmojiCategory(category)}
-                              >
-                                {category.charAt(0).toUpperCase() + category.slice(1)}
-                              </button>
-                            ))}
-                        </div>
-                        
-                        <div className="border border-[var(--color-border-primary)]/40 p-2 rounded-lg bg-[var(--color-surface-elevated)]">
-                          <div className="flex flex-wrap gap-1">
-                            {EMOJI_CATEGORIES[emojiCategory].slice(0, 12).map((emoji) => (
-                              <button
-                                key={emoji}
-                                type="button"
-                                className={`w-8 h-8 flex items-center justify-center text-lg hover:bg-[var(--color-surface-hover)] rounded transition-colors ${
-                                  habitForm.icon === emoji ? 'bg-[var(--color-brand-100)] ring-1 ring-[var(--color-brand-500)]' : ''
-                                }`}
-                                onClick={() => setHabitForm({...habitForm, icon: emoji})}
-                              >
-                                {emoji}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Compact Color Picker */}
-                      <div>
-                        <label className="text-xs font-medium text-[var(--color-text-primary)] font-outfit block mb-2">Color</label>
-                        <div className="flex gap-2">
-                          {COLOR_OPTIONS.map((color) => (
-                            <button
-                              key={color}
-                              type="button"
-                              className="w-8 h-8 rounded-lg transition-transform hover:scale-110"
-                              style={{ 
-                                backgroundColor: color,
-                                border: habitForm.color === color ? "2px solid white" : "1px solid var(--color-border-primary)",
-                                outline: habitForm.color === color ? `2px solid ${color}` : "none"
-                              }}
-                              onClick={() => setHabitForm({...habitForm, color})}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {activeTab === "settings" && (
-                    <div className="space-y-4">
-                      {/* Reminders */}
-                      <div className="flex items-center justify-between p-3 bg-[var(--color-surface-elevated)] rounded-lg">
-                        <div>
-                          <span className="text-sm font-medium text-[var(--color-text-primary)] font-outfit">
-                            Enable Reminders
-                          </span>
-                          <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">
-                            Members can get notifications
-                          </p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={habitForm.schedule.reminderEnabled || false}
-                            onChange={(e) => 
-                              setHabitForm({
-                                ...habitForm, 
-                                schedule: { 
-                                  ...habitForm.schedule, 
-                                  reminderEnabled: e.target.checked 
-                                }
-                              })
-                            }
-                            className="sr-only"
-                          />
-                          <div className={`w-11 h-6 rounded-full transition-colors ${
-                            habitForm.schedule.reminderEnabled 
-                              ? 'bg-[var(--color-brand-500)]' 
-                              : 'bg-gray-300'
-                          }`}>
-                            <div className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${
-                              habitForm.schedule.reminderEnabled ? 'translate-x-5' : 'translate-x-0'
-                            } mt-0.5 ml-0.5`} />
-                          </div>
-                        </label>
-                      </div>
-                      
-                      {habitForm.schedule.reminderEnabled && (
-                        <div>
-                          <label className="text-xs font-medium text-[var(--color-text-primary)] font-outfit block mb-1">
-                            Default Time
-                          </label>
-                          <input
-                            type="time"
-                            value={habitForm.schedule.reminderTime || ''}
-                            onChange={(e) => 
-                              setHabitForm({
-                                ...habitForm, 
-                                schedule: { 
-                                  ...habitForm.schedule, 
-                                  reminderTime: e.target.value 
-                                }
-                              })
-                            }
-                            className="w-full h-10 px-3 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/40 rounded-lg text-[var(--color-text-primary)] font-outfit focus:outline-none focus:border-[var(--color-brand-500)] transition-colors text-sm"
-                          />
-                        </div>
-                      )}
-
-                      {/* Required Setting */}
-                      <div className="flex items-center justify-between p-3 bg-[var(--color-surface-elevated)] rounded-lg">
-                        <div>
-                          <span className="text-sm font-medium text-[var(--color-text-primary)] font-outfit">
-                            Required Habit
-                          </span>
-                          <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">
-                            All members adopt automatically
-                          </p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={habitForm.isRequired || false}
-                            onChange={(e) => setHabitForm({...habitForm, isRequired: e.target.checked})}
-                            className="sr-only"
-                          />
-                          <div className={`w-11 h-6 rounded-full transition-colors ${
-                            habitForm.isRequired 
-                              ? 'bg-[var(--color-brand-500)]' 
-                              : 'bg-gray-300'
-                          }`}>
-                            <div className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${
-                              habitForm.isRequired ? 'translate-x-5' : 'translate-x-0'
-                            } mt-0.5 ml-0.5`} />
-                          </div>
-                        </label>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Footer */}
-                <div className="flex items-center gap-3 pt-3 border-t border-[var(--color-border-primary)]">
-                  <button
-                    onClick={() => {
-                      setShowAddHabitModal(false);
-                      setActiveTab('details');
-                      setEmojiCategory('common');
-                    }}
-                    className="flex-1 h-10 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/40 text-[var(--color-text-primary)] rounded-lg transition-all duration-200 font-outfit font-medium text-sm"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleAddHabit}
-                    disabled={!habitForm.name}
-                    className="flex-1 h-10 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] disabled:bg-[var(--color-surface-elevated)] disabled:text-[var(--color-text-tertiary)] text-white rounded-lg transition-all duration-200 font-outfit font-semibold flex items-center justify-center gap-2 text-sm"
-                  >
-                    <CheckIcon className="w-4 h-4" />
-                    Create
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <GroupHabitModal
+            isOpen={showAddHabitModal}
+            onClose={() => {
+              setShowAddHabitModal(false);
+              setHabitForm({
+                name: "",
+                description: "",
+                icon: "🎯",
+                color: "#6366f1",
+                defaultTarget: 1,
+                schedule: "daily",
+                tags: [],
+                category: "other",
+              });
+              setEmojiCategory("common");
+              setActiveTab("details");
+            }}
+            mode="add"
+            groupId={groupId}
+            habitForm={habitForm}
+            setHabitForm={setHabitForm}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            emojiCategory={emojiCategory}
+            setEmojiCategory={setEmojiCategory}
+            onSave={handleAddHabit}
+            onSuccess={() => {
+              setShowAddHabitModal(false);
+              showNotification("Group habit added successfully!");
+              fetchGroupData();
+            }}
+          />
         )}
+
+        {showEditHabitModal && selectedHabit && (
+          <GroupHabitModal
+            isOpen={showEditHabitModal}
+            onClose={() => {
+              setShowEditHabitModal(false);
+              setSelectedHabit(null);
+              setHabitForm({
+                name: "",
+                description: "",
+                icon: "🎯",
+                color: "#6366f1",
+                defaultTarget: 1,
+                schedule: "daily",
+                tags: [],
+                category: "other",
+              });
+              setEmojiCategory("common");
+              setActiveTab("details");
+            }}
+            mode="edit"
+            groupId={groupId}
+            habitForm={habitForm}
+            setHabitForm={setHabitForm}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            emojiCategory={emojiCategory}
+            setEmojiCategory={setEmojiCategory}
+            onSave={handleUpdateHabit}
+            onSuccess={() => {
+              setShowEditHabitModal(false);
+              showNotification("Group habit updated successfully!");
+              fetchGroupData();
+            }}
+          />
+        )}
+
+        {showAdoptModal && adoptingHabit && (
+          <HabitAdoptModal
+            isOpen={showAdoptModal}
+            onClose={() => {
+              setShowAdoptModal(false);
+              setAdoptingHabit(null);
+              setAdoptingPrivacyLevel("private");
+            }}
+            habit={adoptingHabit}
+            privacyLevel={adoptingPrivacyLevel}
+            setPrivacyLevel={setAdoptingPrivacyLevel}
+            onAdopt={handleAdoptHabit}
+            onSuccess={() => {
+              setShowAdoptModal(false);
+              showNotification("Habit adopted successfully!");
+              fetchGroupData();
+            }}
+          />
+        )}
+
+        {/* Encouragement Modal */}
+        <EncouragementModal
+          isOpen={encouragementModal.isOpen}
+          onClose={closeEncouragementModal}
+          targetUser={encouragementModal.targetUser}
+          workspaceId={groupId}
+          habitId={encouragementModal.habitId}
+          onEncouragementSent={handleEncouragementSent}
+        />
       </div>
     </div>
   );

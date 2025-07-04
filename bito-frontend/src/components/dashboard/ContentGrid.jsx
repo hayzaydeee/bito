@@ -905,6 +905,7 @@ const ContentGrid = () => {
                 onDeleteHabit={handleDeleteHabit}
                 onEditHabit={handleEditHabit}
                 viewType="table"
+                persistenceKey="contentGrid_databaseViewType"
                 dateRange={databaseDateRange}
                 mode="week" // Database is always weekly
                 isInEditMode={isInEditMode}

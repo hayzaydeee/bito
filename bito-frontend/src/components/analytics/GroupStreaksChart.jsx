@@ -2,6 +2,33 @@ import React, { useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { PersonIcon, BarChartIcon } from '@radix-ui/react-icons';
 
+// Utility function to get a consistent member key for both data initialization and processing
+const getMemberKey = (member, index) => {
+  if (!member) return `Unknown Member ${index}`;
+  
+  // Try to get a meaningful name from the member object
+  // Check all possible locations where the name might be stored
+  const name = 
+    member.name || 
+    (member.userId && typeof member.userId === 'object' && member.userId.name) ||
+    (member.user && member.user.name) ||
+    (member.user && typeof member.user === 'object' && member.user.name);
+  
+  if (name) return name;
+  
+  // If no name found, use ID as fallback
+  const id = 
+    (member.userId && typeof member.userId === 'string' && member.userId) ||
+    (member.userId && typeof member.userId === 'object' && member.userId._id) ||
+    member._id ||
+    member.id;
+    
+  if (id) return `User ${id.toString().substring(0, 6)}`;
+  
+  // Last resort: use index
+  return `Member ${index + 1}`;
+};
+
 // Predefined colors for member lines
 const MEMBER_COLORS = [
   '#4f46e5', // indigo
@@ -22,46 +49,239 @@ const GroupStreaksChart = ({
   timeRange = 'week',
   className = '' 
 }) => {
-  console.log('GroupStreaksChart render:', { membersCount: members.length, dataCount: completionData.length });
+  console.log('GroupStreaksChart render:', { 
+    membersCount: members.length, 
+    dataCount: completionData.length,
+    completionSample: completionData.slice(0, 2),
+    membersSample: members.slice(0, 2).map(m => ({
+      id: m.userId?._id || m.userId || m.id,
+      name: m.name,
+      userIdType: m.userId ? typeof m.userId : 'undefined',
+      key: getMemberKey(m, members.indexOf(m))
+    }))
+  });
 
-  // Generate chart data for the week
+  // Generate chart data for the week using real completion data
   const chartData = useMemo(() => {
+    console.log('GroupStreaksChart - Starting chart data generation with:', {
+      membersCount: members.length,
+      completionDataCount: completionData.length
+    });
+
+    // For debugging: Dump first few entries of each array
+    if (members.length > 0) {
+      console.log('GroupStreaksChart - Members sample:', 
+        members.slice(0, 3).map(m => ({
+          id: m.id || m._id,
+          userId: m.userId ? (typeof m.userId === 'object' ? m.userId._id : m.userId) : 'none',
+          name: m.name || (m.userId && m.userId.name) || 'unnamed'
+        }))
+      );
+    }
+    
+    if (completionData.length > 0) {
+      console.log('GroupStreaksChart - Completion data sample:', 
+        completionData.slice(0, 3).map(entry => ({
+          userId: entry.userId ? (typeof entry.userId === 'object' ? entry.userId._id : entry.userId) : 'none',
+          date: entry.date,
+          habitId: entry.habitId
+        }))
+      );
+    }
+
     if (!members.length) return [];
 
+    // Create member ID map for quick lookup (handling various ID formats)
+    const memberMap = new Map();
+    members.forEach((member, index) => {
+      // Handle all possible ID formats that could come from the backend
+      // MongoDB IDs can be represented in multiple ways
+      
+      // 1. Handle userId object with _id
+      if (member.userId && typeof member.userId === 'object' && member.userId._id) {
+        memberMap.set(member.userId._id.toString(), { 
+          member, index, key: getMemberKey(member, index)
+        });
+      }
+      
+      // 2. Handle userId as string
+      if (member.userId && typeof member.userId === 'string') {
+        memberMap.set(member.userId, { 
+          member, index, key: getMemberKey(member, index)
+        });
+      }
+      
+      // 3. Handle direct _id
+      if (member._id) {
+        memberMap.set(member._id.toString(), { 
+          member, index, key: getMemberKey(member, index)
+        });
+      }
+      
+      // 4. Handle direct id
+      if (member.id) {
+        memberMap.set(member.id.toString(), { 
+          member, index, key: getMemberKey(member, index)
+        });
+      }
+      
+      // 5. Handle user object with _id (just in case)
+      if (member.user && typeof member.user === 'object' && member.user._id) {
+        memberMap.set(member.user._id.toString(), { 
+          member, index, key: getMemberKey(member, index)
+        });
+      }
+      
+      // 6. As a last resort, use the member's index as a key
+      memberMap.set(`member-index-${index}`, { 
+        member, index, key: getMemberKey(member, index)
+      });
+    });
+    
+    console.log('GroupStreaksChart - Created member map with keys:', 
+      Array.from(memberMap.keys()).slice(0, 5));
+
+    console.log('GroupStreaksChart - Created member map with keys:', 
+      Array.from(memberMap.keys()).slice(0, 5));
+
+    // Set up weekly data structure
     const today = new Date();
     const startOfWeek = new Date(today);
     startOfWeek.setDate(today.getDate() - today.getDay()); // Start from Sunday
-
+    
     const weekData = [];
     
+    // Create data structure for each day of the week
     for (let day = 0; day < 7; day++) {
       const date = new Date(startOfWeek);
       date.setDate(startOfWeek.getDate() + day);
+      const dateStr = date.toISOString().split('T')[0];
       
       const dayData = {
         day: date.toLocaleDateString('en-US', { weekday: 'short' }),
-        date: date.toISOString().split('T')[0],
+        date: dateStr,
       };
 
-      // Add completion counts for each member
+      // Initialize all members with 0 completions
       members.forEach((member, index) => {
-        const memberKey = member.userId?.name || member.name || `Member ${index + 1}`;
-        // For now, generate sample data - in real app this would come from API
-        dayData[memberKey] = Math.floor(Math.random() * 8); // 0-7 completions per day
+        const memberKey = getMemberKey(member, index);
+        dayData[memberKey] = 0;
       });
 
       weekData.push(dayData);
     }
+    
+    // Create a date map for quick lookup of day data
+    const dateMap = new Map();
+    weekData.forEach(day => {
+      dateMap.set(day.date, day);
+    });
+    
+    // Process completion data - using a more direct approach
+    let matchCount = 0;
+    
+    if (completionData && completionData.length > 0) {
+      // First, let's examine what kinds of user IDs we're dealing with in the completion data
+      const sampleUserIds = completionData.slice(0, 5).map(entry => ({
+        userId: entry.userId,
+        type: typeof entry.userId,
+        hasIdProperty: typeof entry.userId === 'object' && entry.userId && '_id' in entry.userId,
+        idValue: typeof entry.userId === 'object' && entry.userId?._id ? entry.userId._id.toString() : 
+                (entry.userId ? entry.userId.toString() : 'none')
+      }));
+      
+      console.log('Completion data userIds sample:', sampleUserIds);
+      
+      // Process each completion entry
+      completionData.forEach(entry => {
+        // Skip if no date or not completed
+        if (!entry.date || entry.completed === false) return;
+        
+        // Format date consistently
+        const dateKey = entry.date.split('T')[0];
+        const dayData = dateMap.get(dateKey);
+        
+        // Skip if not in current week
+        if (!dayData) {
+          console.log(`Date not in current week: ${dateKey}`);
+          return;
+        }
+        
+        // Try multiple userId formats for matching
+        let matched = false;
+        
+        // Extract all possible userId formats
+        const possibleIds = [];
+        
+        // 1. Direct userId as string
+        if (entry.userId && typeof entry.userId === 'string') {
+          possibleIds.push(entry.userId);
+        }
+        
+        // 2. userId._id from object
+        if (entry.userId && typeof entry.userId === 'object' && entry.userId._id) {
+          possibleIds.push(entry.userId._id.toString());
+        }
+        
+        // 3. userId as object without _id property
+        if (entry.userId && typeof entry.userId === 'object') {
+          possibleIds.push(entry.userId.toString());
+        }
+        
+        // Try all possible IDs for matching
+        for (const idStr of possibleIds) {
+          const memberData = memberMap.get(idStr);
+          if (memberData) {
+            const { key } = memberData;
+            dayData[key] += 1;
+            matchCount++;
+            matched = true;
+            break; // Stop after first match
+          }
+        }
+        
+        // If still no match found, try a more exhaustive search
+        if (!matched && members.length <= 10) { // Only for reasonable member counts
+          // Try direct comparison with all members
+          for (let i = 0; i < members.length; i++) {
+            const member = members[i];
+            
+            // Compare all possible ID combinations
+            if ((member.userId && entry.userId && member.userId.toString() === entry.userId.toString()) ||
+                (member.userId && typeof entry.userId === 'object' && entry.userId._id && 
+                 member.userId.toString() === entry.userId._id.toString()) ||
+                (member._id && entry.userId && member._id.toString() === entry.userId.toString()) ||
+                (member.id && entry.userId && member.id.toString() === entry.userId.toString())) {
+              
+              const key = getMemberKey(member, i);
+              dayData[key] += 1;
+              matchCount++;
+              matched = true;
+              break;
+            }
+          }
+        }
+        
+        if (!matched && matchCount < 3) {
+          console.log('No match found for entry:', entry);
+        }
+      });
+    }
+    
+    console.log(`GroupStreaksChart - Final processing: matched ${matchCount}/${completionData.length} completion entries`);
+    console.log('GroupStreaksChart - Final chart data structure:', weekData);
+    
+    
 
     return weekData;
-  }, [members]);
+  }, [members, completionData]);
 
   // Get top performers
   const topPerformers = useMemo(() => {
     if (!chartData.length || !members.length) return [];
 
     const memberTotals = members.map((member, index) => {
-      const memberKey = member.userId?.name || member.name || `Member ${index + 1}`;
+      const memberKey = getMemberKey(member, index);
       const total = chartData.reduce((sum, day) => sum + (day[memberKey] || 0), 0);
       return {
         name: memberKey,
@@ -167,7 +387,7 @@ const GroupStreaksChart = ({
                 formatter={(value, name) => [`${value} completions`, name]}
               />
               {members.slice(0, 3).map((member, index) => {
-                const memberKey = member.userId?.name || member.name || `Member ${index + 1}`;
+                const memberKey = getMemberKey(member, index);
                 const color = MEMBER_COLORS[index % MEMBER_COLORS.length];
                 return (
                   <Line
@@ -199,7 +419,7 @@ const GroupStreaksChart = ({
         {members.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-3 justify-center">
             {members.slice(0, 3).map((member, index) => {
-              const memberKey = member.userId?.name || member.name || `Member ${index + 1}`;
+              const memberKey = getMemberKey(member, index);
               const color = MEMBER_COLORS[index % MEMBER_COLORS.length];
               return (
                 <div key={memberKey} className="flex items-center gap-2">

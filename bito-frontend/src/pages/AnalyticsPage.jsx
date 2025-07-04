@@ -7,7 +7,31 @@ import { createWidgetComponent } from '../components/shared/widgetFactory';
 
 const AnalyticsPage = () => {
   const { habits, entries, isLoading } = useHabits();
-  const [selectedTimeRange, setSelectedTimeRange] = useState('7d');
+  
+  // Persistent time range selection
+  const [selectedTimeRange, setSelectedTimeRange] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.analytics.timeRange);
+      if (saved && ['7d', '30d', '90d'].includes(saved)) {
+        return saved;
+      }
+    } catch (error) {
+      console.warn('Failed to load time range from localStorage:', error);
+    }
+    return '7d'; // Default value
+  });
+
+  // Custom handler for time range changes with persistence
+  const handleTimeRangeChange = useCallback((timeRange) => {
+    setSelectedTimeRange(timeRange);
+    
+    // Save to localStorage
+    try {
+      localStorage.setItem(STORAGE_KEYS.analytics.timeRange, timeRange);
+    } catch (error) {
+      console.warn('Failed to save time range to localStorage:', error);
+    }
+  }, []);
 
   // Time range options
   const timeRangeOptions = [
@@ -88,7 +112,7 @@ const AnalyticsPage = () => {
                 return (
                   <button
                     key={option.value}
-                    onClick={() => setSelectedTimeRange(option.value)}
+                    onClick={() => handleTimeRangeChange(option.value)}
                     className={`flex items-center gap-1 sm:gap-2 px-1.5 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-md sm:rounded-lg transition-all duration-200 font-outfit text-xs sm:text-sm ${
                       selectedTimeRange === option.value
                         ? 'bg-[var(--color-brand-600)] text-white shadow-md'

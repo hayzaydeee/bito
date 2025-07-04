@@ -100,7 +100,6 @@ const WorkspaceDashboard = () => {
         setShowAdoptModal(false);
         setSelectedHabit(null);
         
-        console.log('✅ Habit adopted successfully:', response.habit.name);
       }
     } catch (error) {
       console.error('Error adopting habit:', error);

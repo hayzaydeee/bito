@@ -12,7 +12,7 @@ import {
 } from "@radix-ui/react-icons";
 import { useAuth } from "../../contexts/AuthContext";
 import NotificationsDropdown from "./NotificationsDropdown";
-import { notificationsAPI } from "../../services/api";
+import { workspacesAPI } from "../../services/api";
 
 const StatusBar = ({
   isMenuCollapsed,
@@ -38,8 +38,34 @@ const StatusBar = ({
 
   const fetchNotificationCount = async () => {
     try {
-      const response = await notificationsAPI.getUnreadCount();
-      setNotificationCount(response.data?.unreadCount || 0);
+      // For now, we'll count recent activities from all workspaces
+      const workspacesResponse = await workspacesAPI.getWorkspaces();
+      const workspaces = workspacesResponse.data?.workspaces || [];
+      
+      let totalCount = 0;
+      for (const workspace of workspaces) {
+        try {
+          const activityResponse = await workspacesAPI.getWorkspaceActivity(workspace._id, {
+            limit: 5,
+            types: 'habit_completed,habit_adopted,streak_milestone,member_joined,badge_earned'
+          });
+          const activities = activityResponse.data?.activities || [];
+          
+          // Count activities from the last 24 hours
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          
+          const recentActivities = activities.filter(activity => 
+            new Date(activity.createdAt) > yesterday
+          );
+          
+          totalCount += recentActivities.length;
+        } catch (err) {
+          console.warn(`Failed to fetch activities for workspace ${workspace._id}:`, err);
+        }
+      }
+      
+      setNotificationCount(Math.min(totalCount, 99)); // Cap at 99
     } catch (error) {
       console.error('Error fetching notification count:', error);
     }
@@ -161,7 +187,6 @@ const StatusBar = ({
             <NotificationsDropdown
               isOpen={showNotifications}
               onClose={() => setShowNotifications(false)}
-              onNotificationCountChange={fetchNotificationCount}
             />
           </div>
 

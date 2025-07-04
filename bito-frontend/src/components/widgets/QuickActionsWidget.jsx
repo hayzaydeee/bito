@@ -177,7 +177,11 @@ const QuickActionsWidget = memo(({
             {visibleActions.map((action) => (
               <button
                 key={action.id}
-                onClick={action.action}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  action.action();
+                }}
                 className={getButtonClasses(action)}
                 disabled={(action.id === 'quick-complete' && habits.length === 0) || action.id === 'csv-import'}
               >

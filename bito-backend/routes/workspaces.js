@@ -1821,7 +1821,15 @@ router.put('/workspace-habits/:id', [
   body('settings.allowCustomization')
     .optional()
     .isBoolean()
-    .withMessage('allowCustomization must be a boolean')
+    .withMessage('allowCustomization must be a boolean'),
+  body('icon')
+    .optional()
+    .isString()
+    .withMessage('Icon must be a string'),
+  body('color')
+    .optional()
+    .isString()
+    .withMessage('Color must be a string')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -1867,19 +1875,25 @@ router.put('/workspace-habits/:id', [
       });
     }
 
-    const { name, description, category, isRequired, settings } = req.body;
+    const { name, description, category, isRequired, settings, icon, color, schedule } = req.body;
 
     // Update habit
     if (name !== undefined) workspaceHabit.name = name;
     if (description !== undefined) workspaceHabit.description = description;
     if (category !== undefined) workspaceHabit.category = category;
     if (isRequired !== undefined) workspaceHabit.isRequired = isRequired;
+    if (icon !== undefined) workspaceHabit.icon = icon;
+    if (color !== undefined) workspaceHabit.color = color;
     
     if (settings) {
+      if (!workspaceHabit.settings) workspaceHabit.settings = {};
       if (settings.visibility !== undefined) workspaceHabit.settings.visibility = settings.visibility;
       if (settings.allowCustomization !== undefined) workspaceHabit.settings.allowCustomization = settings.allowCustomization;
       if (settings.defaultTarget) {
         workspaceHabit.settings.defaultTarget = settings.defaultTarget;
+      }
+      if (schedule) {
+        workspaceHabit.settings.schedule = schedule;
       }
     }
 
@@ -2228,7 +2242,7 @@ router.get('/:workspaceId/members/:memberId/dashboard', authenticateJWT, async (
     }
     
     // Get habit IDs to fetch entries for - now simply all the user's habit IDs
-    const habitIds = Object.keys(habitIdToEntryMap).map(id => mongoose.Types.ObjectId(id));
+    const habitIds = Object.keys(habitIdToEntryMap).map(id => new mongoose.Types.ObjectId(id));
     
     // Get ALL the member's habit entries for any habit they track
     const habitEntries = await HabitEntry.find({
@@ -2263,7 +2277,7 @@ router.get('/:workspaceId/members/:memberId/dashboard', authenticateJWT, async (
       workspaceId,
       habitsCount: processedHabits.length,
       entriesCount: Object.values(entriesMap).flat().length,
-      habitIdsMapped: Object.values(memberHabitToHabitMap).length,
+      habitIdsMapped: Object.keys(habitIdToEntryMap).length,
     });
     
     // Check if we have no habits and provide additional debug info

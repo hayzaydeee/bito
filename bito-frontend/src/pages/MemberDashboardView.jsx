@@ -18,7 +18,7 @@ const AVAILABLE_WIDGET_TYPES = {
     title: "Habits Overview",
     icon: "📊",
     description: "Daily habit completion chart",
-    defaultProps: { w: 6, h: 4 },
+    defaultProps: { w: 12, h: 10 },
   },
   "habit-list": {
     title: "Habits List",
@@ -30,24 +30,25 @@ const AVAILABLE_WIDGET_TYPES = {
 
 const getDefaultLayouts = () => ({
   lg: [
-    { i: "habits-overview", x: 0, y: 0, w: 12, h: 6, moved: false, static: false },
-    { i: "habit-list", x: 0, y: 6, w: 12, h: 10, moved: false, static: false },
+    { i: "habits-overview", x: 0, y: 0, w: 12, h: 6, },
+    { i: "habit-list", x: 0, y: 6, w: 12, h: 10, },
   ],
   md: [
-    { i: "habits-overview", x: 0, y: 0, w: 12, h: 4, moved: false, static: false },
-    { i: "habit-list", x: 0, y: 4, w: 12, h: 6, moved: false, static: false },
+    { i: "habits-overview", x: 0, y: 0, w: 12, h: 6, },
+    { i: "habit-list", x: 0, y: 10, w: 12, h: 10,  },
   ],
   sm: [
-    { i: "habits-overview", x: 0, y: 0, w: 12, h: 4, moved: false, static: false },
-    { i: "habit-list", x: 0, y: 4, w: 12, h: 6, moved: false, static: false },
+    { i: "habits-overview", x: 0, y: 0, w: 12, h: 6,  },
+    { i: "habit-list", x: 0, y: 12, w: 12, h: 10, },
   ],
   xs: [
-    { i: "habits-overview", x: 0, y: 0, w: 4, h: 3, moved: false, static: false },
-    { i: "habit-list", x: 0, y: 3, w: 4, h: 6, moved: false, static: false },
+    { i: "habits-overview", x: 0, y: 0, w: 4, h: 6, },
+    { i: "habit-list", x: 0, y: 8, w: 4, h: 10, 
+     },
   ],
   xxs: [
-    { i: "habits-overview", x: 0, y: 0, w: 2, h: 3, moved: false, static: false },
-    { i: "habit-list", x: 0, y: 3, w: 2, h: 6, moved: false, static: false },
+    { i: "habits-overview", x: 0, y: 0, w: 2, h: 6,  },
+    { i: "habit-list", x: 0, y: 6, w: 2, h: 6,  },
   ],
 });
 
@@ -56,10 +57,6 @@ const getDefaultActiveWidgets = () => [
   "habit-list",
 ];
 
-const STORAGE_KEYS = {
-  layouts: "habitTracker_memberDashboardLayouts",
-  widgets: "habitTracker_memberDashboardWidgets"
-};
 
 const MemberDashboardView = () => {
   const { groupId, memberId } = useParams();
@@ -271,19 +268,19 @@ const MemberDashboardView = () => {
 
   // Disabled handlers for read-only mode
   const handleToggleCompletion = () => {
-    console.log('Read-only mode: Cannot modify member habits');
+    // Read-only mode: Cannot modify member habits
   };
 
   const handleAddHabit = () => {
-    console.log('Read-only mode: Cannot add habits for member');
+    // Read-only mode: Cannot add habits for member
   };
 
   const handleDeleteHabit = () => {
-    console.log('Read-only mode: Cannot delete member habits');
+    // Read-only mode: Cannot delete member habits
   };
 
   const handleEditHabit = () => {
-    console.log('Read-only mode: Cannot edit member habits');
+    // Read-only mode: Cannot edit member habits
   };
 
   useEffect(() => {
@@ -295,10 +292,7 @@ const MemberDashboardView = () => {
       setLoading(true);
       setError(null);
       
-      console.log(`Fetching dashboard for member ${memberId} in workspace ${groupId}`);
       const response = await groupsAPI.getMemberDashboard(groupId, memberId);
-      
-      console.log('Member dashboard response:', response);
       
       if (response.success) {
         // Validate required data is present
@@ -323,14 +317,29 @@ const MemberDashboardView = () => {
         
         // Continue with empty habits - we'll show the empty state UI
         
-        // Process entries to ensure correct format - should now be keyed by actual habit IDs
+        // Process entries to ensure correct format for HabitGrid/context compatibility
         const processedEntries = {};
         if (typeof response.entries === 'object') {
           Object.keys(response.entries).forEach(habitId => {
             if (habitId && habitId !== "undefined" && habitId !== "null") {
-              processedEntries[habitId] = Array.isArray(response.entries[habitId]) 
-                ? response.entries[habitId] 
-                : [];
+              const habitEntries = response.entries[habitId];
+              
+              // Convert from array format (from API) to object format (for HabitGrid)
+              if (Array.isArray(habitEntries)) {
+                processedEntries[habitId] = {};
+                habitEntries.forEach(entry => {
+                  if (entry && entry.date) {
+                    // Convert date to YYYY-MM-DD format if needed
+                    const dateKey = typeof entry.date === 'string' 
+                      ? entry.date.split('T')[0] 
+                      : new Date(entry.date).toISOString().split('T')[0];
+                    processedEntries[habitId][dateKey] = entry;
+                  }
+                });
+              } else if (typeof habitEntries === 'object') {
+                // Already in correct format
+                processedEntries[habitId] = habitEntries;
+              }
             }
           });
         }
@@ -348,11 +357,6 @@ const MemberDashboardView = () => {
             // Keep track if it's a workspace habit
             isGroupHabit: !!habit.workspaceId
           }));
-        
-        console.log('Processed member data:', {
-          habitsCount: processedHabits.length,
-          entriesCount: Object.keys(processedEntries).length,
-        });
         
         // Perform additional validation of habit-entry relationship
         const entriesWithNoMatchingHabit = Object.keys(processedEntries).filter(
@@ -530,21 +534,6 @@ const MemberDashboardView = () => {
       {/* Dashboard Grid Container - Only show when there are habits */}
       {habits && habits.length > 0 && (
         <div className="relative">
-          {/* Debug info - remove in production */}
-          <div className="mb-4 p-4 bg-[var(--color-surface-elevated)] rounded-xl border border-[var(--color-border-primary)]/20">
-            <details className="text-xs">
-              <summary className="text-[var(--color-text-secondary)] cursor-pointer">Debug Info</summary>
-              <pre className="mt-2 max-h-64 overflow-auto p-2 bg-[var(--color-surface-primary)] rounded">
-                {JSON.stringify({
-                  habitsCount: habits?.length || 0,
-                  habitIds: habits?.map(h => h._id) || [],
-                  entriesKeys: entries ? Object.keys(entries) : [],
-                  entriesCount: entries ? Object.values(entries).flat().length : 0
-                }, null, 2)}
-              </pre>
-            </details>
-          </div>
-
           <BaseGridContainer
           mode="dashboard"
           
@@ -571,8 +560,8 @@ const MemberDashboardView = () => {
           updateDatabaseMonth={updateDatabaseMonth}
           
           // Disabled UI handlers
-          onShowEnhancedCsvImport={() => console.log('Read-only mode: CSV import disabled')}
-          onShowLLMSettings={() => console.log('Read-only mode: LLM settings disabled')}
+          onShowEnhancedCsvImport={() => {/* Read-only mode: CSV import disabled */}}
+          onShowLLMSettings={() => {/* Read-only mode: LLM settings disabled */}}
           
           // Filter components
           ChartFilterControls={ChartFilterControls}
@@ -582,7 +571,6 @@ const MemberDashboardView = () => {
           availableWidgets={AVAILABLE_WIDGET_TYPES}
           defaultWidgets={getDefaultActiveWidgets()}
           defaultLayouts={getDefaultLayouts()}
-          storageKeys={STORAGE_KEYS}
           className="member-dashboard-grid"
           
           // Read-only mode flag
