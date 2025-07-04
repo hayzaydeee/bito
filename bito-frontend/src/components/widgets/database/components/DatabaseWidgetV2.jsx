@@ -1,5 +1,5 @@
 import React, { useState, memo, useMemo, useCallback } from "react";
-import { HabitGrid } from "../../../habitGrid/index.js";
+import { HabitGrid } from "../../../HabitGrid/index.js";
 import { DatabaseHeader } from "./DatabaseHeader.jsx";
 import { GalleryViewV2 } from "./GalleryViewV2.jsx";
 import { habitUtils, useHabits } from "../../../../contexts/HabitContext";
