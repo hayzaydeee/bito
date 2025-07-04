@@ -41,8 +41,7 @@ const InvitationPage = () => {
   const fetchInvitation = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:5000/api/workspaces/invitations/${token}`);
-      const data = await response.json();
+      const data = await groupsAPI.getInvitationByToken(token);
       
       if (data.success) {
         setInvitation(data.invitation);

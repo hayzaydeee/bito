@@ -293,6 +293,11 @@ export const workspacesAPI = {
     return apiRequest(`/api/workspaces/${workspaceId}/invitations${params}`);
   },
 
+  // Get invitation details by token
+  getInvitationByToken: async (token) => {
+    return apiRequest(`/api/workspaces/invitations/${token}`);
+  },
+
   // Accept invitation
   acceptInvitation: async (token) => {
     return apiRequest(`/api/workspaces/invitations/${token}/accept`, {
@@ -412,6 +417,11 @@ export const groupsAPI = {
   getInvitations: async (groupId, status) => {
     const params = status ? `?status=${status}` : '';
     return apiRequest(`/api/workspaces/${groupId}/invitations${params}`);
+  },
+
+  // Get invitation details by token
+  getInvitationByToken: async (token) => {
+    return apiRequest(`/api/workspaces/invitations/${token}`);
   },
 
   // Accept invitation
