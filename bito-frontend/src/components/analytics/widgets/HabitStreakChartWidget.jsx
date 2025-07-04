@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useHabits } from '../../../contexts/HabitContext';
-import HabitStreakChart from '../HabitStreakChart';
+import HabitStreakChart from '../HabitStreakChart.jsx';
 
 const HabitStreakChartWidget = ({ 
   timeRange = '30d',

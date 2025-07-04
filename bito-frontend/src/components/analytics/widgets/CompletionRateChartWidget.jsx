@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useHabits } from '../../../contexts/HabitContext';
 import { ArrowUpIcon, ArrowDownIcon } from '@radix-ui/react-icons';
-import CompletionRateChart from '../CompletionRateChart';
+import CompletionRateChart from '../CompletionRateChart.jsx';
 
 const CompletionRateChartWidget = ({ 
   timeRange = '30d',
