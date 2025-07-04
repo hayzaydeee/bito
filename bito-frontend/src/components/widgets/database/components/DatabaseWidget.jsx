@@ -1,4 +1,4 @@
-import { useState, memo, useMemo } from "react";
+import { useState, memo, useMemo, useCallback } from "react";
 import {
   useHabitData,
   useHabitActions,
@@ -42,11 +42,46 @@ const DatabaseWidget = memo(
     onDeleteHabit,
     onEditHabit,
     viewType: initialViewType = "table",
+    onViewTypeChange = null, // Callback for view type changes
+    persistenceKey = null, // Key for localStorage persistence
     breakpoint = "lg",
     filterComponent = null,
     dateRange = null,
     mode = "week",
-  }) => {    const [viewType, setViewType] = useState(initialViewType);
+  }) => {    
+    const [viewType, setViewType] = useState(() => {
+      // Try to load from localStorage if persistence key is provided
+      if (persistenceKey) {
+        try {
+          const saved = localStorage.getItem(persistenceKey);
+          if (saved && (saved === "table" || saved === "gallery")) {
+            return saved;
+          }
+        } catch (error) {
+          console.warn('Failed to load view type from localStorage:', error);
+        }
+      }
+      return initialViewType;
+    });
+
+    // Custom setViewType function that handles persistence and callbacks
+    const handleViewTypeChange = useCallback((newViewType) => {
+      setViewType(newViewType);
+      
+      // Save to localStorage if persistence key is provided
+      if (persistenceKey) {
+        try {
+          localStorage.setItem(persistenceKey, newViewType);
+        } catch (error) {
+          console.warn('Failed to save view type to localStorage:', error);
+        }
+      }
+      
+      // Call the optional callback
+      if (onViewTypeChange) {
+        onViewTypeChange(newViewType);
+      }
+    }, [persistenceKey, onViewTypeChange]);
 
     // Calculate dynamic title with date range
     const displayTitle = useMemo(() => {
@@ -133,10 +168,10 @@ const DatabaseWidget = memo(
         <DatabaseHeader
           title={displayTitle}
           viewType={viewType}
-          setViewType={setViewType}
+          setViewType={handleViewTypeChange}
           filterComponent={filterComponent}
         />
-        <div className="flex-1 min-h-0 overflow-auto">{renderContent()}</div>
+        <div className="widget-content-area">{renderContent()}</div>
       </div>
     );
   }

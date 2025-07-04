@@ -7,6 +7,7 @@ import React, {
   Suspense,
   useEffect,
 } from "react";
+import { useNavigate } from "react-router-dom";
 import { Responsive, WidthProvider } from "react-grid-layout";
 import {
   Pencil1Icon,
@@ -19,12 +20,16 @@ import "react-resizable/css/styles.css";
 import "../widgets/widgets.css";
 
 // Import data service and filter components
-import habitDataService, { filterState } from "../../services/habitDataService";
+import { useHabits, habitUtils } from "../../contexts/HabitContext";
 import {
   ChartFilterControls,
   DatabaseFilterControls,
 } from "../ui/FilterControls";
-import CsvImportModal from "../ui/CsvImportModal";
+// Temporarily disabled for deployment
+// import CsvImportModal from "../ui/CsvImportModal";
+// import EnhancedCsvImportModal from "../ui/EnhancedCsvImportModal";
+import LLMSettingsModal from "../ui/LLMSettingsModal";
+import CustomHabitEditModal from "../ui/CustomHabitEditModal";
 
 // Lazy load widgets for better performance
 const ChartWidget = lazy(() =>
@@ -32,16 +37,15 @@ const ChartWidget = lazy(() =>
     default: module.ChartWidget,
   }))
 );
-const DatabaseWidget = lazy(() =>
-  import("../widgets/database/components/DatabaseWidget.jsx").then((module) => ({
-    default: module.DatabaseWidget,
-  }))
+
+const DatabaseWidgetBridge = lazy(() =>
+  import("../widgets/database/components/DatabaseWidgetBridge.jsx").then(
+    (module) => ({
+      default: module.DatabaseWidgetBridge,
+    })
+  )
 );
-const QuickActionsWidget = lazy(() =>
-  import("../widgets/QuickActionsWidget").then((module) => ({
-    default: module.QuickActionsWidget,
-  }))
-);
+const QuickActionsWidget = lazy(() => import("../widgets/QuickActionsWidget"));
 
 // Loading component for lazy widgets
 const WidgetSkeleton = ({ title }) => (
@@ -70,12 +74,6 @@ const AVAILABLE_WIDGET_TYPES = {
     description: "Daily habit completion chart",
     defaultProps: { w: 6, h: 4 },
   },
-  "weekly-progress": {
-    title: "Weekly Progress",
-    icon: "📈",
-    description: "Weekly habit trend analysis",
-    defaultProps: { w: 8, h: 6 },
-  },
   "habit-list": {
     title: "Habits List",
     icon: "📋",
@@ -94,41 +92,35 @@ const AVAILABLE_WIDGET_TYPES = {
 const getDefaultActiveWidgets = () => [
   "habits-overview",
   "quick-actions",
-  "weekly-progress",
   "habit-list",
 ];
 
-// Default layouts configuration
+// Default layouts configuration (optimized for better content display)
 const getDefaultLayouts = () => ({
   lg: [
-    { i: "habits-overview", x: 0, y: 0, w: 6, h: 4 },
-    { i: "quick-actions", x: 6, y: 0, w: 6, h: 4 },
-    { i: "weekly-progress", x: 0, y: 4, w: 8, h: 6 },
-    { i: "habit-list", x: 8, y: 4, w: 4, h: 6 },
+    { i: "habits-overview", x: 0, y: 0, w: 8, h: 6, moved: false, static: false },
+    { i: "quick-actions", x: 8, y: 0, w: 4, h: 5, moved: false, static: false },
+    { i: "habit-list", x: 0, y: 6, w: 12, h: 10, moved: false, static: false },
   ],
   md: [
-    { i: "habits-overview", x: 0, y: 0, w: 6, h: 4 },
-    { i: "quick-actions", x: 6, y: 0, w: 6, h: 4 },
-    { i: "weekly-progress", x: 0, y: 4, w: 12, h: 6 },
-    { i: "habit-list", x: 0, y: 10, w: 12, h: 6 },
+    { i: "habits-overview", x: 0, y: 0, w: 6, h: 4, moved: false, static: false },
+    { i: "quick-actions", x: 6, y: 0, w: 6, h: 4, moved: false, static: false },
+    { i: "habit-list", x: 0, y: 4, w: 12, h: 6, moved: false, static: false },
   ],
   sm: [
-    { i: "habits-overview", x: 0, y: 0, w: 12, h: 4 },
-    { i: "quick-actions", x: 0, y: 4, w: 12, h: 4 },
-    { i: "weekly-progress", x: 0, y: 8, w: 12, h: 6 },
-    { i: "habit-list", x: 0, y: 14, w: 12, h: 6 },
+    { i: "habits-overview", x: 0, y: 0, w: 12, h: 4, moved: false, static: false },
+    { i: "quick-actions", x: 0, y: 4, w: 12, h: 4, moved: false, static: false },
+    { i: "habit-list", x: 0, y: 8, w: 12, h: 6, moved: false, static: false },
   ],
   xs: [
-    { i: "habits-overview", x: 0, y: 0, w: 4, h: 3 },
-    { i: "quick-actions", x: 0, y: 3, w: 4, h: 3 },
-    { i: "weekly-progress", x: 0, y: 6, w: 4, h: 4 },
-    { i: "habit-list", x: 0, y: 10, w: 4, h: 6 },
+    { i: "habits-overview", x: 0, y: 0, w: 4, h: 3, moved: false, static: false },
+    { i: "quick-actions", x: 0, y: 3, w: 4, h: 3, moved: false, static: false },
+    { i: "habit-list", x: 0, y: 6, w: 4, h: 6, moved: false, static: false },
   ],
   xxs: [
-    { i: "habits-overview", x: 0, y: 0, w: 2, h: 3 },
-    { i: "quick-actions", x: 0, y: 3, w: 2, h: 3 },
-    { i: "weekly-progress", x: 0, y: 6, w: 2, h: 4 },
-    { i: "habit-list", x: 0, y: 10, w: 2, h: 6 },
+    { i: "habits-overview", x: 0, y: 0, w: 2, h: 3, moved: false, static: false },
+    { i: "quick-actions", x: 0, y: 3, w: 2, h: 3, moved: false, static: false },
+    { i: "habit-list", x: 0, y: 6, w: 2, h: 6, moved: false, static: false },
   ],
 });
 
@@ -196,7 +188,6 @@ const loadActiveWidgetsFromStorage = () => {
 const clearStoredLayouts = () => {
   try {
     localStorage.removeItem(LAYOUTS_STORAGE_KEY);
-    console.log("Stored layouts cleared");
   } catch (error) {
     console.warn("Failed to clear layouts from localStorage:", error);
   }
@@ -217,6 +208,7 @@ const throttle = (func, limit) => {
 };
 
 const ContentGrid = () => {
+  const navigate = useNavigate();
   const gridRef = useRef(null);
   // Initialize layouts from localStorage or use defaults
   const [layouts, setLayouts] = useState(() => loadLayoutsFromStorage());
@@ -227,6 +219,12 @@ const ContentGrid = () => {
   const [globalEditMode, setGlobalEditMode] = useState(false);
   const [widgetEditStates, setWidgetEditStates] = useState({});
   const [showWidgetPicker, setShowWidgetPicker] = useState(false);
+  const [showEnhancedCsvImport, setShowEnhancedCsvImport] = useState(false);
+  const [showLLMSettings, setShowLLMSettings] = useState(false);
+  
+  // Habit modal states
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [currentHabit, setCurrentHabit] = useState(null);
 
   // Auto-save layouts and widgets to localStorage
   useEffect(() => {
@@ -235,169 +233,439 @@ const ContentGrid = () => {
   useEffect(() => {
     saveActiveWidgetsToStorage(activeWidgets);
   }, [activeWidgets]);
-  // Filter state management
-  const [filters, setFilters] = useState(() => filterState.loadFilters());
 
-  // Initialize habit data with enhanced historical data
-  const { habits: initialHabits, completions: initialCompletions } = useMemo(
-    () => habitDataService.initialize(),
-    []
-  );
+  // Independent filter state management for each widget
+  const [chartFilters, setChartFilters] = useState(() => {
+    const getCurrentWeekNumber = () => {
+      const today = new Date();
+      const currentMonth = today.getMonth();
+      const currentYear = today.getFullYear();
 
-  // Habit data state management
-  const [habits, setHabits] = useState(initialHabits);
-  const [completions, setCompletions] = useState(initialCompletions);
+      // Get first day of current month
+      const monthStart = new Date(currentYear, currentMonth, 1);
 
-  // Save filters when they change
-  useEffect(() => {
-    filterState.saveFilters(filters);
-  }, [filters]);
+      // Get the Monday of the week containing the first day of month
+      const firstWeekStart = habitUtils.getWeekStart(monthStart);
+
+      // Get the Monday of the week containing today
+      const currentWeekStart = habitUtils.getWeekStart(today);
+
+      // Calculate week number by comparing week starts
+      const weekDiff = Math.floor(
+        (currentWeekStart - firstWeekStart) / (7 * 24 * 60 * 60 * 1000)
+      );
+
+      // Week numbers start from 1
+      return weekDiff + 1;
+    };
+
+    const currentMonth = new Date().getMonth() + 1; // 1-12 range for UI consistency
+    const currentWeekNumber = getCurrentWeekNumber();
+
+    return {
+      mode: "week",
+      period: currentWeekNumber, // Default to current week
+      selectedMonth: currentMonth,
+    };
+  });
+
+  const [databaseFilters, setDatabaseFilters] = useState(() => {
+    const getCurrentWeekNumber = () => {
+      const today = new Date();
+      const currentMonth = today.getMonth();
+      const currentYear = today.getFullYear();
+
+      // Get first day of current month
+      const monthStart = new Date(currentYear, currentMonth, 1);
+
+      // Get the Monday of the week containing the first day of month
+      const firstWeekStart = habitUtils.getWeekStart(monthStart);
+
+      // Get the Monday of the week containing today
+      const currentWeekStart = habitUtils.getWeekStart(today);
+
+      // Calculate week number by comparing week starts
+      const weekDiff = Math.floor(
+        (currentWeekStart - firstWeekStart) / (7 * 24 * 60 * 60 * 1000)
+      );
+
+      // Week numbers start from 1
+      return weekDiff + 1;
+    };
+
+    const currentMonth = new Date().getMonth() + 1; // 1-12 range for UI consistency
+    const currentWeekNumber = getCurrentWeekNumber();
+
+    return {
+      mode: "week",
+      period: currentWeekNumber, // Default to current week
+      selectedMonth: currentMonth,
+    };
+  });
+
+  // Helper function to get the current week number within a month
+  const getCurrentWeekNumber = useCallback(() => {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+
+    // Get first day of current month
+    const monthStart = new Date(currentYear, currentMonth, 1);
+
+    // Get the Monday of the week containing the first day of month
+    const firstWeekStart = habitUtils.getWeekStart(monthStart);
+
+    // Get the Monday of the week containing today
+    const currentWeekStart = habitUtils.getWeekStart(today);
+
+    // Calculate week number by comparing week starts
+    const weekDiff = Math.floor(
+      (currentWeekStart - firstWeekStart) / (7 * 24 * 60 * 60 * 1000)
+    );
+
+    // Week numbers start from 1
+    return weekDiff + 1;
+  }, []);
+
+  // Get data from new HabitContext
+  const {
+    habits,
+    entries,
+    isLoading,
+    error,
+    createHabit,
+    updateHabit,
+    deleteHabit,
+    toggleHabitCompletion,
+  } = useHabits();
+
+  // Helper function to get date range from filters using HabitContext's calculations (fixed timezone)
+  const getDateRangeFromFilters = useCallback((filterObj) => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+
+    if (filterObj.chartMode === "week") {
+      // Use proper calendar weeks with local time (fixed timezone issues)
+      const selectedMonth = filterObj.chartSelectedMonth - 1; // Convert to 0-11 range
+      const weekPeriod = filterObj.chartPeriod || 1;
+
+      // Get first day of selected month
+      const monthStart = new Date(currentYear, selectedMonth, 1);
+
+      // Get the Monday of the week containing the first day of month
+      const firstWeekStart = habitUtils.getWeekStart(monthStart);
+
+      // Calculate the specific week start (0-based, so subtract 1)
+      const weekStart = new Date(firstWeekStart);
+      weekStart.setDate(firstWeekStart.getDate() + (weekPeriod - 1) * 7);
+
+      // Week end is 6 days after week start
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+
+      return {
+        start: weekStart,
+        end: weekEnd,
+      };
+    } else if (filterObj.chartMode === "month") {
+      // For month mode, use the selected month
+      const selectedMonth = filterObj.chartSelectedMonth - 1; // Convert to 0-11 range
+      const startOfMonth = new Date(currentYear, selectedMonth, 1);
+      const endOfMonth = new Date(currentYear, selectedMonth + 1, 0);
+      return {
+        start: startOfMonth,
+        end: endOfMonth,
+      };
+    } else {
+      // Continuous/all time mode - get a 90-day range
+      const endDate = new Date();
+      const startDate = new Date(endDate);
+      startDate.setDate(endDate.getDate() - 89);
+      return {
+        start: startDate,
+        end: endDate,
+      };
+    }
+  }, []);
+
+  // Calculate chart-specific date range (only for chart widgets)
+  const chartDateRange = useMemo(() => {
+    const filterObj = {
+      chartMode: chartFilters.mode,
+      chartPeriod: chartFilters.period,
+      chartSelectedMonth: chartFilters.selectedMonth,
+    };
+    const range = getDateRangeFromFilters(filterObj);
+    return range;
+  }, [chartFilters, getDateRangeFromFilters]);
+
+  // Calculate database-specific date range (only for database widgets)
+  const databaseDateRange = useMemo(() => {
+    const filterObj = {
+      chartMode: "week", // Database is always weekly
+      chartPeriod: databaseFilters.period,
+      chartSelectedMonth: databaseFilters.selectedMonth,
+    };
+    const range = getDateRangeFromFilters(filterObj);
+    return range;
+  }, [databaseFilters, getDateRangeFromFilters]);
 
   // CSV Import state
   const [showCsvImport, setShowCsvImport] = useState(false);
 
-  // Get filter options (dynamically based on selected months)
+  // Get filter options - generate proper calendar weeks
   const filterOptions = useMemo(() => {
-    const chartMonth = filters.chartMode === 'week' ? filters.chartSelectedMonth : null;
-    const dbMonth = filters.databaseSelectedMonth; // Database is always weekly
-    
-    // Use the appropriate month for generating options
-    const monthForOptions = chartMonth || dbMonth || new Date().getMonth() + 1;
-    return habitDataService.getFilterOptions(monthForOptions);
-  }, [filters.chartMode, filters.chartSelectedMonth, filters.databaseSelectedMonth]);
+    // Generate weeks for the selected chart month using HabitContext logic
+    const getWeeksForMonth = (month) => {
+      const year = new Date().getFullYear();
+      const weeks = [];
+
+      // Get first day of selected month
+      const monthStart = new Date(year, month - 1, 1); // month is 1-based
+      const monthEnd = new Date(year, month, 0);
+
+      // Start from the Monday of the week containing the first day of month
+      let currentWeekStart = habitUtils.getWeekStart(monthStart);
+      let weekNumber = 1;
+
+      // Generate weeks that overlap with this month
+      while (currentWeekStart <= monthEnd) {
+        const weekEnd = new Date(currentWeekStart);
+        weekEnd.setDate(currentWeekStart.getDate() + 6);
+
+        // Format dates as DD/MM
+        const formatDate = (date) => {
+          const day = date.getDate().toString().padStart(2, "0");
+          const month = (date.getMonth() + 1).toString().padStart(2, "0");
+          return `${day}/${month}`;
+        };
+
+        const startStr = formatDate(currentWeekStart);
+        const endStr = formatDate(weekEnd);
+
+        weeks.push({
+          value: weekNumber,
+          label: `Week ${weekNumber} (${startStr} - ${endStr})`,
+        });
+
+        // Move to next week
+        currentWeekStart = new Date(currentWeekStart);
+        currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+        weekNumber++;
+      }
+
+      return weeks;
+    };
+
+    const chartWeeks = getWeeksForMonth(chartFilters.selectedMonth);
+    const databaseWeeks = getWeeksForMonth(databaseFilters.selectedMonth);
+
+    return {
+      chartModes: [
+        { value: "week", label: "Weekly View" },
+        { value: "month", label: "Monthly View" },
+        { value: "continuous", label: "All Time" },
+      ],
+      weeks: chartWeeks,
+      databaseWeeks: databaseWeeks,
+      months: [
+        { value: 1, label: "January" },
+        { value: 2, label: "February" },
+        { value: 3, label: "March" },
+        { value: 4, label: "April" },
+        { value: 5, label: "May" },
+        { value: 6, label: "June" },
+        { value: 7, label: "July" },
+        { value: 8, label: "August" },
+        { value: 9, label: "September" },
+        { value: 10, label: "October" },
+        { value: 11, label: "November" },
+        { value: 12, label: "December" },
+      ],
+    };
+  }, [chartFilters.selectedMonth, databaseFilters.selectedMonth]);
+
   // Filter update handlers
   const updateChartFilter = useCallback((mode, period) => {
-    setFilters((prev) => ({
-      ...prev,
-      chartMode: mode,
-      chartPeriod: period,
-    }));
+    setChartFilters((prev) => {
+      // When mode changes, reset period to 1 to ensure validity
+      const newPeriod = mode !== prev.mode ? 1 : period;
+      return {
+        ...prev,
+        mode: mode,
+        period: newPeriod,
+      };
+    });
   }, []);
 
   const updateChartMonth = useCallback((month) => {
-    setFilters((prev) => ({
-      ...prev,
-      chartSelectedMonth: month,
-      chartPeriod: 1, // Reset to first week when month changes
-    }));
+    setChartFilters((prev) => {
+      // Calculate which week of the new month contains the current date
+      const getCurrentWeekInMonth = (targetMonth) => {
+        const today = new Date();
+        const currentYear = today.getFullYear();
+
+        // Check if the target month contains today
+        if (targetMonth - 1 === today.getMonth()) {
+          // Calculate current week number for current month
+          const monthStart = new Date(currentYear, targetMonth - 1, 1);
+          const firstWeekStart = habitUtils.getWeekStart(monthStart);
+          const currentWeekStart = habitUtils.getWeekStart(today);
+          const weekDiff = Math.floor(
+            (currentWeekStart - firstWeekStart) / (7 * 24 * 60 * 60 * 1000)
+          );
+          return weekDiff + 1;
+        } else {
+          // For other months, default to first week
+          return 1;
+        }
+      };
+
+      const newPeriod = getCurrentWeekInMonth(month);
+
+      return {
+        ...prev,
+        selectedMonth: month,
+        period: newPeriod,
+      };
+    });
   }, []);
+
   const updateDatabaseFilter = useCallback((period) => {
-    setFilters((prev) => ({
+    setDatabaseFilters((prev) => ({
       ...prev,
-      databasePeriod: period,
+      period: period,
     }));
   }, []);
 
   const updateDatabaseMonth = useCallback((month) => {
-    setFilters((prev) => ({
-      ...prev,
-      databaseSelectedMonth: month,
-      databasePeriod: 1, // Reset to first week when month changes
-    }));
-  }, []);
-  // Habit event handlers
-  const handleToggleCompletion = useCallback((key, isCompleted) => {
-    console.log(`Toggling completion for ${key}: ${isCompleted}`);
+    setDatabaseFilters((prev) => {
+      // Calculate which week of the new month contains the current date
+      const getCurrentWeekInMonth = (targetMonth) => {
+        const today = new Date();
+        const currentYear = today.getFullYear();
 
-    // Handle both new date-based keys and old day-based keys
-    const today = new Date();
-    const currentDay = today.getDay();
-    const startOfWeek = new Date(today);
-    const daysToSubtract = currentDay === 0 ? 6 : currentDay - 1;
-    startOfWeek.setDate(today.getDate() - daysToSubtract);
-
-    setCompletions((prev) => {
-      const newCompletions = { ...prev };
-
-      if (key.includes("-")) {
-        // Parse the key to determine if it's day-based or date-based
-        const parts = key.split("-");
-        const lastPart = parts[parts.length - 1];
-        const habitId = parseInt(lastPart);
-
-        if (!isNaN(habitId)) {
-          const keyWithoutId = parts.slice(0, -1).join("-");
-
-          // Check if it's a date (YYYY-MM-DD format) or day name
-          const isDateKey = /^\d{4}-\d{2}-\d{2}$/.test(keyWithoutId);
-
-          if (isDateKey) {
-            // It's a date-based key, also set the corresponding day-based key
-            const date = new Date(keyWithoutId);
-            const dayName = date.toLocaleDateString("en-US", {
-              weekday: "long",
-            });
-            const dayKey = `${dayName}-${habitId}`;
-
-            newCompletions[key] = isCompleted;
-            newCompletions[dayKey] = isCompleted;
-          } else {
-            // It's a day-based key, also set the corresponding date-based key
-            const dayName = keyWithoutId;
-            const daysOfWeek = [
-              "Monday",
-              "Tuesday",
-              "Wednesday",
-              "Thursday",
-              "Friday",
-              "Saturday",
-              "Sunday",
-            ];
-            const dayIndex = daysOfWeek.indexOf(dayName);
-
-            if (dayIndex >= 0) {
-              const date = new Date(startOfWeek);
-              date.setDate(startOfWeek.getDate() + dayIndex);
-              const dateStr = date.toISOString().split("T")[0];
-              const dateKey = `${dateStr}-${habitId}`;
-
-              newCompletions[key] = isCompleted;
-              newCompletions[dateKey] = isCompleted;
-            } else {
-              newCompletions[key] = isCompleted;
-            }
-          }
+        // Check if the target month contains today
+        if (targetMonth - 1 === today.getMonth()) {
+          // Calculate current week number for current month
+          const monthStart = new Date(currentYear, targetMonth - 1, 1);
+          const firstWeekStart = habitUtils.getWeekStart(monthStart);
+          const currentWeekStart = habitUtils.getWeekStart(today);
+          const weekDiff = Math.floor(
+            (currentWeekStart - firstWeekStart) / (7 * 24 * 60 * 60 * 1000)
+          );
+          return weekDiff + 1;
         } else {
-          newCompletions[key] = isCompleted;
+          // For other months, default to first week
+          return 1;
         }
-      } else {
-        newCompletions[key] = isCompleted;
+      };
+
+      const newPeriod = getCurrentWeekInMonth(month);
+
+      return {
+        ...prev,
+        selectedMonth: month,
+        period: newPeriod,
+      };
+    });
+  }, []);
+
+  useEffect(() => {
+    const handleAddHabitEvent = () => {
+      // Navigate to habits page where user can create habits
+      navigate('/app/habits');
+    };
+
+    const handleQuickActionsEvent = () => {
+      // Could show a quick actions modal or navigate to habits page
+      // For now, let's also navigate to habits page as a useful action
+      navigate('/app/habits');
+    };
+
+    window.addEventListener("openAddHabitModal", handleAddHabitEvent);
+    window.addEventListener("openQuickActions", handleQuickActionsEvent);
+
+    return () => {
+      window.removeEventListener("openAddHabitModal", handleAddHabitEvent);
+      window.removeEventListener("openQuickActions", handleQuickActionsEvent);
+    };
+  }, []);
+
+  // Habit event handlers
+  const handleAddHabit = useCallback(() => {
+    setCurrentHabit(null);
+    setEditModalOpen(true);
+  }, []);
+
+  const handleCloseHabitModal = useCallback(() => {
+    setEditModalOpen(false);
+    setCurrentHabit(null);
+  }, []);
+
+  const handleDeleteHabit = useCallback(
+    async (habitId) => {
+      const result = await deleteHabit(habitId);
+      if (!result.success) {
+        console.error("Failed to delete habit:", result.error);
+        // You could show a toast notification here
       }
-
-      return newCompletions;
-    });
-  }, []);
-
-  const handleAddHabit = useCallback((habit) => {
-    console.log("Adding new habit:", habit);
-    setHabits((prev) => [...prev, habit]);
-  }, []);
-
-  const handleDeleteHabit = useCallback((habitId) => {
-    console.log("Deleting habit:", habitId);
-    setHabits((prev) => prev.filter((h) => h.id !== habitId));
-    // Also remove completions for this habit
-    setCompletions((prev) => {
-      const newCompletions = { ...prev };
-      Object.keys(newCompletions).forEach((key) => {
-        if (key.endsWith(`-${habitId}`)) {
-          delete newCompletions[key];
-        }
-      });
-      return newCompletions;
-    });
-  }, []);
+    },
+    [deleteHabit]
+  );
 
   const handleEditHabit = useCallback((habit) => {
-    console.log("Editing habit:", habit);
-    setHabits((prev) => prev.map((h) => (h.id === habit.id ? habit : h)));
+    setCurrentHabit(habit);
+    setEditModalOpen(true);
   }, []);
 
-  // CSV Import handler
+  const handleSaveHabit = useCallback(async (habitData) => {
+    try {
+      let result;
+      if (currentHabit) {
+        // Updating existing habit
+        result = await updateHabit(currentHabit._id, habitData);
+      } else {
+        // Creating new habit
+        result = await createHabit(habitData);
+      }
+      
+      if (result.success) {
+        setEditModalOpen(false);
+        setCurrentHabit(null);
+      } else {
+        console.error("Failed to save habit:", result.error);
+        // You could show a toast notification here
+      }
+    } catch (error) {
+      console.error("Error saving habit:", error);
+    }
+  }, [currentHabit, createHabit, updateHabit]);
+
+  const handleToggleCompletion = useCallback(
+    async (habitId, date) => {
+      const result = await toggleHabitCompletion(habitId, date);
+      if (!result.success) {
+        console.error("Failed to toggle habit:", result.error);
+        // You could show a toast notification here
+      }
+    },
+    [toggleHabitCompletion]
+  ); // Enhanced CSV Import handler
+  const handleEnhancedCsvImport = useCallback((importedData) => {
+    // The enhanced import uses the HabitContext directly, so we just need to close the modal
+    setShowEnhancedCsvImport(false);
+
+    // Optionally show a success message or update UI
+    if (importedData.habits.length > 0) {
+      // Could show a toast notification here
+    }
+  }, []);
+
+  // CSV Import handler (legacy)
   const handleCsvImport = useCallback((importedData) => {
-    console.log("Importing CSV data:", importedData);
-    setHabits(importedData.habits);
-    setCompletions(importedData.completions);
+    // The CSV import should now use the store's dual-write system
+    // which is handled in the CsvImportModal, so we just need to close the modal
     setShowCsvImport(false);
   }, []);
 
@@ -472,7 +740,6 @@ const ContentGrid = () => {
 
       // Check if widget is already active
       if (activeWidgets.includes(widgetType)) {
-        console.log(`Widget ${widgetType} is already active`);
         setShowWidgetPicker(false);
         return;
       }
@@ -538,48 +805,14 @@ const ContentGrid = () => {
       };
     },
     [currentBreakpoint]
-  ); // Get filtered data based on current filters
-  const filteredData = useMemo(() => {
-    return habitDataService.getFilteredData(habits, completions, filters);
-  }, [habits, completions, filters]);
+  ); // Remove shared filteredData - each widget will manage its own data
 
-  // Helper function to calculate daily completion data (now using filtered data)
-  const calculateDailyCompletions = useCallback(() => {
-    return filteredData.chartData;
-  }, [filteredData.chartData]);
+  // Remove helper function - each widget will calculate its own data
 
-  // Memoized widget data to prevent unnecessary re-renders
-  const widgetData = useMemo(
-    () => ({
-      "habits-overview": {
-        title: "Daily Habits Completion",
-        type: "area", // Changed from line to area to match weekly progress style
-        data: calculateDailyCompletions(),
-      },
-      "weekly-progress": {
-        title: "Weekly Progress Trend",
-        type: "area",
-        data: [
-          { name: "Week 1", value: 75 },
-          { name: "Week 2", value: 82 },
-          { name: "Week 3", value: 78 },
-          { name: "Week 4", value: 85 },
-          { name: "Week 5", value: 89 },
-          { name: "Week 6", value: 92 },
-        ],
-      },
-      "habit-list": [
-        { id: 1, name: "Morning Exercise", completed: true, streak: 15 },
-        { id: 2, name: "Read 30 minutes", completed: true, streak: 8 },
-        { id: 3, name: "Meditate", completed: false, streak: 5 },
-        { id: 4, name: "Drink water", completed: true, streak: 22 },
-        { id: 5, name: "Learn coding", completed: false, streak: 3 },
-      ],
-    }),
-    [calculateDailyCompletions]
-  );
-  // Memoized widgets configuration for performance
-  const widgets = useMemo(
+  // Remove shared widgetData - each widget will manage its own data independently
+
+  // Independent chart widgets (habits-overview)
+  const chartWidgets = useMemo(
     () => ({
       "habits-overview": {
         title: "Habits Overview",
@@ -591,18 +824,21 @@ const ContentGrid = () => {
             >
               <ChartWidget
                 title="Daily Habits Completion"
-                type="area"
-                data={widgetData["habits-overview"].data}
-                color="var(--color-brand-400)"                filterComponent={
+                type="line"
+                chartType="completion"
+                dateRange={chartDateRange}
+                color="var(--color-brand-400)"
+                onAddHabit={handleAddHabit}
+                filterComponent={
                   <ChartFilterControls
-                    mode={filters.chartMode}
-                    period={filters.chartPeriod}
-                    selectedMonth={filters.chartSelectedMonth}
-                    onModeChange={(mode) =>
-                      updateChartFilter(mode, filters.chartPeriod)
+                    mode={chartFilters.mode}
+                    period={chartFilters.period}
+                    selectedMonth={chartFilters.selectedMonth}
+                    onModeChange={
+                      (mode) => updateChartFilter(mode, 1) // Reset to first period when mode changes
                     }
                     onPeriodChange={(period) =>
-                      updateChartFilter(filters.chartMode, period)
+                      updateChartFilter(chartFilters.mode, period)
                     }
                     onMonthChange={updateChartMonth}
                     options={filterOptions}
@@ -614,80 +850,105 @@ const ContentGrid = () => {
           );
         },
       },
+    }),
+    [
+      chartFilters,
+      chartDateRange,
+      updateChartFilter,
+      updateChartMonth,
+      getWidgetProps,
+      filterOptions,
+    ]
+  );
+
+  // Independent quick actions widget
+  const quickActionsWidget = useMemo(
+    () => ({
       "quick-actions": {
         title: "Quick Actions",
         component: (layout) => {
           const props = getWidgetProps("quick-actions", layout);
           return (
             <Suspense fallback={<WidgetSkeleton title="Quick Actions" />}>
-              <QuickActionsWidget {...props} />
+              <QuickActionsWidget 
+                habits={habits}
+                entries={entries}
+                onAddHabit={handleAddHabit}
+                onToggleCompletion={handleToggleCompletion}
+                onShowCsvImport={() => {}} // Disabled for deployment
+                onShowLLMSettings={() => setShowLLMSettings(true)}
+                {...props} 
+              />
             </Suspense>
           );
         },
       },
-      "weekly-progress": {
-        title: "Weekly Progress",
+    }),
+    [getWidgetProps, habits, entries, handleAddHabit, handleToggleCompletion]
+  );
+
+  // Independent database widget (habit-list)
+  const databaseWidget = useMemo(
+    () => ({
+      "habit-list": {
+        title: "My Habits",
         component: (layout) => {
-          const props = getWidgetProps("weekly-progress", layout);
+          const props = getWidgetProps("habit-list", layout);
+          const isInEditMode = isWidgetInEditMode("habit-list");
           return (
-            <Suspense fallback={<WidgetSkeleton title="Weekly Progress" />}>
-              <ChartWidget
-                title="Weekly Habit Streaks"
-                type="area"
-                data={widgetData["weekly-progress"].data}
-                color="var(--color-brand-400)"
+            <Suspense fallback={<WidgetSkeleton title="My Habits" />}>
+              <DatabaseWidgetBridge
+                habits={habits}
+                completions={entries} // Use raw entries, let the widget filter them
+                onToggleCompletion={handleToggleCompletion}
+                onAddHabit={handleAddHabit}
+                onDeleteHabit={handleDeleteHabit}
+                onEditHabit={handleEditHabit}
+                viewType="table"
+                persistenceKey="contentGrid_databaseViewType"
+                dateRange={databaseDateRange}
+                mode="week" // Database is always weekly
+                isInEditMode={isInEditMode}
+                filterComponent={
+                  <DatabaseFilterControls
+                    period={databaseFilters.period}
+                    selectedMonth={databaseFilters.selectedMonth}
+                    onPeriodChange={updateDatabaseFilter}
+                    onMonthChange={updateDatabaseMonth}
+                    options={filterOptions}
+                  />
+                }
                 {...props}
               />
             </Suspense>
           );
         },
       },
-      "habit-list": {
-        title: "My Habits",
-        component: (layout) => {
-          const props = getWidgetProps("habit-list", layout);          return (
-            <DatabaseWidget
-              habits={habits}
-              completions={filteredData.databaseCompletions}
-              onToggleCompletion={handleToggleCompletion}
-              onAddHabit={handleAddHabit}
-              onDeleteHabit={handleDeleteHabit}
-              onEditHabit={handleEditHabit}
-              viewType="table"
-              dateRange={filteredData.databaseRange}
-              mode={filteredData.databaseMode}
-              filterComponent={
-                <DatabaseFilterControls
-                  period={filters.databasePeriod}
-                  selectedMonth={filters.databaseSelectedMonth}
-                  onPeriodChange={updateDatabaseFilter}
-                  onMonthChange={updateDatabaseMonth}
-                  options={filterOptions}
-                />
-              }
-              {...props}
-            />
-          );
-        },
-      },    }),
+    }),
     [
-      currentBreakpoint,
-      getWidgetProps,
+      databaseFilters,
+      databaseDateRange,
       habits,
-      completions,
+      entries,
       handleToggleCompletion,
       handleAddHabit,
       handleDeleteHabit,
       handleEditHabit,
-      widgetData,
-      filters,
-      filteredData,
-      updateChartFilter,
-      updateChartMonth,
       updateDatabaseFilter,
       updateDatabaseMonth,
+      getWidgetProps,
       filterOptions,
     ]
+  );
+
+  // Combine all widgets into a single object for rendering
+  const widgets = useMemo(
+    () => ({
+      ...chartWidgets,
+      ...quickActionsWidget,
+      ...databaseWidget,
+    }),
+    [chartWidgets, quickActionsWidget, databaseWidget]
   );
   return (
     <div className="w-full h-full">
@@ -708,28 +969,46 @@ const ContentGrid = () => {
           <label className="flex items-center gap-2 text-sm font-outfit text-[var(--color-text-secondary)]">
             <input
               type="checkbox"
+              id="global-edit-mode"
+              name="globalEditMode"
               checked={globalEditMode}
               onChange={(e) => setGlobalEditMode(e.target.checked)}
               className="w-4 h-4 rounded border border-[var(--color-border-primary)] bg-[var(--color-surface-elevated)] text-[var(--color-brand-500)] focus:ring-[var(--color-brand-500)] focus:ring-2 focus:ring-opacity-50"
             />
             <span>Edit All</span>
-          </label>          {/* Add widget button */}
+          </label>{" "}
+          {/* Add widget button */}
           <button
             onClick={() => setShowWidgetPicker(!showWidgetPicker)}
             className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg text-sm transition-all duration-200 font-outfit"
           >
             <PlusIcon className="w-4 h-4" />
             Add Widget
-          </button>
-
-          {/* CSV Import button */}
-          <button
-            onClick={() => setShowCsvImport(true)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm transition-all duration-200 font-outfit"
+          </button>{" "}
+          {/* Primary CSV Import button - Enhanced with AI */}
+          {/* <button
+            onClick={() => setShowEnhancedCsvImport(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white rounded-lg text-sm transition-all duration-200 font-outfit font-medium shadow-lg"
           >
-            📄 Import CSV
-          </button>
-
+            <span className="text-sm">🤖</span>
+            Import CSV with AI
+          </button> */}
+          {/* LLM Settings button */}
+          {/* <button
+            onClick={() => setShowLLMSettings(true)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-sm transition-all duration-200 font-outfit"
+          >
+            <span className="text-sm">⚙️</span>
+            AI Settings
+          </button> */}
+          {/* Legacy CSV Import button - Secondary option */}
+          {/* <button
+            onClick={() => setShowCsvImport(true)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-gray-400 hover:bg-gray-500 text-white rounded-lg text-xs transition-all duration-200 font-outfit opacity-75"
+            title="Basic CSV import without AI assistance"
+          >
+            📄 Basic Import
+          </button> */}
           {/* Reset layouts button */}
           {(globalEditMode ||
             Object.values(widgetEditStates).some(Boolean)) && (
@@ -757,6 +1036,7 @@ const ContentGrid = () => {
         isResizable={
           globalEditMode || Object.values(widgetEditStates).some(Boolean)
         }
+        dragHandleClassName="widget-drag-handle"
         margin={[20, 20]}
         containerPadding={[0, 0]}
         useCSSTransforms={true}
@@ -786,24 +1066,17 @@ const ContentGrid = () => {
                 <div className="h-full flex flex-col">
                   {/* Widget header with controls */}
                   <div
-                    className={`px-4 py-3 bg-[var(--color-surface-elevated)]/50 backdrop-blur-sm border-b border-[var(--color-border-primary)]/30 ${
-                      isInEditMode ? "cursor-move" : ""
-                    }`}
-                    onMouseDown={(e) => {
-                      // Allow dragging only if clicking on the title area, not on buttons
-                      const target = e.target;
-                      const isButton = target.closest("button");
-                      if (isButton) {
-                        e.stopPropagation();
-                      }
-                    }}
+                    className={`px-4 py-3 bg-[var(--color-surface-elevated)]/50 backdrop-blur-sm border-b border-[var(--color-border-primary)]/30`}
                   >
                     {" "}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        {/* Drag handle indicator for edit mode */}
+                        {/* Drag handle indicator for edit mode - ONLY this should be draggable */}
                         {isInEditMode && (
-                          <div className="flex flex-col gap-0.5 cursor-move opacity-60 hover:opacity-100 transition-opacity">
+                          <div 
+                            className="widget-drag-handle flex flex-col gap-0.5 cursor-move opacity-60 hover:opacity-100 transition-opacity"
+                            title="Drag to move widget"
+                          >
                             <div className="w-1 h-1 bg-[var(--color-text-tertiary)] rounded-full"></div>
                             <div className="w-1 h-1 bg-[var(--color-text-tertiary)] rounded-full"></div>
                             <div className="w-1 h-1 bg-[var(--color-text-tertiary)] rounded-full"></div>
@@ -817,7 +1090,8 @@ const ContentGrid = () => {
                               .breakpoint === "xs"
                               ? "text-sm"
                               : "text-lg"
-                          } ${isInEditMode ? "cursor-move" : ""}`}
+                          } ${isInEditMode ? "cursor-move widget-drag-handle" : ""}`}
+                          title={isInEditMode ? "Drag to move widget" : widget.title}
                         >
                           {widget.title}
                         </h3>
@@ -896,7 +1170,13 @@ const ContentGrid = () => {
                   </div>
 
                   {/* Widget content */}
-                  <div className="flex-1 p-4 min-h-0 overflow-hidden">
+                  <div 
+                    className="flex-1 p-4 min-h-0 overflow-hidden"
+                    onMouseDown={(e) => {
+                      // Prevent widget dragging from content area to allow internal DnD
+                      e.stopPropagation();
+                    }}
+                  >
                     {widget.component(currentLayout)}
                   </div>
                 </div>
@@ -971,16 +1251,32 @@ const ContentGrid = () => {
                 );
               })}
             </div>
-          </div>        </div>
-      )}
-
-      {/* CSV Import Modal */}
-      <CsvImportModal
+          </div>{" "}
+        </div>
+      )}{" "}
+      {/* CSV Import Modal - Temporarily disabled for deployment */}
+      {/* <CsvImportModal
         isOpen={showCsvImport}
         onClose={() => setShowCsvImport(false)}
         onImport={handleCsvImport}
-        existingHabits={habits}
-        existingCompletions={completions}
+      /> */}
+      {/* Enhanced CSV Import Modal - Temporarily disabled for deployment */}
+      {/* <EnhancedCsvImportModal
+        isOpen={showEnhancedCsvImport}
+        onClose={() => setShowEnhancedCsvImport(false)}
+        onImportComplete={handleEnhancedCsvImport}
+      /> */}
+      {/* LLM Settings Modal */}
+      <LLMSettingsModal
+        isOpen={showLLMSettings}
+        onClose={() => setShowLLMSettings(false)}
+      />
+      {/* Habit Edit/Create Modal */}
+      <CustomHabitEditModal
+        isOpen={editModalOpen}
+        onClose={handleCloseHabitModal}
+        habit={currentHabit}
+        onSave={handleSaveHabit}
       />
     </div>
   );

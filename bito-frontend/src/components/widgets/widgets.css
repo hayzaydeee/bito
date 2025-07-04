@@ -3,11 +3,90 @@
   position: relative;
   overflow: hidden;
   transition: all 0.2s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .widget-container.dragging {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   transform: rotate(2deg);
+}
+
+/* Global widget scrollability - apply to all grid items */
+.react-grid-item {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.react-grid-item > div {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Widget content area scrollability */
+.widget-content-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-primary) transparent;
+}
+
+.widget-content-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+.widget-content-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.widget-content-area::-webkit-scrollbar-thumb {
+  background-color: var(--color-border-primary);
+  border-radius: 3px;
+  opacity: 0.5;
+}
+
+.widget-content-area::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-text-tertiary);
+  opacity: 0.8;
+}
+
+/* Widget header fixed positioning */
+.widget-header {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+  background: var(--color-surface-elevated);
+  border-bottom: 1px solid var(--color-border-primary);
+}
+
+/* Ensure all chart containers are scrollable */
+.chart-widget,
+.database-widget,
+.analytics-widget,
+.habit-widget,
+.settings-widget {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.chart-widget .widget-content-area,
+.database-widget .widget-content-area,
+.analytics-widget .widget-content-area,
+.habit-widget .widget-content-area,
+.settings-widget .widget-content-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
 }
 
 /* React Grid Layout responsive overrides */
@@ -43,6 +122,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 2px solid transparent;
 }
 
 /* Add resize dots pattern */
@@ -61,30 +141,73 @@
   background-repeat: no-repeat;
 }
 
-.react-grid-item:hover > .react-resizable-handle,
-.react-grid-item.react-draggable-dragging > .react-resizable-handle {
-  /* Hide by default, will be overridden by edit-mode styles */
-  opacity: 0;
-  visibility: hidden;
-}
-
-/* Show resize handle only for widgets in edit mode */
+/* Show resize handle only for specific widgets in edit mode OR when global edit is active */
 .react-grid-item[data-edit-mode="true"] > .react-resizable-handle,
 .react-grid-item.edit-mode > .react-resizable-handle {
-  opacity: 0.8;
-  visibility: visible;
-  background-color: var(--color-brand-500);
-  border: 2px solid var(--color-brand-600);
+  opacity: 0.9 !important;
+  visibility: visible !important;
+  background-color: var(--color-brand-500) !important;
+  border: 2px solid var(--color-brand-600) !important;
   border-radius: 0 0 8px 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
 }
 
 .react-grid-item[data-edit-mode="true"]:hover > .react-resizable-handle,
 .react-grid-item.edit-mode:hover > .react-resizable-handle {
-  opacity: 1;
-  background-color: var(--color-brand-600);
-  transform: scale(1.15);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  opacity: 1 !important;
+  background-color: var(--color-brand-600) !important;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Show resize handles for ALL widgets ONLY when global edit mode is active */
+.layout.edit-active .react-grid-item > .react-resizable-handle,
+.layout.resizable-mode .react-grid-item > .react-resizable-handle {
+  opacity: 0.8 !important;
+  visibility: visible !important;
+  background-color: var(--color-brand-500) !important;
+  border: 2px solid var(--color-brand-600) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+.layout.edit-active .react-grid-item:hover > .react-resizable-handle,
+.layout.resizable-mode .react-grid-item:hover > .react-resizable-handle {
+  opacity: 1 !important;
+  background-color: var(--color-brand-600) !important;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Override: Hide resize handles for widgets NOT in edit mode when global edit is OFF */
+.layout:not(.edit-active):not(.resizable-mode) .react-grid-item:not([data-edit-mode="true"]):not(.edit-mode) > .react-resizable-handle {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Alternative fallback - show resize handles when grid is in resizable mode */
+.layout.resizable-mode .react-grid-item > .react-resizable-handle,
+.layout.edit-active .react-grid-item > .react-resizable-handle {
+  opacity: 0.8 !important;
+  visibility: visible !important;
+  background-color: var(--color-brand-500) !important;
+  border: 2px solid var(--color-brand-600) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Show on hover for any grid item when in edit mode */
+.layout.edit-active .react-grid-item:hover > .react-resizable-handle,
+.layout.resizable-mode .react-grid-item:hover > .react-resizable-handle {
+  opacity: 1 !important;
+  visibility: visible !important;
+  background-color: var(--color-brand-600) !important;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Ensure Settings page follows the same rules */
+.settings-grid.layout:not(.edit-active):not(.resizable-mode) .react-grid-item:not([data-edit-mode="true"]):not(.edit-mode) > .react-resizable-handle {
+  opacity: 0 !important;
+  visibility: hidden !important;
 }
 
 /* Widget-specific responsive styles */
@@ -296,5 +419,66 @@
 
 /* Ensure proper click areas */
 .react-grid-item:not(.react-draggable-dragging) .widget-header-buttons button {
+  pointer-events: auto;
+}
+
+/* Glowing Line Chart Styles */
+.glow-line-chart {
+  background: linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.95) 100%) !important;
+  border-radius: 8px;
+}
+
+.glow-line-chart .recharts-line-curve {
+  stroke: var(--color-brand-400) !important;
+  stroke-width: 2px !important;
+  filter: drop-shadow(0 0 4px var(--color-brand-400)) drop-shadow(0 0 8px var(--color-brand-400)) !important;
+}
+
+.glow-line-chart .recharts-dot {
+  fill: var(--color-brand-400) !important;
+  stroke: var(--color-brand-400) !important;
+  filter: drop-shadow(0 0 6px var(--color-brand-400)) !important;
+}
+
+.glow-line-chart .recharts-active-dot {
+  fill: var(--color-brand-400) !important;
+  stroke: var(--color-brand-400) !important;
+  filter: drop-shadow(0 0 10px var(--color-brand-400)) drop-shadow(0 0 16px var(--color-brand-400)) !important;
+}
+
+.glow-line-chart .recharts-cartesian-grid-horizontal line {
+  stroke: rgba(255,255,255,0.1) !important;
+}
+
+.glow-line-chart .recharts-cartesian-grid-vertical line {
+  stroke: transparent !important;
+}
+
+/* Force theme color on line chart text labels */
+.glow-line-chart text {
+  fill: var(--color-brand-400) !important;
+  font-family: var(--font-outfit) !important;
+}
+
+/* Drag Handle Styles */
+.widget-drag-handle {
+  user-select: none;
+}
+
+.widget-drag-handle:hover {
+  opacity: 1 !important;
+}
+
+/* Prevent dragging on non-handle elements when in edit mode */
+.react-grid-item.edit-mode > * {
+  pointer-events: auto;
+}
+
+.react-grid-item.edit-mode .widget-header-buttons {
+  pointer-events: auto;
+}
+
+/* Ensure drag handles work properly */
+.react-grid-item.edit-mode .widget-drag-handle {
   pointer-events: auto;
 }

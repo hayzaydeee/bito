@@ -1,4 +1,4 @@
-import { useMemo, memo, useState, useEffect } from "react";
+import { useMemo, memo } from "react";
 import {
   BarChart,
   Bar,
@@ -16,630 +16,447 @@ import {
   Area,
   AreaChart,
 } from "recharts";
+import { useChartData } from "../../globalHooks/useChartData";
+import { EmptyStateWithAddHabit } from "../../components/habitGrid/EmptyStateWithAddHabit";
+import "./widgets.css";
 
-export const ChartWidget = memo(
-  ({
-    title,
-    type = "bar",
-    data = [],
-    color = "#3B82F6",
-    breakpoint = "lg",
-    availableColumns = 8,
-    availableRows = 4,
-    size = { width: 320, height: 200 },
-    widgetConfig = {},
-    filterComponent = null,
-  }) => {
-    const [isAnimating, setIsAnimating] = useState(true);
-    const [animatedData, setAnimatedData] = useState([]);
+// Helper function to generate chart data from props (for member dashboards)
+const generateChartDataFromProps = (habits, entries, chartType, dateRange) => {
+  if (!habits || habits.length === 0) {
+    return [];
+  }
 
-    const defaultData = [
-      { name: "Mon", value: 8 },
-      { name: "Tue", value: 6 },
-      { name: "Wed", value: 8 },
-      { name: "Thu", value: 7 },
-      { name: "Fri", value: 9 },
-      { name: "Sat", value: 5 },
-      { name: "Sun", value: 8 },
-      { name: "Mon", value: 4 },
-      { name: "Tue", value: 7 },
-      { name: "Wed", value: 8 },
-      { name: "Thu", value: 6 },
-      { name: "Fri", value: 9 },
-      { name: "Sat", value: 8 },
-      { name: "Sun", value: 7 },
-    ];
+  const today = new Date();
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - today.getDay());
+  
+  // Default to current week if no date range provided
+  const startDate = dateRange?.start || weekStart;
+  const endDate = dateRange?.end || new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
 
-    const pieData = [
-      { name: "Completed", value: 27, color: "#22C55E" },
-      { name: "Missed", value: 8, color: "#EF4444" },
-    ];
+  switch (chartType) {
+    case 'completion':
+      return generateCompletionChartFromProps(habits, entries, startDate, endDate);
+    default:
+      return generateCompletionChartFromProps(habits, entries, startDate, endDate);
+  }
+};
 
-    // Use provided data or default data
-    const chartData = data.length > 0 ? data : defaultData;    // Determine Y-axis domain based on data type
-    const getYAxisDomain = () => {
-      // All modes now use habit count, so use the same domain
-      return [0, "dataMax + 1"];
-    };
-
-    // Animation effect for bars
-    useEffect(() => {
-      if (type === "bar") {
-        setIsAnimating(true);
-
-        // Start with zero values
-        const zeroData = chartData.map((item) => ({ ...item, value: 0 }));
-        setAnimatedData(zeroData);
-
-        // Animate to actual values with staggered delays
-        chartData.forEach((item, index) => {
-          setTimeout(() => {
-            setAnimatedData((prev) =>
-              prev.map((prevItem, prevIndex) =>
-                prevIndex === index
-                  ? { ...prevItem, value: item.value }
-                  : prevItem
-              )
-            );
-          }, index * 100); // 100ms delay between each bar
-        });
-
-        // Mark animation as complete
-        setTimeout(() => {
-          setIsAnimating(false);
-        }, chartData.length * 100 + 500);
-      } else {
-        setAnimatedData(chartData);
-        setIsAnimating(false);
+// Helper function to generate completion chart data from props
+const generateCompletionChartFromProps = (habits, entries, startDate, endDate) => {
+  const data = [];
+  const current = new Date(startDate);
+  
+  while (current <= endDate) {
+    const dateStr = current.toISOString().split('T')[0];
+    
+    let totalHabits = 0;
+    let completedHabits = 0;
+    
+    habits.forEach(habit => {
+      totalHabits++;
+      
+      // Check if there's an entry for this habit on this date
+      const habitEntries = entries[habit._id];
+      let hasCompletedEntry = false;
+      
+      if (habitEntries) {
+        if (Array.isArray(habitEntries)) {
+          // Handle array format (legacy or direct API response)
+          hasCompletedEntry = habitEntries.some(entry => {
+            const entryDate = new Date(entry.date).toISOString().split('T')[0];
+            return entryDate === dateStr && entry.completed;
+          });
+        } else if (typeof habitEntries === 'object') {
+          // Handle object format (HabitContext format with date keys)
+          const dayEntry = habitEntries[dateStr];
+          hasCompletedEntry = dayEntry && dayEntry.completed;
+        }
       }
-    }, [chartData, type]);
-
-    // Custom animated bar component
-    const AnimatedBar = ({ payload, x, y, width, height, fill }) => {
-      const [currentHeight, setCurrentHeight] = useState(0);
-
-      useEffect(() => {
-        const targetHeight = height;
-        let startTime = null;
-        const duration = 800; // Animation duration in ms
-
-        const animate = (timestamp) => {
-          if (!startTime) startTime = timestamp;
-          const progress = Math.min((timestamp - startTime) / duration, 1);
-
-          // Easing function for smooth animation
-          const easeOutCubic = 1 - Math.pow(1 - progress, 3);
-          setCurrentHeight(targetHeight * easeOutCubic);
-
-          if (progress < 1) {
-            requestAnimationFrame(animate);
-          }
-        };
-
-        requestAnimationFrame(animate);
-      }, [height]);
-
-      return (
-        <rect
-          x={x}
-          y={y + height - currentHeight}
-          width={width}
-          height={currentHeight}
-          fill={fill}
-          rx="6"
-          ry="6"
-          style={{
-            filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
-            transition: "all 0.3s ease",
-          }}
-        />
-      );
-    };
-
-    // Create a safe gradient ID from color
-    const gradientId = useMemo(() => {
-      if (color.startsWith("var(")) {
-        // Extract CSS variable name and create safe ID
-        const varName = color.match(/var\(--([^)]+)\)/)?.[1] || "default";
-        return varName.replace(/-/g, "");
+      
+      if (hasCompletedEntry) {
+        completedHabits++;
       }
-      return color.replace("#", "");
-    }, [color]);
+    });
+    
+    const completionRate = totalHabits > 0 ? Math.round((completedHabits / totalHabits) * 100) : 0;
+    
+    data.push({
+      date: dateStr,
+      day: current.toLocaleDateString('en-US', { weekday: 'short' }),
+      completion: completionRate,
+      completed: completedHabits,
+      total: totalHabits,
+      name: current.toLocaleDateString('en-US', { weekday: 'short' }),
+      value: completedHabits
+    });
+    
+    current.setDate(current.getDate() + 1);
+  }
+  
+  return data;
+};
 
-    // Responsive configuration based on breakpoint
-    const chartConfig = useMemo(() => {
-      const config = {
-        chartType: type,
-        showLegend: widgetConfig.showLegend !== false,
-        showAxes: widgetConfig.showAxes !== false,
-        showGrid: true,
-        ...widgetConfig,
-      };
+export const ChartWidget = ({
+  title,
+  type = "bar",
+  chartType = "completion",
+  data = [],
+  color = "#3B82F6",
+  breakpoint = "lg",
+  availableColumns = 8,
+  availableRows = 4,
+  size = { width: 320, height: 200 },
+  widgetConfig = {},
+  filterComponent = null,
+  dateRange = null,
+  onAddHabit = null,
+  habits = null, // Add habits prop
+  entries = null, // Add entries prop
+}) => {
+  // Get real habit data based on chart type - but only if habits/entries props aren't provided
+  const habitChartData = useChartData(chartType, dateRange);
 
-      switch (breakpoint) {
-        case "xs":
-          return {
-            ...config,
-            showLegend: false,
-            showAxes: false,
-            showGrid: false,
-          };
-        case "sm":
-          return {
-            ...config,
-            showLegend: false,
-            showAxes: availableRows > 3,
-            showGrid: availableRows > 3,
-          };
-        case "md":
-          return {
-            ...config,
-            showLegend: availableColumns > 4,
-            showAxes: true,
-            showGrid: true,
-          };
-        default:
-          return config;
-      }
-    }, [widgetConfig, breakpoint, availableColumns, availableRows, type]); // Simple stats for very small widgets
-    if (breakpoint === "xs") {
-      const total = chartData.reduce((sum, item) => sum + item.value, 0);
-      const avg =
-        chartData.length > 0 ? Math.round(total / chartData.length) : 0;
-
-      return (
-        <div className="h-full flex flex-col">
-          <div className="text-xs font-medium mb-2 truncate text-[var(--color-text-secondary)] font-outfit">
-            {title || "Progress"}
-          </div>
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <div
-                className={`text-xl font-bold font-dmSerif transition-all duration-1000 ${
-                  isAnimating ? "transform scale-110" : ""
-                }`}
-                style={{ color }}
-              >
-                {isAnimating ? "..." : total}
-              </div>
-              <div className="text-xs text-[var(--color-text-tertiary)] font-outfit">
-                total
-              </div>
-              <div className="text-sm text-[var(--color-text-secondary)] mt-1 font-outfit">
-                avg: {isAnimating ? "..." : avg}
-              </div>
-            </div>
-          </div>
-        </div>
-      );
+  // Use passed props if available, otherwise use hook data
+  const finalData = useMemo(() => {
+    // If habits and entries are provided as props, use them directly
+    if (habits !== null && entries !== null) {
+      // Generate chart data from the provided habits and entries
+      const generatedData = generateChartDataFromProps(habits, entries, chartType, dateRange);
+      return generatedData;
+    }
+    
+    // Otherwise, use the hook data (for regular dashboard usage)
+    if (habitChartData && habitChartData.length > 0) {
+      return habitChartData;
     }
 
-    const renderChart = () => {
-      const commonProps = {
-        data: chartConfig.chartType === "pie" ? pieData : chartData,
-        margin:
-          breakpoint === "sm"
-            ? { top: 20, right: 5, left: 5, bottom: 5 }
-            : { top: 30, right: 10, left: 0, bottom: 10 },
-      };
-      switch (chartConfig.chartType) {
-        case "line":
+    if (data && data.length > 0) {
+      return data;
+    }
+
+    // Fallback default data
+    const fallbackData = [
+      { name: "Mon", value: 0 },
+      { name: "Tue", value: 0 },
+      { name: "Wed", value: 0 },
+      { name: "Thu", value: 0 },
+      { name: "Fri", value: 0 },
+      { name: "Sat", value: 0 },
+      { name: "Sun", value: 0 },
+    ];
+    return fallbackData;
+  }, [habitChartData, data, habits, entries, chartType, dateRange]);
+  const pieData = [
+    { name: "Completed", value: 27, color: "var(--color-success)" },
+    { name: "Missed", value: 8, color: "var(--color-error)" },
+  ];
+
+  // Determine Y-axis domain based on data type
+  const yAxisDomain = useMemo(() => {
+    if (!finalData || finalData.length === 0) return [0, 10];
+
+    const maxValue = Math.max(...finalData.map((item) => item.value || 0));
+
+    // For habit completion data, use the actual count range
+    if (chartType === "completion") {
+      // Add a little padding above the max value, but ensure minimum scale of 10
+      return [0, Math.max(10, Math.ceil(maxValue * 1.2))];
+    }
+
+    // For other data types, add some padding
+    return [0, Math.ceil(maxValue * 1.1)];
+  }, [finalData, chartType]);
+
+  const commonProps = {
+    width: size.width,
+    height: size.height,
+    data: finalData,
+    margin: { top: 30, right: 15, left: 5, bottom: 5 },
+  };
+
+  const renderChart = () => {
+    switch (type) {
+      case "line": // Custom label component for showing values on points
+        const CustomLabel = ({ x, y, value }) => {
+          if (value === undefined || value === null) return null;
           return (
-            <LineChart {...commonProps}>
-              {/* Minimal grid - only horizontal lines */}
-              {chartConfig.showGrid && (
-                <CartesianGrid
-                  strokeDasharray="none"
-                  stroke="var(--color-border-primary)"
-                  strokeOpacity={0.2}
-                  horizontal={true}
-                  vertical={false}
-                />
-              )}
-              {chartConfig.showAxes && (
-                <XAxis
-                  dataKey="name"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{
-                    fontSize: 11,
-                    fill: "var(--color-text-tertiary)",
-                    fontFamily: "var(--font-outfit)",
-                  }}
-                  dy={5}
-                />
-              )}              {chartConfig.showAxes && (
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{
-                    fontSize: 11,
-                    fill: "var(--color-text-tertiary)",
-                    fontFamily: "var(--font-outfit)",
-                  }}
-                  width={25}
-                  domain={getYAxisDomain()}
-                  allowDecimals={false}
-                />              )}
+            <text
+              x={x}
+              y={y - 8}
+              fill="var(--color-text-primary)"
+              textAnchor="middle"
+              fontSize="11"
+              fontWeight="600"
+              fontFamily="var(--font-outfit)"
+            >
+              {value}
+            </text>
+          );
+        };
+        return (
+          <ResponsiveContainer 
+            width="100%" 
+            height="100%"
+            style={{ backgroundColor: "transparent" }}
+          >
+            <LineChart
+              {...commonProps}
+              style={{ backgroundColor: "transparent" }}
+            >
+              {" "}
+              <CartesianGrid
+                strokeDasharray="1 1"
+                stroke="var(--color-border-primary)"
+                strokeOpacity={0.3}
+                horizontal={true}
+                vertical={false}
+              />{" "}
+              <XAxis
+                dataKey="name"
+                stroke="var(--color-text-secondary)"
+                fontSize={10}
+                fontFamily="var(--font-outfit)"
+                axisLine={false}
+                tickLine={false}
+                interval={finalData.length > 20 ? Math.floor(finalData.length / 10) : 0}
+                tick={{ fontSize: 10 }}
+                height={30}
+              />
+              <YAxis
+                stroke="var(--color-text-secondary)"
+                fontSize={10}
+                fontFamily="var(--font-outfit)"
+                domain={yAxisDomain}
+                axisLine={false}
+                tickLine={false}
+                width={25}
+                tickFormatter={(value) =>
+                  chartType === "completion" ? Math.round(value).toString() : value
+                }
+              />
               <Tooltip
                 contentStyle={{
                   backgroundColor: "var(--color-surface-elevated)",
-                  border: "1px solid var(--color-border-primary)",
-                  borderRadius: "8px",
-                  fontSize: "12px",
-                  fontFamily: "var(--font-outfit)",
+                  border: "1px solid var(--color-border-secondary)",
+                  borderRadius: "6px",
                   color: "var(--color-text-primary)",
-                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                  fontFamily: "var(--font-outfit)",
+                  fontSize: "12px",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                  padding: "8px 12px",
                 }}
                 labelStyle={{
                   color: "var(--color-text-secondary)",
+                  fontFamily: "var(--font-outfit)",
+                  fontSize: "11px",
                   marginBottom: "4px",
-                }}                formatter={(value, name, props) => {
-                  const payload = props?.payload;
-                  return [
-                    `${value} habit${value !== 1 ? "s" : ""} completed`,
-                    payload?.fullName || name,
-                  ];
                 }}
-              />{" "}
-              {/* Clean line with dots and labels */}
+                formatter={(value, name) => [
+                  chartType === "completion" ? `${value} habits` : value,
+                  name === "value" ? "Completed" : name,
+                ]}
+              />
               <Line
                 type="monotone"
                 dataKey="value"
-                stroke={color}
-                strokeWidth={3}
+                stroke="var(--color-brand-400)"
+                strokeWidth={2.5}
                 dot={{
-                  fill: color,
+                  fill: "var(--color-brand-400)",
                   strokeWidth: 0,
                   r: 4,
                 }}
                 activeDot={{
                   r: 6,
-                  fill: color,
+                  fill: "var(--color-brand-400)",
                   stroke: "var(--color-surface-primary)",
                   strokeWidth: 2,
-                  filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
                 }}
-                label={{
-                  position: "top",
-                  offset: 10,
-                  fontSize: 12,
-                  fill: "var(--color-text-primary)",
-                  fontFamily: "var(--font-outfit)",
-                  fontWeight: 500,
-                }}
-              />{" "}
-              {/* Gradient definition for line */}
+                label={<CustomLabel />}
+                // Updated styling for better visibility
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        );
+      case "area":
+        return (
+          <ResponsiveContainer width="100%" height="100%">
+            {" "}
+            <AreaChart {...commonProps}>
               <defs>
-                <linearGradient
-                  id={`lineGradient-${gradientId}`}
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
-                  <stop offset="0%" stopColor={color} stopOpacity={0.8} />
-                  <stop offset="100%" stopColor={color} stopOpacity={0.1} />
+                <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                  <stop
+                    offset="5%"
+                    stopColor="var(--color-brand-400)"
+                    stopOpacity={0.8}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor="var(--color-brand-400)"
+                    stopOpacity={0.1}
+                  />
                 </linearGradient>
               </defs>
-            </LineChart>
-          );
-
-        case "area":
-          return (
-            <AreaChart {...commonProps}>
-              {/* Minimal grid - only horizontal lines */}
-              {chartConfig.showGrid && (
-                <CartesianGrid
-                  strokeDasharray="none"
-                  stroke="var(--color-border-primary)"
-                  strokeOpacity={0.2}
-                  horizontal={true}
-                  vertical={false}
-                />
-              )}
-              {chartConfig.showAxes && (
-                <XAxis
-                  dataKey="name"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{
-                    fontSize: 11,
-                    fill: "var(--color-text-tertiary)",
-                    fontFamily: "var(--font-outfit)",
-                  }}
-                  dy={5}
-                />
-              )}{" "}
-              {chartConfig.showAxes && (
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{
-                    fontSize: 11,
-                    fill: "var(--color-text-tertiary)",
-                    fontFamily: "var(--font-outfit)",
-                  }}                  width={25}
-                  domain={getYAxisDomain()}
-                  allowDecimals={false}
-                />
-              )}
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="var(--color-border-primary)"
+              />
+              <XAxis
+                dataKey="name"
+                stroke="var(--color-text-secondary)"
+                fontSize={12}
+                fontFamily="var(--font-outfit)"
+              />
+              <YAxis
+                stroke="var(--color-text-secondary)"
+                fontSize={12}
+                fontFamily="var(--font-outfit)"
+                domain={yAxisDomain}
+              />
               <Tooltip
                 contentStyle={{
                   backgroundColor: "var(--color-surface-elevated)",
-                  border: "1px solid var(--color-border-primary)",
+                  border: "1px solid var(--color-brand-400)",
                   borderRadius: "8px",
-                  fontSize: "12px",
-                  fontFamily: "var(--font-outfit)",
                   color: "var(--color-text-primary)",
-                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                  fontFamily: "var(--font-outfit)",
+                  boxShadow: "0 4px 20px var(--color-brand-400)/20",
                 }}
                 labelStyle={{
-                  color: "var(--color-text-secondary)",
-                  marginBottom: "4px",
-                }}                formatter={(value, name, props) => {
-                  const payload = props?.payload;
-                  return [
-                    `${value} habit${value !== 1 ? "s" : ""} completed`,
-                    payload?.fullName || name,
-                  ];
+                  color: "var(--color-brand-400)",
+                  fontFamily: "var(--font-outfit)",
                 }}
-              />{" "}
-              {/* Area fill with gradient and labels */}
+              />
               <Area
                 type="monotone"
                 dataKey="value"
-                stroke={color}
-                strokeWidth={3}
-                fill={`url(#areaGradient-${gradientId})`}
-                dot={{
-                  fill: color,
-                  strokeWidth: 0,
-                  r: 4,
-                }}
-                activeDot={{
-                  r: 6,
-                  fill: color,
-                  stroke: "var(--color-surface-primary)",
-                  strokeWidth: 2,
-                  filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
-                }}
-                label={{
-                  position: "top",
-                  offset: 10,
-                  fontSize: 12,
-                  fill: "var(--color-text-primary)",
-                  fontFamily: "var(--font-outfit)",
-                  fontWeight: 500,
-                }}
+                stroke="var(--color-brand-400)"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#colorValue)"
               />
-              {/* Gradient definition for area */}
-              <defs>
-                <linearGradient
-                  id={`areaGradient-${gradientId}`}
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
-                  <stop offset="0%" stopColor={color} stopOpacity={0.3} />
-                  <stop offset="100%" stopColor={color} stopOpacity={0.05} />
-                </linearGradient>
-              </defs>
             </AreaChart>
-          );
-
-        case "pie":
-          return (
-            <PieChart {...commonProps}>
+          </ResponsiveContainer>
+        );
+      case "pie":
+        return (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
               <Pie
                 data={pieData}
                 cx="50%"
                 cy="50%"
-                innerRadius={breakpoint === "sm" ? 25 : 40}
-                outerRadius={breakpoint === "sm" ? 50 : 80}
-                paddingAngle={3}
+                outerRadius={60}
+                fill="var(--color-brand-400)"
                 dataKey="value"
+                label
               >
                 {pieData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
-              </Pie>
-              <Tooltip />
-              {chartConfig.showLegend && availableColumns > 4 && <Legend />}
-            </PieChart>
-          );
-        default: // bar chart
-          return (
-            <BarChart
-              {...commonProps}
-              data={type === "bar" ? animatedData : chartData}
-            >
-              {/* Minimal grid - only horizontal lines */}
-              {chartConfig.showGrid && (
-                <CartesianGrid
-                  strokeDasharray="none"
-                  stroke="var(--color-border-primary)"
-                  strokeOpacity={0.2}
-                  horizontal={true}
-                  vertical={false}
-                />
-              )}
-              {chartConfig.showAxes && (
-                <XAxis
-                  dataKey="name"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{
-                    fontSize: 11,
-                    fill: "var(--color-text-tertiary)",
-                    fontFamily: "var(--font-outfit)",
-                  }}
-                  dy={5}
-                />
-              )}
-              {chartConfig.showAxes && (
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{
-                    fontSize: 11,
-                    fill: "var(--color-text-tertiary)",
-                    fontFamily: "var(--font-outfit)",
-                  }}
-                  width={25}
-                  domain={getYAxisDomain()}
-                />
-              )}
+              </Pie>{" "}
               <Tooltip
                 contentStyle={{
                   backgroundColor: "var(--color-surface-elevated)",
-                  border: "1px solid var(--color-border-primary)",
+                  border: "1px solid var(--color-brand-400)",
                   borderRadius: "8px",
-                  fontSize: "12px",
-                  fontFamily: "var(--font-outfit)",
                   color: "var(--color-text-primary)",
-                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                  fontFamily: "var(--font-outfit)",
+                  boxShadow: "0 4px 20px var(--color-brand-400)/20",
                 }}
                 labelStyle={{
-                  color: "var(--color-text-secondary)",
-                  marginBottom: "4px",
+                  color: "var(--color-brand-400)",
+                  fontFamily: "var(--font-outfit)",
                 }}
-                animationDuration={300}
+              />
+              <Legend
+                wrapperStyle={{
+                  fontFamily: "var(--font-outfit)",
+                  color: "var(--color-text-primary)",
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        );
+      default:
+      case "bar":
+        return (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart {...commonProps}>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="var(--color-border-primary)"
+              />{" "}
+              <XAxis
+                dataKey="name"
+                stroke="var(--color-text-secondary)"
+                fontSize={12}
+                fontFamily="var(--font-outfit)"
+              />
+              <YAxis
+                stroke="var(--color-text-secondary)"
+                fontSize={12}
+                fontFamily="var(--font-outfit)"
+                domain={yAxisDomain}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "var(--color-surface-elevated)",
+                  border: "1px solid var(--color-brand-400)",
+                  borderRadius: "8px",
+                  color: "var(--color-text-primary)",
+                  fontFamily: "var(--font-outfit)",
+                  boxShadow: "0 4px 20px var(--color-brand-400)/20",
+                }}
+                labelStyle={{
+                  color: "var(--color-brand-400)",
+                  fontFamily: "var(--font-outfit)",
+                }}
               />
               <Bar
                 dataKey="value"
-                fill={`url(#barGradient-${gradientId})`}
-                radius={[6, 6, 0, 0]}
-                stroke="none"
-                animationBegin={0}
-                animationDuration={800}
-                animationEasing="ease-out"
+                fill="var(--color-brand-400)"
+                radius={[4, 4, 0, 0]}
               />
-              {/* Gradient definition for bars */}
-              <defs>
-                <linearGradient
-                  id={`barGradient-${gradientId}`}
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
-                  <stop offset="0%" stopColor={color} stopOpacity={0.9} />
-                  <stop offset="100%" stopColor={color} stopOpacity={0.6} />
-                </linearGradient>
-                {/* Add a subtle glow effect for animation */}
-                <filter id={`barGlow-${gradientId}`}>
-                  <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-                  <feMerge>
-                    <feMergeNode in="coloredBlur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
             </BarChart>
-          );
-      }
-    };
-    return (
-      <div className="w-full h-full flex flex-col">
-        {(title || filterComponent) && (
-          <div className="mb-2 flex-shrink-0 flex items-center justify-between">
-            {title && (
-              <h4
-                className={`font-medium text-[var(--color-text-secondary)] truncate font-dmSerif ${
-                  breakpoint === "sm" ? "text-xs" : "text-sm"
-                }`}
-              >
-                {title}
-              </h4>
-            )}
-            {filterComponent && (
-              <div className="flex-shrink-0 ml-2">{filterComponent}</div>
-            )}
-          </div>
-        )}{" "}
-        <div
-          className={`flex-1 min-h-0 relative ${
-            isAnimating && type === "bar" ? "overflow-hidden" : ""
-          }`}
-        >
-          {" "}
-          {/* Loading shimmer overlay */}
-          {isAnimating && type === "bar" && (
-            <div className="absolute inset-0 z-10 pointer-events-none">
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" />
-            </div>
-          )}
-          {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              {renderChart()}
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex items-center justify-center h-full text-[var(--color-text-tertiary)]">
-              <p
-                className={`font-outfit ${
-                  breakpoint === "sm" ? "text-xs" : "text-sm"
-                }`}
-              >
-                No data available
-              </p>
-            </div>
-          )}
-        </div>
-        {/* Quick stats for medium+ widgets */}
-        {breakpoint !== "xs" &&
-          breakpoint !== "sm" &&
-          availableRows > 3 &&
-          chartData.length > 0 && (
-            <div className="flex justify-around pt-2 mt-2 border-t border-[var(--color-border-primary)] text-xs flex-shrink-0 font-outfit">
-              <div className="text-center">
-                <div
-                  className={`font-semibold font-dmSerif transition-all duration-500 ${
-                    isAnimating ? "opacity-60" : "opacity-100"
-                  }`}
-                  style={{ color }}
-                >
-                  {isAnimating
-                    ? "..."
-                    : chartData.reduce((sum, item) => sum + item.value, 0)}
-                </div>
-                <div className="text-[var(--color-text-tertiary)]">Total</div>
-              </div>
-              <div className="text-center">
-                <div
-                  className={`font-semibold text-[var(--color-success)] font-dmSerif transition-all duration-500 ${
-                    isAnimating ? "opacity-60" : "opacity-100"
-                  }`}
-                >
-                  {isAnimating
-                    ? "..."
-                    : Math.round(
-                        (chartData.reduce((sum, item) => sum + item.value, 0) /
-                          (chartData.length * 5)) *
-                          100
-                      )}
-                  {!isAnimating && "%"}
-                </div>
-                <div className="text-[var(--color-text-tertiary)]">Success</div>
-              </div>
-              <div className="text-center">
-                <div
-                  className={`font-semibold text-[var(--color-brand-400)] font-dmSerif transition-all duration-500 ${
-                    isAnimating ? "opacity-60" : "opacity-100"
-                  }`}
-                >
-                  {isAnimating
-                    ? "..."
-                    : Math.max(...chartData.map((item) => item.value))}
-                </div>
-                <div className="text-[var(--color-text-tertiary)]">Best</div>
-              </div>
-            </div>
-          )}
+          </ResponsiveContainer>
+        );
+    }
+  };
+
+  return (
+    <div className="w-full h-full flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4 px-4 pt-4 flex-shrink-0">
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] font-outfit">
+          {title}
+        </h3>
+        {filterComponent && (
+          <div className="flex items-center gap-2">{filterComponent}</div>
+        )}
       </div>
-    );
-  }
-);
+      
+      {/* Chart Container */}
+      <div className="widget-content-area px-4 pb-4">
+        {finalData && finalData.length > 0 ? (
+          <div
+            className={`w-full h-full ${
+              type === "line" ? "p-4" : ""
+            }`}
+          >
+            {renderChart()}
+          </div>
+        ) : (
+          <div className="h-full flex items-center justify-center">
+            <EmptyStateWithAddHabit onAddHabit={onAddHabit} className="max-w-md" />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 ChartWidget.displayName = "ChartWidget";
+
+export default ChartWidget;
