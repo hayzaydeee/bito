@@ -368,8 +368,8 @@ const VerticalMenu = ({ isCollapsed }) => {
                 <TargetIcon className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-lg font-bold gradient-text font-dmSerif">
-                  Bito
+                <p className="text-lg font-bold gradient-text font-outfit">
+                bito
                 </p>
               </div>
             </div>
