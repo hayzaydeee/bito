@@ -179,21 +179,21 @@ const Login = () => {
       {/* Enhanced Navigation */}
       <nav className="relative z-10 p-6">
         <Flex justify="between" align="center">
-          <Button
+          <button
             variant="ghost"
             onClick={() => navigate("/")}
-            className="flex items-center gap-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-all duration-200 hover:scale-105"
+            className="flex items-center gap-2 font-outfit text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-all duration-200 hover:scale-105"
           >
             <ArrowLeftIcon className="w-4 h-4" />
             Back to Home
-          </Button>
+          </button>
 
           <Flex align="center" gap="3">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center shadow-lg">
               <TargetIcon className="w-5 h-5 text-white" />
             </div>
-            <Text className="text-xl font-bold font-dmSerif gradient-text">
-              Bito
+            <Text className="text-xl font-bold font-outfit gradient-text">
+              bito
             </Text>
           </Flex>
         </Flex>

@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Flex, Text, Button } from '@radix-ui/themes';
 import { 
   PlayIcon, 
   ArrowRightIcon, 
@@ -9,14 +8,32 @@ import {
   CalendarIcon,
   BarChartIcon,
   LightningBoltIcon,
-  StarIcon
+  StarIcon,
+  ChevronRightIcon,
+  DotFilledIcon,
+  GitHubLogoIcon,
+  TwitterLogoIcon,
+  PersonIcon,
+  GlobeIcon,
+  Cross2Icon,
+  HamburgerMenuIcon,
+  EnvelopeClosedIcon
 } from '@radix-ui/react-icons';
 import { useAuth } from '../contexts/AuthContext';
+import ContactModal from '../components/ui/ContactModal';
+import HowItWorksSection from '../components/landingPage/HowItWorksSection';
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading } = useAuth();
   const [isVisible, setIsVisible] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('hero');
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+  const heroRef = useRef(null);
+  const featuresRef = useRef(null);
+  const testimonialsRef = useRef(null);
+  const howItWorksRef = useRef(null);
 
   useEffect(() => {
     setIsVisible(true);
@@ -28,6 +45,26 @@ const LandingPage = () => {
       navigate('/app');
     }
   }, [isAuthenticated, isLoading, navigate]);
+
+  // Intersection Observer for active section tracking
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+
+    [heroRef, featuresRef, testimonialsRef, howItWorksRef].forEach(ref => {
+      if (ref.current) observer.observe(ref.current);
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   // Show loading state while checking authentication
   if (isLoading) {
@@ -43,346 +80,383 @@ const LandingPage = () => {
 
   const features = [
     {
-      icon: <TargetIcon className="w-6 h-6" />,
+      icon: <TargetIcon className="w-5 h-5" />,
       title: "Smart Goal Tracking",
-      description: "Set and track meaningful goals with intelligent progress insights and personalized recommendations."
+      description: "Set meaningful goals with AI-powered insights and personalized recommendations that adapt to your progress.",
+      badge: "AI-Powered"
     },
     {
-      icon: <CalendarIcon className="w-6 h-6" />,
-      title: "Visual Calendar",
-      description: "Beautiful calendar view to visualize your consistency and spot patterns in your habit formation."
+      icon: <CalendarIcon className="w-5 h-5" />,
+      title: "Visual Progress",
+      description: "Beautiful calendar and chart views help you visualize consistency patterns and celebrate your wins.",
+      badge: "Visual"
     },
     {
-      icon: <BarChartIcon className="w-6 h-6" />,
-      title: "Advanced Analytics",
-      description: "Detailed analytics and reports to understand your progress and optimize your habits over time."
+      icon: <BarChartIcon className="w-5 h-5" />,
+      title: "Deep Analytics",
+      description: "Understand your habits with detailed analytics, trend analysis, and correlation insights.",
+      badge: "Analytics"
     },
     {
-      icon: <LightningBoltIcon className="w-6 h-6" />,
+      icon: <LightningBoltIcon className="w-5 h-5" />,
       title: "Quick Actions",
-      description: "Lightning-fast habit logging with shortcuts and automation to keep you in the flow."
+      description: "Lightning-fast habit logging with shortcuts, automation, and seamless integrations.",
+      badge: "Fast"
     }
   ];
 
   const testimonials = [
     {
       name: "Sarah Chen",
-      role: "Product Manager",
-      content: "Bito has completely transformed how I approach personal development. The visual progress tracking keeps me motivated every day.",
-      rating: 5
+      role: "Product Manager at Stripe",
+      content: "Bito has completely transformed how I approach personal development. The visual progress tracking keeps me motivated every single day.",
+      rating: 5,
+      avatar: "SC"
     },
     {
       name: "Michael Rodriguez",
-      role: "Software Engineer",
+      role: "Software Engineer at Vercel",
       content: "The analytics dashboard is incredible. I can see exactly what's working and what isn't in my daily routines.",
-      rating: 5
+      rating: 5,
+      avatar: "MR"
     },
     {
       name: "Emily Johnson",
-      role: "Designer",
+      role: "Designer at Figma",
       content: "Beautiful design and incredibly intuitive. Building habits has never felt this engaging and rewarding.",
-      rating: 5
+      rating: 5,
+      avatar: "EJ"
     }
   ];
+
+  const stats = [
+    { value: "10K+", label: "Active Users" },
+    { value: "500K+", label: "Habits Tracked" },
+    { value: "98%", label: "Success Rate" },
+    { value: "4.9/5", label: "User Rating" }
+  ];
+
+  const scrollToSection = (ref) => {
+    ref.current?.scrollIntoView({ behavior: 'smooth' });
+    setMobileMenuOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[var(--color-bg-primary)] via-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] overflow-hidden">
-      {/* Navigation Bar - Minimalist */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[var(--color-surface-primary)]/80 backdrop-blur-sm border-b border-[var(--color-border-primary)]/10">
-        <div className="max-w-5xl mx-auto px-4 py-2">
-          <Flex justify="between" align="center">
+      {/* Navigation Bar - Cal.com Inspired */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[var(--color-surface-primary)]/95 backdrop-blur-md border-b border-[var(--color-border-primary)]/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center h-16">
             {/* Logo */}
-            <Flex align="center" gap="1">
-              <div className="w-6 h-6 rounded-md bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center">
-                <TargetIcon className="w-3.5 h-3.5 text-white" />
+            <div className="flex-shrink-0 flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center shadow-lg">
+                <TargetIcon className="w-4 h-4 text-white" />
               </div>
-              <Text className="text-sm font-medium font-dmSerif gradient-text">
-                Bito
-              </Text>
-            </Flex>
+              <span className="text-xl font-bold gradient-text font-outfit">
+                bito
+              </span>
+            </div>
 
-            {/* Navigation Links - More Compact */}
-            <Flex align="center" gap="4" className="hidden md:flex">
-              <Text className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer transition-colors font-outfit">
-                Features
-              </Text>
-              <Text className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer transition-colors font-outfit">
-                Pricing
-              </Text>
-              <Text className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer transition-colors font-outfit">
-                About
-              </Text>
-            </Flex>
+            {/* Desktop Navigation - Centered */}
+            <div className="hidden md:flex flex-1 justify-center items-center font-outfit">
+              <div className="flex items-center gap-8">
+                <button
+                  onClick={() => scrollToSection(featuresRef)}
+                  className={`text-sm font-medium transition-colors hover:text-[var(--color-text-primary)] ${
+                    activeSection === 'features' ? 'text-[var(--color-brand-500)]' : 'text-[var(--color-text-secondary)]'
+                  }`}
+                >
+                  Features
+                </button>
+                <button
+                  onClick={() => scrollToSection(howItWorksRef)}
+                  className={`text-sm font-medium transition-colors hover:text-[var(--color-text-primary)] ${
+                    activeSection === 'howItWorks' ? 'text-[var(--color-brand-500)]' : 'text-[var(--color-text-secondary)]'
+                  }`}
+                >
+                  How It Works
+                </button>
+              </div>
+            </div>
 
-            {/* Auth Buttons - Simplified */}
-            <Flex align="center" gap="2">
-              <Button 
-                variant="ghost" 
+            {/* Auth Buttons */}
+            <div className="hidden md:flex flex-shrink-0 items-center gap-3 font-outfit">
+              <button 
                 onClick={() => navigate('/login')}
-                className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors font-outfit text-xs px-2 py-1"
+                className="px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
               >
                 Sign In
-              </Button>
-              <Button 
+              </button>
+              <button 
                 onClick={() => navigate('/signup')}
-                className="bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded text-xs px-3 py-1 transition-all font-outfit"
+                className="px-4 py-2 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl"
               >
-                Sign Up
-              </Button>
-            </Flex>
-          </Flex>
+                Get Started
+              </button>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
+            >
+              {mobileMenuOpen ? (
+                <Cross2Icon className="w-5 h-5 text-[var(--color-text-primary)]" />
+              ) : (
+                <HamburgerMenuIcon className="w-5 h-5 text-[var(--color-text-primary)]" />
+              )}
+            </button>
+          </div>
+
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden py-4 border-t border-[var(--color-border-primary)]/20">
+              <div className="flex flex-col gap-4">
+                <button
+                  onClick={() => scrollToSection(featuresRef)}
+                  className="text-left text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+                >
+                  Features
+                </button>
+                <button
+                  onClick={() => scrollToSection(howItWorksRef)}
+                  className="text-left text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+                >
+                  How It Works
+                </button>
+                <div className="pt-4 border-t border-[var(--color-border-primary)]/20 flex flex-col gap-3">
+                  <button 
+                    onClick={() => navigate('/login')}
+                    className="text-left text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+                  >
+                    Sign In
+                  </button>
+                  <button 
+                    onClick={() => navigate('/signup')}
+                    className="px-4 py-2 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg text-sm font-medium transition-all duration-200 text-center"
+                  >
+                    Get Started
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </nav>
 
-      {/* Hero Section - Inspired by WelcomeCard */}
-      <section className="relative min-h-[70vh] flex items-center justify-center px-6 pt-16">
-        {/* Background Effects - Similar to Dashboard */}
+      {/* Hero Section - Cal.com Style */}
+      <section 
+        ref={heroRef}
+        id="hero"
+        className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-20"
+      >
+        {/* Background Effects */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-brand-500)]/5 via-[var(--color-brand-400)]/3 to-transparent"></div>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[var(--color-brand-400)]/10 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-[var(--color-brand-600)]/10 to-transparent rounded-full translate-y-16 -translate-x-16"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-brand-500)]/5 via-transparent to-[var(--color-brand-400)]/3"></div>
+          {/* Floating Elements */}
+          <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-[var(--color-brand-400)]/40 rounded-full animate-float"></div>
+          <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-[var(--color-brand-500)]/60 rounded-full animate-float" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute bottom-1/3 left-1/5 w-1.5 h-1.5 bg-[var(--color-brand-300)]/50 rounded-full animate-float" style={{ animationDelay: '2s' }}></div>
         </div>
 
-        <div className={`relative z-10 max-w-3xl mx-auto transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
-          {/* Hero Glass Card - Inspired by WelcomeCard */}
-          <div className="glass-card p-6 rounded-2xl relative overflow-hidden mb-6 text-center">
-            {/* Subtle Background Pattern */}
-            <div className="absolute inset-0">
-              <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-brand-500)]/3 via-[var(--color-brand-400)]/2 to-transparent"></div>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[var(--color-brand-400)]/8 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
-            </div>
-
-            <div className="relative z-10">
-              {/* Badge - Dashboard Style */}
-              <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--color-surface-elevated)]/70 border border-[var(--color-border-primary)]/20 mb-4">
-                <StarIcon className="w-3 h-3 text-[var(--color-brand-400)]" />
-                <Text className="text-xs font-medium text-[var(--color-text-secondary)] font-outfit">
-                  Build lasting habits
-                </Text>
-              </div>
-
-              {/* Main Headline - Using Dashboard Style */}
-              <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-brand-400)] bg-clip-text text-transparent font-dmSerif mb-3 leading-tight">
-                Build Better Habits With Bito
-              </h1>
-
-              {/* Subtitle */}
-              <Text className="text-sm text-[var(--color-text-secondary)] mb-5 max-w-xl mx-auto leading-relaxed font-outfit">
-                Track, analyze, and optimize your daily routines with beautiful insights.
-              </Text>
-
-              {/* CTA Buttons - Dashboard Style */}
-              <Flex gap="2" justify="center" className="mb-6">
-                <Button 
-                  onClick={() => navigate('/signup')}
-                  className="bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-brand-600)] text-white rounded text-xs px-4 py-1.5 transition-all font-outfit flex items-center gap-1 group shadow-sm"
-                >
-                  <PlayIcon className="w-3 h-3 group-hover:scale-110 transition-transform" />
-                  Get Started
-                </Button>
-                
-                <Button 
-                  variant="soft" 
-                  className="bg-[var(--color-surface-elevated)]/50 hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/20 text-xs px-3 py-1.5 font-outfit rounded shadow-sm"
-                >
-                  Watch Demo
-                </Button>
-              </Flex>
-            </div>
+        <div className={`relative z-10 max-w-4xl mx-auto text-center transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          {/* Badge */}
+          <div 
+          onClick={() => navigate('/signup')}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-surface-elevated)]/80 backdrop-blur-sm border border-[var(--color-border-primary)]/30 mb-8 hover:scale-105 transition-transform duration-300">
+            <div className="w-2 h-2 bg-[var(--color-success)] rounded-full animate-pulse"></div>
+            <span className="text-sm font-medium text-[var(--color-text-primary)]">bito v1 is live!</span>
+            <ChevronRightIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
           </div>
 
-          {/* Hero Stats - Card Style */}
-          <div className="glass-card p-4 rounded-xl border border-[var(--color-border-primary)]/10">
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-center">
-                <div className="text-xl font-bold font-dmSerif bg-gradient-to-r from-[var(--color-brand-400)] to-[var(--color-brand-500)] bg-clip-text text-transparent mb-1">10K+</div>
-                <Text className="text-xs text-[var(--color-text-tertiary)] font-outfit">Users</Text>
-              </div>
-              <div className="text-center">
-                <div className="text-xl font-bold font-dmSerif bg-gradient-to-r from-[var(--color-brand-400)] to-[var(--color-brand-500)] bg-clip-text text-transparent mb-1">500K+</div>
-                <Text className="text-xs text-[var(--color-text-tertiary)] font-outfit">Habits</Text>
-              </div>
-              <div className="text-center">
-                <div className="text-xl font-bold font-dmSerif bg-gradient-to-r from-[var(--color-brand-400)] to-[var(--color-brand-500)] bg-clip-text text-transparent mb-1">98%</div>
-                <Text className="text-xs text-[var(--color-text-tertiary)] font-outfit">Success</Text>
-              </div>
-            </div>
+          {/* Main Headline */}
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-[var(--color-text-primary)] via-[var(--color-brand-400)] to-[var(--color-brand-500)] bg-clip-text text-transparent font-dmSerif mb-6 leading-tight">
+            Build habits that
+            <br />
+            actually stick
+          </h1>
+
+          {/* Subtitle */}
+          <p className="text-lg md:text-xl text-[var(--color-text-secondary)] mb-10 max-w-2xl mx-auto leading-relaxed font-outfit">
+            The most effective way to track, analyze, and optimize your daily routines with beautiful insights and AI-powered recommendations.
+          </p>
+
+          {/* CTAs */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 font-outfit">
+            <button 
+              onClick={() => navigate('/signup')}
+              className="group px-8 py-4 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-xl text-base font-semibold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+            >
+              Start for free
+              <ArrowRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </button>
+            
+            <button className="px-8 py-4 bg-[var(--color-surface-elevated)]/80 hover:bg-[var(--color-surface-hover)] backdrop-blur-sm border border-[var(--color-border-primary)]/30 text-[var(--color-text-primary)] rounded-xl text-base font-semibold transition-all duration-300 hover:scale-105 shadow-lg">
+              Watch Demo
+            </button>
           </div>
+
         </div>
       </section>
 
-      {/* Features Section - Dashboard Style */}
-      <section className="py-8 px-6 relative">
-        <div className="max-w-4xl mx-auto">
-          {/* Section Header - Dashboard Style */}
-          <div className="glass-card p-4 rounded-xl border border-[var(--color-border-primary)]/10 mb-6">
-            <div className="text-center">
-              <h2 className="text-xl font-bold font-dmSerif bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-brand-400)] bg-clip-text text-transparent mb-2">
-                Everything You Need to Succeed
-              </h2>
-              <Text className="text-sm text-[var(--color-text-secondary)] max-w-xl mx-auto font-outfit">
-                Powerful features designed for effective habit building
-              </Text>
-            </div>
+      {/* Features Section - Modern Grid */}
+      <section 
+        ref={featuresRef}
+        id="features"
+        className="py-24 px-4 sm:px-6 lg:px-8 relative"
+      >
+        <div className="max-w-7xl mx-auto">
+          {/* Section Header */}
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-brand-400)] bg-clip-text text-transparent font-dmSerif mb-4">
+              Everything you need to succeed
+            </h2>
+            <p className="text-lg text-[var(--color-text-secondary)] max-w-2xl mx-auto font-outfit">
+              Powerful features designed for effective habit building, from tracking to insights
+            </p>
           </div>
           
-          {/* Features Grid - Dashboard Style Cards */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Features Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 font-outfit">
             {features.map((feature, index) => (
               <div 
                 key={index}
-                className="glass-card p-4 rounded-xl border border-[var(--color-border-primary)]/10 transition-all hover:border-[var(--color-brand-500)]/20 hover:shadow-sm"
+                className="group relative p-6 glass-card rounded-2xl border border-[var(--color-border-primary)]/20 transition-all duration-500 hover:border-[var(--color-brand-500)]/30 hover:transform hover:scale-105"
+                style={{ animationDelay: `${index * 100}ms` }}
               >
-                <div className="w-10 h-10 rounded-lg bg-[var(--color-brand-500)]/10 text-[var(--color-brand-500)] flex items-center justify-center mb-3">
+                {/* Badge */}
+                <div className="absolute top-4 right-4">
+                  <span className="px-2 py-1 bg-[var(--color-brand-500)]/10 text-[var(--color-brand-400)] text-xs font-medium rounded-full border border-[var(--color-brand-500)]/20">
+                    {feature.badge}
+                  </span>
+                </div>
+
+                {/* Icon */}
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[var(--color-brand-500)]/20 to-[var(--color-brand-400)]/10 border border-[var(--color-brand-500)]/20 text-[var(--color-brand-400)] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                   {feature.icon}
                 </div>
-                <h3 className="text-sm font-bold font-dmSerif mb-1.5 text-[var(--color-text-primary)]">
+
+                {/* Content */}
+                <h3 className="text-lg font-bold font-dmSerif mb-3 text-[var(--color-text-primary)] group-hover:text-[var(--color-brand-400)] transition-colors">
                   {feature.title}
                 </h3>
-                <Text className="text-xs text-[var(--color-text-secondary)] leading-relaxed font-outfit">
+                <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
                   {feature.description}
-                </Text>
+                </p>
+
+                {/* Hover Effect */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[var(--color-brand-500)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
               </div>
             ))}
           </div>
         </div>
       </section>
-
-      {/* Testimonials Section - Dashboard Style */}
-      <section className="py-8 px-6 relative">
+      
+      {/* How It Works Section */}
+      <HowItWorksSection ref={howItWorksRef} />
+      
+      {/* CTA Section */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8 relative">
         <div className="max-w-4xl mx-auto">
-          {/* Section Header - Dashboard Style */}
-          <div className="glass-card p-4 rounded-xl border border-[var(--color-border-primary)]/10 mb-6">
-            <div className="text-center">
-              <h2 className="text-xl font-bold font-dmSerif bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-brand-400)] bg-clip-text text-transparent mb-2">
-                Loved by Our Community
-              </h2>
-              <Text className="text-sm text-[var(--color-text-secondary)] max-w-xl mx-auto font-outfit">
-                Join people who transformed their habits with Bito
-              </Text>
-            </div>
-          </div>
-
-          {/* Testimonials Grid - Dashboard Style */}
-          <div className="grid md:grid-cols-3 gap-4">
-            {testimonials.map((testimonial, index) => (
-              <div 
-                key={index}
-                className="glass-card p-4 rounded-xl border border-[var(--color-border-primary)]/10 transition-all hover:border-[var(--color-brand-500)]/20 hover:shadow-sm relative overflow-hidden"
-              >
-                {/* Subtle Background Pattern */}
-                <div className="absolute inset-0">
-                  <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-[var(--color-brand-400)]/5 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
-                </div>
-                
-                <div className="relative z-10">
-                  <div className="flex gap-0.5 mb-2">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <StarIcon key={i} className="w-3 h-3 text-yellow-400 fill-current" />
-                    ))}
-                  </div>
-                  <Text className="text-[var(--color-text-secondary)] mb-3 text-xs leading-relaxed">
-                    "{testimonial.content}"
-                  </Text>
-                  <div className="flex items-center">
-                    <div className="w-6 h-6 rounded-full bg-[var(--color-brand-500)]/10 text-[var(--color-brand-500)] flex items-center justify-center mr-2">
-                      <Text className="text-[10px] font-bold">{testimonial.name.charAt(0)}</Text>
-                    </div>
-                    <div>
-                      <div className="font-medium text-sm text-[var(--color-text-primary)]">
-                        {testimonial.name}
-                      </div>
-                      <Text className="text-xs text-[var(--color-text-tertiary)]">
-                        {testimonial.role}
-                      </Text>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section - Dashboard Style */}
-      <section className="py-8 px-6 relative">
-        <div className="max-w-4xl mx-auto">
-          <div className="glass-card p-6 rounded-2xl relative overflow-hidden">
-            {/* Subtle Background Pattern - Like WelcomeCard */}
+          <div className="relative p-12 glass-card rounded-3xl border border-[var(--color-border-primary)]/20 text-center overflow-hidden">
+            {/* Background Effects */}
             <div className="absolute inset-0">
               <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-brand-500)]/5 via-[var(--color-brand-400)]/3 to-transparent"></div>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[var(--color-brand-400)]/8 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-[var(--color-brand-500)]/8 to-transparent rounded-full translate-y-16 -translate-x-16"></div>
+              <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-[var(--color-brand-400)]/10 to-transparent rounded-full -translate-y-20 translate-x-20"></div>
+              <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-[var(--color-brand-500)]/10 to-transparent rounded-full translate-y-20 -translate-x-20"></div>
             </div>
             
-            <div className="relative z-10 text-center">
-              <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-brand-400)] bg-clip-text text-transparent font-dmSerif mb-3">
-                Ready to Transform Your Habits?
+            <div className="relative z-10">
+              <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-brand-400)] bg-clip-text text-transparent font-dmSerif mb-4">
+                Ready to build better habits?
               </h2>
               
-              <Text className="text-sm text-[var(--color-text-secondary)] mb-5 max-w-xl mx-auto">
-                Start building better habits today with Bito
-              </Text>
+              <p className="text-lg text-[var(--color-text-secondary)] mb-8 max-w-2xl mx-auto font-outfit">
+                Join thousands of people who are already building lasting habits with Bito
+              </p>
 
-              <Flex gap="2" justify="center" className="mb-4">
-                <Button 
-                  className="bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-brand-600)] text-white rounded text-xs px-6 py-2 transition-all font-outfit flex items-center gap-2 group shadow-sm"
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+                <button 
+                  className="font-outfit group px-8 py-4 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-xl text-base font-semibold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                   onClick={() => navigate('/signup')}
                 >
-                  <PlayIcon className="w-3 h-3 group-hover:scale-110 transition-transform" />
                   Start Your Journey
-                  <ArrowRightIcon className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                </Button>
-              </Flex>
+                  <ArrowRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
 
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-1.5 h-1.5 bg-[var(--color-success)] rounded-full"></div>
-                <Text className="text-xs text-[var(--color-text-tertiary)]">
-                  No credit card required • Free trial • Cancel anytime
-                </Text>
+              <div className="flex items-center justify-center gap-2 text-sm text-[var(--color-text-tertiary)] font-outfit">
+                <CheckCircledIcon className="w-4 h-4 text-[var(--color-success)]" />
+                <span>No credit card required • 2-minute setup</span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Footer - Dashboard Style */}
-      <footer className="py-6 px-6 border-t border-[var(--color-border-primary)]/10">
-        <div className="max-w-4xl mx-auto">
-          <div className="glass-card p-4 rounded-xl border border-[var(--color-border-primary)]/10 mb-4">
-            <Flex justify="between" align="center" wrap="wrap" gap="2">
+      {/* Footer */}
+      <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-[var(--color-border-primary)]/20">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+            {/* Logo & Description */}
+            <div className="flex flex-col items-center md:items-start gap-4">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-md bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center">
-                  <TargetIcon className="w-3.5 h-3.5 text-white" />
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center">
+                  <TargetIcon className="w-4 h-4 text-white" />
                 </div>
-                <div>
-                  <h3 className="text-sm font-medium font-dmSerif bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-brand-400)] bg-clip-text text-transparent">Bito</h3>
-                  <Text className="text-xs text-[var(--color-text-secondary)]">
-                    Build better habits, build a better life.
-                  </Text>
-                </div>
+                <span className="text-xl font-bold font-outfit gradient-text">bito</span>
               </div>
-              
-              <Flex gap="4">
-                <Text className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] cursor-pointer transition-colors">
-                  Privacy
-                </Text>
-                <Text className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] cursor-pointer transition-colors">
-                  Terms
-                </Text>
-                <Text className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] cursor-pointer transition-colors">
-                  Support
-                </Text>
-              </Flex>
-            </Flex>
+              <p className="text-sm text-[var(--color-text-secondary)] max-w-xs text-center md:text-left font-outfit">
+                Build better habits, bit by bit.
+              </p>
+            </div>
+            
+            {/* Links */}
+            <div className="flex flex-wrap justify-center md:justify-end gap-8">
+              <div className="flex flex-col gap-3">
+                <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Product</h4>
+                <a href="#" className="text-sm text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors">Features</a>
+                <a href="#" className="text-sm text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors">Pricing</a>
+                <a href="#" className="text-sm text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors">Changelog</a>
+              </div>
+              <div className="flex flex-col gap-3">
+                <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Company</h4>
+                <a href="#" className="text-sm text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors">About</a>
+                <a href="#" className="text-sm text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors">Blog</a>
+                <a href="#" className="text-sm text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors">Careers</a>
+              </div>
+              <div className="flex flex-col gap-3">
+                <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Support</h4>
+                <button 
+                  onClick={() => setContactModalOpen(true)}
+                  className="text-sm text-left text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors">
+                  Contact
+                </button>
+              </div>
+            </div>
           </div>
           
-          <div className="text-center">
-            <Text className="text-xs text-[var(--color-text-tertiary)]">
+          <div className="mt-12 pt-8 border-t border-[var(--color-border-primary)]/20 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-[var(--color-text-tertiary)]">
               © 2025 Bito. All rights reserved.
-            </Text>
+            </p>
+            <div className="flex items-center gap-4">
+              <a href="#" className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors">
+                <TwitterLogoIcon className="w-5 h-5" />
+              </a>
+              <a href="#" className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors">
+                <GitHubLogoIcon className="w-5 h-5" />
+              </a>
+            </div>
           </div>
         </div>
       </footer>
+
+      {/* Contact Modal - Initial State Hidden */}
+      <ContactModal 
+        isOpen={contactModalOpen} 
+        onClose={() => setContactModalOpen(false)} 
+      />
     </div>
   );
 };
