@@ -3,7 +3,7 @@ import { DatabaseWidget } from './DatabaseWidget.jsx'; // Old version
 import { DatabaseWidgetV2 } from './DatabaseWidgetV2.jsx'; // New version
 
 // Feature flag to control which version to use
-const USE_NEW_WIDGET = true; // Change this to gradually migrate
+const USE_NEW_WIDGET = false; // Change this to gradually migrate
 
 export const DatabaseWidgetBridge = (props) => {
   // You can add logic here to gradually rollout the new widget

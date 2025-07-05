@@ -37,6 +37,7 @@ const DatabaseWidget = memo(
     title = "Habit Tracker",
     habits = [],
     completions = {},
+    entries = null, // Add entries prop for member dashboard compatibility
     onToggleCompletion,
     onAddHabit,
     onDeleteHabit,
@@ -48,6 +49,7 @@ const DatabaseWidget = memo(
     filterComponent = null,
     dateRange = null,
     mode = "week",
+    readOnly = false, // Add readOnly prop for member dashboards
   }) => {    
     const [viewType, setViewType] = useState(() => {
       // Try to load from localStorage if persistence key is provided
@@ -105,6 +107,49 @@ const DatabaseWidget = memo(
       return title;
     }, [title, dateRange, mode]);
 
+    // Transform entries to completions format if entries are provided (for member dashboard)
+    const transformedCompletions = useMemo(() => {
+      // If entries are provided (member dashboard), transform them to completions format
+      if (entries && typeof entries === 'object') {
+        const transformed = {};
+        
+        Object.keys(entries).forEach(habitId => {
+          const habitEntries = entries[habitId];
+          if (habitEntries && typeof habitEntries === 'object') {
+            Object.keys(habitEntries).forEach(date => {
+              const entry = habitEntries[date];
+              if (entry && entry.completed) {
+                // Convert date to day name for the key format expected by useHabitData
+                try {
+                  const dateObj = new Date(date + 'T00:00:00');
+                  const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+                  transformed[`${dayName}-${habitId}`] = true;
+                  // Also store with date format for backward compatibility
+                  transformed[`${date}-${habitId}`] = true;
+                } catch (error) {
+                  console.warn('Error converting date for completion:', date, error);
+                }
+              }
+            });
+          }
+        });
+        
+        return transformed;
+      }
+      
+      // Otherwise use the provided completions
+      return completions;
+    }, [entries, completions]);
+
+    // Transform habits to ensure they have the id property that useHabitData expects
+    const transformedHabits = useMemo(() => {
+      return habits.map(habit => ({
+        ...habit,
+        id: habit._id || habit.id, // useHabitData expects 'id' property
+        _id: habit._id || habit.id
+      }));
+    }, [habits]);
+
     // Use custom hooks for data management
     const {
       daysOfWeek,
@@ -115,7 +160,12 @@ const DatabaseWidget = memo(
       getDayCompletion,
       getHabitCompletion,
       weekStats,
-    } = useHabitData({ habits, completions, dateRange, mode });
+    } = useHabitData({ 
+      habits: transformedHabits, 
+      completions: transformedCompletions, 
+      dateRange, 
+      mode 
+    });
 
     const {
       newHabitName,
@@ -126,10 +176,10 @@ const DatabaseWidget = memo(
       handleAddHabit,
       handleCancelAdd,
     } = useHabitActions({
-      onToggleCompletion,
-      onAddHabit,
-      onDeleteHabit,
-      onEditHabit,
+      onToggleCompletion: readOnly ? null : onToggleCompletion,
+      onAddHabit: readOnly ? null : onAddHabit,
+      onDeleteHabit: readOnly ? null : onDeleteHabit,
+      onEditHabit: readOnly ? null : onEditHabit,
       dateRange,
     });// Common props for all views
     const commonProps = {
@@ -141,7 +191,7 @@ const DatabaseWidget = memo(
       getDayCompletion,
       getHabitCompletion,
       weekStats,
-      handleToggleCompletion,
+      handleToggleCompletion: readOnly ? () => {} : handleToggleCompletion,
       breakpoint,
     };
     const renderContent = () => {
@@ -153,12 +203,12 @@ const DatabaseWidget = memo(
           return (
             <GalleryView
               {...commonProps}
-              showAddForm={showAddForm}
-              setShowAddForm={setShowAddForm}
+              showAddForm={readOnly ? false : showAddForm}
+              setShowAddForm={readOnly ? () => {} : setShowAddForm}
               newHabitName={newHabitName}
-              setNewHabitName={setNewHabitName}
-              handleAddHabit={handleAddHabit}
-              handleCancelAdd={handleCancelAdd}
+              setNewHabitName={readOnly ? () => {} : setNewHabitName}
+              handleAddHabit={readOnly ? () => {} : handleAddHabit}
+              handleCancelAdd={readOnly ? () => {} : handleCancelAdd}
             />          );
       }
     };
