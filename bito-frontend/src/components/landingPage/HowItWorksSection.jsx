@@ -177,13 +177,13 @@ const HowItWorksSection = forwardRef((props, ref) => {
             <span className="text-sm font-medium text-[var(--color-text-primary)]">How it works</span>
           </div>
           
-          <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-brand-400)] bg-clip-text text-transparent font-dmSerif mb-6">
-            From zero to habit hero
+          <h2 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-brand-400)] bg-clip-text text-transparent font-dmSerif mb-6">
+            Track anything. Visualise everything.
             <br />
-            in four simple steps
+            Build together.
           </h2>
           
-          <p className="text-lg text-[var(--color-text-secondary)] max-w-2xl mx-auto">
+          <p className="text-md font-outfit text-[var(--color-text-secondary)] max-w-2xl mx-auto">
             Discover how Bito transforms your daily routines into lasting habits with intelligent tracking, 
             beautiful insights, and collaborative accountability.
           </p>
