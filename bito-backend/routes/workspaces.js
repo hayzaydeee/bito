@@ -2456,4 +2456,133 @@ router.get('/:id/shared-habits-overview', authenticateJWT, async (req, res) => {
   }
 });
 
+// @route   GET /api/workspaces/:workspaceId/members/:memberId/dashboard
+// @desc    Get member dashboard data (for viewing another member's habits with permission)
+// @access  Private
+router.get('/:workspaceId/members/:memberId/dashboard', authenticateJWT, async (req, res) => {
+  try {
+    const { workspaceId, memberId } = req.params;
+    const requestingUserId = req.user.id;
+
+    console.log(`📊 Fetching member dashboard for member ${memberId} in workspace ${workspaceId}, requested by ${requestingUserId}`);
+
+    // Verify workspace exists and requesting user has access
+    const workspace = await Workspace.findById(workspaceId)
+      .populate('members.userId', 'name email avatar');
+    
+    if (!workspace) {
+      return res.status(404).json({
+        success: false,
+        error: 'Workspace not found'
+      });
+    }
+
+    // Check if requesting user is a member of the workspace
+    const isRequestingUserMember = workspace.members.some(member => 
+      member.userId._id.toString() === requestingUserId
+    );
+
+    if (!isRequestingUserMember) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied. You are not a member of this workspace.'
+      });
+    }
+
+    // Find the target member in the workspace
+    const targetMember = workspace.members.find(member => 
+      member.userId._id.toString() === memberId
+    );
+
+    if (!targetMember) {
+      return res.status(404).json({
+        success: false,
+        error: 'Member not found in this workspace'
+      });
+    }
+
+    // Get the target member's habits in this workspace
+    const memberHabits = await Habit.find({
+      userId: memberId,
+      source: 'workspace',
+      workspaceId: workspaceId,
+      isActive: true
+    })
+    .populate('workspaceHabitId', 'name description category icon color')
+    .sort({ createdAt: -1 });
+
+    console.log(`Found ${memberHabits.length} habits for member ${memberId}`);
+
+    // Get habit entries for the member's habits
+    const habitIds = memberHabits.map(habit => habit._id);
+    const habitEntries = await HabitEntry.find({
+      habitId: { $in: habitIds },
+      userId: memberId
+    });
+
+    console.log(`Found ${habitEntries.length} habit entries for member ${memberId}`);
+
+    // Organize entries by habitId
+    const entriesByHabit = {};
+    habitEntries.forEach(entry => {
+      const habitId = entry.habitId.toString();
+      if (!entriesByHabit[habitId]) {
+        entriesByHabit[habitId] = [];
+      }
+      entriesByHabit[habitId].push({
+        _id: entry._id,
+        date: entry.date,
+        completed: entry.completed,
+        value: entry.value,
+        note: entry.note,
+        createdAt: entry.createdAt,
+        updatedAt: entry.updatedAt
+      });
+    });
+
+    res.json({
+      success: true,
+      member: {
+        _id: targetMember.userId._id,
+        name: targetMember.userId.name,
+        email: targetMember.userId.email,
+        avatar: targetMember.userId.avatar,
+        role: targetMember.role,
+        status: targetMember.status
+      },
+      habits: memberHabits.map(habit => ({
+        _id: habit._id,
+        name: habit.name || habit.workspaceHabitId?.name,
+        description: habit.description || habit.workspaceHabitId?.description,
+        category: habit.category || habit.workspaceHabitId?.category,
+        icon: habit.icon || habit.workspaceHabitId?.icon,
+        color: habit.color || habit.workspaceHabitId?.color,
+        frequency: habit.frequency,
+        target: habit.target,
+        isActive: habit.isActive,
+        streakCount: habit.streakCount,
+        source: habit.source,
+        workspaceId: habit.workspaceId,
+        workspaceHabitId: habit.workspaceHabitId,
+        adoptedAt: habit.adoptedAt,
+        createdAt: habit.createdAt,
+        updatedAt: habit.updatedAt
+      })),
+      entries: entriesByHabit,
+      workspace: {
+        _id: workspace._id,
+        name: workspace.name
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching member dashboard:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch member dashboard',
+      details: error.message
+    });
+  }
+});
+
 module.exports = router;
