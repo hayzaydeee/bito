@@ -25,7 +25,6 @@ import GroupInviteModal from "../components/ui/GroupInviteModal";
 import EncouragementModal from "../components/shared/EncouragementModal";
 import MemberProgressWidget from "../components/widgets/MemberProgressWidget";
 import EncouragementFeedWidget from "../components/widgets/EncouragementFeedWidget";
-import ChallengeWidget from "../components/widgets/ChallengeWidget";
 import GroupHabitModal from "../components/ui/GroupHabitModal";
 import HabitAdoptModal from "../components/ui/HabitAdoptModal";
 import "../components/ui/ModalAnimation.css";
@@ -130,7 +129,6 @@ const WorkspaceOverview = () => {
   const [activities, setActivities] = useState([]);
   const [groupHabits, setGroupHabits] = useState([]);
   const [members, setMembers] = useState([]);
-  const [challenges, setChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Modal states
@@ -219,15 +217,6 @@ const WorkspaceOverview = () => {
       } catch (err) {
         console.warn("Failed to fetch group habits:", err);
         setGroupHabits([]);
-      }
-
-      // Fetch challenges data
-      try {
-        const challengesResponse = await groupsAPI.getChallenges(groupId);
-        setChallenges(challengesResponse.challenges || []);
-      } catch (err) {
-        console.warn("Failed to fetch challenges:", err);
-        setChallenges([]);
       }
 
       // Fetch group tracking data which includes completions
@@ -473,17 +462,6 @@ const WorkspaceOverview = () => {
       .catch((err) => console.warn("Failed to refresh encouragements:", err));
   };
 
-  const handleCreateChallenge = async (challengeData) => {
-    try {
-      await groupsAPI.createChallenge(groupId, challengeData);
-      // Refresh challenges data
-      const challengesResponse = await groupsAPI.getChallenges(groupId);
-      setChallenges(challengesResponse.challenges || []);
-    } catch (err) {
-      console.error("Failed to create challenge:", err);
-    }
-  };
-
   // Check user permissions with multiple ID format checks
   const currentUserId = user?._id || user?.id;
 
@@ -505,13 +483,6 @@ const WorkspaceOverview = () => {
   // Widget definitions (excluding header which is now standalone)
   const groupWidgets = useMemo(
     () => ({
-      "challenges-widget": {
-        title: "Group Challenges",
-        description: "Team challenges and accountability",
-        category: "collaboration",
-        defaultProps: { w: 12, h: 5 },
-        component: () => <ChallengeWidget workspaceId={groupId} />,
-      },
       "recent-activity-widget": {
         title: "Recent Activity",
         description: "Latest team updates and member activities",

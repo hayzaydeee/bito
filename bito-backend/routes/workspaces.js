@@ -13,7 +13,6 @@ const HabitEntry = require('../models/HabitEntry');
 const Activity = require('../models/Activity');
 const User = require('../models/User');
 const Invitation = require('../models/Invitation');
-const Challenge = require('../models/Challenge');
 const emailService = require('../services/emailService');
 
 // Debug middleware to log all requests to this router
@@ -1089,7 +1088,6 @@ router.delete('/:id/members/:userId', authenticateJWT, async (req, res) => {
       });
       await MemberHabit.deleteMany({ workspaceId: workspace._id });
       await WorkspaceHabit.deleteMany({ workspaceId: workspace._id });
-      await Challenge.deleteMany({ workspaceId: workspace._id });
       await Activity.deleteMany({ workspaceId: workspace._id });
       await Invitation.deleteMany({ workspaceId: workspace._id });
       await Workspace.findByIdAndDelete(workspace._id);
@@ -2159,15 +2157,11 @@ router.delete('/:id', authenticateJWT, async (req, res) => {
     await WorkspaceHabit.deleteMany({ workspaceId });
     console.log(`🗑️ Deleted workspace habits`);
 
-    // 4. Delete challenges
-    await Challenge.deleteMany({ workspaceId });
-    console.log(`🗑️ Deleted challenges`);
-
-    // 5. Delete activities
+    // 4. Delete activities
     await Activity.deleteMany({ workspaceId });
     console.log(`🗑️ Deleted activities`);
 
-    // 6. Delete invitations
+    // 5. Delete invitations
     await Invitation.deleteMany({ workspaceId });
     console.log(`🗑️ Deleted invitations`);
 
@@ -2501,17 +2495,27 @@ router.get('/:workspaceId/members/:memberId/dashboard', authenticateJWT, async (
       });
     }
 
-    // Get the target member's habits in this workspace
+    // Get the target member's habits (all their active habits for dashboard view)
+    console.log(`� Looking for habits for member ${memberId}`);
+    
     const memberHabits = await Habit.find({
       userId: memberId,
-      source: 'workspace',
-      workspaceId: workspaceId,
       isActive: true
     })
     .populate('workspaceHabitId', 'name description category icon color')
     .sort({ createdAt: -1 });
 
-    console.log(`Found ${memberHabits.length} habits for member ${memberId}`);
+    console.log(`Found ${memberHabits.length} active habits for member ${memberId}`);
+    
+    if (memberHabits.length > 0) {
+      console.log(`📋 Habit details:`, memberHabits.map(h => ({ 
+        id: h._id, 
+        name: h.name, 
+        source: h.source, 
+        workspaceId: h.workspaceId?.toString(),
+        isActive: h.isActive 
+      })));
+    }
 
     // Get habit entries for the member's habits
     const habitIds = memberHabits.map(habit => habit._id);
@@ -2580,6 +2584,88 @@ router.get('/:workspaceId/members/:memberId/dashboard', authenticateJWT, async (
     res.status(500).json({
       success: false,
       error: 'Failed to fetch member dashboard',
+      details: error.message
+    });
+  }
+});
+
+// @route   GET /api/workspaces/:workspaceId/challenges
+// @desc    Get challenges for workspace (stub endpoint - returns empty)
+// @access  Private
+router.get('/:workspaceId/challenges', authenticateJWT, async (req, res) => {
+  try {
+    console.log('📝 Challenges endpoint called - returning empty challenges array');
+    res.json({
+      success: true,
+      challenges: [],
+      message: 'Challenges feature is currently disabled'
+    });
+  } catch (error) {
+    console.error('Error in challenges endpoint:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch challenges',
+      details: error.message
+    });
+  }
+});
+
+// @route   POST /api/workspaces/:workspaceId/challenges
+// @desc    Create challenge (stub endpoint - returns success but does nothing)
+// @access  Private
+router.post('/:workspaceId/challenges', authenticateJWT, async (req, res) => {
+  try {
+    console.log('📝 Create challenge endpoint called - returning success without creating');
+    res.json({
+      success: true,
+      message: 'Challenges feature is currently disabled',
+      challenge: null
+    });
+  } catch (error) {
+    console.error('Error in create challenge endpoint:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create challenge',
+      details: error.message
+    });
+  }
+});
+
+// @route   POST /api/workspaces/:workspaceId/challenges/:challengeId/join
+// @desc    Join challenge (stub endpoint - returns success but does nothing)
+// @access  Private
+router.post('/:workspaceId/challenges/:challengeId/join', authenticateJWT, async (req, res) => {
+  try {
+    console.log('📝 Join challenge endpoint called - returning success without joining');
+    res.json({
+      success: true,
+      message: 'Challenges feature is currently disabled'
+    });
+  } catch (error) {
+    console.error('Error in join challenge endpoint:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to join challenge',
+      details: error.message
+    });
+  }
+});
+
+// @route   DELETE /api/workspaces/:workspaceId/challenges/:challengeId/leave
+// @desc    Leave challenge (stub endpoint - returns success but does nothing)
+// @access  Private
+router.delete('/:workspaceId/challenges/:challengeId/leave', authenticateJWT, async (req, res) => {
+  try {
+    console.log('📝 Leave challenge endpoint called - returning success without leaving');
+    res.json({
+      success: true,
+      message: 'Challenges feature is currently disabled'
+    });
+  } catch (error) {
+    console.error('Error in leave challenge endpoint:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to leave challenge',
       details: error.message
     });
   }

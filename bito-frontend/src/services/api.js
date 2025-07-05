@@ -580,33 +580,7 @@ export const groupsAPI = {
     return apiRequest(`/api/workspaces/${workspaceId}/leaderboard${queryString ? `?${queryString}` : ''}`);
   },
 
-  // Get challenges for a workspace
-  getChallenges: async (workspaceId, params = {}) => {
-    const queryString = new URLSearchParams(params).toString();
-    return apiRequest(`/api/workspaces/${workspaceId}/challenges${queryString ? `?${queryString}` : ''}`);
-  },
 
-  // Create a new challenge
-  createChallenge: async (workspaceId, challengeData) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/challenges`, {
-      method: 'POST',
-      body: JSON.stringify(challengeData),
-    });
-  },
-
-  // Join a challenge
-  joinChallenge: async (workspaceId, challengeId) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/challenges/${challengeId}/join`, {
-      method: 'POST',
-    });
-  },
-
-  // Leave a challenge
-  leaveChallenge: async (workspaceId, challengeId) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/challenges/${challengeId}/leave`, {
-      method: 'DELETE',
-    });
-  },
 
   // Member interaction endpoints
   
