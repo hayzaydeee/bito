@@ -949,7 +949,6 @@ const WorkspaceOverview = () => {
       activities,
       groupHabits,
       members,
-      challenges,
       canManageGroup,
       navigate,
       groupId,
@@ -1007,15 +1006,6 @@ const WorkspaceOverview = () => {
     xs: [
       {
         w: 4,
-        h: 5,
-        x: 0,
-        y: 5,
-        i: "challenges-widget",
-        moved: false,
-        static: false,
-      },
-      {
-        w: 4,
         h: 7,
         x: 0,
         y: 14,
@@ -1043,15 +1033,6 @@ const WorkspaceOverview = () => {
       },
     ],
     xxs: [
-      {
-        w: 2,
-        h: 5,
-        x: 0,
-        y: 0,
-        i: "challenges-widget",
-        moved: false,
-        static: false,
-      },
       {
         w: 2,
         h: 3,
