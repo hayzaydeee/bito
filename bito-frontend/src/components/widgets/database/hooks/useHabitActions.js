@@ -63,7 +63,14 @@ export const useHabitActions = ({
       const key = dateStr ? `${dateStr}-${habitId}` : `${day}-${habitId}`;
       
       if (onToggleCompletion) {
-        onToggleCompletion(key, !displayCompletions[key]);
+        // Call with the correct parameters for Dashboard compatibility
+        // Dashboard expects (habitId, date) format
+        if (dateStr) {
+          onToggleCompletion(habitId, dateStr);
+        } else {
+          // Fallback: call with the key format for legacy compatibility
+          onToggleCompletion(key, !displayCompletions[key]);
+        }
       }
     },
     [onToggleCompletion, getDayDate]
