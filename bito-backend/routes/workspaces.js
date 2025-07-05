@@ -1733,10 +1733,11 @@ router.post('/:workspaceId/habits', [
         type: 'habit_created',
         userId: req.user.id,
         workspaceId,
-        metadata: {
+        data: {
           habitId: workspaceHabit._id,
           habitName: name
-        }
+        },
+        visibility: 'workspace'
       });
       await activity.save();
     } catch (activityError) {
@@ -2006,8 +2007,9 @@ router.delete('/workspace-habits/:id', authenticateJWT, async (req, res) => {
       const activity = new Activity({
         workspaceId: workspaceHabit.workspaceId,
         userId: req.user.id,
-        type: 'habit_created', // We might want to add 'habit_deleted' to the Activity model
+        type: 'habit_created', // Using habit_created with action: 'deleted' since there's no habit_deleted type
         data: {
+          habitId: workspaceHabit._id,
           habitName: workspaceHabit.name,
           action: 'deleted'
         },
