@@ -11,23 +11,28 @@ const EmptyGalleryState = ({ onGetStarted }) => (
     </div>
     
     <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2 font-outfit">
-      Ready to build great habits?
+      {onGetStarted ? "Ready to build great habits?" : "No Habits Yet"}
     </h3>
     
     <p className="text-sm text-[var(--color-text-secondary)] mb-6 max-w-xs font-outfit">
-      Start tracking your daily habits and build consistency. Add your first habit to get started!
+      {onGetStarted 
+        ? "Start tracking your daily habits and build consistency. Add your first habit to get started!"
+        : "This member hasn't added any habits yet."
+      }
     </p>
     
-    <button
-      onClick={onGetStarted}
-      className="flex items-center gap-2 px-4 py-2 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg transition-all duration-200 font-outfit text-sm"
-    >
-      <PlusIcon className="w-4 h-4" />
-      Add Your First Habit
-    </button>
+    {onGetStarted && (
+      <button
+        onClick={onGetStarted}
+        className="flex items-center gap-2 px-4 py-2 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg transition-all duration-200 font-outfit text-sm"
+      >
+        <PlusIcon className="w-4 h-4" />
+        Add Your First Habit
+      </button>
+    )}
     
     <div className="mt-8 text-xs text-[var(--color-text-tertiary)] space-y-1 font-outfit">
-      <p>💡 Try habits like "Drink 8 glasses of water" or "Read for 30 minutes"</p>
+      {onGetStarted && <p>💡 Try habits like "Drink 8 glasses of water" or "Read for 30 minutes"</p>}
     </div>
   </div>
 );
@@ -51,11 +56,12 @@ export const GalleryView = ({
   setNewHabitName,
   handleAddHabit,
   handleCancelAdd,
+  readOnly = false, // Add readOnly prop
 }) => {
   // Show empty state if no habits exist
   if (!displayHabits || displayHabits.length === 0) {
     return (
-      <EmptyGalleryState onGetStarted={() => setShowAddForm(true)} />
+      <EmptyGalleryState onGetStarted={readOnly ? null : () => setShowAddForm(true)} />
     );
   }
 
@@ -168,11 +174,18 @@ export const GalleryView = ({
                       {day.slice(0, 1)}
                     </div>
                     <button
-                      onClick={() => handleToggleCompletion(day, habit.id, displayCompletions)}
-                      className={`w-8 h-8 rounded-lg transition-all duration-200 flex items-center justify-center hover:scale-110 active:scale-95 ${
+                      onClick={() => 
+                        !readOnly && handleToggleCompletion(day, habit.id, displayCompletions)
+                      }
+                      disabled={readOnly}
+                      className={`w-8 h-8 rounded-lg transition-all duration-200 flex items-center justify-center ${
+                        readOnly 
+                          ? "cursor-not-allowed opacity-60" 
+                          : "hover:scale-110 active:scale-95"
+                      } ${
                         isCompleted
                           ? "shadow-sm transform scale-105"
-                          : "hover:shadow-sm"
+                          : readOnly ? "" : "hover:shadow-sm"
                       }`}
                       style={{
                         backgroundColor: isCompleted ? habit.color : "transparent",
@@ -253,8 +266,13 @@ export const GalleryView = ({
           </div>
         ) : (
           <button
-            onClick={() => setShowAddForm(true)}
-            className="bg-[var(--color-surface-elevated)] rounded-lg p-4 border border-[var(--color-border-primary)] border-dashed hover:border-[var(--color-brand-400)] hover:bg-[var(--color-brand-500)]/5 transition-all duration-200 group"
+            onClick={() => !readOnly && setShowAddForm(true)}
+            disabled={readOnly}
+            className={`bg-[var(--color-surface-elevated)] rounded-lg p-4 border border-[var(--color-border-primary)] transition-all duration-200 group ${
+              readOnly
+                ? "border-dashed cursor-not-allowed opacity-60"
+                : "border-dashed hover:border-[var(--color-brand-400)] hover:bg-[var(--color-brand-500)]/5"
+            }`}
           >
             <div className="flex flex-col items-center justify-center text-center space-y-2">
               <div className="w-10 h-10 rounded-lg bg-[var(--color-brand-500)]/10 flex items-center justify-center group-hover:bg-[var(--color-brand-500)]/20 transition-all duration-200">
