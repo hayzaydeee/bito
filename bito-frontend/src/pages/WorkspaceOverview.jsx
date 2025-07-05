@@ -1233,14 +1233,12 @@ const WorkspaceOverview = () => {
           </div>
 
           <div className="flex items-center gap-3 mt-6 lg:mt-0">
-            {canManageGroup && (
               <button
                 onClick={() => navigate(`/app/groups/${groupId}/settings`)}
                 className="flex items-center justify-center w-12 h-12 rounded-2xl bg-[var(--color-surface-elevated] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/40 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-all duration-200"
               >
                 <GearIcon className="w-5 h-5" />
               </button>
-            )}
           </div>
         </div>
 
