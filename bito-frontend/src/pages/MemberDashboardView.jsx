@@ -9,7 +9,7 @@ import {
 import { groupsAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { habitUtils } from '../contexts/HabitContext';
-import BaseGridContainer from '../components/shared/BaseGridContainer';
+import { ContextGridAdapter } from '../components/shared';
 import { ChartFilterControls, DatabaseFilterControls } from '../components/ui/FilterControls';
 
 // Same configuration as Dashboard component, but excluding Quick Actions
@@ -531,15 +531,15 @@ const MemberDashboardView = () => {
       {/* Dashboard Grid Container - Only show when there are habits */}
       {habits && habits.length > 0 && (
         <div className="relative">
-          <BaseGridContainer
+          <ContextGridAdapter
           mode="dashboard"
           
-          // Member's data instead of current user's data
+          // Override context data with member's data
           habits={habits || []}
-          entries={entries || {}} // Ensure it's an object not an array
+          entries={entries || {}}
           isLoading={false}
           
-          // Disabled handlers for read-only mode
+          // Override handlers for read-only mode
           onToggleCompletion={handleToggleCompletion}
           onAddHabit={handleAddHabit}
           onDeleteHabit={handleDeleteHabit}

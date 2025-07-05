@@ -16,6 +16,8 @@ import MemberDashboardView from "./pages/MemberDashboardView";
 import GroupSelection from "./pages/GroupSelection";
 import InvitationPage from "./pages/InvitationPage";
 import { HabitProvider } from "./contexts/HabitContext";
+import { NotificationProvider } from "./contexts/NotificationContext";
+import ToastContainer from "./components/ui/ToastContainer";
 
 // Import authentication context
 import { AuthProvider } from "./contexts/AuthContext";
@@ -24,10 +26,11 @@ function App() {
 
   return (
     <AuthProvider>
-      <HabitProvider>
-        <Theme
-          appearance="dark"
-          accentColor="indigo"
+      <NotificationProvider>
+        <HabitProvider>
+          <Theme
+            appearance="dark"
+            accentColor="indigo"
           grayColor="slate"
           radius="large"
           scaling="100%"
@@ -63,8 +66,10 @@ function App() {
             </Routes>
           </div>
         </Router>
+        <ToastContainer />
       </Theme>
     </HabitProvider>
+  </NotificationProvider>
   </AuthProvider>
   );
 }

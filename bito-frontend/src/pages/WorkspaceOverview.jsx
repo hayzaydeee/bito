@@ -13,14 +13,12 @@ import {
   BackpackIcon,
   HeartIcon,
   ChevronRightIcon,
-  CheckCircledIcon,
   ArrowLeftIcon,
-  Cross2Icon,
-  ExclamationTriangleIcon,
 } from "@radix-ui/react-icons";
 import BaseGridContainer from "../components/shared/BaseGridContainer";
 import { groupsAPI } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
+import { useAppNotifications } from "../hooks/useAppNotifications";
 import GroupInviteModal from "../components/ui/GroupInviteModal";
 import EncouragementModal from "../components/shared/EncouragementModal";
 import MemberProgressWidget from "../components/widgets/MemberProgressWidget";
@@ -123,6 +121,7 @@ const WorkspaceOverview = () => {
   const { groupId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { workspace, habit, member, app } = useAppNotifications();
 
   const [group, setGroup] = useState(null);
   const [overview, setOverview] = useState(null);
@@ -136,9 +135,6 @@ const WorkspaceOverview = () => {
   const [showAddHabitModal, setShowAddHabitModal] = useState(false);
   const [showEditHabitModal, setShowEditHabitModal] = useState(false);
   const [showMembersModal, setShowMembersModal] = useState(false);
-
-  // Notification states
-  const [notification, setNotification] = useState(null);
   const [selectedHabit, setSelectedHabit] = useState(null);
 
   // Form states
@@ -179,12 +175,6 @@ const WorkspaceOverview = () => {
     targetUser: null,
     habitId: null,
   });
-
-  // Show notification helper
-  const showNotification = (message, type = "success") => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification(null), 4000); // Auto-hide after 4 seconds
-  };
 
   useEffect(() => {
     fetchGroupData();
@@ -285,16 +275,14 @@ const WorkspaceOverview = () => {
         setShowInviteModal(false);
         setInviteForm({ email: "", role: "member", message: "" });
         // Show success notification
-        showNotification(
-          `Invitation sent to ${inviteForm.email} successfully!`
-        );
+        workspace.inviteSent(inviteForm.email);
         // Refresh group data
         fetchGroupData();
       }
     } catch (error) {
       console.error("Error inviting member:", error);
       // Show error notification
-      showNotification("Failed to send invitation. Please try again.", "error");
+      workspace.error("send invitation", error.message || "Please try again.");
     }
   };
 
@@ -320,16 +308,14 @@ const WorkspaceOverview = () => {
         setActiveTab("details");
         setEmojiCategory("common");
         // Show success notification
-        showNotification(
-          `Group habit "${habitForm.name}" created successfully!`
-        );
+        habit.created(habitForm.name);
         // Refresh group data
         fetchGroupData();
       }
     } catch (error) {
       console.error("Error adding habit:", error);
       // Show error notification
-      showNotification("Failed to create habit. Please try again.", "error");
+      habit.error("create", error.message || "Please try again.");
     }
   };
 
@@ -381,15 +367,13 @@ const WorkspaceOverview = () => {
 
       if (response.success) {
         setShowEditHabitModal(false);
-        showNotification(
-          `Group habit "${habitForm.name}" updated successfully!`
-        );
+        habit.updated(habitForm.name);
         // Refresh group data
         fetchGroupData();
       }
     } catch (error) {
       console.error("Error updating habit:", error);
-      showNotification("Failed to update habit. Please try again.", "error");
+      habit.error("update", error.message || "Please try again.");
     }
   };
 
@@ -398,13 +382,13 @@ const WorkspaceOverview = () => {
       const response = await groupsAPI.deleteGroupHabit(groupId, habitId);
       if (response.success) {
         setShowEditHabitModal(false);
-        showNotification("Group habit deleted successfully!");
+        habit.deleted("Group habit");
         // Refresh group data
         fetchGroupData();
       }
     } catch (error) {
       console.error("Error deleting habit:", error);
-      showNotification("Failed to delete habit. Please try again.", "error");
+      habit.error("delete", error.message || "Please try again.");
     }
   };
 
@@ -423,13 +407,10 @@ const WorkspaceOverview = () => {
       await fetchGroupData();
 
       // Show success notification
-      showNotification(`Successfully adopted "${adoptingHabit.name}" habit!`);
+      habit.adopted(adoptingHabit.name);
     } catch (error) {
       console.error("Error adopting habit:", error);
-      showNotification(
-        "Failed to adopt habit. You may have already adopted it.",
-        "error"
-      );
+      habit.error("adopt", "You may have already adopted it.");
     }
   };
 
@@ -630,10 +611,7 @@ const WorkspaceOverview = () => {
               await handleAdoptHabit();
             } catch (error) {
               console.error("Error adopting habit:", error);
-              showNotification(
-                "Failed to adopt habit. You may have already adopted it.",
-                "error"
-              );
+              habit.error("adopt", "You may have already adopted it.");
             }
           };
 
@@ -1129,34 +1107,6 @@ const WorkspaceOverview = () => {
 
   return (
     <div className="min-h-screen page-container p-6">
-      {/* Success/Error Notification */}
-      {notification && (
-        <div
-          className={`fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 max-w-sm p-4 rounded-lg shadow-lg border transition-all duration-300 ${
-            notification.type === "success"
-              ? "bg-green-50 border-green-200 text-green-800"
-              : "bg-red-50 border-red-200 text-red-800"
-          }`}
-        >
-          <div className="flex items-center gap-3">
-            {notification.type === "success" ? (
-              <CheckCircledIcon className="w-5 h-5 text-green-600" />
-            ) : (
-              <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
-            )}
-            <p className="text-sm font-medium font-outfit">
-              {notification.message}
-            </p>
-            <button
-              onClick={() => setNotification(null)}
-              className="ml-auto p-1 hover:bg-black/5 rounded"
-            >
-              <Cross2Icon className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
-
       <div className="max-w-7xl mx-auto">
         {/* Group Header - Outside of the widget grid */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
@@ -1245,7 +1195,7 @@ const WorkspaceOverview = () => {
             onSave={handleAddHabit}
             onSuccess={() => {
               setShowAddHabitModal(false);
-              showNotification("Group habit added successfully!");
+              habit.created("Group habit");
               fetchGroupData();
             }}
           />
@@ -1283,7 +1233,7 @@ const WorkspaceOverview = () => {
             onDelete={handleDeleteHabit}
             onSuccess={() => {
               setShowEditHabitModal(false);
-              showNotification("Group habit updated successfully!");
+              habit.updated("Group habit");
               fetchGroupData();
             }}
           />
@@ -1300,7 +1250,7 @@ const WorkspaceOverview = () => {
             onAdopt={handleAdoptHabit}
             onSuccess={() => {
               setShowAdoptModal(false);
-              showNotification("Habit adopted successfully!");
+              habit.adopted(adoptingHabit?.name || "habit");
               fetchGroupData();
             }}
           />
