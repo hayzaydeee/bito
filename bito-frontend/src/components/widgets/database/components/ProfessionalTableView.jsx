@@ -13,6 +13,7 @@ export const ProfessionalTableView = ({
   getDayCompletion,
   handleToggleCompletion,
   displayCompletions,
+  readOnly = false, // Add readOnly prop
 }) => {
   // Empty state when no habits are available
   if (!displayHabits || displayHabits.length === 0) {
@@ -141,16 +142,21 @@ export const ProfessionalTableView = ({
                         <div className="flex items-center justify-center">
                           <button
                             onClick={() =>
-                              handleToggleCompletion(
+                              !readOnly && handleToggleCompletion(
                                 day,
                                 habit.id,
                                 displayCompletions
                               )
                             }
-                            className={`w-7 h-7 rounded-lg transition-all duration-200 flex items-center justify-center hover:scale-110 active:scale-95 ${
+                            disabled={readOnly}
+                            className={`w-7 h-7 rounded-lg transition-all duration-200 flex items-center justify-center ${
+                              readOnly 
+                                ? "cursor-not-allowed opacity-60" 
+                                : "hover:scale-110 active:scale-95"
+                            } ${
                               isCompleted
                                 ? "shadow-md transform scale-105"
-                                : "hover:shadow-sm"
+                                : readOnly ? "" : "hover:shadow-sm"
                             }`}
                             style={{
                               backgroundColor: isCompleted
@@ -197,9 +203,16 @@ export const ProfessionalTableView = ({
                   <td className="py-3 px-4 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <button
-                        className="text-xs text-[var(--color-brand-400)] hover:text-[var(--color-brand-300)] font-outfit font-medium transition-colors"
+                        className={`text-xs font-outfit font-medium transition-colors ${
+                          readOnly 
+                            ? "text-[var(--color-text-tertiary)] cursor-not-allowed" 
+                            : "text-[var(--color-brand-400)] hover:text-[var(--color-brand-300)]"
+                        }`}
+                        disabled={readOnly}
                         onClick={() => {
-                          /* Handle view day details */
+                          if (!readOnly) {
+                            /* Handle view day details */
+                          }
                         }}
                       >
                         View
@@ -208,9 +221,16 @@ export const ProfessionalTableView = ({
                         •
                       </span>
                       <button
-                        className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] font-outfit font-medium transition-colors"
+                        className={`text-xs font-outfit font-medium transition-colors ${
+                          readOnly 
+                            ? "text-[var(--color-text-tertiary)] cursor-not-allowed" 
+                            : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
+                        }`}
+                        disabled={readOnly}
                         onClick={() => {
-                          /* Handle edit day */
+                          if (!readOnly) {
+                            /* Handle edit day */
+                          }
                         }}
                       >
                         Edit

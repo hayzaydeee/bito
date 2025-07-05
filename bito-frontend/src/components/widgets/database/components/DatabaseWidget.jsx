@@ -191,8 +191,9 @@ const DatabaseWidget = memo(
       getDayCompletion,
       getHabitCompletion,
       weekStats,
-      handleToggleCompletion: readOnly ? () => {} : handleToggleCompletion,
+      handleToggleCompletion,
       breakpoint,
+      readOnly, // Pass readOnly flag to components
     };
     const renderContent = () => {
       switch (viewType) {
