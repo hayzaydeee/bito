@@ -13,6 +13,7 @@ import {
   BackpackIcon,
   HeartIcon,
   ChevronRightIcon,
+  CheckCircledIcon,
   ArrowLeftIcon,
 } from "@radix-ui/react-icons";
 import BaseGridContainer from "../components/shared/BaseGridContainer";
