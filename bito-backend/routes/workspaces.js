@@ -2124,4 +2124,270 @@ router.delete('/:id', authenticateJWT, async (req, res) => {
   }
 });
 
+// @route   GET /api/workspaces/:id/group-trackers
+// @desc    Get group trackers data for all members in a workspace
+// @access  Private (Members)
+router.get('/:id/group-trackers', authenticateJWT, async (req, res) => {
+  try {
+    const workspaceId = req.params.id;
+    const userId = req.user.id;
+    
+    console.log(`📊 GROUP TRACKERS REQUEST: Workspace ${workspaceId}, User ${userId}`);
+    
+    // Parse date range from query params
+    const { startDate, endDate } = req.query;
+    const dateFilter = {};
+    
+    if (startDate) {
+      dateFilter.date = { $gte: new Date(startDate) };
+      console.log(`📅 Using startDate filter: ${startDate}`);
+    }
+    
+    if (endDate) {
+      if (!dateFilter.date) dateFilter.date = {};
+      dateFilter.date.$lte = new Date(endDate);
+      console.log(`📅 Using endDate filter: ${endDate}`);
+    }
+    
+    // Find the workspace and verify user is a member
+    const workspace = await Workspace.findById(workspaceId);
+    if (!workspace) {
+      console.log(`❌ Workspace not found: ${workspaceId}`);
+      return res.status(404).json({
+        success: false,
+        error: 'Workspace not found'
+      });
+    }
+    
+    // Check if user is a member of the workspace
+    const isMember = workspace.members.some(m => m.userId.toString() === userId);
+    if (!isMember) {
+      console.log(`⛔ User ${userId} is not a member of workspace ${workspaceId}`);
+      return res.status(403).json({
+        success: false,
+        error: 'You are not a member of this workspace'
+      });
+    }
+    
+    // Get all workspace habits
+    const workspaceHabits = await WorkspaceHabit.find({ workspaceId }).lean();
+    console.log(`📋 Found ${workspaceHabits.length} workspace habits`);
+    
+    // Get all member habits for the workspace habits
+    const memberHabits = await MemberHabit.find({ 
+      workspaceId,
+      workspaceHabitId: { $in: workspaceHabits.map(h => h._id) }
+    }).populate('userId', 'name email').lean();
+    console.log(`👥 Found ${memberHabits.length} member habits`);
+    
+    // Create a map of workspace habits by ID for easy lookup
+    const workspaceHabitsMap = {};
+    workspaceHabits.forEach(habit => {
+      workspaceHabitsMap[habit._id.toString()] = habit;
+    });
+    
+    // Get all habit entries for the member habits within the date range
+    const query = {
+      habitId: { $in: memberHabits.map(h => h._id) },
+      ...dateFilter
+    };
+    
+    console.log(`🔍 Querying habit entries with filter:`, query);
+    const habitEntries = await HabitEntry.find(query).lean();
+    console.log(`📝 Found ${habitEntries.length} habit entries`);
+    
+    // Group entries by member habit ID
+    const entriesByHabitId = {};
+    habitEntries.forEach(entry => {
+      const habitId = entry.habitId.toString();
+      if (!entriesByHabitId[habitId]) {
+        entriesByHabitId[habitId] = [];
+      }
+      entriesByHabitId[habitId].push(entry);
+    });
+    
+    // Build the tracker data structure
+    const trackers = memberHabits.map(memberHabit => {
+      const workspaceHabitId = memberHabit.workspaceHabitId.toString();
+      const workspaceHabit = workspaceHabitsMap[workspaceHabitId];
+      const habitId = memberHabit._id.toString();
+      
+      return {
+        userId: memberHabit.userId._id,
+        userName: memberHabit.userId.name,
+        habitId: habitId,
+        workspaceHabitId: workspaceHabitId,
+        habitName: workspaceHabit?.name || memberHabit.name,
+        frequency: memberHabit.frequency || workspaceHabit?.frequency,
+        streakCount: memberHabit.streakCount || 0,
+        totalCompletions: memberHabit.totalCompletions || 0,
+        entries: entriesByHabitId[habitId] || []
+      };
+    });
+    
+    res.json({
+      success: true,
+      trackers,
+      dateRange: {
+        startDate: startDate ? new Date(startDate) : null,
+        endDate: endDate ? new Date(endDate) : null
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error fetching group trackers:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch group trackers',
+      details: error.message
+    });
+  }
+});
+
+// @route   GET /api/workspaces/:id/shared-habits-overview
+// @desc    Get overview stats for shared habits across workspace
+// @access  Private (Members)
+router.get('/:id/shared-habits-overview', authenticateJWT, async (req, res) => {
+  try {
+    const workspaceId = req.params.id;
+    const userId = req.user.id;
+    
+    console.log(`📊 SHARED HABITS OVERVIEW REQUEST: Workspace ${workspaceId}, User ${userId}`);
+    
+    // Find the workspace and verify user is a member
+    const workspace = await Workspace.findById(workspaceId);
+    if (!workspace) {
+      console.log(`❌ Workspace not found: ${workspaceId}`);
+      return res.status(404).json({
+        success: false,
+        error: 'Workspace not found'
+      });
+    }
+    
+    // Check if user is a member of the workspace
+    const isMember = workspace.members.some(m => m.userId.toString() === userId);
+    if (!isMember) {
+      console.log(`⛔ User ${userId} is not a member of workspace ${workspaceId}`);
+      return res.status(403).json({
+        success: false,
+        error: 'You are not a member of this workspace'
+      });
+    }
+    
+    // Get all workspace habits
+    const workspaceHabits = await WorkspaceHabit.find({ workspaceId }).lean();
+      // Get counts of members who adopted each habit
+    const habitAdoptionCounts = await MemberHabit.aggregate([
+      { 
+        $match: { 
+          workspaceId: new mongoose.Types.ObjectId(workspaceId),
+          workspaceHabitId: { $in: workspaceHabits.map(h => h._id) }
+        }
+      },
+      { 
+        $group: {
+          _id: "$workspaceHabitId",
+          adoptedCount: { $sum: 1 }
+        }
+      }
+    ]);
+    
+    // Create a map of adoption counts by workspace habit ID
+    const adoptionCountsMap = {};
+    habitAdoptionCounts.forEach(item => {
+      adoptionCountsMap[item._id.toString()] = item.adoptedCount;
+    });
+    
+    // Calculate completion rates for each habit over last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    // Get member habits for the workspace
+    const memberHabits = await MemberHabit.find({
+      workspaceId,
+      workspaceHabitId: { $in: workspaceHabits.map(h => h._id) }
+    }).lean();
+    
+    // Get entries for these habits in the last 30 days
+    const entries = await HabitEntry.find({
+      habitId: { $in: memberHabits.map(h => h._id) },
+      date: { $gte: thirtyDaysAgo }
+    }).lean();
+    
+    // Group member habits by workspace habit ID
+    const memberHabitsByWorkspaceHabit = {};
+    memberHabits.forEach(habit => {
+      const workspaceHabitId = habit.workspaceHabitId.toString();
+      if (!memberHabitsByWorkspaceHabit[workspaceHabitId]) {
+        memberHabitsByWorkspaceHabit[workspaceHabitId] = [];
+      }
+      memberHabitsByWorkspaceHabit[workspaceHabitId].push(habit);
+    });
+    
+    // Group entries by habit ID
+    const entriesByHabitId = {};
+    entries.forEach(entry => {
+      const habitId = entry.habitId.toString();
+      if (!entriesByHabitId[habitId]) {
+        entriesByHabitId[habitId] = [];
+      }
+      entriesByHabitId[habitId].push(entry);
+    });
+    
+    // Build the overview data
+    const overview = workspaceHabits.map(habit => {
+      const habitId = habit._id.toString();
+      const memberHabitsForWorkspaceHabit = memberHabitsByWorkspaceHabit[habitId] || [];
+      
+      // Calculate completion stats
+      let totalCompletions = 0;
+      let totalExpectedCompletions = 0;
+      
+      memberHabitsForWorkspaceHabit.forEach(memberHabit => {
+        const memberHabitId = memberHabit._id.toString();
+        const habitEntries = entriesByHabitId[memberHabitId] || [];
+        
+        totalCompletions += habitEntries.length;
+        
+        // Calculate expected completions based on frequency and 30-day period
+        // This is a simplified calculation and might need adjustment based on your frequency model
+        const daysPerWeek = memberHabit.frequency?.daysPerWeek || habit.frequency?.daysPerWeek || 7;
+        totalExpectedCompletions += Math.round((30 / 7) * daysPerWeek);
+      });
+      
+      const completionRate = totalExpectedCompletions > 0 
+        ? (totalCompletions / totalExpectedCompletions) * 100 
+        : 0;
+      
+      return {
+        habitId: habitId,
+        name: habit.name,
+        description: habit.description,
+        adoptedCount: adoptionCountsMap[habitId] || 0,
+        totalMembers: workspace.members.length,
+        adoptionRate: workspace.members.length > 0 
+          ? ((adoptionCountsMap[habitId] || 0) / workspace.members.length) * 100 
+          : 0,
+        completionRate: Math.min(100, completionRate),
+        totalCompletions,
+        streak: Math.max(...memberHabitsForWorkspaceHabit.map(h => h.streakCount || 0), 0)
+      };
+    });
+    
+    res.json({
+      success: true,
+      overview,
+      memberCount: workspace.members.length
+    });
+    
+  } catch (error) {
+    console.error('Error fetching shared habits overview:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch shared habits overview',
+      details: error.message
+    });
+  }
+});
+
 module.exports = router;
