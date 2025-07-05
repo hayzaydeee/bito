@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { 
   ExitIcon, 
   Cross2Icon, 
   ExclamationTriangleIcon 
 } from '@radix-ui/react-icons';
 import { workspacesAPI } from '../../services/api';
+import '../ui/ModalAnimation.css';
 
 const LeaveWorkspaceButton = ({ workspace, isOwner }) => {
+  const modalRef = useRef(null);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -78,39 +81,48 @@ const LeaveWorkspaceButton = ({ workspace, isOwner }) => {
           <ExitIcon className="w-4 h-4" />
           {isLoading ? 'Processing...' : 'Leave Workspace'}
         </button>
-        
-        {error && (
-          <p className="mt-2 text-sm text-red-500">
-            {error}
-          </p>
-        )}
       </div>
 
       {/* Confirmation Dialog */}
-      {isConfirmDialogOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="w-full max-w-md p-6 bg-[var(--color-surface-primary)] rounded-xl shadow-xl border border-[var(--color-border-primary)]">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                  <ExitIcon className="w-5 h-5 text-red-600" />
-                </div>
-                <h3 className="text-lg font-medium text-[var(--color-text-primary)]">
-                  Leave Workspace
-                </h3>
+      {isConfirmDialogOpen && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-200 animate-fade-in" 
+            onClick={closeConfirmDialog}
+          />
+          
+          {/* Modal */}
+          <div 
+            ref={modalRef}
+            className="relative bg-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)] shadow-xl p-6 w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto z-10 transform transition-all duration-200 animate-zoom-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button 
+              className="absolute top-4 right-4 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+              onClick={closeConfirmDialog}
+            >
+              <Cross2Icon className="w-5 h-5" />
+            </button>
+            
+            {/* Header */}
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center mx-auto mb-4">
+                <ExitIcon className="w-8 h-8 text-white" />
               </div>
-              
-              <button 
-                onClick={closeConfirmDialog}
-                className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
-              >
-                <Cross2Icon className="w-5 h-5" />
-              </button>
+              <div className="text-2xl font-dmSerif gradient-text mb-2">
+                Leave Workspace
+              </div>
+              <p className="text-sm text-[var(--color-text-secondary)] font-outfit mb-5">
+                You are about to leave <strong>{workspace?.name}</strong>
+              </p>
             </div>
             
+            {/* Content */}
             <div className="space-y-4">
               <p className="text-sm text-[var(--color-text-secondary)]">
-                Are you sure you want to leave <strong>{workspace?.name}</strong>? You'll lose access to:
+                You'll lose access to:
               </p>
               
               <ul className="list-disc pl-5 text-sm text-[var(--color-text-secondary)] space-y-1">
@@ -128,10 +140,19 @@ const LeaveWorkspaceButton = ({ workspace, isOwner }) => {
                 </div>
               </div>
               
-              <div className="flex gap-3 pt-3">
+              {/* Action buttons */}
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">
+                    {error}
+                  </p>
+                </div>
+              )}
+              
+              <div className="flex gap-3 pt-4">
                 <button
                   onClick={closeConfirmDialog}
-                  className="flex-1 px-4 py-2 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] rounded-lg border border-[var(--color-border-primary)] transition-colors"
+                  className="flex-1 px-4 py-2 rounded-lg border border-[var(--color-border-primary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-all duration-200 font-outfit text-sm"
                 >
                   Cancel
                 </button>
@@ -139,7 +160,7 @@ const LeaveWorkspaceButton = ({ workspace, isOwner }) => {
                 <button
                   onClick={handleLeaveWorkspace}
                   disabled={isLoading}
-                  className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors disabled:opacity-50"
+                  className="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-all duration-200 font-outfit text-sm disabled:opacity-50"
                 >
                   {isLoading ? (
                     <span className="flex items-center justify-center">
@@ -153,7 +174,8 @@ const LeaveWorkspaceButton = ({ workspace, isOwner }) => {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

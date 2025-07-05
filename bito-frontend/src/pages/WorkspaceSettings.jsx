@@ -557,15 +557,6 @@ const WorkspaceSettings = () => {
           )}
         </div>
 
-        {/* Permission Notice */}
-        {!canEditSettings && (
-          <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800/30">
-            <p className="text-amber-800 dark:text-amber-200 font-outfit">
-              ⚠️ You have read-only access to these settings. Only workspace
-              owners and admins can make changes.
-            </p>
-          </div>
-        )}
 
         {/* Settings Grid */}
         <BaseGridContainer
@@ -657,7 +648,7 @@ const SettingItem = ({
               className="w-48 h-10 px-3 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/30 rounded-lg font-outfit transition-all duration-200 shadow-sm"
               disabled={!editable}
             />
-            <Select.Content className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/30 rounded-lg shadow-xl z-50">
+            <Select.Content className="font-outfit bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/30 rounded-lg shadow-xl z-50">
               {options?.map((option) => (
                 <Select.Item
                   key={option.value}
