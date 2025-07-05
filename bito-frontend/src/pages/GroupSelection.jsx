@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button, Card } from "@radix-ui/themes";
 import {
   PlusIcon,
@@ -15,6 +15,9 @@ import {
   EnterIcon,
   CheckIcon,
   ClockIcon,
+  CheckCircledIcon,
+  ExclamationTriangleIcon,
+  Cross2Icon,
 } from "@radix-ui/react-icons";
 import { groupsAPI } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
@@ -22,10 +25,12 @@ import WorkspaceCreationModal from "../components/ui/WorkspaceCreationModal";
 
 const GroupSelection = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [groups, setGroups] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [notification, setNotification] = useState(null);
   const [newGroup, setNewGroup] = useState({
     name: "",
     description: "",
@@ -34,9 +39,22 @@ const GroupSelection = () => {
     color: "#4f46e5", // Added default color for the new modal
   });
 
+  // Show notification helper
+  const showNotification = (message, type = "success") => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 4000); // Auto-hide after 4 seconds
+  };
+
   useEffect(() => {
     fetchGroups();
-  }, []);
+    
+    // Check if we have a notification from navigation state
+    if (location.state?.notification) {
+      showNotification(location.state.notification.message, location.state.notification.type);
+      // Clear the state to prevent showing notification again on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const fetchGroups = async () => {
     try {
@@ -394,6 +412,34 @@ const GroupSelection = () => {
           onClose={() => setShowCreateModal(false)}
           onSave={handleCreateGroup}
         />
+
+        {/* Success/Error Notification */}
+        {notification && (
+          <div
+            className={`fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 max-w-sm p-4 rounded-lg shadow-lg border transition-all duration-300 ${
+              notification.type === "success"
+                ? "bg-green-50 border-green-200 text-green-800"
+                : "bg-red-50 border-red-200 text-red-800"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              {notification.type === "success" ? (
+                <CheckCircledIcon className="w-5 h-5 text-green-600" />
+              ) : (
+                <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
+              )}
+              <p className="text-sm font-medium font-outfit">
+                {notification.message}
+              </p>
+              <button
+                onClick={() => setNotification(null)}
+                className="ml-auto p-1 hover:bg-black/5 rounded"
+              >
+                <Cross2Icon className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

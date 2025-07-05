@@ -15,6 +15,8 @@ import {
   ChevronLeftIcon,
   CheckIcon,
   Cross2Icon,
+  CheckCircledIcon,
+  ExclamationTriangleIcon,
 } from "@radix-ui/react-icons";
 import BaseGridContainer from "../components/shared/BaseGridContainer";
 import {
@@ -48,6 +50,15 @@ const WorkspaceSettings = () => {
   });
 
   const [selectedCategory, setSelectedCategory] = useState("all");
+
+  // Notification state
+  const [notification, setNotification] = useState(null);
+
+  // Show notification helper
+  const showNotification = (message, type = "success") => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 4000); // Auto-hide after 4 seconds
+  };
 
   // Fetch workspace data
   useEffect(() => {
@@ -116,10 +127,12 @@ const WorkspaceSettings = () => {
           ...prev,
           ...response.workspace,
         }));
+        showNotification("Settings saved successfully", "success");
       }
     } catch (error) {
       console.error("Error saving settings:", error);
       setError("Failed to save settings");
+      showNotification("Failed to save settings", "error");
     } finally {
       setSaving(false);
     }
@@ -136,10 +149,19 @@ const WorkspaceSettings = () => {
 
     try {
       await workspacesAPI.removeMember(groupId, user.id);
-      navigate("/app/groups");
+      // Navigate with success message in state
+      navigate("/app/groups", {
+        state: { 
+          notification: { 
+            message: "Successfully left workspace", 
+            type: "success" 
+          }
+        }
+      });
     } catch (error) {
       console.error("Error leaving workspace:", error);
       setError("Failed to leave workspace");
+      showNotification("Failed to leave workspace", "error");
     }
   };
 
@@ -164,15 +186,25 @@ const WorkspaceSettings = () => {
     const userConfirmation = prompt("Type 'DELETE' to confirm workspace deletion:");
     if (userConfirmation !== "DELETE") {
       setError("Workspace deletion cancelled - confirmation text did not match.");
+      showNotification("Workspace deletion cancelled", "error");
       return;
     }
 
     try {
       await workspacesAPI.deleteWorkspace(groupId);
-      navigate("/app/groups");
+      // Navigate with success message in state
+      navigate("/app/groups", {
+        state: { 
+          notification: { 
+            message: "Workspace deleted successfully", 
+            type: "success" 
+          }
+        }
+      });
     } catch (error) {
       console.error("Error deleting workspace:", error);
       setError("Failed to delete workspace");
+      showNotification("Failed to delete workspace", "error");
     }
   };
 
@@ -588,6 +620,34 @@ const WorkspaceSettings = () => {
           storageKeys={storageKeys}
           minH={300}
         />
+
+        {/* Success/Error Notification */}
+        {notification && (
+          <div
+            className={`fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 max-w-sm p-4 rounded-lg shadow-lg border transition-all duration-300 ${
+              notification.type === "success"
+                ? "bg-green-50 border-green-200 text-green-800"
+                : "bg-red-50 border-red-200 text-red-800"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              {notification.type === "success" ? (
+                <CheckCircledIcon className="w-5 h-5 text-green-600" />
+              ) : (
+                <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
+              )}
+              <p className="text-sm font-medium font-outfit">
+                {notification.message}
+              </p>
+              <button
+                onClick={() => setNotification(null)}
+                className="ml-auto p-1 hover:bg-black/5 rounded"
+              >
+                <Cross2Icon className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
