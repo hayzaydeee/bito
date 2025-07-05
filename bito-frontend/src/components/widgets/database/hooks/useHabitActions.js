@@ -30,7 +30,8 @@ export const useHabitActions = ({
       if (dayIndex >= 0) {
         const date = new Date(startOfWeek);
         date.setDate(startOfWeek.getDate() + dayIndex);
-        return date.toISOString().split('T')[0];
+        // Use local date formatting to match useHabitData
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
       }
       return null;
     }
@@ -44,7 +45,8 @@ export const useHabitActions = ({
       while (current <= dateRange.end) {
         const currentDayName = current.toLocaleDateString('en-US', { weekday: 'long' });
         if (currentDayName === dayName) {
-          return current.toISOString().split('T')[0];
+          // Use local date formatting to match useHabitData
+          return `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`;
         }
         current.setDate(current.getDate() + 1);
       }
