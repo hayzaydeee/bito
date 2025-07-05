@@ -298,12 +298,6 @@ const VerticalMenu = ({ isCollapsed }) => {
             ) : workspaces.length === 0 ? (
               <div className="px-3 py-2">
                 <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">No groups yet</p>
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="text-xs text-[var(--color-brand-500)] hover:text-[var(--color-brand-600)] font-outfit font-medium mt-1"
-                >
-                  Create your first group
-                </button>
               </div>
             ) : (
               workspaces.slice(0, 5).map((workspace) => {

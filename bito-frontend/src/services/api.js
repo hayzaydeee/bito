@@ -224,127 +224,54 @@ export const habitsAPI = {
 
 // Workspaces API
 export const workspacesAPI = {
-  // Get all user workspaces
-  getWorkspaces: async () => {
+  // Get all workspaces for the current user
+  getUserWorkspaces: async () => {
     return apiRequest('/api/workspaces');
   },
-
-  // Create new workspace
+  
+  // Get a specific workspace
+  getWorkspace: async (workspaceId) => {
+    return apiRequest(`/api/workspaces/${workspaceId}`);
+  },
+  
+  // Create a new workspace
   createWorkspace: async (workspaceData) => {
     return apiRequest('/api/workspaces', {
       method: 'POST',
       body: JSON.stringify(workspaceData),
     });
   },
-
-  // Get specific workspace
-  getWorkspace: async (workspaceId) => {
-    return apiRequest(`/api/workspaces/${workspaceId}`);
-  },
-
-  // Update workspace
+  
+  // Update a workspace
   updateWorkspace: async (workspaceId, workspaceData) => {
     return apiRequest(`/api/workspaces/${workspaceId}`, {
       method: 'PUT',
       body: JSON.stringify(workspaceData),
     });
   },
-
-  // Delete workspace
+  
+  // Delete a workspace
   deleteWorkspace: async (workspaceId) => {
     return apiRequest(`/api/workspaces/${workspaceId}`, {
       method: 'DELETE',
     });
   },
-
-  // Get workspace overview
-  getWorkspaceOverview: async (workspaceId) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/overview`);
+  
+  // Get workspace members
+  getWorkspaceMembers: async (workspaceId) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/members`);
   },
-
-  // Get workspace activity
-  getWorkspaceActivity: async (workspaceId, params = {}) => {
-    const searchParams = new URLSearchParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        searchParams.append(key, value);
-      }
-    });
-    
-    const queryString = searchParams.toString();
-    const endpoint = queryString 
-      ? `/api/workspaces/${workspaceId}/activity?${queryString}` 
-      : `/api/workspaces/${workspaceId}/activity`;
-    
-    return apiRequest(endpoint);
-  },
-
-  // Invite member to workspace
-  inviteMember: async (workspaceId, inviteData) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/members/invite`, {
-      method: 'POST',
-      body: JSON.stringify(inviteData),
-    });
-  },
-
-  // Get workspace invitations
-  getInvitations: async (workspaceId, status) => {
-    const params = status ? `?status=${status}` : '';
-    return apiRequest(`/api/workspaces/${workspaceId}/invitations${params}`);
-  },
-
-  // Get invitation details by token
-  getInvitationByToken: async (token) => {
-    return apiRequest(`/api/workspaces/invitations/${token}`);
-  },
-
-  // Accept invitation
-  acceptInvitation: async (token) => {
-    return apiRequest(`/api/workspaces/invitations/${token}/accept`, {
+  
+  // Leave a workspace (self-service member exit)
+  leaveWorkspace: async (workspaceId) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/leave`, {
       method: 'POST',
     });
   },
-
-  // Decline invitation
-  declineInvitation: async (token) => {
-    return apiRequest(`/api/workspaces/invitations/${token}/decline`, {
-      method: 'POST',
-    });
-  },
-
-  // Cancel invitation
-  cancelInvitation: async (workspaceId, invitationId) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/invitations/${invitationId}`, {
-      method: 'DELETE',
-    });
-  },
-
-  // Update member role
-  updateMemberRole: async (workspaceId, userId, roleData) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/members/${userId}`, {
-      method: 'PUT',
-      body: JSON.stringify(roleData),
-    });
-  },
-
-  // Remove member from workspace
-  removeMember: async (workspaceId, userId) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/members/${userId}`, {
-      method: 'DELETE',
-    });
-  },
-
+  
   // Get workspace habits
   getWorkspaceHabits: async (workspaceId) => {
     return apiRequest(`/api/workspaces/${workspaceId}/habits`);
-  },
-
-  // Create workspace habit
-  createWorkspaceHabit: async (workspaceId, habitData) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/habits`, {
-      method: 'POST',
-      body: JSON.stringify(habitData),
-    });
   },
 };
 

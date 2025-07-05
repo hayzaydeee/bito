@@ -27,6 +27,7 @@ import {
 } from "../components/shared/widgetRegistry";
 import { useAuth } from "../contexts/AuthContext";
 import { workspacesAPI } from "../services/api";
+import LeaveWorkspaceButton from "../components/settingsPage/LeaveWorkspaceButton";
 
 const WorkspaceSettings = () => {
   const { groupId } = useParams();
@@ -138,32 +139,7 @@ const WorkspaceSettings = () => {
     }
   };
 
-  const handleLeaveWorkspace = async () => {
-    if (
-      !confirm(
-        "Are you sure you want to leave this workspace? You will lose access to all workspace data."
-      )
-    ) {
-      return;
-    }
-
-    try {
-      await workspacesAPI.removeMember(groupId, user.id);
-      // Navigate with success message in state
-      navigate("/app/groups", {
-        state: { 
-          notification: { 
-            message: "Successfully left workspace", 
-            type: "success" 
-          }
-        }
-      });
-    } catch (error) {
-      console.error("Error leaving workspace:", error);
-      setError("Failed to leave workspace");
-      showNotification("Failed to leave workspace", "error");
-    }
-  };
+  // Leave workspace functionality is now handled by the LeaveWorkspaceButton component
 
   const handleDeleteWorkspace = async () => {
     if (
@@ -421,30 +397,10 @@ const WorkspaceSettings = () => {
                   Irreversible and destructive actions
                 </p>
               </div>
-            </div>
-
-            <div className="flex-1 flex flex-col justify-between">
+            </div>              <div className="flex-1 flex flex-col justify-between">
               <div className="space-y-4">
                 {!isOwner && (
-                  <div className="flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800/30">
-                    <div>
-                      <p className="font-medium text-red-800 dark:text-red-200 font-outfit">
-                        Leave Workspace
-                      </p>
-                      <p className="text-sm text-red-600 dark:text-red-300 font-outfit">
-                        You will lose access to all workspace data
-                      </p>
-                    </div>
-                    <Button
-                      variant="solid"
-                      color="red"
-                      onClick={handleLeaveWorkspace}
-                      className="font-outfit"
-                    >
-                      <ExitIcon className="w-4 h-4 mr-2" />
-                      Leave Workspace
-                    </Button>
-                  </div>
+                  <LeaveWorkspaceButton workspace={workspace} isOwner={isOwner} />
                 )}
 
                 {isOwner && (
@@ -481,7 +437,6 @@ const WorkspaceSettings = () => {
       canEditSettings,
       isOwner,
       handleSettingChange,
-      handleLeaveWorkspace,
       handleDeleteWorkspace,
       navigate,
       groupId,
@@ -764,7 +719,7 @@ const SettingItem = ({
           </div>
         ) : (
           <div
-            className={`text-sm font-outfit bg-[var(--color-surface-elevated)] px-3 py-2 rounded-lg border border-[var(--color-border-primary)]/30 min-w-32 min-h-[2.5rem] ${
+            className={`text-sm font-outfit bg-[var(--color-surface-elevated] px-3 py-2 rounded-lg border border-[var(--color-border-primary)]/30 min-w-32 min-h-[2.5rem] ${
               editable
                 ? "cursor-pointer hover:bg-[var(--color-surface-hover)]"
                 : "opacity-60"

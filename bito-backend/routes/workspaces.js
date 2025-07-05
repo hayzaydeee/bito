@@ -1130,6 +1130,70 @@ router.delete('/:id/members/:userId', authenticateJWT, async (req, res) => {
   }
 });
 
+// Leave workspace - Self-service member exit
+// Allow a user to remove themselves from a workspace if they're not the owner
+router.post('/:id/leave', authenticateJWT, async (req, res) => {
+  try {
+    const workspaceId = req.params.id;
+    const userId = req.user.id;
+
+    // Find the workspace
+    const workspace = await Workspace.findById(workspaceId);
+    
+    if (!workspace) {
+      return res.status(404).json({ message: 'Workspace not found' });
+    }
+
+    // Check if user is a member
+    if (!workspace.isMember(userId)) {
+      return res.status(403).json({ message: 'You are not a member of this workspace' });
+    }
+
+    // Cannot leave if you're the only owner
+    const isOwner = workspace.getMemberRole(userId) === 'owner';
+    const ownerCount = workspace.members.filter(m => m.role === 'owner').length;
+
+    if (isOwner && ownerCount <= 1) {
+      return res.status(403).json({ 
+        message: 'Cannot leave workspace as the only owner. Transfer ownership first or delete the workspace.' 
+      });
+    }
+
+    // Create an activity record
+    const activity = new Activity({
+      workspaceId: workspace._id,
+      userId: userId,
+      type: 'member_left',
+      data: {
+        workspaceName: workspace.name,
+        userRole: workspace.getMemberRole(userId)
+      }
+    });
+    await activity.save();
+
+    // Remove the user from workspace members
+    workspace.members = workspace.members.filter(member => 
+      member.userId.toString() !== userId.toString()
+    );
+    
+    await workspace.save();
+
+    // Remove all member habits for this user in this workspace
+    await MemberHabit.deleteMany({
+      workspaceId: workspaceId,
+      userId: userId
+    });
+
+    return res.status(200).json({ 
+      message: 'Successfully left the workspace',
+      workspaceId: workspace._id
+    });
+  } catch (error) {
+    console.error('Error leaving workspace:', error);
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // Temporary route to fix corrupted workspace member data
 router.post('/fix-member-data', async (req, res) => {
   try {

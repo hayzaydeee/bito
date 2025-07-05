@@ -190,7 +190,7 @@ const HowItWorksSection = forwardRef((props, ref) => {
         </div>
 
         {/* User Journey Preview */}
-        <div className={`mb-16 transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+        <div className={`mb-16 font-outfit transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {userJourneys.map((journey, index) => (
               <div key={index} className="text-center p-4 glass-card rounded-xl border border-[var(--color-border-primary)]/20">
@@ -224,17 +224,17 @@ const HowItWorksSection = forwardRef((props, ref) => {
                 <span className={`w-5 h-5 flex items-center justify-center ${activeStep === index ? 'text-white' : ''}`}>
                   {step.icon}
                 </span>
-                <span className="hidden sm:inline">{step.title}</span>
-                {activeStep === index && (
+                <span className="hidden sm:inline font-outfit">{step.title}</span>
+                {/* {activeStep === index && (
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-full"></div>
-                )}
+                )} */}
               </button>
             ))}
           </div>
         </div>
 
         {/* Active Step Content */}
-        <div className={`transition-all duration-1000 delay-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+        <div className={`font-outfit transition-all duration-1000 delay-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           {steps.map((step, index) => (
             <div
               key={step.id}
@@ -399,23 +399,6 @@ const HowItWorksSection = forwardRef((props, ref) => {
                 }`}
               />
             ))}
-          </div>
-        </div>
-
-        {/* Bottom CTA */}
-        <div className={`text-center mt-16 transition-all duration-1000 delay-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <div className="inline-flex items-center gap-4 p-4 glass-card rounded-xl border border-[var(--color-border-primary)]/20">
-            <div className="text-left">
-              <div className="text-sm font-semibold text-[var(--color-text-primary)]">
-                Ready to start your habit journey?
-              </div>
-              <div className="text-xs text-[var(--color-text-secondary)]">
-                Join thousands building better habits with Bito
-              </div>
-            </div>
-            <button className="px-6 py-3 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg font-medium transition-all duration-200 hover:scale-105 shadow-lg whitespace-nowrap">
-              Get Started Free
-            </button>
           </div>
         </div>
       </div>
