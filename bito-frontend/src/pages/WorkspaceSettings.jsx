@@ -663,7 +663,7 @@ const SettingItem = ({
           </div>
         ) : (
           <div
-            className={`text-sm font-outfit bg-[var(--color-surface-elevated] px-3 py-2 rounded-lg border border-[var(--color-border-primary)]/30 min-w-32 min-h-[2.5rem] ${
+            className={`text-sm font-outfit bg-[var(--color-surface-elevated)] px-3 py-2 rounded-lg border border-[var(--color-border-primary)]/30 min-w-32 min-h-[2.5rem] ${
               editable
                 ? "cursor-pointer hover:bg-[var(--color-surface-hover)]"
                 : "opacity-60"
