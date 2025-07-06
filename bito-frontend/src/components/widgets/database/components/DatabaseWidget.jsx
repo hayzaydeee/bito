@@ -206,12 +206,12 @@ const DatabaseWidget = memo(
         return (
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] font-outfit">
+              <h3 className="text-sm font-outfit font-semibold text-[var(--color-text-secondary)]">
                 Manage Habits
               </h3>
               <button
                 onClick={() => setShowHabitManagement(false)}
-                className="px-3 py-1.5 text-xs font-medium bg-[var(--color-surface-secondary)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] rounded-lg transition-all duration-200"
+                className="px-3 font-outfit py-1.5 text-xs font-medium bg-[var(--color-surface-secondary)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] rounded-lg transition-all duration-200"
               >
                 Back to Tracking
               </button>
@@ -235,7 +235,7 @@ const DatabaseWidget = memo(
                 {!readOnly && (
                   <button
                     onClick={() => setShowHabitManagement(true)}
-                    className="px-3 py-1.5 text-xs font-medium bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg transition-all duration-200"
+                    className="px-3 font-outfit py-1.5 text-xs font-medium bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg transition-all duration-200"
                   >
                     Manage Habits
                   </button>
