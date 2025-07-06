@@ -59,20 +59,12 @@ export const useHabitActions = ({
   const handleToggleCompletion = useCallback(
     (day, habitId, displayCompletions) => {
       // Convert day name to date if we have a date range
+      // This ensures we always use the correct date for the currently viewed week
       const dateStr = getDayDate(day);
       
-      // Create the appropriate key - prefer date-based keys when available
-      const key = dateStr ? `${dateStr}-${habitId}` : `${day}-${habitId}`;
-      
-      if (onToggleCompletion) {
-        // Call with the correct parameters for Dashboard compatibility
-        // Dashboard expects (habitId, date) format
-        if (dateStr) {
-          onToggleCompletion(habitId, dateStr);
-        } else {
-          // Fallback: call with the key format for legacy compatibility
-          onToggleCompletion(key, !displayCompletions[key]);
-        }
+      if (onToggleCompletion && dateStr) {
+        // Always use habitId and date format for consistent storage
+        onToggleCompletion(habitId, dateStr);
       }
     },
     [onToggleCompletion, getDayDate]

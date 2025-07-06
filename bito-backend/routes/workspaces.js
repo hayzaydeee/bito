@@ -2069,11 +2069,10 @@ router.delete('/workspace-habits/:id', authenticateJWT, async (req, res) => {
       const activity = new Activity({
         workspaceId: workspaceHabit.workspaceId,
         userId: req.user.id,
-        type: 'habit_created', // Using habit_created with action: 'deleted' since there's no habit_deleted type
+        type: 'habit_deleted',
         data: {
           habitId: workspaceHabit._id,
-          habitName: workspaceHabit.name,
-          action: 'deleted'
+          habitName: workspaceHabit.name
         },
         visibility: 'workspace'
       });

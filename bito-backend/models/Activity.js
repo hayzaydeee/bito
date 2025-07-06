@@ -26,6 +26,7 @@ const activitySchema = new mongoose.Schema({
       'member_joined',
       'member_left',
       'habit_created',
+      'habit_deleted',
       'challenge_completed',
       'badge_earned'
     ],

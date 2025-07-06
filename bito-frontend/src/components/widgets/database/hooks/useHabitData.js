@@ -60,17 +60,20 @@ export const useHabitData = ({ habits, completions, dateRange = null, mode = "we
       // Try to find the date for this day
       const dayInfo = getCurrentWeekDates.find((d) => d.day === day);
       if (dayInfo) {
+        // When we have a specific date (from dateRange), only use date-based keys
+        // This ensures completions are only shown for the specific date being viewed
         const dateKey = `${dayInfo.date}-${habitId}`;
-        const dayKey = `${day}-${habitId}`;
-        // Check both date-based and day-based keys for backward compatibility
-        return (
-          displayCompletions[dateKey] || displayCompletions[dayKey] || false
-        );
+        
+        // If we have entries for this habit
+        if (displayCompletions[habitId] && displayCompletions[habitId][dayInfo.date]) {
+          return displayCompletions[habitId][dayInfo.date].completed || false;
+        }
+        
+        // For backward compatibility with the old format
+        return displayCompletions[dateKey] || false;
       }
 
-      // Fallback to day-based key
-      const key = `${day}-${habitId}`;
-      return displayCompletions[key] || false;
+      return false;
     },
     [displayCompletions, getCurrentWeekDates]
   );

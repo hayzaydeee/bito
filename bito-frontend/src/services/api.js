@@ -317,7 +317,31 @@ export const groupsAPI = {
 
   // Get group habits
   getGroupHabits: async (groupId) => {
-    return apiRequest(`/api/workspaces/${groupId}/habits`);
+    try {
+      // First try the specific workspace habits endpoint
+      return apiRequest(`/api/workspaces/${groupId}/habits`);
+    } catch (error) {
+      console.error(`Error fetching habits via workspace endpoint for ${groupId}:`, error);
+      
+      // Fallback approach: Get all habits and filter by workspace
+      try {
+        const allHabitsResponse = await apiRequest('/api/habits?includeWorkspaceHabits=true');
+        if (allHabitsResponse.success) {
+          const workspaceHabits = allHabitsResponse.habits.filter(
+            habit => habit.workspaceId === groupId
+          );
+          
+          return {
+            success: true,
+            habits: workspaceHabits
+          };
+        }
+        return { success: false, error: 'Failed to get habits' };
+      } catch (secondError) {
+        console.error(`Fallback also failed for ${groupId}:`, secondError);
+        return { success: false, error: secondError.message };
+      }
+    }
   },
 
   // Get group activity
@@ -394,7 +418,31 @@ export const groupsAPI = {
 
   // Get group habits
   getGroupHabits: async (groupId) => {
-    return apiRequest(`/api/workspaces/${groupId}/habits`);
+    try {
+      // First try the specific workspace habits endpoint
+      return apiRequest(`/api/workspaces/${groupId}/habits`);
+    } catch (error) {
+      console.error(`Error fetching habits via workspace endpoint for ${groupId}:`, error);
+      
+      // Fallback approach: Get all habits and filter by workspace
+      try {
+        const allHabitsResponse = await apiRequest('/api/habits?includeWorkspaceHabits=true');
+        if (allHabitsResponse.success) {
+          const workspaceHabits = allHabitsResponse.habits.filter(
+            habit => habit.workspaceId === groupId
+          );
+          
+          return {
+            success: true,
+            habits: workspaceHabits
+          };
+        }
+        return { success: false, error: 'Failed to get habits' };
+      } catch (secondError) {
+        console.error(`Fallback also failed for ${groupId}:`, secondError);
+        return { success: false, error: secondError.message };
+      }
+    }
   },
 
   // Create group habit

@@ -15,6 +15,7 @@ import {
   ChevronRightIcon,
   CheckCircledIcon,
   ArrowLeftIcon,
+  TrashIcon,
 } from "@radix-ui/react-icons";
 import BaseGridContainer from "../components/shared/BaseGridContainer";
 import { groupsAPI } from "../services/api";
@@ -529,6 +530,12 @@ const WorkspaceOverview = () => {
                         activity.data?.habitName || "a new group habit"
                       }`;
                       icon = TargetIcon;
+                      break;
+                    case "habit_deleted":
+                      description = `${userName} deleted ${
+                        activity.data?.habitName || "a group habit"
+                      }`;
+                      icon = TrashIcon; // You may need to import this icon
                       break;
                     default:
                       description =

@@ -60,13 +60,41 @@ const GroupSelection = () => {
     try {
       setIsLoading(true);
       const response = await groupsAPI.getGroups();
+      
       if (response.success) {
-        // If workspaces have habitCounts, ensure they're properly typed as numbers
-        const workspacesWithValidCounts = response.workspaces.map(workspace => ({
-          ...workspace,
-          habitCount: workspace.habitCount ? Number(workspace.habitCount) : 0
-        }));
-        setGroups(workspacesWithValidCounts);
+        const workspaces = response.workspaces;
+        
+        // Handle workspaces without habitCount or with incorrect habitCount
+        const workspacesWithAccurateCounts = await Promise.all(
+          workspaces.map(async (workspace) => {
+            // If habitCount is missing or we suspect it's incorrect
+            if (workspace.habitCount === undefined || workspace.habitCount === null || workspace.habitCount < 0) {
+              try {
+                // Fetch actual habits for this workspace
+                const habitsResponse = await groupsAPI.getGroupHabits(workspace._id);
+                
+                if (habitsResponse.success) {
+                  return {
+                    ...workspace,
+                    habitCount: habitsResponse.habits.length,
+                    // Store the actual habits for potential future use
+                    _habits: habitsResponse.habits
+                  };
+                }
+              } catch (err) {
+                console.error(`Failed to fetch habits for workspace ${workspace._id}:`, err);
+              }
+            }
+            
+            // If we couldn't get better data, ensure habitCount is a number
+            return {
+              ...workspace,
+              habitCount: workspace.habitCount ? Number(workspace.habitCount) : 0
+            };
+          })
+        );
+        
+        setGroups(workspacesWithAccurateCounts);
       }
     } catch (error) {
       console.error("Error fetching groups:", error);
@@ -107,19 +135,65 @@ const GroupSelection = () => {
 
   const verifyHabitCounts = async () => {
     try {
-      const verification = await groupsAPI.verifyGroupHabitCounts();
-      if (verification.success) {
-        console.log('Habit Count Verification:', verification.results);
-        
-        const mismatchedGroups = verification.results.filter(result => !result.match);
-        if (mismatchedGroups.length > 0) {
-          console.warn('Groups with mismatched habit counts:', mismatchedGroups);
-        } else {
-          console.log('All group habit counts match reported values');
+      showNotification("Verifying habit counts, check console for results", "info");
+      
+      // Get the current groups data
+      const currentGroups = [...groups];
+      const results = [];
+      
+      for (const group of currentGroups) {
+        try {
+          // Get actual habits for this workspace
+          const habitsResponse = await groupsAPI.getGroupHabits(group._id);
+          
+          const actualCount = habitsResponse.success ? habitsResponse.habits.length : 'error';
+          const reportedCount = group.habitCount;
+          const match = reportedCount === actualCount;
+          
+          results.push({
+            workspaceId: group._id,
+            workspaceName: group.name,
+            reportedCount,
+            actualCount,
+            match
+          });
+          
+          // If there's a mismatch, update the group's habit count
+          if (!match && habitsResponse.success) {
+            // Update the specific group in the array
+            setGroups(prevGroups => 
+              prevGroups.map(prevGroup => 
+                prevGroup._id === group._id 
+                  ? { ...prevGroup, habitCount: habitsResponse.habits.length }
+                  : prevGroup
+              )
+            );
+          }
+        } catch (err) {
+          console.error(`Failed to verify habits for workspace ${group._id}:`, err);
+          results.push({
+            workspaceId: group._id,
+            workspaceName: group.name,
+            reportedCount: group.habitCount,
+            actualCount: 'error',
+            error: err.message
+          });
         }
+      }
+      
+      console.log('Habit Count Verification Results:', results);
+      
+      const mismatchedGroups = results.filter(result => !result.match);
+      if (mismatchedGroups.length > 0) {
+        console.warn('Groups with mismatched habit counts:', mismatchedGroups);
+        showNotification(`Fixed ${mismatchedGroups.length} mismatched habit counts`, "success");
+      } else {
+        console.log('All group habit counts match actual values');
+        showNotification("All habit counts are accurate", "success");
       }
     } catch (error) {
       console.error('Error verifying habit counts:', error);
+      showNotification("Error verifying habit counts", "error");
     }
   };
 
@@ -276,7 +350,7 @@ const GroupSelection = () => {
                     <div className="animate-pulse h-8 w-12 bg-[var(--color-surface-hover)] rounded"></div>
                   ) : (
                     groups.reduce(
-                      (total, group) => total + (group.habitCount || 0),
+                      (total, group) => total + (typeof group.habitCount === 'number' ? group.habitCount : 0),
                       0
                     )
                   )}
@@ -386,7 +460,7 @@ const GroupSelection = () => {
                             </span>
                           </div>
                           <p className="text-base font-bold text-[var(--color-text-primary)] font-dmSerif">
-                            {group.habitCount || 0}
+                            {typeof group.habitCount === 'number' ? group.habitCount : 0}
                           </p>
                         </div>
                       </div>

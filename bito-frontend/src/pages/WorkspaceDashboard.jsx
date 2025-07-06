@@ -79,6 +79,9 @@ const WorkspaceDashboard = () => {
   };
 
   const handleAdoptHabit = async (workspaceHabit) => {
+    // Close the modal immediately to prevent multiple clicks
+    setShowAdoptModal(false);
+    
     try {
       const response = await groupsAPI.adoptWorkspaceHabit(groupId, workspaceHabit._id, {
         personalSettings: {
@@ -96,13 +99,11 @@ const WorkspaceDashboard = () => {
         
         // Refresh the main habit context so it appears in personal dashboard
         await fetchHabits();
-        
-        setShowAdoptModal(false);
         setSelectedHabit(null);
-        
       }
     } catch (error) {
       console.error('Error adopting habit:', error);
+      // The modal is already closed, but we could show an error notification here
     }
   };
 
@@ -463,12 +464,24 @@ const WorkspaceDashboard = () => {
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-surface-secondary)] to-[var(--color-surface-secondary)]/80 flex items-center justify-center shadow-sm border border-[var(--color-border-primary)]/10">
                       <span className="text-lg">
                         {activity.type === 'habit_completed' ? '✅' : 
-                         activity.type === 'streak_milestone' ? '🔥' : '📈'}
+                         activity.type === 'streak_milestone' ? '🔥' : 
+                         activity.type === 'habit_created' ? '�' : 
+                         activity.type === 'habit_deleted' ? '🗑️' : 
+                         activity.type === 'habit_adopted' ? '👍' : 
+                         activity.type === 'member_joined' ? '👋' : '�📈'}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-[var(--color-text-primary)] font-outfit font-medium">
-                        <span className="font-semibold">{activity.userId?.name || 'Someone'}</span> completed a habit
+                        <span className="font-semibold">{activity.userId?.name || 'Someone'}</span> {' '}
+                        {activity.type === 'habit_completed' && 'completed a habit'}
+                        {activity.type === 'streak_milestone' && 'achieved a streak milestone'}
+                        {activity.type === 'habit_created' && `created habit "${activity.data?.habitName || 'Unnamed habit'}"`}
+                        {activity.type === 'habit_deleted' && `deleted habit "${activity.data?.habitName || 'Unnamed habit'}"`}
+                        {activity.type === 'habit_adopted' && 'adopted a habit'}
+                        {activity.type === 'member_joined' && 'joined the workspace'}
+                        {activity.type === 'member_left' && 'left the workspace'}
+                        {!['habit_completed', 'streak_milestone', 'habit_created', 'habit_deleted', 'habit_adopted', 'member_joined', 'member_left'].includes(activity.type) && 'performed an action'}
                       </p>
                       <p className="text-xs text-[var(--color-text-tertiary)] font-outfit mt-1">
                         {new Date(activity.createdAt).toLocaleDateString('en-US', { 
