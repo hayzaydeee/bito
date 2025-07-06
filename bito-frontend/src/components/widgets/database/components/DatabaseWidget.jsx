@@ -5,6 +5,7 @@ import {
   DatabaseHeader,
   GalleryView,
   ProfessionalTableView,
+  HabitsTableView,
 } from "../index.js";
 
 // Helper function to get current week range
@@ -181,7 +182,7 @@ const DatabaseWidget = memo(
       onDeleteHabit: readOnly ? null : onDeleteHabit,
       onEditHabit: readOnly ? null : onEditHabit,
       dateRange,
-    });// Common props for all views
+    });    // Common props for all views
     const commonProps = {
       daysOfWeek,
       displayHabits,
@@ -194,11 +195,55 @@ const DatabaseWidget = memo(
       handleToggleCompletion,
       breakpoint,
       readOnly, // Pass readOnly flag to components
+      handleEditHabit: onEditHabit, // Pass edit handler function
     };
+    // Add an option to show habit management view
+    const [showHabitManagement, setShowHabitManagement] = useState(false);
+    
     const renderContent = () => {
+      // If showing habit management, render the habit table view
+      if (showHabitManagement) {
+        return (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] font-outfit">
+                Manage Habits
+              </h3>
+              <button
+                onClick={() => setShowHabitManagement(false)}
+                className="px-3 py-1.5 text-xs font-medium bg-[var(--color-surface-secondary)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] rounded-lg transition-all duration-200"
+              >
+                Back to Tracking
+              </button>
+            </div>
+            <HabitsTableView 
+              displayHabits={displayHabits} 
+              handleEditHabit={onEditHabit}
+              handleDeleteHabit={onDeleteHabit}
+              readOnly={readOnly}
+            />
+          </div>
+        );
+      }
+      
+      // Otherwise, render the normal views
       switch (viewType) {
         case "table":
-          return <ProfessionalTableView {...commonProps} />;
+          return (
+            <div className="space-y-4">
+              <div className="flex justify-end">
+                {!readOnly && (
+                  <button
+                    onClick={() => setShowHabitManagement(true)}
+                    className="px-3 py-1.5 text-xs font-medium bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg transition-all duration-200"
+                  >
+                    Manage Habits
+                  </button>
+                )}
+              </div>
+              <ProfessionalTableView {...commonProps} />
+            </div>
+          );
         case "gallery":
         default:
           return (
@@ -210,7 +255,8 @@ const DatabaseWidget = memo(
               setNewHabitName={readOnly ? () => {} : setNewHabitName}
               handleAddHabit={readOnly ? () => {} : handleAddHabit}
               handleCancelAdd={readOnly ? () => {} : handleCancelAdd}
-            />          );
+            />
+          );
       }
     };
     

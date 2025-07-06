@@ -1,5 +1,5 @@
 import React from "react";
-import { PlusIcon, CheckIcon } from "@radix-ui/react-icons";
+import { PlusIcon, CheckIcon, Pencil1Icon } from "@radix-ui/react-icons";
 
 /**
  * Empty State Component for Gallery View
@@ -56,6 +56,7 @@ export const GalleryView = ({
   setNewHabitName,
   handleAddHabit,
   handleCancelAdd,
+  handleEditHabit, // Add edit handler
   readOnly = false, // Add readOnly prop
 }) => {
   // Show empty state if no habits exist
@@ -150,6 +151,15 @@ export const GalleryView = ({
                   {daysOfWeek.filter(day => getCompletionStatus(day, habit.id)).length}/{daysOfWeek.length} days this week
                 </p>
               </div>
+              {!readOnly && handleEditHabit && (
+                <button
+                  onClick={() => handleEditHabit(habit)}
+                  className="w-8 h-8 flex items-center justify-center rounded-full text-[var(--color-text-tertiary)] hover:text-[var(--color-brand-400)] hover:bg-[var(--color-surface-secondary)] transition-all duration-200"
+                  title="Edit habit"
+                >
+                  <Pencil1Icon className="w-4 h-4" />
+                </button>
+              )}
             </div>
 
             {/* Daily Checkboxes */}            <div className="grid grid-cols-7 gap-2">              {daysOfWeek.map((day) => {

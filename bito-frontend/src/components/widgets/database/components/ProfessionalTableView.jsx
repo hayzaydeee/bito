@@ -14,6 +14,7 @@ export const ProfessionalTableView = ({
   handleToggleCompletion,
   displayCompletions,
   readOnly = false, // Add readOnly prop
+  handleEditHabit, // Add edit habit handler
 }) => {
   // Empty state when no habits are available
   if (!displayHabits || displayHabits.length === 0) {
@@ -229,11 +230,13 @@ export const ProfessionalTableView = ({
                         disabled={readOnly}
                         onClick={() => {
                           if (!readOnly) {
-                            /* Handle edit day */
+                            // Manage habits button in the main view is better
+                            // For now just redirect to the habit management view
+                            alert("Use the 'Manage Habits' button to edit habits");
                           }
                         }}
                       >
-                        Edit
+                        Details
                       </button>
                     </div>
                   </td>
