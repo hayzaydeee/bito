@@ -45,10 +45,7 @@ const HowItWorksSection = forwardRef((props, ref) => {
   useEffect(() => {
     if (!isVisible) return;
     
-    console.log("HowItWorksSection is visible, setting up auto-advance");
-    
     const interval = setInterval(() => {
-      console.log("Auto-advancing to next step");
       setActiveStep((prev) => (prev + 1) % steps.length);
     }, 4000);
 
@@ -160,7 +157,6 @@ const HowItWorksSection = forwardRef((props, ref) => {
       ref.current = element;
     }
     
-    console.log("HowItWorksSection ref set", { element });
   };
 
   return (
@@ -242,7 +238,6 @@ const HowItWorksSection = forwardRef((props, ref) => {
                 activeStep === index ? 'opacity-100 scale-100 relative z-10' : 'opacity-0 scale-95 hidden'
               }`}
             >
-              {console.log(`Step ${index} - Active: ${activeStep === index}`)}
               {activeStep === index && (
                 <div className="grid lg:grid-cols-2 gap-12 items-center">
                   {/* Content Side */}

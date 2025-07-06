@@ -450,8 +450,7 @@ const LandingPage = () => {
               </h2>
 
               <p className="text-lg text-[var(--color-text-secondary)] mb-8 max-w-2xl mx-auto font-outfit">
-                Join thousands of people who are already building lasting habits
-                with Bito
+                Let's help set the building blocks for the life you want.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">

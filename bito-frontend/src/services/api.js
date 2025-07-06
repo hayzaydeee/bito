@@ -315,6 +315,11 @@ export const groupsAPI = {
     return apiRequest(`/api/workspaces/${groupId}/overview`);
   },
 
+  // Get group habits
+  getGroupHabits: async (groupId) => {
+    return apiRequest(`/api/workspaces/${groupId}/habits`);
+  },
+
   // Get group activity
   getGroupActivity: async (groupId, params = {}) => {
     const searchParams = new URLSearchParams();
@@ -753,4 +758,37 @@ export const notificationsAPI = {
   getUnreadCount: async () => {
     return apiRequest('/api/users/notifications/unread-count');
   },
+};
+
+// Verify habit counts for debug purposes
+export const verifyHabitCounts = async () => {
+  const groupsResponse = await apiRequest('/api/workspaces');
+  if (!groupsResponse.success) return { success: false, error: 'Failed to fetch groups' };
+  
+  const results = [];
+  
+  for (const workspace of groupsResponse.workspaces) {
+    try {
+      // Get actual habits for this workspace
+      const habitsResponse = await apiRequest(`/api/workspaces/${workspace._id}/habits`);
+      
+      results.push({
+        workspaceId: workspace._id,
+        workspaceName: workspace.name,
+        reportedCount: workspace.habitCount || 0,
+        actualCount: habitsResponse.success ? habitsResponse.habits.length : 'error',
+        match: workspace.habitCount === (habitsResponse.success ? habitsResponse.habits.length : 0)
+      });
+    } catch (err) {
+      results.push({
+        workspaceId: workspace._id,
+        workspaceName: workspace.name,
+        reportedCount: workspace.habitCount || 0,
+        actualCount: 'error',
+        error: err.message
+      });
+    }
+  }
+  
+  return { success: true, results };
 };

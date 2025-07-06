@@ -61,7 +61,12 @@ const GroupSelection = () => {
       setIsLoading(true);
       const response = await groupsAPI.getGroups();
       if (response.success) {
-        setGroups(response.workspaces);
+        // If workspaces have habitCounts, ensure they're properly typed as numbers
+        const workspacesWithValidCounts = response.workspaces.map(workspace => ({
+          ...workspace,
+          habitCount: workspace.habitCount ? Number(workspace.habitCount) : 0
+        }));
+        setGroups(workspacesWithValidCounts);
       }
     } catch (error) {
       console.error("Error fetching groups:", error);
@@ -97,6 +102,24 @@ const GroupSelection = () => {
       }
     } catch (error) {
       console.error("Error creating group:", error);
+    }
+  };
+
+  const verifyHabitCounts = async () => {
+    try {
+      const verification = await groupsAPI.verifyGroupHabitCounts();
+      if (verification.success) {
+        console.log('Habit Count Verification:', verification.results);
+        
+        const mismatchedGroups = verification.results.filter(result => !result.match);
+        if (mismatchedGroups.length > 0) {
+          console.warn('Groups with mismatched habit counts:', mismatchedGroups);
+        } else {
+          console.log('All group habit counts match reported values');
+        }
+      }
+    } catch (error) {
+      console.error('Error verifying habit counts:', error);
     }
   };
 
@@ -159,6 +182,15 @@ const GroupSelection = () => {
               <PlusIcon className="w-4 h-4" />
               Create Group
             </button>
+            {/* Debug button - only visible to admins - should be removed in production */}
+            {user?.role === 'admin' && (
+              <button
+                onClick={verifyHabitCounts}
+                className="ml-2 flex items-center gap-2 h-12 px-6 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl font-outfit font-medium"
+              >
+                Verify Counts
+              </button>
+            )}
           </div>
         </div>
         {/* Quick Stats */}
@@ -240,9 +272,13 @@ const GroupSelection = () => {
               {/* Value */}
               <div className="mb-2">
                 <span className="text-3xl font-bold font-dmSerif text-[var(--color-text-primary)]">
-                  {groups.reduce(
-                    (total, group) => total + (group.habitCount || 0),
-                    0
+                  {isLoading ? (
+                    <div className="animate-pulse h-8 w-12 bg-[var(--color-surface-hover)] rounded"></div>
+                  ) : (
+                    groups.reduce(
+                      (total, group) => total + (group.habitCount || 0),
+                      0
+                    )
                   )}
                 </span>
               </div>
