@@ -1,6 +1,6 @@
 # Bito - Smart Collaborative Habit Tracking 🎯
 
-[![Web App](https://img.shields.io/badge/Web%20Apps-bito.works-blue?style=for-the-badge)](https://bito.works)
+[![Web App](https://img.shields.io/badge/Web%20App-bito.works-blue?style=for-the-badge)](https://bito.works)
 [![Frontend](https://img.shields.io/badge/Frontend-React%2019-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)
 [![Backend](https://img.shields.io/badge/Backend-Node.js-339933?style=for-the-badge&logo=node.js)](https://nodejs.org/)
 [![Database](https://img.shields.io/badge/Database-MongoDB-47A248?style=for-the-badge&logo=mongodb)](https://mongodb.com/)
