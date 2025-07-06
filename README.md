@@ -61,7 +61,7 @@ Seamlessly import data from existing systems with our LLM-powered CSV analyzer t
 ### Frontend Stack
 ```
 React 19              # Latest React with concurrent features
-TypeScript           # Type-safe development (where applicable)
+JavaScript           # Habit logging logic & analytics
 Vite                 # Ultra-fast build tooling and HMR
 TailwindCSS 4        # Utility-first styling with custom design system
 Radix UI Themes      # Accessible component primitives
