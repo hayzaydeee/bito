@@ -1,4 +1,5 @@
 import { useMemo, useCallback } from "react";
+import { habitUtils } from "../../../utils/habitLogic.js";
 
 /**
  * Custom hook for managing habit data and calculations
@@ -81,37 +82,75 @@ export const useHabitData = ({ habits, completions, dateRange = null, mode = "we
   // Calculate daily completion percentages
   const getDayCompletion = useCallback(
     (day) => {
-      const totalHabits = displayHabits.length;
-      const completedHabits = displayHabits.filter((habit) =>
+      // Find the date for this day
+      const dayInfo = getCurrentWeekDates.find((d) => d.day === day);
+      if (!dayInfo) return 0;
+      
+      const dateObj = new Date(dayInfo.date + 'T00:00:00');
+      
+      // Filter habits to only those scheduled for this day
+      const scheduledHabits = displayHabits.filter((habit) =>
+        habitUtils.isHabitScheduledForDate(habit, dateObj)
+      );
+      
+      const completedHabits = scheduledHabits.filter((habit) =>
         getCompletionStatus(day, habit.id)
       ).length;
-      return totalHabits > 0
-        ? Math.round((completedHabits / totalHabits) * 100)
-        : 0;
+      
+      return scheduledHabits.length > 0
+        ? Math.round((completedHabits / scheduledHabits.length) * 100)
+        : 100; // If no habits scheduled, consider it 100% complete
     },
-    [displayHabits, getCompletionStatus]
+    [displayHabits, getCompletionStatus, getCurrentWeekDates]
   );
 
   // Calculate habit completion percentages across the week
   const getHabitCompletion = useCallback(
     (habitId) => {
-      const completedDays = daysOfWeek.filter((day) =>
+      // Find the habit to check its schedule
+      const habit = displayHabits.find(h => h.id === habitId);
+      if (!habit) return 0;
+      
+      // Filter days to only those where this habit is scheduled
+      const scheduledDays = daysOfWeek.filter(day => {
+        const dayInfo = getCurrentWeekDates.find((d) => d.day === day);
+        if (!dayInfo) return false;
+        const dateObj = new Date(dayInfo.date + 'T00:00:00');
+        return habitUtils.isHabitScheduledForDate(habit, dateObj);
+      });
+      
+      const completedDays = scheduledDays.filter((day) =>
         getCompletionStatus(day, habitId)
       ).length;
-      return Math.round((completedDays / daysOfWeek.length) * 100);
+      
+      return scheduledDays.length > 0
+        ? Math.round((completedDays / scheduledDays.length) * 100)
+        : 100; // If no scheduled days, consider it 100%
     },
-    [daysOfWeek, getCompletionStatus]
+    [displayHabits, daysOfWeek, getCompletionStatus, getCurrentWeekDates]
   );
 
   // Calculate overall statistics
   const weekStats = useMemo(() => {
-    const totalCells = displayHabits.length * daysOfWeek.length;
-    const completedCells = displayHabits.reduce(
-      (sum, habit) =>
-        sum +
-        daysOfWeek.filter((day) => getCompletionStatus(day, habit.id)).length,
-      0
-    );
+    // Calculate total scheduled cells and completed cells
+    let totalScheduledCells = 0;
+    let completedCells = 0;
+    
+    displayHabits.forEach(habit => {
+      daysOfWeek.forEach(day => {
+        const dayInfo = getCurrentWeekDates.find((d) => d.day === day);
+        if (dayInfo) {
+          const dateObj = new Date(dayInfo.date + 'T00:00:00');
+          if (habitUtils.isHabitScheduledForDate(habit, dateObj)) {
+            totalScheduledCells++;
+            if (getCompletionStatus(day, habit.id)) {
+              completedCells++;
+            }
+          }
+        }
+      });
+    });
+    
     const averageCompletion = Math.round(
       daysOfWeek.reduce((sum, day) => sum + getDayCompletion(day), 0) /
         daysOfWeek.length
@@ -121,13 +160,13 @@ export const useHabitData = ({ habits, completions, dateRange = null, mode = "we
     ).length;
 
     return {
-      totalCells,
+      totalCells: totalScheduledCells,
       completedCells,
       averageCompletion,
       perfectDays,
-      completionRate: Math.round((completedCells / totalCells) * 100),
+      completionRate: totalScheduledCells > 0 ? Math.round((completedCells / totalScheduledCells) * 100) : 100,
     };
-  }, [displayHabits, daysOfWeek, getCompletionStatus, getDayCompletion]);
+  }, [displayHabits, daysOfWeek, getCompletionStatus, getDayCompletion, getCurrentWeekDates]);
   return {
     daysOfWeek,
     displayHabits,

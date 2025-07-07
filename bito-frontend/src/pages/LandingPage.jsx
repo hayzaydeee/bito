@@ -551,7 +551,7 @@ const LandingPage = () => {
 
           <div className="mt-12 pt-8 border-t border-[var(--color-border-primary)]/20 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm font-outfit text-[var(--color-text-tertiary)]">
-              © 2025 Bito. All rights reserved.
+              © 2025 hayzaydee. All rights reserved.
             </p>
             <div className="flex items-center gap-4">
               <a

@@ -1,5 +1,6 @@
 import React from "react";
 import { PlusIcon, CheckIcon, Pencil1Icon } from "@radix-ui/react-icons";
+import { habitUtils } from "../../../../utils/habitLogic.js";
 
 /**
  * Empty State Component for Gallery View
@@ -148,7 +149,16 @@ export const GalleryView = ({
                   {habit.name}
                 </h4>
                 <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">
-                  {daysOfWeek.filter(day => getCompletionStatus(day, habit.id)).length}/{daysOfWeek.length} days this week
+                  {(() => {
+                    const scheduledDays = daysOfWeek.filter(day => {
+                      const dayInfo = getCurrentWeekDates?.find((d) => d.day === day);
+                      if (!dayInfo) return false;
+                      const dateObj = new Date(dayInfo.date + 'T00:00:00');
+                      return habitUtils.isHabitScheduledForDate(habit, dateObj);
+                    });
+                    const completedScheduledDays = scheduledDays.filter(day => getCompletionStatus(day, habit.id));
+                    return `${completedScheduledDays.length}/${scheduledDays.length} scheduled days completed`;
+                  })()}
                 </p>
               </div>
               {!readOnly && handleEditHabit && (
@@ -172,6 +182,10 @@ export const GalleryView = ({
                 const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
                 const isToday = dayInfo?.date === todayString;
 
+                // Check if habit is scheduled for this day
+                const dateObj = dayInfo ? new Date(dayInfo.date + 'T00:00:00') : null;
+                const isScheduled = dateObj ? habitUtils.isHabitScheduledForDate(habit, dateObj) : false;
+
                 return (
                   <div key={day} className="text-center">
                     <div
@@ -183,30 +197,39 @@ export const GalleryView = ({
                     >
                       {day.slice(0, 1)}
                     </div>
-                    <button
-                      onClick={() => 
-                        !readOnly && handleToggleCompletion(day, habit.id, displayCompletions)
-                      }
-                      disabled={readOnly}
-                      className={`w-8 h-8 rounded-lg transition-all duration-200 flex items-center justify-center ${
-                        readOnly 
-                          ? "cursor-not-allowed opacity-60" 
-                          : "hover:scale-110 active:scale-95"
-                      } ${
-                        isCompleted
-                          ? "shadow-sm transform scale-105"
-                          : readOnly ? "" : "hover:shadow-sm"
-                      }`}
-                      style={{
-                        backgroundColor: isCompleted ? habit.color : "transparent",
-                        border: `2px solid ${habit.color}`,
-                        boxShadow: isCompleted ? `0 2px 4px ${habit.color}30` : "none",
-                      }}
-                    >
-                      {isCompleted && (
-                        <CheckIcon className="w-4 h-4 text-white font-bold" />
-                      )}
-                    </button>
+                    {isScheduled ? (
+                      <button
+                        onClick={() => 
+                          !readOnly && handleToggleCompletion(day, habit.id, displayCompletions)
+                        }
+                        disabled={readOnly}
+                        className={`w-8 h-8 rounded-lg transition-all duration-200 flex items-center justify-center ${
+                          readOnly 
+                            ? "cursor-not-allowed opacity-60" 
+                            : "hover:scale-110 active:scale-95"
+                        } ${
+                          isCompleted
+                            ? "shadow-sm transform scale-105"
+                            : readOnly ? "" : "hover:shadow-sm"
+                        }`}
+                        style={{
+                          backgroundColor: isCompleted ? habit.color : "transparent",
+                          border: `2px solid ${habit.color}`,
+                          boxShadow: isCompleted ? `0 2px 4px ${habit.color}30` : "none",
+                        }}
+                      >
+                        {isCompleted && (
+                          <CheckIcon className="w-4 h-4 text-white font-bold" />
+                        )}
+                      </button>
+                    ) : (
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center opacity-30">
+                        <div
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: habit.color }}
+                        />
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -217,7 +240,16 @@ export const GalleryView = ({
               <div className="flex items-center justify-between text-xs text-[var(--color-text-tertiary)] mb-1 font-outfit">
                 <span>Weekly Progress</span>
                 <span>
-                  {daysOfWeek.filter(day => getCompletionStatus(day, habit.id)).length}/{daysOfWeek.length}
+                  {(() => {
+                    const scheduledDays = daysOfWeek.filter(day => {
+                      const dayInfo = getCurrentWeekDates?.find((d) => d.day === day);
+                      if (!dayInfo) return false;
+                      const dateObj = new Date(dayInfo.date + 'T00:00:00');
+                      return habitUtils.isHabitScheduledForDate(habit, dateObj);
+                    });
+                    const completedScheduledDays = scheduledDays.filter(day => getCompletionStatus(day, habit.id));
+                    return `${completedScheduledDays.length}/${scheduledDays.length}`;
+                  })()}
                 </span>
               </div>
               <div className="w-full bg-[var(--color-surface-secondary)] rounded-full h-2">
@@ -225,7 +257,17 @@ export const GalleryView = ({
                   className="h-2 rounded-full transition-all duration-300"
                   style={{
                     backgroundColor: habit.color,
-                    width: `${(daysOfWeek.filter(day => getCompletionStatus(day, habit.id)).length / daysOfWeek.length) * 100}%`,
+                    width: `${(() => {
+                      const scheduledDays = daysOfWeek.filter(day => {
+                        const dayInfo = getCurrentWeekDates?.find((d) => d.day === day);
+                        if (!dayInfo) return false;
+                        const dateObj = new Date(dayInfo.date + 'T00:00:00');
+                        return habitUtils.isHabitScheduledForDate(habit, dateObj);
+                      });
+                      if (scheduledDays.length === 0) return 100; // If no scheduled days, show full progress
+                      const completedScheduledDays = scheduledDays.filter(day => getCompletionStatus(day, habit.id));
+                      return (completedScheduledDays.length / scheduledDays.length) * 100;
+                    })()}%`,
                   }}
                 />
               </div>
