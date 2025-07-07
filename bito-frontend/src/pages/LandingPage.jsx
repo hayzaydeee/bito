@@ -179,18 +179,14 @@ const LandingPage = () => {
           <div className="flex items-center h-16">
             {/* Logo */}
             <div className="flex-shrink-0 flex items-center gap-2 w-48">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center shadow-lg">
-                <TargetIcon className="w-4 h-4 text-white" />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-brand-500)] to-[var(--color-brand-700)] flex items-center justify-center shadow-lg">
+                <TargetIcon className="w-6 h-6 text-white" />
               </div>
-              <span
-                className={`text-xl font-bold font-outfit ${
-                  hasScrolled
-                    ? "gradient-text"
-                    : "text-[var(--color-text-primary)]"
-                }`}
-              >
-                bito
-              </span>
+              <div>
+                <p className="text-lg font-bold gradient-text font-outfit">
+                  bito
+                </p>
+              </div>
             </div>
 
             {/* Desktop Navigation - Centered */}
