@@ -2561,6 +2561,7 @@ router.get('/:workspaceId/members/:memberId/dashboard', authenticateJWT, async (
         icon: habit.icon || habit.workspaceHabitId?.icon,
         color: habit.color || habit.workspaceHabitId?.color,
         frequency: habit.frequency,
+        schedule: habit.schedule,
         target: habit.target,
         isActive: habit.isActive,
         streakCount: habit.streakCount,
