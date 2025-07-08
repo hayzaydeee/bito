@@ -269,13 +269,6 @@ const HowItWorksSection = forwardRef((props, ref) => {
                       ))}
                     </div>
 
-                    {/* CTA for active step */}
-                    <div className="pt-4">
-                      <button className="group flex items-center gap-2 px-6 py-3 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg font-medium transition-all duration-200 hover:scale-105 shadow-lg">
-                        Try this step
-                        <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                      </button>
-                    </div>
                   </div>
 
                   {/* Screenshot/Visual Side */}
