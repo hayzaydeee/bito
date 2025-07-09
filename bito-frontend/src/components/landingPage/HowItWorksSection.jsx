@@ -1,14 +1,10 @@
-import React, { useState, useRef, useEffect, forwardRef } from 'react';
+import { useState, useRef, useEffect, forwardRef } from 'react';
 import { 
   PlayIcon,
   PlusIcon,
-  TargetIcon,
   BarChartIcon,
   PersonIcon,
   CheckCircledIcon,
-  ArrowRightIcon,
-  LightningBoltIcon,
-  CalendarIcon,
   MobileIcon,
   DesktopIcon
 } from '@radix-ui/react-icons';

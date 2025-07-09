@@ -65,12 +65,25 @@ if (process.env.NODE_ENV === 'production') {
 const allowedOrigins = [
   'http://localhost:5173', // Vite dev server
   'http://localhost:3000', // Alternative dev server
+  'http://localhost:4173', // Vite preview server
   'https://bito.works',    // Production
+  // Add your public domain here if needed
+  // 'https://your-domain.com',
 ];
 
 // Add FRONTEND_URL if it's set and not already included
 if (process.env.FRONTEND_URL && !allowedOrigins.includes(process.env.FRONTEND_URL)) {
   allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
+// Support multiple frontend URLs via comma-separated FRONTEND_URLS
+if (process.env.FRONTEND_URLS) {
+  const additionalUrls = process.env.FRONTEND_URLS.split(',').map(url => url.trim());
+  additionalUrls.forEach(url => {
+    if (url && !allowedOrigins.includes(url)) {
+      allowedOrigins.push(url);
+    }
+  });
 }
 
 app.use(cors({
