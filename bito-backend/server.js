@@ -63,7 +63,7 @@ if (process.env.NODE_ENV === 'production') {
 
 // CORS configuration
 const allowedOrigins = [
-  'http://localhost:5173', // Vite dev server
+  'http://localhost:5174', // Vite dev server
   'http://localhost:3000', // Alternative dev server
   'http://localhost:4173', // Vite preview server
   'https://bito.works',    // Production
@@ -155,6 +155,20 @@ app.get('/health', (req, res) => {
     status: 'OK',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Debug endpoint to check user object
+app.get('/debug-user', require('./middleware/auth').authenticateJWT, (req, res) => {
+  res.json({
+    user: {
+      id: req.user.id,
+      _id: req.user._id,
+      email: req.user.email,
+      name: req.user.name,
+      fullObject: req.user
+    },
+    timestamp: new Date().toISOString()
   });
 });
 

@@ -42,13 +42,22 @@ const generateChartDataFromProps = (habits, entries, chartType, dateRange) => {
   }
 };
 
+// Helper function to format date consistently (matching database widget and HabitContext)
+const formatDateLocal = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 // Helper function to generate completion chart data from props
 const generateCompletionChartFromProps = (habits, entries, startDate, endDate) => {
   const data = [];
   const current = new Date(startDate);
   
   while (current <= endDate) {
-    const dateStr = current.toISOString().split('T')[0];
+    // Use local timezone date formatting instead of UTC
+    const dateStr = formatDateLocal(current);
     
     let totalHabits = 0;
     let completedHabits = 0;
@@ -64,7 +73,8 @@ const generateCompletionChartFromProps = (habits, entries, startDate, endDate) =
         if (Array.isArray(habitEntries)) {
           // Handle array format (legacy or direct API response)
           hasCompletedEntry = habitEntries.some(entry => {
-            const entryDate = new Date(entry.date).toISOString().split('T')[0];
+            // Use consistent date formatting for comparison
+            const entryDate = formatDateLocal(new Date(entry.date));
             return entryDate === dateStr && entry.completed;
           });
         } else if (typeof habitEntries === 'object') {

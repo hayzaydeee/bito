@@ -105,12 +105,12 @@ const SettingsPage = ({ section }) => {
   const [settings, setSettings] = useState({
     notifications: true,
     darkMode: true,
-    emailNotifications: false,
+    emailNotifications: true, // Default to true as per backend
     weeklyReports: true,
     autoBackup: true,
     language: "en",
     timezone: "UTC",
-    theme: "indigo",
+    theme: "auto", // Default to auto as per backend
     workspaceNotifications: true,
     shareProgress: "progress-only",
     defaultWorkspacePrivacy: "invite-only"
@@ -174,6 +174,10 @@ const SettingsPage = ({ section }) => {
             [key]: value
           }
         }));
+
+        // Show success notification
+        showNotification(`${key === 'emailNotifications' ? 'Email notifications' : key === 'timezone' ? 'Timezone' : 'Theme'} updated successfully!`, 'success');
+        
       } catch (error) {
         console.error('Failed to save setting:', error);
         // Revert local state on error
@@ -181,6 +185,7 @@ const SettingsPage = ({ section }) => {
           ...prev,
           [key]: userProfile?.preferences?.[key] ?? prev[key]
         }));
+        showNotification(`Failed to update ${key}. Please try again.`, 'error');
       } finally {
         setIsSaving(false);
       }
@@ -548,13 +553,7 @@ const SettingsPage = ({ section }) => {
                   </div>
                   <div className="min-w-0 flex-1">
                     <h4 className="font-semibold text-[var(--color-text-primary)] font-outfit truncate">{userProfile?.name || 'Loading...'}</h4>
-                    <p className="text-sm text-[var(--color-text-secondary)] font-outfit truncate">{userProfile?.email || 'Loading...'}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${userProfile?.isVerified ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                      <span className={`text-xs font-outfit truncate ${userProfile?.isVerified ? 'text-green-600' : 'text-yellow-600'}`}>
-                        {userProfile?.isVerified ? 'Verified account' : 'Account pending verification'}
-                      </span>
-                    </div>
+                    <p className="text-sm text-[var(--color-text-secondary)] font-outfit truncate">{userProfile?.email || 'Loading...'}</p> 
                     {(userProfile?.hasGoogleAuth || userProfile?.hasGithubAuth) && (
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-xs text-[var(--color-text-tertiary)] font-outfit truncate">
@@ -573,11 +572,14 @@ const SettingsPage = ({ section }) => {
                     type="select"
                     options={[
                       { label: "UTC", value: "UTC" },
-                      { label: "EST (UTC-5)", value: "EST" },
-                      { label: "PST (UTC-8)", value: "PST" },
-                      { label: "GMT (UTC+0)", value: "GMT" },
-                      { label: "CET (UTC+1)", value: "CET" },
-                      { label: "JST (UTC+9)", value: "JST" }
+                      { label: "EST (UTC-5)", value: "America/New_York" },
+                      { label: "CST (UTC-6)", value: "America/Chicago" },
+                      { label: "MST (UTC-7)", value: "America/Denver" },
+                      { label: "PST (UTC-8)", value: "America/Los_Angeles" },
+                      { label: "GMT (UTC+0)", value: "Europe/London" },
+                      { label: "CET (UTC+1)", value: "Europe/Paris" },
+                      { label: "JST (UTC+9)", value: "Asia/Tokyo" },
+                      { label: "AEST (UTC+10)", value: "Australia/Sydney" }
                     ]}
                     onChange={(value) => handleSettingChange('timezone', value)}
                     icon={<GlobeIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />}
@@ -689,7 +691,10 @@ const SettingsPage = ({ section }) => {
                   
                   if (permResponse.ok) {
                     const permData = await permResponse.json();
-                    permissions[workspace._id] = permData.permissions;
+                    permissions[workspace._id] = permData.permissions || { isPublicToWorkspace: true };
+                  } else {
+                    // Set default permissions if endpoint doesn't exist yet
+                    permissions[workspace._id] = { isPublicToWorkspace: true };
                   }
                 } catch (error) {
                   console.error(`Error fetching permissions for workspace ${workspace._id}:`, error);
@@ -697,12 +702,12 @@ const SettingsPage = ({ section }) => {
               }
               
               setDashboardPermissions(permissions);
+            }            } catch (error) {
+              console.error('Error fetching workspaces:', error);
+              showNotification('Failed to load workspace data. Please refresh the page.', 'error');
+            } finally {
+              setLoading(false);
             }
-          } catch (error) {
-            console.error('Error fetching workspaces:', error);
-          } finally {
-            setLoading(false);
-          }
         };
         
         const updateWorkspacePermissions = async (workspaceId, newPermissions) => {
@@ -730,6 +735,7 @@ const SettingsPage = ({ section }) => {
               showNotification('Dashboard sharing settings updated successfully!', 'success');
             } else {
               const error = await response.json();
+              console.error('Failed to update permissions:', error);
               showNotification(error.error || 'Failed to update settings', 'error');
             }
           } catch (error) {
@@ -874,7 +880,7 @@ const SettingsPage = ({ section }) => {
               options={[
                 { label: "🌙 Dark", value: "dark" },
                 { label: "☀️ Light", value: "light" },
-                { label: "� Auto", value: "auto" }
+                { label: "🔄 Auto", value: "auto" }
               ]}
               onChange={(value) => handleSettingChange('theme', value)}
               icon={<MoonIcon className="w-4 h-4 text-indigo-500" />}
@@ -931,10 +937,11 @@ const SettingsPage = ({ section }) => {
             linkElement.click();
             
             setExportSuccess(true);
+            showNotification('Data exported successfully! Check your downloads folder.', 'success');
             setTimeout(() => setExportSuccess(false), 3000);
           } catch (error) {
             console.error('Export failed:', error);
-            alert('Export failed. Please try again.');
+            showNotification('Export failed. Please try again.', 'error');
           } finally {
             setIsExporting(false);
           }
@@ -953,12 +960,14 @@ const SettingsPage = ({ section }) => {
                   password,
                   confirmDeletion: 'DELETE_MY_ACCOUNT'
                 });
-                alert('Account deleted successfully. You will be logged out.');
-                // Handle logout/redirect
-                window.location.href = '/';
+                showNotification('Account deleted successfully. You will be logged out.', 'success');
+                // Wait a moment before redirect to show the notification
+                setTimeout(() => {
+                  window.location.href = '/';
+                }, 2000);
               } catch (error) {
                 console.error('Account deletion failed:', error);
-                alert('Account deletion failed: ' + (error.message || 'Please try again.'));
+                showNotification('Account deletion failed: ' + (error.message || 'Please try again.'), 'error');
               }
             }
           }
@@ -1028,7 +1037,7 @@ const SettingsPage = ({ section }) => {
               {exportSuccess && (
                 <div className="mb-4 p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg">
                   <p className="text-sm text-green-700 dark:text-green-300 font-outfit">
-                    ✅ Data exported successfully! Check your downloads folder.
+                    ✅ Data exported successfully! Your export file has been downloaded.
                   </p>
                 </div>
               )}
@@ -1145,6 +1154,12 @@ const SettingsPage = ({ section }) => {
           <p className="text-sm text-[var(--color-text-tertiary)] font-outfit">
             💡 <strong>Pro tip:</strong> Use "Edit All" to customize your settings layout, or use the category filter to focus on specific areas.
           </p>
+          {isSaving && (
+            <div className="mt-4 flex items-center justify-center gap-2 text-sm text-[var(--color-text-secondary)] font-outfit">
+              <div className="w-4 h-4 border-2 border-[var(--color-brand-500)] border-t-transparent rounded-full animate-spin"></div>
+              Saving settings...
+            </div>
+          )}
         </div>
       </div>
       

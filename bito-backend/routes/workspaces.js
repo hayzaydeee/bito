@@ -85,16 +85,17 @@ router.get('/debug-members-temp', async (req, res) => {
 // @access  Private
 router.get('/', authenticateJWT, async (req, res) => {
   try {
-    console.log('Fetching workspaces for user:', req.user?.id);
+    const userId = req.user._id || req.user.id;
+    console.log('Fetching workspaces for user:', userId);
     
-    if (!req.user || !req.user.id) {
+    if (!req.user || (!req.user._id && !req.user.id)) {
       return res.status(401).json({
         success: false,
         error: 'User not authenticated'
       });
     }
     
-    const workspaces = await Workspace.findByUserId(req.user.id);
+    const workspaces = await Workspace.findByUserId(userId);
     console.log('Found workspaces:', workspaces.length);
     
     res.json({
@@ -278,7 +279,8 @@ router.get('/:id', authenticateJWT, async (req, res) => {
       .populate('members.userId', 'name email avatar');
     
     // Get user's role in workspace
-    const userRole = workspace.getMemberRole(req.user.id);
+    const userId = req.user._id || req.user.id;
+    const userRole = workspace.getMemberRole(userId);
     
     // Get workspace habits (filtered by visibility)
     const workspaceHabits = await WorkspaceHabit.findByWorkspace(
@@ -313,8 +315,9 @@ router.get('/:id', authenticateJWT, async (req, res) => {
 router.get('/:id/overview', authenticateJWT, async (req, res) => {
   try {
     const workspace = await Workspace.findById(req.params.id);
+    const userId = req.user._id || req.user.id;
     
-    if (!workspace || !workspace.isMember(req.user.id)) {
+    if (!workspace || !workspace.isMember(userId)) {
       return res.status(404).json({
         success: false,
         error: 'Workspace not found or access denied'
@@ -431,8 +434,9 @@ router.get('/:id/activity', authenticateJWT, async (req, res) => {
   try {
     const { page = 1, limit = 20, types } = req.query;
     const workspace = await Workspace.findById(req.params.id);
+    const userId = req.user._id || req.user.id;
     
-    if (!workspace || !workspace.isMember(req.user.id)) {
+    if (!workspace || !workspace.isMember(userId)) {
       return res.status(404).json({
         success: false,
         error: 'Workspace not found or access denied'
@@ -513,11 +517,13 @@ router.post('/:id/members/invite', [
       });
     }
     
-    console.log(`📧 Workspace found: ${workspace.name}, checking permissions for user ${req.user.id}`);
+    console.log(`📧 Workspace found: ${workspace.name}, checking permissions for user ${req.user._id || req.user.id}`);
+    
+    const userId = req.user._id || req.user.id;
     
     // Check if user can invite members
-    if (!workspace.canUserAccess(req.user.id, 'invite')) {
-      console.log(`❌ Permission denied: User ${req.user.id} cannot invite members to workspace ${workspace._id}`);
+    if (!workspace.canUserAccess(userId, 'invite')) {
+      console.log(`❌ Permission denied: User ${userId} cannot invite members to workspace ${workspace._id}`);
       return res.status(403).json({
         success: false,
         error: 'You do not have permission to invite members'
@@ -568,7 +574,7 @@ router.post('/:id/members/invite', [
       existingInvitation.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
       existingInvitation.role = role; // Update role in case it changed
       existingInvitation.message = message; // Update message
-      existingInvitation.invitedBy = req.user.id; // Update who sent the invite
+      existingInvitation.invitedBy = userId; // Update who sent the invite
       
       await existingInvitation.save();
       
@@ -602,7 +608,7 @@ router.post('/:id/members/invite', [
     
     const invitation = new Invitation({
       workspaceId: workspace._id,
-      invitedBy: req.user.id,
+      invitedBy: userId,
       email: email,
       invitedUserId: existingUser ? existingUser._id : null,
       role: role,
@@ -679,7 +685,8 @@ router.get('/:id/invitations', authenticateJWT, async (req, res) => {
     }
     
     // Check if user can view invitations (owners and admins)
-    const userRole = workspace.getMemberRole(req.user.id);
+    const userId = req.user._id || req.user.id;
+    const userRole = workspace.getMemberRole(userId);
     if (!userRole || !['owner', 'admin'].includes(userRole)) {
       return res.status(403).json({
         success: false,
@@ -1133,7 +1140,13 @@ router.delete('/:id/members/:userId', authenticateJWT, async (req, res) => {
 router.post('/:id/leave', authenticateJWT, async (req, res) => {
   try {
     const workspaceId = req.params.id;
-    const userId = req.user.id;
+    const userId = req.user._id || req.user.id; // Support both _id and id
+
+    console.log('Leave workspace request:', { 
+      workspaceId, 
+      userId: userId.toString(),
+      userFromToken: { id: req.user._id || req.user.id, email: req.user.email }
+    });
 
     // Find the workspace
     const workspace = await Workspace.findById(workspaceId);
@@ -1144,6 +1157,14 @@ router.post('/:id/leave', authenticateJWT, async (req, res) => {
 
     // Check if user is a member
     if (!workspace.isMember(userId)) {
+      console.log('User not a member check:', {
+        userId: userId.toString(),
+        members: workspace.members.map(m => ({ 
+          userId: m.userId.toString(), 
+          status: m.status,
+          role: m.role 
+        }))
+      });
       return res.status(403).json({ message: 'You are not a member of this workspace' });
     }
 
@@ -2097,6 +2118,137 @@ router.delete('/workspace-habits/:id', authenticateJWT, async (req, res) => {
   }
 });
 
+// @route   PUT /api/workspaces/:id
+// @desc    Update workspace settings
+// @access  Private (Owners and Admins)
+router.put('/:id', authenticateJWT, async (req, res) => {
+  try {
+    const workspaceId = req.params.id;
+    const userId = req.user._id || req.user.id;
+    const { name, description, type, settings } = req.body;
+
+    console.log(`🔧 UPDATE WORKSPACE REQUEST: Workspace ${workspaceId}, User ${userId}`);
+
+    // Find the workspace
+    const workspace = await Workspace.findById(workspaceId);
+    if (!workspace) {
+      return res.status(404).json({
+        success: false,
+        error: 'Workspace not found'
+      });
+    }
+
+    // Check permissions - only owners and admins can update settings
+    const userRole = workspace.getMemberRole(userId);
+    if (!userRole || !['owner', 'admin'].includes(userRole)) {
+      return res.status(403).json({
+        success: false,
+        error: 'You do not have permission to update workspace settings'
+      });
+    }
+
+    console.log(`🔧 Permission check passed - User role: ${userRole}`);
+
+    // Validate and update basic fields
+    if (name !== undefined) {
+      if (!name.trim() || name.length > 100) {
+        return res.status(400).json({
+          success: false,
+          error: 'Workspace name must be 1-100 characters'
+        });
+      }
+      workspace.name = name.trim();
+    }
+
+    if (description !== undefined) {
+      if (description.length > 500) {
+        return res.status(400).json({
+          success: false,
+          error: 'Description cannot exceed 500 characters'
+        });
+      }
+      workspace.description = description.trim();
+    }
+
+    if (type !== undefined) {
+      const validTypes = ['family', 'team', 'fitness', 'study', 'community', 'personal'];
+      if (!validTypes.includes(type)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid workspace type'
+        });
+      }
+      workspace.type = type;
+    }
+
+    // Update settings object
+    if (settings) {
+      if (settings.isPublic !== undefined) {
+        workspace.settings.isPublic = Boolean(settings.isPublic);
+      }
+      
+      if (settings.allowInvites !== undefined) {
+        workspace.settings.allowInvites = Boolean(settings.allowInvites);
+      }
+      
+      if (settings.requireApproval !== undefined) {
+        workspace.settings.requireApproval = Boolean(settings.requireApproval);
+      }
+      
+      if (settings.privacyLevel !== undefined) {
+        const validLevels = ['open', 'members-only', 'invite-only'];
+        if (!validLevels.includes(settings.privacyLevel)) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid privacy level'
+          });
+        }
+        workspace.settings.privacyLevel = settings.privacyLevel;
+      }
+
+      if (settings.allowMemberHabitCreation !== undefined) {
+        workspace.settings.allowMemberHabitCreation = Boolean(settings.allowMemberHabitCreation);
+      }
+
+      if (settings.defaultHabitVisibility !== undefined) {
+        const validVisibility = ['public', 'progress-only', 'streaks-only', 'private'];
+        if (!validVisibility.includes(settings.defaultHabitVisibility)) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid default habit visibility'
+          });
+        }
+        workspace.settings.defaultHabitVisibility = settings.defaultHabitVisibility;
+      }
+    }
+
+    // Save the updated workspace
+    workspace.updatedAt = new Date();
+    await workspace.save();
+
+    console.log(`🔧 Workspace updated successfully`);
+
+    // Return the updated workspace
+    const updatedWorkspace = await Workspace.findById(workspaceId)
+      .populate('ownerId', 'name email avatar')
+      .populate('members.userId', 'name email avatar');
+
+    res.json({
+      success: true,
+      message: 'Workspace settings updated successfully',
+      workspace: updatedWorkspace
+    });
+
+  } catch (error) {
+    console.error('Error updating workspace:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update workspace settings',
+      details: error.message
+    });
+  }
+});
+
 // @route   DELETE /api/workspaces/:id
 // @desc    Delete entire workspace
 // @route   DELETE /api/workspaces/:id
@@ -2104,7 +2256,7 @@ router.delete('/workspace-habits/:id', authenticateJWT, async (req, res) => {
 router.delete('/:id', authenticateJWT, async (req, res) => {
   try {
     const workspaceId = req.params.id;
-    const userId = req.user.id;
+    const userId = req.user._id || req.user.id;
 
     console.log(`🗑️ DELETE WORKSPACE REQUEST: Workspace ${workspaceId}, User ${userId}`);
 
@@ -2119,7 +2271,7 @@ router.delete('/:id', authenticateJWT, async (req, res) => {
 
     // Check if user is the owner
     const member = workspace.members.find(
-      (m) => m.userId.toString() === userId
+      (m) => m.userId.toString() === userId.toString()
     );
 
     if (!member || member.role !== 'owner') {
@@ -2183,286 +2335,148 @@ router.delete('/:id', authenticateJWT, async (req, res) => {
   }
 });
 
-// @route   GET /api/workspaces/:id/group-trackers
-// @desc    Get group trackers data for all members in a workspace
-// @access  Private (Members)
-router.get('/:id/group-trackers', authenticateJWT, async (req, res) => {
+// @route   PUT /api/workspaces/:id
+// @desc    Update workspace settings
+// @access  Private (Owners and Admins)
+router.put('/:id', authenticateJWT, async (req, res) => {
   try {
     const workspaceId = req.params.id;
-    const userId = req.user.id;
-    
-    console.log(`📊 GROUP TRACKERS REQUEST: Workspace ${workspaceId}, User ${userId}`);
-    
-    // Parse date range from query params
-    const { startDate, endDate } = req.query;
-    const dateFilter = {};
-    
-    if (startDate) {
-      dateFilter.date = { $gte: new Date(startDate) };
-      console.log(`📅 Using startDate filter: ${startDate}`);
-    }
-    
-    if (endDate) {
-      if (!dateFilter.date) dateFilter.date = {};
-      dateFilter.date.$lte = new Date(endDate);
-      console.log(`📅 Using endDate filter: ${endDate}`);
-    }
-    
-    // Find the workspace and verify user is a member
+    const userId = req.user._id || req.user.id;
+    const { name, description, type, settings } = req.body;
+
+    console.log(`🔧 UPDATE WORKSPACE REQUEST: Workspace ${workspaceId}, User ${userId}`);
+
+    // Find the workspace
     const workspace = await Workspace.findById(workspaceId);
     if (!workspace) {
-      console.log(`❌ Workspace not found: ${workspaceId}`);
       return res.status(404).json({
         success: false,
         error: 'Workspace not found'
       });
     }
-    
-    // Check if user is a member of the workspace
-    const isMember = workspace.members.some(m => m.userId.toString() === userId);
-    if (!isMember) {
-      console.log(`⛔ User ${userId} is not a member of workspace ${workspaceId}`);
+
+    // Check permissions - only owners and admins can update settings
+    const userRole = workspace.getMemberRole(userId);
+    if (!userRole || !['owner', 'admin'].includes(userRole)) {
       return res.status(403).json({
         success: false,
-        error: 'You are not a member of this workspace'
+        error: 'You do not have permission to update workspace settings'
       });
     }
-    
-    // Get all workspace habits
-    const workspaceHabits = await WorkspaceHabit.find({ workspaceId }).lean();
-    console.log(`📋 Found ${workspaceHabits.length} workspace habits`);
-    
-    // Get all member habits for the workspace habits
-    const memberHabits = await MemberHabit.find({ 
-      workspaceId,
-      workspaceHabitId: { $in: workspaceHabits.map(h => h._id) }
-    }).populate('userId', 'name email').lean();
-    console.log(`👥 Found ${memberHabits.length} member habits`);
-    
-    // Create a map of workspace habits by ID for easy lookup
-    const workspaceHabitsMap = {};
-    workspaceHabits.forEach(habit => {
-      workspaceHabitsMap[habit._id.toString()] = habit;
-    });
-    
-    // Get all habit entries for the member habits within the date range
-    const query = {
-      habitId: { $in: memberHabits.map(h => h._id) },
-      ...dateFilter
-    };
-    
-    console.log(`🔍 Querying habit entries with filter:`, query);
-    const habitEntries = await HabitEntry.find(query).lean();
-    console.log(`📝 Found ${habitEntries.length} habit entries`);
-    
-    // Group entries by member habit ID
-    const entriesByHabitId = {};
-    habitEntries.forEach(entry => {
-      const habitId = entry.habitId.toString();
-      if (!entriesByHabitId[habitId]) {
-        entriesByHabitId[habitId] = [];
-      }
-      entriesByHabitId[habitId].push(entry);
-    });
-    
-    // Build the tracker data structure
-    const trackers = memberHabits.map(memberHabit => {
-      const workspaceHabitId = memberHabit.workspaceHabitId.toString();
-      const workspaceHabit = workspaceHabitsMap[workspaceHabitId];
-      const habitId = memberHabit._id.toString();
-      
-      return {
-        userId: memberHabit.userId._id,
-        userName: memberHabit.userId.name,
-        habitId: habitId,
-        workspaceHabitId: workspaceHabitId,
-        habitName: workspaceHabit?.name || memberHabit.name,
-        frequency: memberHabit.frequency || workspaceHabit?.frequency,
-        streakCount: memberHabit.streakCount || 0,
-        totalCompletions: memberHabit.totalCompletions || 0,
-        entries: entriesByHabitId[habitId] || []
-      };
-    });
-    
-    res.json({
-      success: true,
-      trackers,
-      dateRange: {
-        startDate: startDate ? new Date(startDate) : null,
-        endDate: endDate ? new Date(endDate) : null
-      }
-    });
-    
-  } catch (error) {
-    console.error('Error fetching group trackers:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch group trackers',
-      details: error.message
-    });
-  }
-});
 
-// @route   GET /api/workspaces/:id/shared-habits-overview
-// @desc    Get overview stats for shared habits across workspace
-// @access  Private (Members)
-router.get('/:id/shared-habits-overview', authenticateJWT, async (req, res) => {
-  try {
-    const workspaceId = req.params.id;
-    const userId = req.user.id;
-    
-    console.log(`📊 SHARED HABITS OVERVIEW REQUEST: Workspace ${workspaceId}, User ${userId}`);
-    
-    // Find the workspace and verify user is a member
-    const workspace = await Workspace.findById(workspaceId);
-    if (!workspace) {
-      console.log(`❌ Workspace not found: ${workspaceId}`);
-      return res.status(404).json({
-        success: false,
-        error: 'Workspace not found'
-      });
+    console.log(`🔧 Permission check passed - User role: ${userRole}`);
+
+    // Validate and update basic fields
+    if (name !== undefined) {
+      if (!name.trim() || name.length > 100) {
+        return res.status(400).json({
+          success: false,
+          error: 'Workspace name must be 1-100 characters'
+        });
+      }
+      workspace.name = name.trim();
     }
-    
-    // Check if user is a member of the workspace
-    const isMember = workspace.members.some(m => m.userId.toString() === userId);
-    if (!isMember) {
-      console.log(`⛔ User ${userId} is not a member of workspace ${workspaceId}`);
-      return res.status(403).json({
-        success: false,
-        error: 'You are not a member of this workspace'
-      });
+
+    if (description !== undefined) {
+      if (description.length > 500) {
+        return res.status(400).json({
+          success: false,
+          error: 'Description cannot exceed 500 characters'
+        });
+      }
+      workspace.description = description.trim();
     }
-    
-    // Get all workspace habits
-    const workspaceHabits = await WorkspaceHabit.find({ workspaceId }).lean();
-      // Get counts of members who adopted each habit
-    const habitAdoptionCounts = await MemberHabit.aggregate([
-      { 
-        $match: { 
-          workspaceId: new mongoose.Types.ObjectId(workspaceId),
-          workspaceHabitId: { $in: workspaceHabits.map(h => h._id) }
+
+    if (type !== undefined) {
+      const validTypes = ['family', 'team', 'fitness', 'study', 'community', 'personal'];
+      if (!validTypes.includes(type)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid workspace type'
+        });
+      }
+      workspace.type = type;
+    }
+
+    // Update settings object
+    if (settings) {
+      if (settings.isPublic !== undefined) {
+        workspace.settings.isPublic = Boolean(settings.isPublic);
+      }
+      
+      if (settings.allowInvites !== undefined) {
+        workspace.settings.allowInvites = Boolean(settings.allowInvites);
+      }
+      
+      if (settings.requireApproval !== undefined) {
+        workspace.settings.requireApproval = Boolean(settings.requireApproval);
+      }
+      
+      if (settings.privacyLevel !== undefined) {
+        const validLevels = ['open', 'members-only', 'invite-only'];
+        if (!validLevels.includes(settings.privacyLevel)) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid privacy level'
+          });
         }
-      },
-      { 
-        $group: {
-          _id: "$workspaceHabitId",
-          adoptedCount: { $sum: 1 }
+        workspace.settings.privacyLevel = settings.privacyLevel;
+      }
+
+      if (settings.allowMemberHabitCreation !== undefined) {
+        workspace.settings.allowMemberHabitCreation = Boolean(settings.allowMemberHabitCreation);
+      }
+
+      if (settings.defaultHabitVisibility !== undefined) {
+        const validVisibility = ['public', 'progress-only', 'streaks-only', 'private'];
+        if (!validVisibility.includes(settings.defaultHabitVisibility)) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid default habit visibility'
+          });
         }
+        workspace.settings.defaultHabitVisibility = settings.defaultHabitVisibility;
       }
-    ]);
-    
-    // Create a map of adoption counts by workspace habit ID
-    const adoptionCountsMap = {};
-    habitAdoptionCounts.forEach(item => {
-      adoptionCountsMap[item._id.toString()] = item.adoptedCount;
-    });
-    
-    // Calculate completion rates for each habit over last 30 days
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
-    // Get member habits for the workspace
-    const memberHabits = await MemberHabit.find({
-      workspaceId,
-      workspaceHabitId: { $in: workspaceHabits.map(h => h._id) }
-    }).lean();
-    
-    // Get entries for these habits in the last 30 days
-    const entries = await HabitEntry.find({
-      habitId: { $in: memberHabits.map(h => h._id) },
-      date: { $gte: thirtyDaysAgo }
-    }).lean();
-    
-    // Group member habits by workspace habit ID
-    const memberHabitsByWorkspaceHabit = {};
-    memberHabits.forEach(habit => {
-      const workspaceHabitId = habit.workspaceHabitId.toString();
-      if (!memberHabitsByWorkspaceHabit[workspaceHabitId]) {
-        memberHabitsByWorkspaceHabit[workspaceHabitId] = [];
-      }
-      memberHabitsByWorkspaceHabit[workspaceHabitId].push(habit);
-    });
-    
-    // Group entries by habit ID
-    const entriesByHabitId = {};
-    entries.forEach(entry => {
-      const habitId = entry.habitId.toString();
-      if (!entriesByHabitId[habitId]) {
-        entriesByHabitId[habitId] = [];
-      }
-      entriesByHabitId[habitId].push(entry);
-    });
-    
-    // Build the overview data
-    const overview = workspaceHabits.map(habit => {
-      const habitId = habit._id.toString();
-      const memberHabitsForWorkspaceHabit = memberHabitsByWorkspaceHabit[habitId] || [];
-      
-      // Calculate completion stats
-      let totalCompletions = 0;
-      let totalExpectedCompletions = 0;
-      
-      memberHabitsForWorkspaceHabit.forEach(memberHabit => {
-        const memberHabitId = memberHabit._id.toString();
-        const habitEntries = entriesByHabitId[memberHabitId] || [];
-        
-        totalCompletions += habitEntries.length;
-        
-        // Calculate expected completions based on frequency and 30-day period
-        // This is a simplified calculation and might need adjustment based on your frequency model
-        const daysPerWeek = memberHabit.frequency?.daysPerWeek || habit.frequency?.daysPerWeek || 7;
-        totalExpectedCompletions += Math.round((30 / 7) * daysPerWeek);
-      });
-      
-      const completionRate = totalExpectedCompletions > 0 
-        ? (totalCompletions / totalExpectedCompletions) * 100 
-        : 0;
-      
-      return {
-        habitId: habitId,
-        name: habit.name,
-        description: habit.description,
-        adoptedCount: adoptionCountsMap[habitId] || 0,
-        totalMembers: workspace.members.length,
-        adoptionRate: workspace.members.length > 0 
-          ? ((adoptionCountsMap[habitId] || 0) / workspace.members.length) * 100 
-          : 0,
-        completionRate: Math.min(100, completionRate),
-        totalCompletions,
-        streak: Math.max(...memberHabitsForWorkspaceHabit.map(h => h.streakCount || 0), 0)
-      };
-    });
-    
-    res.json({
-      success: true,
-      overview,
-      memberCount: workspace.members.length
-    });
-    
-  } catch (error) {
-    console.error('Error fetching shared habits overview:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch shared habits overview',
-      details: error.message
-    });
-  }
-});
+    }
 
-// @route   GET /api/workspaces/:workspaceId/members/:memberId/dashboard
-// @desc    Get member dashboard data (for viewing another member's habits with permission)
-// @access  Private
-router.get('/:workspaceId/members/:memberId/dashboard', authenticateJWT, async (req, res) => {
-  try {
-    const { workspaceId, memberId } = req.params;
-    const requestingUserId = req.user.id;
+    // Save the updated workspace
+    workspace.updatedAt = new Date();
+    await workspace.save();
 
-    console.log(`📊 Fetching member dashboard for member ${memberId} in workspace ${workspaceId}, requested by ${requestingUserId}`);
+    console.log(`🔧 Workspace updated successfully`);
 
-    // Verify workspace exists and requesting user has access
-    const workspace = await Workspace.findById(workspaceId)
+    // Return the updated workspace
+    const updatedWorkspace = await Workspace.findById(workspaceId)
+     
+      .populate('ownerId', 'name email avatar')
       .populate('members.userId', 'name email avatar');
-    
+
+    res.json({
+      success: true,
+      message: 'Workspace settings updated successfully',
+      workspace: updatedWorkspace
+    });
+
+  } catch (error) {
+    console.error('Error updating workspace:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update workspace settings',
+      details: error.message
+    });
+  }
+});
+
+// @route   GET /api/workspaces/:id/dashboard-permissions
+// @desc    Get user's dashboard sharing permissions for a workspace
+// @access  Private
+router.get('/:id/dashboard-permissions', authenticateJWT, async (req, res) => {
+  try {
+    const workspaceId = req.params.id;
+    const userId = req.user._id || req.user.id;
+
+    // Find the workspace to verify membership
+    const workspace = await Workspace.findById(workspaceId);
     if (!workspace) {
       return res.status(404).json({
         success: false,
@@ -2470,203 +2484,113 @@ router.get('/:workspaceId/members/:memberId/dashboard', authenticateJWT, async (
       });
     }
 
-    // Check if requesting user is a member of the workspace
-    const isRequestingUserMember = workspace.members.some(member => 
-      member.userId._id.toString() === requestingUserId
+    // Check if user is a member
+    const isMember = workspace.members.some(member => 
+      member.userId.toString() === userId.toString()
     );
 
-    if (!isRequestingUserMember) {
+    if (!isMember) {
       return res.status(403).json({
         success: false,
         error: 'Access denied. You are not a member of this workspace.'
       });
     }
 
-    // Find the target member in the workspace
-    const targetMember = workspace.members.find(member => 
-      member.userId._id.toString() === memberId
-    );
+    // Get user's dashboard permissions for this workspace
+    const user = await User.findById(userId);
+    const permissions = user.dashboardSharingPermissions?.find(
+      perm => perm.workspaceId.toString() === workspaceId
+    ) || { isPublicToWorkspace: true };
 
-    if (!targetMember) {
+    res.json({
+      success: true,
+      permissions: {
+        isPublicToWorkspace: permissions.isPublicToWorkspace !== false,
+        allowedMembers: permissions.allowedMembers || []
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching dashboard permissions:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch dashboard permissions'
+    });
+  }
+});
+
+// @route   PUT /api/workspaces/:id/dashboard-permissions
+// @desc    Update user's dashboard sharing permissions for a workspace
+// @access  Private
+router.put('/:id/dashboard-permissions', authenticateJWT, async (req, res) => {
+  try {
+    const workspaceId = req.params.id;
+    const userId = req.user._id || req.user.id;
+    const { isPublicToWorkspace, allowedMembers } = req.body;
+
+    // Find the workspace to verify membership
+    const workspace = await Workspace.findById(workspaceId);
+    if (!workspace) {
       return res.status(404).json({
         success: false,
-        error: 'Member not found in this workspace'
+        error: 'Workspace not found'
       });
     }
 
-    // Get the target member's habits (all their active habits for dashboard view)
-    console.log(`� Looking for habits for member ${memberId}`);
-    
-    const memberHabits = await Habit.find({
-      userId: memberId,
-      isActive: true
-    })
-    .populate('workspaceHabitId', 'name description category icon color')
-    .sort({ createdAt: -1 });
+    // Check if user is a member
+    const isMember = workspace.members.some(member => 
+      member.userId.toString() === userId.toString()
+    );
 
-    console.log(`Found ${memberHabits.length} active habits for member ${memberId}`);
-    
-    if (memberHabits.length > 0) {
-      console.log(`📋 Habit details:`, memberHabits.map(h => ({ 
-        id: h._id, 
-        name: h.name, 
-        source: h.source, 
-        workspaceId: h.workspaceId?.toString(),
-        isActive: h.isActive 
-      })));
+    if (!isMember) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied. You are not a member of this workspace.'
+      });
     }
 
-    // Get habit entries for the member's habits
-    const habitIds = memberHabits.map(habit => habit._id);
-    const habitEntries = await HabitEntry.find({
-      habitId: { $in: habitIds },
-      userId: memberId
-    });
+    // Update user's dashboard permissions
+    const user = await User.findById(userId);
+    
+    // Initialize dashboardSharingPermissions if it doesn't exist
+    if (!user.dashboardSharingPermissions) {
+      user.dashboardSharingPermissions = [];
+    }
 
-    console.log(`Found ${habitEntries.length} habit entries for member ${memberId}`);
+    // Find existing permission for this workspace or create new one
+    const existingPermissionIndex = user.dashboardSharingPermissions.findIndex(
+      perm => perm.workspaceId.toString() === workspaceId
+    );
 
-    // Organize entries by habitId
-    const entriesByHabit = {};
-    habitEntries.forEach(entry => {
-      const habitId = entry.habitId.toString();
-      if (!entriesByHabit[habitId]) {
-        entriesByHabit[habitId] = [];
-      }
-      entriesByHabit[habitId].push({
-        _id: entry._id,
-        date: entry.date,
-        completed: entry.completed,
-        value: entry.value,
-        note: entry.note,
-        createdAt: entry.createdAt,
-        updatedAt: entry.updatedAt
-      });
-    });
+    const newPermission = {
+      workspaceId: workspaceId,
+      isPublicToWorkspace: isPublicToWorkspace !== false,
+      allowedMembers: allowedMembers || [],
+      updatedAt: new Date()
+    };
+
+    if (existingPermissionIndex >= 0) {
+      user.dashboardSharingPermissions[existingPermissionIndex] = newPermission;
+    } else {
+      user.dashboardSharingPermissions.push(newPermission);
+    }
+
+    await user.save();
 
     res.json({
       success: true,
-      member: {
-        _id: targetMember.userId._id,
-        name: targetMember.userId.name,
-        email: targetMember.userId.email,
-        avatar: targetMember.userId.avatar,
-        role: targetMember.role,
-        status: targetMember.status
-      },
-      habits: memberHabits.map(habit => ({
-        _id: habit._id,
-        name: habit.name || habit.workspaceHabitId?.name,
-        description: habit.description || habit.workspaceHabitId?.description,
-        category: habit.category || habit.workspaceHabitId?.category,
-        icon: habit.icon || habit.workspaceHabitId?.icon,
-        color: habit.color || habit.workspaceHabitId?.color,
-        frequency: habit.frequency,
-        schedule: habit.schedule,
-        target: habit.target,
-        isActive: habit.isActive,
-        streakCount: habit.streakCount,
-        source: habit.source,
-        workspaceId: habit.workspaceId,
-        workspaceHabitId: habit.workspaceHabitId,
-        adoptedAt: habit.adoptedAt,
-        createdAt: habit.createdAt,
-        updatedAt: habit.updatedAt
-      })),
-      entries: entriesByHabit,
-      workspace: {
-        _id: workspace._id,
-        name: workspace.name
+      message: 'Dashboard sharing permissions updated successfully',
+      permissions: {
+        isPublicToWorkspace: newPermission.isPublicToWorkspace,
+        allowedMembers: newPermission.allowedMembers
       }
     });
 
   } catch (error) {
-    console.error('Error fetching member dashboard:', error);
+    console.error('Error updating dashboard permissions:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch member dashboard',
-      details: error.message
-    });
-  }
-});
-
-// @route   GET /api/workspaces/:workspaceId/challenges
-// @desc    Get challenges for workspace (stub endpoint - returns empty)
-// @access  Private
-router.get('/:workspaceId/challenges', authenticateJWT, async (req, res) => {
-  try {
-    console.log('📝 Challenges endpoint called - returning empty challenges array');
-    res.json({
-      success: true,
-      challenges: [],
-      message: 'Challenges feature is currently disabled'
-    });
-  } catch (error) {
-    console.error('Error in challenges endpoint:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch challenges',
-      details: error.message
-    });
-  }
-});
-
-// @route   POST /api/workspaces/:workspaceId/challenges
-// @desc    Create challenge (stub endpoint - returns success but does nothing)
-// @access  Private
-router.post('/:workspaceId/challenges', authenticateJWT, async (req, res) => {
-  try {
-    console.log('📝 Create challenge endpoint called - returning success without creating');
-    res.json({
-      success: true,
-      message: 'Challenges feature is currently disabled',
-      challenge: null
-    });
-  } catch (error) {
-    console.error('Error in create challenge endpoint:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to create challenge',
-      details: error.message
-    });
-  }
-});
-
-// @route   POST /api/workspaces/:workspaceId/challenges/:challengeId/join
-// @desc    Join challenge (stub endpoint - returns success but does nothing)
-// @access  Private
-router.post('/:workspaceId/challenges/:challengeId/join', authenticateJWT, async (req, res) => {
-  try {
-    console.log('📝 Join challenge endpoint called - returning success without joining');
-    res.json({
-      success: true,
-      message: 'Challenges feature is currently disabled'
-    });
-  } catch (error) {
-    console.error('Error in join challenge endpoint:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to join challenge',
-      details: error.message
-    });
-  }
-});
-
-// @route   DELETE /api/workspaces/:workspaceId/challenges/:challengeId/leave
-// @desc    Leave challenge (stub endpoint - returns success but does nothing)
-// @access  Private
-router.delete('/:workspaceId/challenges/:challengeId/leave', authenticateJWT, async (req, res) => {
-  try {
-    console.log('📝 Leave challenge endpoint called - returning success without leaving');
-    res.json({
-      success: true,
-      message: 'Challenges feature is currently disabled'
-    });
-  } catch (error) {
-    console.error('Error in leave challenge endpoint:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to leave challenge',
-      details: error.message
+      error: 'Failed to update dashboard permissions'
     });
   }
 });

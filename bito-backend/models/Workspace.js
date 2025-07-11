@@ -125,12 +125,26 @@ workspaceSchema.virtual('memberCount').get(function() {
 
 // Methods
 workspaceSchema.methods.isMember = function(userId) {
-  if (!userId) return false;
+  if (!userId) {
+    console.log('isMember: No userId provided');
+    return false;
+  }
   
   const userIdString = userId.toString();
+  console.log('isMember: Checking userId:', userIdString);
+  console.log('isMember: Workspace members:', this.members.map(m => ({
+    userId: m.userId,
+    userIdType: typeof m.userId,
+    userIdString: m.userId ? m.userId.toString() : 'null',
+    status: m.status,
+    role: m.role
+  })));
   
-  return this.members.some(member => {
-    if (!member.userId || member.status !== 'active') return false;
+  const result = this.members.some(member => {
+    if (!member.userId || member.status !== 'active') {
+      console.log('isMember: Skipping inactive or null member:', { userId: member.userId, status: member.status });
+      return false;
+    }
     
     // Handle both ObjectId and string comparisons
     const memberIdString = member.userId.toString();
@@ -140,12 +154,19 @@ workspaceSchema.methods.isMember = function(userId) {
       // Extract ObjectId from corrupted string format
       const match = member.userId.match(/_id: new ObjectId\('([^']+)'\)/);
       if (match && match[1]) {
-        return match[1] === userIdString;
+        const matches = match[1] === userIdString;
+        console.log('isMember: Corrupted string comparison:', { extracted: match[1], userIdString, matches });
+        return matches;
       }
     }
     
-    return memberIdString === userIdString;
+    const matches = memberIdString === userIdString;
+    console.log('isMember: Normal comparison:', { memberIdString, userIdString, matches });
+    return matches;
   });
+  
+  console.log('isMember: Final result:', result);
+  return result;
 };
 
 workspaceSchema.methods.getMemberRole = function(userId) {

@@ -32,7 +32,7 @@ const apiRequest = async (endpoint, options = {}) => {
         method: config.method,
         body: config.body
       });
-      throw new Error(data.error || `HTTP error! status: ${response.status}`);
+      throw new Error(data.error || data.message || `HTTP error! status: ${response.status}`);
     }
 
     return data;

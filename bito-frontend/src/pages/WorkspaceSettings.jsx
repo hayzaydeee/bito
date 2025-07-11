@@ -12,6 +12,8 @@ import {
   ArrowLeftIcon,
   CheckIcon,
   Cross2Icon,
+  PlusIcon,
+  EyeOpenIcon,
 } from "@radix-ui/react-icons";
 import BaseGridContainer from "../components/shared/BaseGridContainer";
 import { useAuth } from "../contexts/AuthContext";
@@ -61,11 +63,17 @@ const WorkspaceSettings = () => {
             allowInvites: workspaceData.settings?.allowInvites || true,
             requireApproval: workspaceData.settings?.requireApproval || false,
             privacyLevel: workspaceData.settings?.privacyLevel || "invite-only",
+            allowMemberHabitCreation: workspaceData.settings?.allowMemberHabitCreation !== false,
+            defaultHabitVisibility: workspaceData.settings?.defaultHabitVisibility || "progress-only",
           });
 
-          // Determine user role
+          // Determine user role - handle ObjectId vs string comparison
+          const currentUserId = user?.id || user?._id;
           const member = workspaceData.members.find(
-            (m) => m.userId === user?.id
+            (m) => {
+              const memberUserId = m.userId?._id || m.userId;
+              return memberUserId === currentUserId || String(memberUserId) === String(currentUserId);
+            }
           );
           setUserRole(member?.role || "member");
         }
@@ -101,6 +109,8 @@ const WorkspaceSettings = () => {
           allowInvites: settings.allowInvites,
           requireApproval: settings.requireApproval,
           privacyLevel: settings.privacyLevel,
+          allowMemberHabitCreation: settings.allowMemberHabitCreation,
+          defaultHabitVisibility: settings.defaultHabitVisibility,
         },
       });
 
@@ -243,6 +253,29 @@ const WorkspaceSettings = () => {
                 }
               />
             </div>
+            
+            {canEditSettings && (
+              <div className="pt-4 border-t border-[var(--color-border-primary)]/30">
+                <Button
+                  onClick={handleSaveSettings}
+                  disabled={saving}
+                  variant="solid"
+                  className="w-full font-outfit"
+                >
+                  {saving ? (
+                    <>
+                      <UpdateIcon className="w-4 h-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <CheckIcon className="w-4 h-4 mr-2" />
+                      Save Settings
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         ),
       },
@@ -286,6 +319,32 @@ const WorkspaceSettings = () => {
                   handleSettingChange("requireApproval", value)
                 }
                 icon={<CheckIcon className="w-4 h-4 text-blue-500" />}
+              />
+
+              <SettingItem
+                label="Allow Member Habit Creation"
+                description="Members can create their own habits in this workspace"
+                value={settings.allowMemberHabitCreation}
+                type="toggle"
+                editable={canEditSettings}
+                onChange={(value) => handleSettingChange("allowMemberHabitCreation", value)}
+                icon={<PlusIcon className="w-4 h-4 text-green-500" />}
+              />
+
+              <SettingItem
+                label="Default Habit Visibility"
+                description="Default visibility for new habits created in this workspace"
+                value={settings.defaultHabitVisibility}
+                type="select"
+                editable={canEditSettings}
+                options={[
+                  { label: "🌐 Public (all details)", value: "public" },
+                  { label: "📊 Progress Only", value: "progress-only" },
+                  { label: "🔥 Streaks Only", value: "streaks-only" },
+                  { label: "🔒 Private", value: "private" },
+                ]}
+                onChange={(value) => handleSettingChange("defaultHabitVisibility", value)}
+                icon={<EyeOpenIcon className="w-4 h-4 text-indigo-500" />}
               />
 
               <div className="pt-4 border-t border-[var(--color-border-primary)]/30">
