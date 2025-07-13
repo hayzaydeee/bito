@@ -1415,9 +1415,15 @@ router.get('/:workspaceId/group-trackers', authenticateJWT, async (req, res) => 
 
       const key = `${habit.userId._id}_${habit._id}`;
       if (!userHabitEntries.has(key)) {
+        const displayName = habit.userId.firstName && habit.userId.lastName 
+          ? `${habit.userId.firstName} ${habit.userId.lastName}`.trim()
+          : habit.userId.username || 'Unknown User';
+        
         userHabitEntries.set(key, {
           userId: habit.userId._id,
-          userName: habit.userId.username || `${habit.userId.firstName} ${habit.userId.lastName}`.trim(),
+          userName: displayName, // For backward compatibility
+          name: displayName, // For frontend .name access
+          memberName: displayName, // For leaderboard compatibility
           habitId: habit._id,
           habitName: habit.workspaceHabitId?.name || habit.name,
           habitCategory: habit.workspaceHabitId?.category,
@@ -1596,6 +1602,9 @@ router.get('/:workspaceId/members/:memberId/dashboard', authenticateJWT, async (
         email: memberUser.email,
         firstName: memberUser.firstName,
         lastName: memberUser.lastName,
+        name: memberUser.firstName && memberUser.lastName 
+          ? `${memberUser.firstName} ${memberUser.lastName}`.trim()
+          : memberUser.username || 'Unknown User',
         avatar: memberUser.avatar,
         role: targetMember.role,
         status: targetMember.status

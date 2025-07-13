@@ -36,7 +36,17 @@ const app = express();
 app.set('trust proxy', 1);
 
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+  permissionsPolicy: {
+    features: {
+      geolocation: ["'self'"],
+      microphone: ["'none'"],
+      camera: ["'none'"],
+      // Explicitly exclude browsing-topics (deprecated feature)
+      // This prevents the "Unrecognized feature" error
+    }
+  }
+}));
 app.use(compression());
 
 // Rate limiting (only in production)
