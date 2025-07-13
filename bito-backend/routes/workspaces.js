@@ -1479,6 +1479,174 @@ router.get('/:workspaceId/group-trackers', authenticateJWT, async (req, res) => 
   }
 });
 
+// @route   GET /api/workspaces/:workspaceId/members/:memberId/dashboard
+// @desc    Get member's dashboard view (habits and entries) within workspace context
+// @access  Private
+router.get('/:workspaceId/members/:memberId/dashboard', authenticateJWT, async (req, res) => {
+  try {
+    const { workspaceId, memberId } = req.params;
+    const requestingUserId = req.user.id;
+
+    console.log('🔍 Member Dashboard Request:', {
+      workspaceId,
+      memberId,
+      requestingUserId
+    });
+
+    // Verify workspace exists and requesting user has access
+    const workspace = await Workspace.findById(workspaceId);
+    if (!workspace) {
+      return res.status(404).json({
+        success: false,
+        error: 'Workspace not found'
+      });
+    }
+
+    const isRequestingUserMember = workspace.members.some(member => 
+      member.userId.toString() === requestingUserId
+    );
+
+    if (!isRequestingUserMember) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied. You are not a member of this workspace.'
+      });
+    }
+
+    // Verify target member is in the workspace
+    const targetMember = workspace.members.find(member => 
+      member.userId.toString() === memberId
+    );
+
+    if (!targetMember) {
+      return res.status(404).json({
+        success: false,
+        error: 'Member not found in this workspace'
+      });
+    }
+
+    // Get target member's user info
+    const memberUser = await User.findById(memberId).select('username email firstName lastName avatar dashboardSharingPermissions');
+    if (!memberUser) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    // Check dashboard sharing permissions
+    const hasPermission = checkDashboardSharingPermission(memberUser, requestingUserId, workspaceId);
+    if (!hasPermission) {
+      return res.status(403).json({
+        success: false,
+        error: 'Member has not shared their dashboard with you'
+      });
+    }
+
+    // Get member's workspace habits
+    const memberHabits = await Habit.find({
+      userId: memberId,
+      source: 'workspace',
+      workspaceId: workspaceId,
+      isActive: true
+    })
+    .populate('workspaceHabitId', 'name description category icon color')
+    .sort({ adoptedAt: -1 });
+
+    // Get habit entries for member's habits
+    const habitIds = memberHabits.map(habit => habit._id);
+    const habitEntries = await HabitEntry.find({
+      habitId: { $in: habitIds },
+      userId: memberId
+    })
+    .sort({ date: -1 });
+
+    // Organize entries by habit ID and date for frontend compatibility
+    const entriesByHabit = {};
+    habitEntries.forEach(entry => {
+      const habitId = entry.habitId.toString();
+      if (!entriesByHabit[habitId]) {
+        entriesByHabit[habitId] = {};
+      }
+      
+      const dateKey = entry.date.toISOString().split('T')[0];
+      entriesByHabit[habitId][dateKey] = {
+        _id: entry._id,
+        habitId: entry.habitId,
+        date: dateKey,
+        completed: entry.completed,
+        value: entry.value,
+        notes: entry.notes,
+        mood: entry.mood,
+        completedAt: entry.completedAt
+      };
+    });
+
+    console.log('📊 Member Dashboard Response:', {
+      memberUsername: memberUser.username,
+      habitsCount: memberHabits.length,
+      entriesCount: habitEntries.length
+    });
+
+    res.json({
+      success: true,
+      member: {
+        _id: memberUser._id,
+        username: memberUser.username,
+        email: memberUser.email,
+        firstName: memberUser.firstName,
+        lastName: memberUser.lastName,
+        avatar: memberUser.avatar,
+        role: targetMember.role,
+        status: targetMember.status
+      },
+      habits: memberHabits,
+      entries: entriesByHabit,
+      totalEntries: habitEntries.length
+    });
+
+  } catch (error) {
+    console.error('Error fetching member dashboard:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch member dashboard',
+      details: error.message
+    });
+  }
+});
+
+// Helper function to check dashboard sharing permissions
+function checkDashboardSharingPermission(memberUser, requestingUserId, workspaceId) {
+  // If no permissions are set, default to public to workspace
+  if (!memberUser.dashboardSharingPermissions || memberUser.dashboardSharingPermissions.length === 0) {
+    return true;
+  }
+
+  const workspacePermission = memberUser.dashboardSharingPermissions.find(
+    perm => perm.workspaceId.toString() === workspaceId
+  );
+
+  if (!workspacePermission) {
+    // No specific permission for this workspace, default to public
+    return true;
+  }
+
+  // Check if public to workspace
+  if (workspacePermission.isPublicToWorkspace) {
+    return true;
+  }
+
+  // Check if specifically allowed
+  if (workspacePermission.allowedMembers && 
+      workspacePermission.allowedMembers.some(allowedId => 
+        allowedId.toString() === requestingUserId
+      )) {
+    return true;
+  }
+
+  return false;
+}
+
 // @route   POST /api/workspaces/:workspaceId/habits/:habitId/adopt
 // @desc    Adopt workspace habit to personal dashboard
 // @access  Private
