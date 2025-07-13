@@ -1326,6 +1326,159 @@ router.get('/:workspaceId/member-habits', authenticateJWT, async (req, res) => {
   }
 });
 
+// @route   GET /api/workspaces/:workspaceId/group-trackers
+// @desc    Get group tracking data for all members in workspace
+// @access  Private
+router.get('/:workspaceId/group-trackers', authenticateJWT, async (req, res) => {
+  try {
+    const { workspaceId } = req.params;
+    const userId = req.user.id;
+    const { startDate, endDate } = req.query;
+
+    console.log('🔍 Group Trackers Request:', {
+      workspaceId,
+      userId,
+      startDate,
+      endDate
+    });
+
+    // Verify workspace exists and user has access
+    const workspace = await Workspace.findById(workspaceId);
+    if (!workspace) {
+      return res.status(404).json({
+        success: false,
+        error: 'Workspace not found'
+      });
+    }
+
+    const isMember = workspace.members.some(member => 
+      member.userId.toString() === userId
+    );
+
+    if (!isMember) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied. You are not a member of this workspace.'
+      });
+    }
+
+    // Build date filter
+    let dateFilter = {};
+    if (startDate || endDate) {
+      dateFilter.date = {};
+      if (startDate) {
+        dateFilter.date.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        dateFilter.date.$lte = new Date(endDate);
+      }
+    }
+
+    // Get all workspace members' user IDs
+    const memberUserIds = workspace.members.map(member => member.userId);
+
+    // Get all workspace habits adopted by members
+    const workspaceHabits = await Habit.find({
+      workspaceId: workspaceId,
+      source: 'workspace',
+      userId: { $in: memberUserIds },
+      isActive: true
+    })
+    .populate('workspaceHabitId', 'name description category icon color')
+    .populate('userId', 'username email firstName lastName');
+
+    // Get habit entries for all workspace habits within date range
+    const habitIds = workspaceHabits.map(habit => habit._id);
+    const habitEntries = await HabitEntry.find({
+      habitId: { $in: habitIds },
+      ...dateFilter
+    })
+    .populate('habitId')
+    .populate('userId', 'username email firstName lastName')
+    .sort({ date: -1 });
+
+    // Group data by user and habit
+    const trackers = [];
+    const habitMap = new Map();
+    
+    // Create habit lookup map
+    workspaceHabits.forEach(habit => {
+      habitMap.set(habit._id.toString(), habit);
+    });
+
+    // Group entries by user and habit
+    const userHabitEntries = new Map();
+    
+    habitEntries.forEach(entry => {
+      const habit = habitMap.get(entry.habitId._id.toString());
+      if (!habit) return;
+
+      const key = `${habit.userId._id}_${habit._id}`;
+      if (!userHabitEntries.has(key)) {
+        userHabitEntries.set(key, {
+          userId: habit.userId._id,
+          userName: habit.userId.username || `${habit.userId.firstName} ${habit.userId.lastName}`.trim(),
+          habitId: habit._id,
+          habitName: habit.workspaceHabitId?.name || habit.name,
+          habitCategory: habit.workspaceHabitId?.category,
+          habitIcon: habit.workspaceHabitId?.icon,
+          habitColor: habit.workspaceHabitId?.color,
+          entries: []
+        });
+      }
+      
+      userHabitEntries.get(key).entries.push({
+        _id: entry._id,
+        date: entry.date.toISOString(),
+        completed: entry.completed,
+        value: entry.value,
+        notes: entry.notes,
+        mood: entry.mood,
+        completedAt: entry.completedAt
+      });
+    });
+
+    // Convert map to array
+    userHabitEntries.forEach((data) => {
+      trackers.push(data);
+    });
+
+    // Get unique habits for reference
+    const habits = Array.from(new Set(workspaceHabits.map(h => h.workspaceHabitId)))
+      .filter(Boolean)
+      .map(whId => {
+        const habit = workspaceHabits.find(h => h.workspaceHabitId && h.workspaceHabitId._id.equals(whId._id));
+        return habit?.workspaceHabitId;
+      });
+
+    console.log('📊 Group Trackers Response:', {
+      trackersCount: trackers.length,
+      habitsCount: habits.length,
+      entriesCount: habitEntries.length
+    });
+
+    res.json({
+      success: true,
+      trackers,
+      habits,
+      memberTrackers: trackers, // Alternative format for compatibility
+      totalEntries: habitEntries.length,
+      dateRange: {
+        startDate: startDate || null,
+        endDate: endDate || null
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching group trackers:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch group trackers',
+      details: error.message
+    });
+  }
+});
+
 // @route   POST /api/workspaces/:workspaceId/habits/:habitId/adopt
 // @desc    Adopt workspace habit to personal dashboard
 // @access  Private
@@ -2447,7 +2600,6 @@ router.put('/:id', authenticateJWT, async (req, res) => {
 
     // Return the updated workspace
     const updatedWorkspace = await Workspace.findById(workspaceId)
-     
       .populate('ownerId', 'name email avatar')
       .populate('members.userId', 'name email avatar');
 

@@ -47,5 +47,14 @@
     "jest": "^29.7.0",
     "nodemon": "^3.0.2",
     "supertest": "^6.3.3"
+  },
+  "jest": {
+    "testMatch": [
+      "**/__tests__/**/*.js"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/routes/"
+    ]
   }
 }
