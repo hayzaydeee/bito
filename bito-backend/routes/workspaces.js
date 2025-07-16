@@ -1549,15 +1549,28 @@ router.get('/:workspaceId/members/:memberId/dashboard', authenticateJWT, async (
       });
     }
 
-    // Get member's workspace habits
-    const memberHabits = await Habit.find({
-      userId: memberId,
-      source: 'workspace',
-      workspaceId: workspaceId,
-      isActive: true
-    })
-    .populate('workspaceHabitId', 'name description category icon color')
-    .sort({ adoptedAt: -1 });
+    // Get member's habits (both personal and workspace habits)
+    const [personalHabits, workspaceHabits] = await Promise.all([
+      // Personal habits
+      Habit.find({
+        userId: memberId,
+        source: 'personal',
+        isActive: true
+      }).sort({ createdAt: -1 }),
+      
+      // Workspace habits for this specific workspace
+      Habit.find({
+        userId: memberId,
+        source: 'workspace',
+        workspaceId: workspaceId,
+        isActive: true
+      })
+      .populate('workspaceHabitId', 'name description category icon color')
+      .sort({ adoptedAt: -1 })
+    ]);
+
+    // Combine both types of habits
+    const memberHabits = [...personalHabits, ...workspaceHabits];
 
     // Get habit entries for member's habits
     const habitIds = memberHabits.map(habit => habit._id);
@@ -1590,7 +1603,9 @@ router.get('/:workspaceId/members/:memberId/dashboard', authenticateJWT, async (
 
     console.log('📊 Member Dashboard Response:', {
       memberUsername: memberUser.username,
-      habitsCount: memberHabits.length,
+      personalHabitsCount: personalHabits.length,
+      workspaceHabitsCount: workspaceHabits.length,
+      totalHabitsCount: memberHabits.length,
       entriesCount: habitEntries.length
     });
 

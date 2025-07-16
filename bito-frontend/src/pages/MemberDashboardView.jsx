@@ -1,16 +1,19 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { 
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import {
   ArrowLeftIcon,
   LockClosedIcon,
   PersonIcon,
-  EyeOpenIcon
-} from '@radix-ui/react-icons';
-import { groupsAPI } from '../services/api';
-import { useAuth } from '../contexts/AuthContext';
-import { habitUtils } from '../contexts/HabitContext';
-import { ContextGridAdapter } from '../components/shared';
-import { ChartFilterControls, DatabaseFilterControls } from '../components/ui/FilterControls';
+  EyeOpenIcon,
+} from "@radix-ui/react-icons";
+import { groupsAPI } from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
+import { habitUtils } from "../contexts/HabitContext";
+import { ContextGridAdapter } from "../components/shared";
+import {
+  ChartFilterControls,
+  DatabaseFilterControls,
+} from "../components/ui/FilterControls";
 
 // Same configuration as Dashboard component, but excluding Quick Actions
 const AVAILABLE_WIDGET_TYPES = {
@@ -30,39 +33,34 @@ const AVAILABLE_WIDGET_TYPES = {
 
 const getDefaultLayouts = () => ({
   lg: [
-    { i: "habits-overview", x: 0, y: 0, w: 12, h: 6, },
-    { i: "habit-list", x: 0, y: 6, w: 12, h: 10, },
+    { i: "habits-overview", x: 0, y: 0, w: 12, h: 6 },
+    { i: "habit-list", x: 0, y: 6, w: 12, h: 10 },
   ],
   md: [
-    { i: "habits-overview", x: 0, y: 0, w: 12, h: 6, },
-    { i: "habit-list", x: 0, y: 10, w: 12, h: 10,  },
+    { i: "habits-overview", x: 0, y: 0, w: 12, h: 6 },
+    { i: "habit-list", x: 0, y: 10, w: 12, h: 10 },
   ],
   sm: [
-    { i: "habits-overview", x: 0, y: 0, w: 12, h: 6,  },
-    { i: "habit-list", x: 0, y: 12, w: 12, h: 10, },
+    { i: "habits-overview", x: 0, y: 0, w: 12, h: 6 },
+    { i: "habit-list", x: 0, y: 12, w: 12, h: 10 },
   ],
   xs: [
-    { i: "habits-overview", x: 0, y: 0, w: 4, h: 6, },
-    { i: "habit-list", x: 0, y: 8, w: 4, h: 10, 
-     },
+    { i: "habits-overview", x: 0, y: 0, w: 4, h: 6 },
+    { i: "habit-list", x: 0, y: 8, w: 4, h: 10 },
   ],
   xxs: [
-    { i: "habits-overview", x: 0, y: 0, w: 2, h: 6,  },
-    { i: "habit-list", x: 0, y: 6, w: 2, h: 6,  },
+    { i: "habits-overview", x: 0, y: 0, w: 2, h: 6 },
+    { i: "habit-list", x: 0, y: 6, w: 2, h: 6 },
   ],
 });
 
-const getDefaultActiveWidgets = () => [
-  "habits-overview",
-  "habit-list",
-];
-
+const getDefaultActiveWidgets = () => ["habits-overview", "habit-list"];
 
 const MemberDashboardView = () => {
   const { groupId, memberId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   const [memberData, setMemberData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -126,10 +124,10 @@ const MemberDashboardView = () => {
 
       const monthStart = new Date(currentYear, selectedMonth, 1);
       const firstWeekStart = habitUtils.getWeekStart(monthStart);
-      
+
       const weekStart = new Date(firstWeekStart);
       weekStart.setDate(firstWeekStart.getDate() + (weekPeriod - 1) * 7);
-      
+
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekStart.getDate() + 6);
 
@@ -235,34 +233,34 @@ const MemberDashboardView = () => {
   // Filter update handlers
   const updateChartFilter = useCallback((mode, period) => {
     // Handle mode and period updates correctly like in Dashboard component
-    setChartFilters(prev => ({
+    setChartFilters((prev) => ({
       ...prev,
       mode: mode,
-      period: period
+      period: period,
     }));
   }, []);
 
   const updateChartMonth = useCallback((month) => {
-    setChartFilters(prev => ({
+    setChartFilters((prev) => ({
       ...prev,
       selectedMonth: month,
-      period: 1 // Reset period when month changes
+      period: 1, // Reset period when month changes
     }));
   }, []);
 
   const updateDatabaseFilter = useCallback((period) => {
     // Only update the period in database filters, as it only supports week view
-    setDatabaseFilters(prev => ({
+    setDatabaseFilters((prev) => ({
       ...prev,
-      period: period
+      period: period,
     }));
   }, []);
 
   const updateDatabaseMonth = useCallback((month) => {
-    setDatabaseFilters(prev => ({
+    setDatabaseFilters((prev) => ({
       ...prev,
       selectedMonth: month,
-      period: 1 // Reset period when month changes
+      period: 1, // Reset period when month changes
     }));
   }, []);
 
@@ -291,99 +289,108 @@ const MemberDashboardView = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await groupsAPI.getMemberDashboard(groupId, memberId);
-      
+
       if (response.success) {
         // Validate required data is present
         if (!response.member) {
-          console.error('Member dashboard response is missing member data:', response);
-          setError('Unable to load member information');
+          console.error(
+            "Member dashboard response is missing member data:",
+            response
+          );
+          setError("Unable to load member information");
           setLoading(false);
           return;
         }
-        
+
         // Ensure habits exists (even if empty)
         if (!response.habits) {
-          console.warn('No habits in response, creating empty array');
+          console.warn("No habits in response, creating empty array");
           response.habits = [];
         }
-        
+
         // Ensure entries exists (even if empty)
         if (!response.entries) {
-          console.warn('No entries in response, creating empty object');
+          console.warn("No entries in response, creating empty object");
           response.entries = {};
         }
-        
+
         // Continue with empty habits - we'll show the empty state UI
-        
+
         // Process entries to ensure correct format for HabitGrid/context compatibility
         const processedEntries = {};
-        if (typeof response.entries === 'object') {
-          Object.keys(response.entries).forEach(habitId => {
+        if (typeof response.entries === "object") {
+          Object.keys(response.entries).forEach((habitId) => {
             if (habitId && habitId !== "undefined" && habitId !== "null") {
               const habitEntries = response.entries[habitId];
-              
+
               // Convert from array format (from API) to object format (for HabitGrid)
               if (Array.isArray(habitEntries)) {
                 processedEntries[habitId] = {};
-                habitEntries.forEach(entry => {
+                habitEntries.forEach((entry) => {
                   if (entry && entry.date) {
                     // Convert date to YYYY-MM-DD format if needed
-                    const dateKey = typeof entry.date === 'string' 
-                      ? entry.date.split('T')[0] 
-                      : new Date(entry.date).toISOString().split('T')[0];
+                    const dateKey =
+                      typeof entry.date === "string"
+                        ? entry.date.split("T")[0]
+                        : new Date(entry.date).toISOString().split("T")[0];
                     processedEntries[habitId][dateKey] = entry;
                   }
                 });
-              } else if (typeof habitEntries === 'object') {
+              } else if (typeof habitEntries === "object") {
                 // Already in correct format
                 processedEntries[habitId] = habitEntries;
               }
             }
           });
         }
-        
-        // Make sure habits have proper IDs and required properties - now directly from their personal collection
+
+        // Make sure habits have proper IDs and required properties - now from both personal and workspace collections
         const processedHabits = response.habits
-          .filter(habit => habit && habit._id) // Filter out any invalid habits
-          .map(habit => ({
+          .filter((habit) => habit && habit._id) // Filter out any invalid habits
+          .map((habit) => ({
             ...habit,
             _id: habit._id || habit.id, // Ensure _id is present
-            name: habit.name || 'Unnamed habit', // Ensure name is present
+            name: habit.name || "Unnamed habit", // Ensure name is present
             // Add any other required fields with defaults
             frequency: habit.frequency || { days: [] },
-            category: habit.category || 'uncategorized',
-            // Keep track if it's a workspace habit
-            isGroupHabit: !!habit.workspaceId
+            category: habit.category || "uncategorized",
+            // Determine habit source for visual distinction
+            source:
+              habit.source || (habit.workspaceId ? "workspace" : "personal"),
+            isGroupHabit: habit.source === "workspace" || !!habit.workspaceId,
+            isPersonalHabit: habit.source === "personal" && !habit.workspaceId,
           }));
-        
+
         // Perform additional validation of habit-entry relationship
         const entriesWithNoMatchingHabit = Object.keys(processedEntries).filter(
-          habitId => !processedHabits.some(h => h._id.toString() === habitId)
+          (habitId) =>
+            !processedHabits.some((h) => h._id.toString() === habitId)
         );
-        
+
         if (entriesWithNoMatchingHabit.length > 0) {
-          console.warn('Entries found for habits that do not exist:', entriesWithNoMatchingHabit);
+          console.warn(
+            "Entries found for habits that do not exist:",
+            entriesWithNoMatchingHabit
+          );
         }
-        
+
         const habitsWithNoEntries = processedHabits
-          .filter(h => !processedEntries[h._id.toString()])
-          .map(h => h._id.toString());
-        
-        
+          .filter((h) => !processedEntries[h._id.toString()])
+          .map((h) => h._id.toString());
+
         setMemberData({
           ...response,
           entries: processedEntries,
-          habits: processedHabits
+          habits: processedHabits,
         });
       } else {
-        setError(response.error || 'Failed to load member dashboard');
+        setError(response.error || "Failed to load member dashboard");
       }
-      
     } catch (error) {
-      console.error('Error fetching member dashboard:', error);
-      setError(error.message || 'Failed to load member dashboard');
+      console.error("Error fetching member dashboard:", error);
+      setError(error.message || "Failed to load member dashboard");
     } finally {
       setLoading(false);
     }
@@ -397,7 +404,10 @@ const MemberDashboardView = () => {
             <div className="h-8 bg-[var(--color-surface-elevated)] rounded w-1/3 mb-8"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-32 bg-[var(--color-surface-elevated)] rounded-2xl"></div>
+                <div
+                  key={i}
+                  className="h-32 bg-[var(--color-surface-elevated)] rounded-2xl"
+                ></div>
               ))}
             </div>
           </div>
@@ -417,7 +427,7 @@ const MemberDashboardView = () => {
             >
               <ArrowLeftIcon className="w-5 h-5 text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)]" />
             </button>
-            
+
             <div>
               <h1 className="text-4xl font-bold font-dmSerif gradient-text mb-1">
                 Error Loading Dashboard
@@ -487,12 +497,26 @@ const MemberDashboardView = () => {
                     Read-only mirror • Complete dashboard view
                   </p>
                 </div>
+                {/* Show habit breakdown if available */}
+                {habits && habits.length > 0 && (
+                  <div className="flex items-center gap-4 mt-2">
+                    <div className="flex items-center gap-2 text-sm text-[var(--color-text-tertiary)]">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                        👤 {habits.filter(h => h.isPersonalHabit).length} Personal
+                      </span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                        📊 {habits.filter(h => h.isGroupHabit).length} Group
+                      </span>
+                      <span className="text-[var(--color-text-tertiary)]">• {habits.length} total habits</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
-      
+
       {/* Show empty state if no habits are found */}
       {habits && habits.length === 0 && (
         <div className="bg-[var(--color-surface-elevated)] rounded-3xl p-10 border border-[var(--color-border-primary)]/20 shadow-sm text-center">
@@ -516,7 +540,9 @@ const MemberDashboardView = () => {
             </li>
             <li className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
-              <span>Encourage them to get started with tracking their first habit!</span>
+              <span>
+                Encourage them to get started with tracking their first habit!
+              </span>
             </li>
           </ul>
           <button
@@ -527,52 +553,49 @@ const MemberDashboardView = () => {
           </button>
         </div>
       )}
-      
+
       {/* Dashboard Grid Container - Only show when there are habits */}
       {habits && habits.length > 0 && (
         <div className="relative">
           <ContextGridAdapter
-          mode="dashboard"
-          
-          // Override context data with member's data
-          habits={habits || []}
-          entries={entries || {}}
-          isLoading={false}
-          
-          // Override handlers for read-only mode
-          onToggleCompletion={handleToggleCompletion}
-          onAddHabit={handleAddHabit}
-          onDeleteHabit={handleDeleteHabit}
-          onEditHabit={handleEditHabit}
-          
-          // Same filter props as Dashboard
-          chartFilters={chartFilters}
-          databaseFilters={databaseFilters}
-          chartDateRange={chartDateRange}
-          databaseDateRange={databaseDateRange}
-          filterOptions={filterOptions}
-          updateChartFilter={updateChartFilter}
-          updateChartMonth={updateChartMonth}
-          updateDatabaseFilter={updateDatabaseFilter}
-          updateDatabaseMonth={updateDatabaseMonth}
-          
-          // Disabled UI handlers
-          onShowEnhancedCsvImport={() => {/* Read-only mode: CSV import disabled */}}
-          onShowLLMSettings={() => {/* Read-only mode: LLM settings disabled */}}
-          
-          // Filter components
-          ChartFilterControls={ChartFilterControls}
-          DatabaseFilterControls={DatabaseFilterControls}
-          
-          // Configuration
-          availableWidgets={AVAILABLE_WIDGET_TYPES}
-          defaultWidgets={getDefaultActiveWidgets()}
-          defaultLayouts={getDefaultLayouts()}
-          className="member-dashboard-grid"
-          
-          // Read-only mode flag
-          readOnly={true}
-        />
+            mode="dashboard"
+            // Override context data with member's data
+            habits={habits || []}
+            entries={entries || {}}
+            isLoading={false}
+            // Override handlers for read-only mode
+            onToggleCompletion={handleToggleCompletion}
+            onAddHabit={handleAddHabit}
+            onDeleteHabit={handleDeleteHabit}
+            onEditHabit={handleEditHabit}
+            // Same filter props as Dashboard
+            chartFilters={chartFilters}
+            databaseFilters={databaseFilters}
+            chartDateRange={chartDateRange}
+            databaseDateRange={databaseDateRange}
+            filterOptions={filterOptions}
+            updateChartFilter={updateChartFilter}
+            updateChartMonth={updateChartMonth}
+            updateDatabaseFilter={updateDatabaseFilter}
+            updateDatabaseMonth={updateDatabaseMonth}
+            // Disabled UI handlers
+            onShowEnhancedCsvImport={() => {
+              /* Read-only mode: CSV import disabled */
+            }}
+            onShowLLMSettings={() => {
+              /* Read-only mode: LLM settings disabled */
+            }}
+            // Filter components
+            ChartFilterControls={ChartFilterControls}
+            DatabaseFilterControls={DatabaseFilterControls}
+            // Configuration
+            availableWidgets={AVAILABLE_WIDGET_TYPES}
+            defaultWidgets={getDefaultActiveWidgets()}
+            defaultLayouts={getDefaultLayouts()}
+            className="member-dashboard-grid"
+            // Read-only mode flag
+            readOnly={true}
+          />
         </div>
       )}
 
@@ -580,7 +603,9 @@ const MemberDashboardView = () => {
       {habits && habits.length > 0 && (
         <div className="mt-8 text-center">
           <p className="text-sm text-[var(--color-text-tertiary)] font-outfit">
-            👁️ <strong>Viewing:</strong> This is a complete, read-only mirror of {member.name}'s personal dashboard. You can see all their habits and progress but cannot make changes.
+            👁️ <strong>Viewing:</strong> This is a complete, read-only mirror of{" "}
+            {member.name}'s personal dashboard. You can see all their habits and
+            progress but cannot make changes.
           </p>
         </div>
       )}
