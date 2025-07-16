@@ -1385,7 +1385,7 @@ router.get('/:workspaceId/group-trackers', authenticateJWT, async (req, res) => 
       isActive: true
     })
     .populate('workspaceHabitId', 'name description category icon color')
-    .populate('userId', 'username email firstName lastName');
+    .populate('userId', 'name email');
 
     // Get habit entries for all workspace habits within date range
     const habitIds = workspaceHabits.map(habit => habit._id);
@@ -1394,7 +1394,7 @@ router.get('/:workspaceId/group-trackers', authenticateJWT, async (req, res) => 
       ...dateFilter
     })
     .populate('habitId')
-    .populate('userId', 'username email firstName lastName')
+    .populate('userId', 'name email')
     .sort({ date: -1 });
 
     // Group data by user and habit
@@ -1415,9 +1415,7 @@ router.get('/:workspaceId/group-trackers', authenticateJWT, async (req, res) => 
 
       const key = `${habit.userId._id}_${habit._id}`;
       if (!userHabitEntries.has(key)) {
-        const displayName = habit.userId.firstName && habit.userId.lastName 
-          ? `${habit.userId.firstName} ${habit.userId.lastName}`.trim()
-          : habit.userId.username || 'Unknown User';
+        const displayName = habit.userId.name || habit.userId.email?.split('@')[0] || 'Unknown User';
         
         userHabitEntries.set(key, {
           userId: habit.userId._id,
@@ -1532,7 +1530,7 @@ router.get('/:workspaceId/members/:memberId/dashboard', authenticateJWT, async (
     }
 
     // Get target member's user info
-    const memberUser = await User.findById(memberId).select('username email firstName lastName avatar dashboardSharingPermissions');
+    const memberUser = await User.findById(memberId).select('name email avatar dashboardSharingPermissions');
     if (!memberUser) {
       return res.status(404).json({
         success: false,
@@ -1602,7 +1600,7 @@ router.get('/:workspaceId/members/:memberId/dashboard', authenticateJWT, async (
     });
 
     console.log('📊 Member Dashboard Response:', {
-      memberUsername: memberUser.username,
+      memberName: memberUser.name,
       personalHabitsCount: personalHabits.length,
       workspaceHabitsCount: workspaceHabits.length,
       totalHabitsCount: memberHabits.length,
@@ -1613,13 +1611,11 @@ router.get('/:workspaceId/members/:memberId/dashboard', authenticateJWT, async (
       success: true,
       member: {
         _id: memberUser._id,
-        username: memberUser.username,
+        username: memberUser.name, // Use name field as username for backward compatibility
         email: memberUser.email,
-        firstName: memberUser.firstName,
-        lastName: memberUser.lastName,
-        name: memberUser.firstName && memberUser.lastName 
-          ? `${memberUser.firstName} ${memberUser.lastName}`.trim()
-          : memberUser.username || 'Unknown User',
+        firstName: null, // These fields don't exist in the User model
+        lastName: null,  // These fields don't exist in the User model
+        name: memberUser.name || memberUser.email?.split('@')[0] || 'Unknown User',
         avatar: memberUser.avatar,
         role: targetMember.role,
         status: targetMember.status

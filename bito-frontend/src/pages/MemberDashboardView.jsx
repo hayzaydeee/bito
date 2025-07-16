@@ -500,7 +500,7 @@ const MemberDashboardView = () => {
                 {/* Show habit breakdown if available */}
                 {habits && habits.length > 0 && (
                   <div className="flex items-center gap-4 mt-2">
-                    <div className="flex items-center gap-2 text-sm text-[var(--color-text-tertiary)]">
+                    <div className="flex items-center gap-2 text-sm text-[var(--color-text-tertiary)] font-outfit">
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
                         👤 {habits.filter(h => h.isPersonalHabit).length} Personal
                       </span>
