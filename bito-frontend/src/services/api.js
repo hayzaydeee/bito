@@ -539,23 +539,12 @@ export const groupsAPI = {
     
     // Process the data to extract completion information in a format suitable for charts
     if (response.success && response.trackers) {
-      console.log('API - Raw tracker data:', response.trackers.slice(0, 2));
-      
       // Extract completion data from trackers - format matching the member dashboard entries
       const completionData = [];
       const entriesByHabit = {};
       
       // Process each tracker to extract completion information
       response.trackers.forEach(tracker => {
-        // Log the first few trackers in detail
-        if (completionData.length < 5) {
-          console.log('API - Processing tracker:', {
-            userId: tracker.userId,
-            userIdType: typeof tracker.userId,
-            habitId: tracker.habitId,
-            entriesCount: tracker.entries?.length || 0
-          });
-        }
         
         if (tracker.entries && tracker.entries.length > 0) {
           // For completion data in chart-friendly format
@@ -569,11 +558,6 @@ export const groupsAPI = {
                 completed: entry.completed,
                 value: entry.value
               };
-              
-              // Log the first few completion entries
-              if (completionData.length < 5) {
-                console.log('API - Created completion entry:', completionEntry);
-              }
               
               completionData.push(completionEntry);
             }
@@ -600,12 +584,6 @@ export const groupsAPI = {
       // Add the processed completion data to the response
       response.completionData = completionData;
       response.entries = entriesByHabit; // Same format as member dashboard
-      
-      console.log('API - Final processed data:', {
-        completionDataLength: completionData.length,
-        entriesHabitCount: Object.keys(entriesByHabit).length,
-        completionSample: completionData.slice(0, 3)
-      });
     }
     
     return response;

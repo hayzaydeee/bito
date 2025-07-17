@@ -7,6 +7,7 @@ import {
   UploadIcon,
 } from "@radix-ui/react-icons";
 import { EmptyStateWithAddHabit } from "../HabitGrid/EmptyStateWithAddHabit.jsx";
+import { habitUtils } from "../../utils/habitLogic.js";
 
 const QuickActionsWidget = memo(
   ({
@@ -29,8 +30,10 @@ const QuickActionsWidget = memo(
 
     const handleQuickComplete = useCallback(() => {
       const today = new Date().toISOString().split("T")[0];
-      // Only complete habits that are not already completed today
-      habits.forEach((habit) => {
+      // Only complete habits that are scheduled for today
+      const todaysHabits = habitUtils.getTodaysHabits(habits);
+      
+      todaysHabits.forEach((habit) => {
         const habitEntries = entries[habit._id];
         const todayEntry = habitEntries && habitEntries[today];
         const isCompleted = todayEntry && todayEntry.completed;
@@ -50,8 +53,10 @@ const QuickActionsWidget = memo(
 
     const handleResetDay = useCallback(() => {
       const today = new Date().toISOString().split("T")[0];
-      // Only reset habits that are currently completed today
-      habits.forEach((habit) => {
+      // Only reset habits that are scheduled for today and currently completed
+      const todaysHabits = habitUtils.getTodaysHabits(habits);
+      
+      todaysHabits.forEach((habit) => {
         const habitEntries = entries[habit._id];
         const todayEntry = habitEntries && habitEntries[today];
         const isCompleted = todayEntry && todayEntry.completed;
