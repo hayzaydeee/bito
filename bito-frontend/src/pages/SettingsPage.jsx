@@ -1047,7 +1047,7 @@ const SettingsPage = ({ section }) => {
                 
                 <button 
                   disabled
-                  className="flex items-center justify-center gap-2 px-3 py-1.5 bg-gray-400 cursor-not-allowed text-white rounded-xl transition-all duration-200 shadow-lg font-outfit font-medium relative"
+                  className="flex items-center justify-center gap-2 px-3 py-1.5 bg-[var(--color-surface-secondary)]/40 cursor-not-allowed text-[var(--color-text-secondary)] border border-[var(--color-border-primary)]/20 rounded-xl transition-all duration-200 shadow-sm font-outfit font-medium relative opacity-60"
                 >
                   <UploadIcon className="w-4 h-4" />
                   <div className="text-center">
@@ -1094,14 +1094,14 @@ const SettingsPage = ({ section }) => {
           
           <div className="flex-1 flex flex-col justify-between">
             {/* Coming Soon Notice */}
-            <div className="bg-gradient-to-r from-blue-50 to-teal-50 dark:from-blue-950/20 dark:to-teal-950/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-4">
+            <div className="bg-[var(--color-surface-secondary)]/40 border border-[var(--color-border-primary)]/30 rounded-xl p-4 mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                  <InfoCircledIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 flex items-center justify-center">
+                  <InfoCircledIcon className="w-4 h-4 text-[var(--color-accent-primary)]" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-blue-800 dark:text-blue-200 font-outfit text-sm">Support System Coming Soon</h4>
-                  <p className="text-xs text-blue-700 dark:text-blue-300 font-outfit">Documentation and support features are in development</p>
+                  <h4 className="font-semibold text-[var(--color-text-primary)] font-outfit text-sm">Support System Coming Soon</h4>
+                  <p className="text-xs text-[var(--color-text-secondary)] font-outfit opacity-80">Documentation and support features are in development</p>
                 </div>
               </div>
             </div>
@@ -1109,24 +1109,24 @@ const SettingsPage = ({ section }) => {
             <div className="grid grid-cols-3 gap-2 mb-6">
               <button 
                 disabled
-                className="flex items-center justify-center gap-2 h-12 px-3 bg-gray-200 dark:bg-gray-700 cursor-not-allowed border border-gray-300 dark:border-gray-600 rounded-lg transition-all duration-200 opacity-50"
+                className="flex items-center justify-center gap-2 h-12 px-3 bg-[var(--color-surface-secondary)]/30 cursor-not-allowed border border-[var(--color-border-primary)]/20 rounded-lg transition-all duration-200 opacity-60"
               >
-                <FileTextIcon className="w-4 h-4" />
-                <span className="font-outfit font-medium text-sm">Documentation</span>
+                <FileTextIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
+                <span className="font-outfit font-medium text-sm text-[var(--color-text-secondary)]">Documentation</span>
               </button>
               <button 
                 disabled
-                className="flex items-center justify-center gap-2 h-12 px-3 bg-gray-200 dark:bg-gray-700 cursor-not-allowed border border-gray-300 dark:border-gray-600 rounded-lg transition-all duration-200 opacity-50"
+                className="flex items-center justify-center gap-2 h-12 px-3 bg-[var(--color-surface-secondary)]/30 cursor-not-allowed border border-[var(--color-border-primary)]/20 rounded-lg transition-all duration-200 opacity-60"
               >
-                <ChatBubbleIcon className="w-4 h-4" />
-                <span className="font-outfit font-medium text-sm">Contact Support</span>
+                <ChatBubbleIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
+                <span className="font-outfit font-medium text-sm text-[var(--color-text-secondary)]">Contact Support</span>
               </button>
               <button 
                 disabled
-                className="flex items-center justify-center gap-2 h-12 px-3 bg-gray-200 dark:bg-gray-700 cursor-not-allowed border border-gray-300 dark:border-gray-600 rounded-lg transition-all duration-200 opacity-50"
+                className="flex items-center justify-center gap-2 h-12 px-3 bg-[var(--color-surface-secondary)]/30 cursor-not-allowed border border-[var(--color-border-primary)]/20 rounded-lg transition-all duration-200 opacity-60"
               >
-                <ExclamationTriangleIcon className="w-4 h-4" />
-                <span className="font-outfit font-medium text-sm">Report Bug</span>
+                <ExclamationTriangleIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
+                <span className="font-outfit font-medium text-sm text-[var(--color-text-secondary)]">Report Bug</span>
               </button>
             </div>
             
