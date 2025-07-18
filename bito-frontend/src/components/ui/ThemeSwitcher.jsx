@@ -48,7 +48,7 @@ const ThemeSwitcher = ({ compact = false }) => {
             />
             
             {/* Menu */}
-            <div className="absolute top-full right-0 mt-2 w-36 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)] rounded-lg shadow-lg z-50 py-1">
+            <div className="absolute font-outfit top-full right-0 mt-2 w-36 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)] rounded-lg shadow-lg z-50 py-1">
               {themeOptions.map((option) => (
                 <button
                   key={option.value}

@@ -16,12 +16,6 @@ export const GalleryView = ({
   handleToggleCompletion,
   weekStats,
   breakpoint,
-  showAddForm,
-  setShowAddForm,
-  newHabitName,
-  setNewHabitName,
-  handleAddHabit,
-  handleCancelAdd,
   handleEditHabit, // Add edit handler
   readOnly = false, // Add readOnly prop
   onAddHabit, // Add onAddHabit prop for modal-based habit creation
@@ -242,55 +236,10 @@ export const GalleryView = ({
         ))}
 
         {/* Add New Habit Card */}
-        {showAddForm ? (
-          <div className="bg-[var(--color-surface-elevated)] rounded-lg p-4 border border-[var(--color-border-primary)] border-dashed">
-            <div className="space-y-3">
-              <h4 className="text-sm font-semibold text-[var(--color-text-primary)] font-outfit">
-                Add New Habit
-              </h4>
-              <input
-                type="text"
-                id="new-habit-name"
-                name="newHabitName"
-                value={newHabitName}
-                onChange={(e) => setNewHabitName(e.target.value)}
-                placeholder="Enter habit name..."
-                className="w-full px-3 py-2 text-sm border border-[var(--color-border-primary)] rounded-lg bg-[var(--color-surface-primary)] text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)]/50 focus:border-[var(--color-brand-400)] font-outfit"
-                autoFocus
-                onKeyPress={(e) => {
-                  if (e.key === "Enter") {
-                    handleAddHabit();
-                  } else if (e.key === "Escape") {
-                    handleCancelAdd();
-                  }
-                }}
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={handleAddHabit}
-                  disabled={!newHabitName.trim()}
-                  className="flex-1 px-3 py-2 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] disabled:bg-[var(--color-text-tertiary)] disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-all duration-200 font-outfit"
-                >
-                  Add Habit
-                </button>
-                <button
-                  onClick={handleCancelAdd}
-                  className="px-3 py-2 border border-[var(--color-border-primary)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] rounded-lg text-sm font-medium transition-all duration-200 font-outfit"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : (
+        {onAddHabit && (
           <button
-            onClick={() => !readOnly && setShowAddForm(true)}
-            disabled={readOnly}
-            className={`bg-[var(--color-surface-elevated)] rounded-lg p-4 border border-[var(--color-border-primary)] transition-all duration-200 group ${
-              readOnly
-                ? "border-dashed cursor-not-allowed opacity-60"
-                : "border-dashed hover:border-[var(--color-brand-400)] hover:bg-[var(--color-brand-500)]/5"
-            }`}
+            onClick={onAddHabit}
+            className="bg-[var(--color-surface-elevated)] rounded-lg p-4 border border-[var(--color-border-primary)] border-dashed hover:border-[var(--color-brand-400)] hover:bg-[var(--color-brand-500)]/5 transition-all duration-200 group"
           >
             <div className="flex flex-col items-center justify-center text-center space-y-2">
               <div className="w-10 h-10 rounded-lg bg-[var(--color-brand-500)]/10 flex items-center justify-center group-hover:bg-[var(--color-brand-500)]/20 transition-all duration-200">

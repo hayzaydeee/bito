@@ -250,12 +250,6 @@ const DatabaseWidget = memo(
           return (
             <GalleryView
               {...commonProps}
-              showAddForm={readOnly ? false : showAddForm}
-              setShowAddForm={readOnly ? () => {} : setShowAddForm}
-              newHabitName={newHabitName}
-              setNewHabitName={readOnly ? () => {} : setNewHabitName}
-              handleAddHabit={readOnly ? () => {} : handleAddHabit}
-              handleCancelAdd={readOnly ? () => {} : handleCancelAdd}
               onAddHabit={readOnly ? null : onAddHabit}
             />
           );

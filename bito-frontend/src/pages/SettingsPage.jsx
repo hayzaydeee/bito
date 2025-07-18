@@ -893,18 +893,13 @@ const SettingsPage = ({ section }) => {
           
           <div className="flex-1 space-y-4">
             <div className="space-y-3">
-              <div className="flex items-center gap-3 mb-3">
-                <MoonIcon className="w-4 h-4 text-indigo-500" />
-                <div>
-                  <Text className="font-medium text-[var(--color-text-primary)] font-outfit">
-                    Theme
-                  </Text>
-                  <Text className="text-xs text-[var(--color-text-secondary)] font-outfit leading-relaxed">
-                    Switch between light, dark, and auto themes
-                  </Text>
-                </div>
-              </div>
-              <ThemeSwitcher />
+              <SettingItem
+                label="Theme"
+                description="Switch between light, dark, and auto themes"
+                icon={<MoonIcon className="w-4 h-4 text-indigo-500" />}
+                type="component"
+                component={<ThemeSwitcher />}
+              />
             </div>
             
             {/* Coming Soon Items */}
@@ -1205,7 +1200,7 @@ const SettingsPage = ({ section }) => {
 };
 
 // SettingItem component for rendering individual settings
-const SettingItem = ({ label, description, value, type, options, onChange, icon, isDisabled = false }) => {
+const SettingItem = ({ label, description, value, type, options, onChange, icon, isDisabled = false, component }) => {
   const renderInput = () => {
     switch (type) {
       case "toggle":
@@ -1240,6 +1235,8 @@ const SettingItem = ({ label, description, value, type, options, onChange, icon,
             {value}
           </div>
         );
+      case "component":
+        return component;
       default:
         return null;
     }
