@@ -862,14 +862,14 @@ const SettingsPage = ({ section }) => {
                     )}
                   </div>
                   
-                  <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+                  <div className="bg-[var(--color-surface-secondary)]/40 border border-[var(--color-border-primary)]/30 rounded-xl p-4">
                     <div className="flex items-start gap-3">
-                      <InfoCircledIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                      <InfoCircledIcon className="w-5 h-5 text-[var(--color-accent-primary)] mt-0.5 flex-shrink-0" />
                       <div>
-                        <h4 className="font-semibold text-blue-800 dark:text-blue-200 font-outfit text-sm mb-1">
+                        <h4 className="font-semibold text-[var(--color-text-primary)] font-outfit text-sm mb-1">
                           How Dashboard Sharing Works
                         </h4>
-                        <ul className="text-xs text-blue-700 dark:text-blue-300 font-outfit space-y-1">
+                        <ul className="text-xs text-[var(--color-text-secondary)] font-outfit space-y-1 opacity-90">
                           <li>• When enabled, group members can view a read-only version of your private dashboard</li>
                           <li>• They can see your habit progress, streaks, and completion patterns</li>
                           <li>• Your personal notes and private data remain hidden</li>
