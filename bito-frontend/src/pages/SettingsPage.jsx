@@ -640,27 +640,36 @@ const SettingsPage = ({ section }) => {
             
             {/* Coming Soon Items */}
             <div className="space-y-3 pt-4 border-t border-[var(--color-border-primary)]/30">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-3">
                 <Text className="text-xs font-semibold text-[var(--color-text-tertiary)] font-outfit uppercase tracking-wide">
-                  Coming Soon
+                  Upcoming Features
                 </Text>
                 <div className="flex-1 h-px bg-[var(--color-border-primary)]/30"></div>
+                <Text className="text-xs text-[var(--color-text-quaternary)] font-outfit">
+                  In Development
+                </Text>
               </div>
               
               <ComingSoonSettingItem
                 label="Push Notifications"
-                description="Habit reminders and achievements"
+                description="Get habit reminders and achievement notifications"
                 icon={<BellIcon className="w-4 h-4 text-emerald-500" />}
+                priority="high"
+                timeline="Q3 2025"
               />
               <ComingSoonSettingItem
                 label="Weekly Reports"
-                description="Detailed progress analytics"
+                description="Receive detailed progress analytics via email"
                 icon={<FileTextIcon className="w-4 h-4 text-purple-500" />}
+                priority="medium"
+                timeline="Q4 2025"
               />
               <ComingSoonSettingItem
                 label="Team Activity"
-                description="Workspace collaboration updates"
+                description="Stay updated on workspace collaboration"
                 icon={<PersonIcon className="w-4 h-4 text-orange-500" />}
+                priority="medium"
+                timeline="Q4 2025"
               />
             </div>
           </div>
@@ -904,24 +913,31 @@ const SettingsPage = ({ section }) => {
             
             {/* Coming Soon Items */}
             <div className="space-y-3 pt-4 border-t border-[var(--color-border-primary)]/30">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-3">
                 <Text className="text-xs font-semibold text-[var(--color-text-tertiary)] font-outfit uppercase tracking-wide">
-                  Coming Soon
+                  Upcoming Features
                 </Text>
                 <div className="flex-1 h-px bg-[var(--color-border-primary)]/30"></div>
+                <Text className="text-xs text-[var(--color-text-quaternary)] font-outfit">
+                  In Development
+                </Text>
               </div>
               
               <ComingSoonSettingItem
                 label="Accent Color"
-                description="Your app's accent color"
+                description="Customize your app's primary accent color"
                 icon={<ColorWheelIcon className="w-4 h-4 text-pink-500" />}
                 currentValue="🔵 Indigo"
+                priority="medium"
+                timeline="Q3 2025"
               />
               <ComingSoonSettingItem
                 label="Language"
-                description="Interface language"
+                description="Choose your preferred interface language"
                 icon={<GlobeIcon className="w-4 h-4 text-blue-500" />}
                 currentValue="🇺🇸 English"
+                priority="low"
+                timeline="Q4 2025"
               />
             </div>
           </div>
@@ -1268,26 +1284,41 @@ const SettingItem = ({ label, description, value, type, options, onChange, icon,
 };
 
 // ComingSoonSettingItem component for features not yet implemented
-const ComingSoonSettingItem = ({ label, description, icon, currentValue }) => {
+const ComingSoonSettingItem = ({ label, description, icon, currentValue, priority = "medium", timeline = "Soon" }) => {
+  const getPriorityColor = () => {
+    switch (priority) {
+      case "high":
+        return "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300";
+      case "medium":
+        return "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300";
+      case "low":
+        return "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400";
+      default:
+        return "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400";
+    }
+  };
+
   return (
-    <div className="flex justify-between items-center py-3 px-2 rounded-lg bg-gray-50 dark:bg-gray-900/30 opacity-60">
+    <div className="flex justify-between items-center py-3 px-2 rounded-lg bg-[var(--color-surface-secondary)]/30 border border-[var(--color-border-primary)]/20 opacity-75 hover:opacity-90 transition-all duration-200">
       <div className="flex-1">
         <div className="flex items-center gap-3 mb-1">
-          {icon && <div className="opacity-70">{icon}</div>}
+          {icon && <div className="opacity-60">{icon}</div>}
           <Text className="font-medium text-[var(--color-text-primary)] font-outfit">
             {label}
           </Text>
-          <span className="text-xs px-2 py-1 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full font-outfit">
-            Coming Soon
-          </span>
+          <div className="flex items-center gap-1">
+            <span className={`text-xs px-2 py-1 rounded-full font-outfit font-medium ${getPriorityColor()}`}>
+              {timeline}
+            </span>
+          </div>
         </div>
-        <Text className="text-xs text-[var(--color-text-secondary)] font-outfit leading-relaxed">
+        <Text className="text-xs text-[var(--color-text-secondary)] font-outfit leading-relaxed opacity-80">
           {description}
         </Text>
       </div>
       {currentValue && (
         <div className="ml-6 flex-shrink-0">
-          <div className="text-sm text-[var(--color-text-secondary)] font-outfit bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 min-w-32">
+          <div className="text-sm text-[var(--color-text-secondary)] font-outfit bg-[var(--color-surface-elevated)] px-3 py-2 rounded-lg border border-[var(--color-border-primary)]/30 min-w-32 opacity-60">
             {currentValue}
           </div>
         </div>
