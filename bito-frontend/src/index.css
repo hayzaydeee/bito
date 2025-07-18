@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
-/* Font Imports */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Text:wght@400&display=swap');
+@theme {
+  /* Font Imports */
+  --font-outfit: 'Outfit', sans-serif;
+  --font-dmSerif: 'DM Serif Text', serif;
+}
 
 /* CSS Custom Properties for Themes */
 :root {
