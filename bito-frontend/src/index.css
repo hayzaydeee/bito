@@ -76,9 +76,9 @@
   --color-surface-hover: #f1f3f9;
   
   /* Text Colors */
-  --color-text-primary: #1e293b;
-  --color-text-secondary: #475569;
-  --color-text-tertiary: #64748b;
+  --color-text-primary: #1e1b4b;   /* Dark indigo instead of slate */
+  --color-text-secondary: #312e81; /* Medium indigo instead of slate */
+  --color-text-tertiary: #3730a3;  /* Lighter indigo instead of slate */
   --color-text-accent: #4f46e5;
   
   /* Border Colors */
