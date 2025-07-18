@@ -167,6 +167,8 @@ const DatabaseWidgetV2 = memo(
                 getDayCompletion={getDayCompletion}
                 handleToggleCompletion={handleToggleCompletion}
                 weekStats={weekStats}
+                readOnly={readOnly}
+                onAddHabit={readOnly ? null : onAddHabit}
               />
             );
           case "gallery":

@@ -93,7 +93,7 @@ export const GalleryViewV2 = ({
 
   // Show empty state if no habits
   if (habits.length === 0) {
-    return <EmptyStateWithAddHabit className="w-full h-full" />;
+    return <EmptyStateWithAddHabit className="w-full h-full" onAddHabit={onAddHabit} />;
   }
 
   return (

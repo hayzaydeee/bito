@@ -196,6 +196,7 @@ const DatabaseWidget = memo(
       breakpoint,
       readOnly, // Pass readOnly flag to components
       handleEditHabit: onEditHabit, // Pass edit handler function
+      onAddHabit: readOnly ? null : onAddHabit, // Pass add habit handler
     };
     // Add an option to show habit management view
     const [showHabitManagement, setShowHabitManagement] = useState(false);
@@ -255,6 +256,7 @@ const DatabaseWidget = memo(
               setNewHabitName={readOnly ? () => {} : setNewHabitName}
               handleAddHabit={readOnly ? () => {} : handleAddHabit}
               handleCancelAdd={readOnly ? () => {} : handleCancelAdd}
+              onAddHabit={readOnly ? null : onAddHabit}
             />
           );
       }

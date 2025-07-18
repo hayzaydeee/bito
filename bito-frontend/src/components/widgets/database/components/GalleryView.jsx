@@ -1,42 +1,7 @@
 import React from "react";
 import { PlusIcon, CheckIcon, Pencil1Icon } from "@radix-ui/react-icons";
 import { habitUtils } from "../../../../utils/habitLogic.js";
-
-/**
- * Empty State Component for Gallery View
- */
-const EmptyGalleryState = ({ onGetStarted }) => (
-  <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-    <div className="w-16 h-16 bg-[var(--color-surface-elevated)] rounded-full flex items-center justify-center mb-4 border-2 border-dashed border-[var(--color-border-primary)]">
-      <span className="text-2xl">📝</span>
-    </div>
-    
-    <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2 font-outfit">
-      {onGetStarted ? "Ready to build great habits?" : "No Habits Yet"}
-    </h3>
-    
-    <p className="text-sm text-[var(--color-text-secondary)] mb-6 max-w-xs font-outfit">
-      {onGetStarted 
-        ? "Start tracking your daily habits and build consistency. Add your first habit to get started!"
-        : "This member hasn't added any habits yet."
-      }
-    </p>
-    
-    {onGetStarted && (
-      <button
-        onClick={onGetStarted}
-        className="flex items-center gap-2 px-4 py-2 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg transition-all duration-200 font-outfit text-sm"
-      >
-        <PlusIcon className="w-4 h-4" />
-        Add Your First Habit
-      </button>
-    )}
-    
-    <div className="mt-8 text-xs text-[var(--color-text-tertiary)] space-y-1 font-outfit">
-      {onGetStarted && <p>💡 Try habits like "Drink 8 glasses of water" or "Read for 30 minutes"</p>}
-    </div>
-  </div>
-);
+import { EmptyStateWithAddHabit } from "../../../HabitGrid/EmptyStateWithAddHabit.jsx";
 
 /**
  * Gallery View Component - Card-based layout for habits
@@ -59,11 +24,12 @@ export const GalleryView = ({
   handleCancelAdd,
   handleEditHabit, // Add edit handler
   readOnly = false, // Add readOnly prop
+  onAddHabit, // Add onAddHabit prop for modal-based habit creation
 }) => {
   // Show empty state if no habits exist
   if (!displayHabits || displayHabits.length === 0) {
     return (
-      <EmptyGalleryState onGetStarted={readOnly ? null : () => setShowAddForm(true)} />
+      <EmptyStateWithAddHabit className="w-full h-full" onAddHabit={readOnly ? null : onAddHabit} />
     );
   }
 

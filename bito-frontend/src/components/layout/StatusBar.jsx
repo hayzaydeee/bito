@@ -12,6 +12,7 @@ import {
 } from "@radix-ui/react-icons";
 import { useAuth } from "../../contexts/AuthContext";
 import NotificationsDropdown from "./NotificationsDropdown";
+import ThemeSwitcher from "../ui/ThemeSwitcher";
 import { notificationsAPI } from "../../services/api";
 
 const StatusBar = ({
@@ -139,6 +140,9 @@ const StatusBar = ({
             </button>
           )}
         </div>
+
+        {/* Theme Switcher */}
+        <ThemeSwitcher compact={true} />
 
         {/* User Actions from WelcomeBar */}
         <div className="flex items-center gap-2 pl-3 border-l border-[var(--color-border-primary)]/50">

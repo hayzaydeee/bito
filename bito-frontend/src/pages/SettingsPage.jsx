@@ -30,6 +30,7 @@ import { WIDGET_TYPES, DEFAULT_WIDGETS, DEFAULT_LAYOUTS, STORAGE_KEYS } from '..
 import { userAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import ThemeSwitcher from '../components/ui/ThemeSwitcher';
 
 const SettingsPage = ({ section }) => {
   const { user } = useAuth();
@@ -891,20 +892,20 @@ const SettingsPage = ({ section }) => {
           </div>
           
           <div className="flex-1 space-y-4">
-            <SettingItem
-              label="Theme"
-              description="Switch between light, dark, and auto themes"
-              value={settings.theme}
-              type="select"
-              options={[
-                { label: "🌙 Dark", value: "dark" },
-                { label: "☀️ Light", value: "light" },
-                { label: "🔄 Auto", value: "auto" }
-              ]}
-              onChange={(value) => handleSettingChange('theme', value)}
-              icon={<MoonIcon className="w-4 h-4 text-indigo-500" />}
-              isDisabled={isSaving}
-            />
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 mb-3">
+                <MoonIcon className="w-4 h-4 text-indigo-500" />
+                <div>
+                  <Text className="font-medium text-[var(--color-text-primary)] font-outfit">
+                    Theme
+                  </Text>
+                  <Text className="text-xs text-[var(--color-text-secondary)] font-outfit leading-relaxed">
+                    Switch between light, dark, and auto themes
+                  </Text>
+                </div>
+              </div>
+              <ThemeSwitcher />
+            </div>
             
             {/* Coming Soon Items */}
             <div className="space-y-3 pt-4 border-t border-[var(--color-border-primary)]/30">
