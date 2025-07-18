@@ -1307,9 +1307,6 @@ const ComingSoonSettingItem = ({ label, description, icon, currentValue, priorit
             {label}
           </Text>
           <div className="flex items-center gap-1">
-            <span className={`text-xs px-2 py-1 rounded-full font-outfit font-medium ${getPriorityColor()}`}>
-              {timeline}
-            </span>
           </div>
         </div>
         <Text className="text-xs text-[var(--color-text-secondary)] font-outfit leading-relaxed opacity-80">

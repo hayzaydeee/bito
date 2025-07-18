@@ -48,7 +48,7 @@ const ThemeSwitcher = ({ compact = false }) => {
             />
             
             {/* Menu */}
-            <div className="absolute font-outfit top-full right-0 mt-2 w-36 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)] rounded-lg shadow-lg z-50 py-1">
+            <div className="absolute  top-full right-0 mt-2 w-36 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)] rounded-lg shadow-lg z-50 py-1">
               {themeOptions.map((option) => (
                 <button
                   key={option.value}
@@ -81,7 +81,7 @@ const ThemeSwitcher = ({ compact = false }) => {
         <button
           key={option.value}
           onClick={() => changeTheme(option.value)}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium font-outfit transition-all ${
             theme === option.value
               ? 'bg-[var(--color-brand-500)] text-white shadow-lg'
               : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]'
