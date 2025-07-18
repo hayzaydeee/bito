@@ -29,9 +29,11 @@ import BaseGridContainer from '../components/shared/BaseGridContainer';
 import { WIDGET_TYPES, DEFAULT_WIDGETS, DEFAULT_LAYOUTS, STORAGE_KEYS } from '../components/shared/widgetRegistry';
 import { userAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 const SettingsPage = ({ section }) => {
   const { user } = useAuth();
+  const { theme, changeTheme, themeOptions } = useTheme();
   const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -153,8 +155,25 @@ const SettingsPage = ({ section }) => {
       [key]: value
     }));
 
+    // Handle theme changes specially through ThemeContext
+    if (key === 'theme') {
+      try {
+        await changeTheme(value);
+        showNotification('Theme updated successfully!', 'success');
+      } catch (error) {
+        console.error('Failed to change theme:', error);
+        showNotification('Failed to update theme', 'error');
+        // Revert local state on error
+        setSettings(prev => ({
+          ...prev,
+          [key]: theme
+        }));
+      }
+      return;
+    }
+
     // Save supported settings to backend
-    const supportedBackendSettings = ['emailNotifications', 'timezone', 'theme'];
+    const supportedBackendSettings = ['emailNotifications', 'timezone'];
     
     if (supportedBackendSettings.includes(key)) {
       try {
@@ -176,7 +195,7 @@ const SettingsPage = ({ section }) => {
         }));
 
         // Show success notification
-        showNotification(`${key === 'emailNotifications' ? 'Email notifications' : key === 'timezone' ? 'Timezone' : 'Theme'} updated successfully!`, 'success');
+        showNotification(`${key === 'emailNotifications' ? 'Email notifications' : 'Timezone'} updated successfully!`, 'success');
         
       } catch (error) {
         console.error('Failed to save setting:', error);
