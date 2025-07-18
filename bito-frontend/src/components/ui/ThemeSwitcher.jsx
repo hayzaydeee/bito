@@ -59,10 +59,10 @@ const ThemeSwitcher = ({ compact = false }) => {
                       : 'text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]'
                   }`}
                 >
-                  <span className="text-base">
+                  <span className="text-base font-normal">
                     {option.value === 'light' ? '☀️' : option.value === 'dark' ? '🌙' : '🖥️'}
                   </span>
-                  <span className="text-xs font-medium">
+                  <span className="text-xs font-medium font-outfit">
                     {option.value === 'light' ? 'Light' : option.value === 'dark' ? 'Dark' : 'Auto'}
                   </span>
                 </button>
