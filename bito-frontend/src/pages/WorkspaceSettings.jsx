@@ -63,18 +63,21 @@ const WorkspaceSettings = () => {
             allowInvites: workspaceData.settings?.allowInvites || true,
             requireApproval: workspaceData.settings?.requireApproval || false,
             privacyLevel: workspaceData.settings?.privacyLevel || "invite-only",
-            allowMemberHabitCreation: workspaceData.settings?.allowMemberHabitCreation !== false,
-            defaultHabitVisibility: workspaceData.settings?.defaultHabitVisibility || "progress-only",
+            allowMemberHabitCreation:
+              workspaceData.settings?.allowMemberHabitCreation !== false,
+            defaultHabitVisibility:
+              workspaceData.settings?.defaultHabitVisibility || "progress-only",
           });
 
           // Determine user role - handle ObjectId vs string comparison
           const currentUserId = user?.id || user?._id;
-          const member = workspaceData.members.find(
-            (m) => {
-              const memberUserId = m.userId?._id || m.userId;
-              return memberUserId === currentUserId || String(memberUserId) === String(currentUserId);
-            }
-          );
+          const member = workspaceData.members.find((m) => {
+            const memberUserId = m.userId?._id || m.userId;
+            return (
+              memberUserId === currentUserId ||
+              String(memberUserId) === String(currentUserId)
+            );
+          });
           setUserRole(member?.role || "member");
         }
       } catch (error) {
@@ -125,7 +128,10 @@ const WorkspaceSettings = () => {
     } catch (error) {
       console.error("Error saving settings:", error);
       setError("Failed to save settings");
-      notifications.error("save settings", error.message || "Please try again.");
+      notifications.error(
+        "save settings",
+        error.message || "Please try again."
+      );
     } finally {
       setSaving(false);
     }
@@ -151,9 +157,13 @@ const WorkspaceSettings = () => {
       return;
     }
 
-    const userConfirmation = prompt("Type 'DELETE' to confirm workspace deletion:");
+    const userConfirmation = prompt(
+      "Type 'DELETE' to confirm workspace deletion:"
+    );
     if (userConfirmation !== "DELETE") {
-      app.error("Workspace deletion cancelled - confirmation text did not match.");
+      app.error(
+        "Workspace deletion cancelled - confirmation text did not match."
+      );
       return;
     }
 
@@ -161,16 +171,19 @@ const WorkspaceSettings = () => {
       await workspacesAPI.deleteWorkspace(groupId);
       // Navigate with success message in state
       navigate("/app/groups", {
-        state: { 
-          notification: { 
-            message: "Workspace deleted successfully", 
-            type: "success" 
-          }
-        }
+        state: {
+          notification: {
+            message: "Workspace deleted successfully",
+            type: "success",
+          },
+        },
       });
     } catch (error) {
       console.error("Error deleting workspace:", error);
-      notifications.error("delete workspace", error.message || "Please try again.");
+      notifications.error(
+        "delete workspace",
+        error.message || "Please try again."
+      );
     }
   };
 
@@ -253,29 +266,7 @@ const WorkspaceSettings = () => {
                 }
               />
             </div>
-            
-            {canEditSettings && (
-              <div className="pt-4 border-t border-[var(--color-border-primary)]/30">
-                <button
-                  onClick={handleSaveSettings}
-                  disabled={saving}
-                  variant="solid"
-                  className="w-full font-outfit"
-                >
-                  {saving ? (
-                    <>
-                      <UpdateIcon className="w-4 h-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <CheckIcon className="w-4 h-4 mr-2" />
-                      Save Settings
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
+
           </div>
         ),
       },
@@ -327,7 +318,9 @@ const WorkspaceSettings = () => {
                 value={settings.allowMemberHabitCreation}
                 type="toggle"
                 editable={canEditSettings}
-                onChange={(value) => handleSettingChange("allowMemberHabitCreation", value)}
+                onChange={(value) =>
+                  handleSettingChange("allowMemberHabitCreation", value)
+                }
                 icon={<PlusIcon className="w-4 h-4 text-green-500" />}
               />
 
@@ -343,7 +336,9 @@ const WorkspaceSettings = () => {
                   { label: "🔥 Streaks Only", value: "streaks-only" },
                   { label: "🔒 Private", value: "private" },
                 ]}
-                onChange={(value) => handleSettingChange("defaultHabitVisibility", value)}
+                onChange={(value) =>
+                  handleSettingChange("defaultHabitVisibility", value)
+                }
                 icon={<EyeOpenIcon className="w-4 h-4 text-indigo-500" />}
               />
 
@@ -436,10 +431,14 @@ const WorkspaceSettings = () => {
                   Irreversible and destructive actions
                 </p>
               </div>
-            </div>              <div className="flex-1 flex flex-col justify-between">
+            </div>{" "}
+            <div className="flex-1 flex flex-col justify-between">
               <div className="space-y-4">
                 {!isOwner && (
-                  <LeaveWorkspaceButton workspace={workspace} isOwner={isOwner} />
+                  <LeaveWorkspaceButton
+                    workspace={workspace}
+                    isOwner={isOwner}
+                  />
                 )}
 
                 {isOwner && (
@@ -574,11 +573,9 @@ const WorkspaceSettings = () => {
           {canEditSettings && (
             <div className="flex items-center gap-3">
               <button
-                variant="solid"
-                size="3"
                 onClick={handleSaveSettings}
-                disabled={saving}
-                className="font-outfit"
+                className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg text-sm transition-all duration-200 font-outfit"
+                data-tour="save-settings-btn"
               >
                 {saving ? (
                   <>
@@ -588,14 +585,13 @@ const WorkspaceSettings = () => {
                 ) : (
                   <>
                     <CheckIcon className="w-4 h-4 mr-2" />
-                    Save Changes
+                    Save Settings
                   </>
                 )}
               </button>
             </div>
           )}
         </div>
-
 
         {/* Settings Grid */}
         <BaseGridContainer
@@ -605,7 +601,6 @@ const WorkspaceSettings = () => {
           storageKeys={storageKeys}
           minH={300}
         />
-
       </div>
     </div>
   );
