@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { CalendarIcon, ActivityLogIcon } from '@radix-ui/react-icons';
+import { habitUtils } from '../../../utils/habitLogic';
 
 const WeeklyHeatmap = ({ habits, entries, timeRange }) => {
   const heatmapData = useMemo(() => {
@@ -29,13 +30,16 @@ const WeeklyHeatmap = ({ habits, entries, timeRange }) => {
 
         // Calculate activity for this day across all habits
         habits.forEach(habit => {
-          const habitEntries = entries[habit._id] || {};
-          const entry = habitEntries[dateStr];
-          
-          possible++;
-          if (entry && entry.completed) {
-            completions++;
-            activity += 1;
+          // Only count habits that are scheduled for this specific date
+          if (habitUtils.isHabitScheduledForDate(habit, currentDate)) {
+            const habitEntries = entries[habit._id] || {};
+            const entry = habitEntries[dateStr];
+            
+            possible++;
+            if (entry && entry.completed) {
+              completions++;
+              activity += 1;
+            }
           }
         });
 

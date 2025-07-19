@@ -1,5 +1,6 @@
 import React, { useMemo, useEffect } from "react";
 import { useHabits, habitUtils } from "../../contexts/HabitContext.jsx";
+import { habitUtils as utilsHabitUtils } from "../../utils/habitLogic.js";
 import { HabitRow } from "./HabitRow.jsx";
 import { WeekHeader } from "./WeekHeader.jsx";
 import { EmptyStateWithAddHabit } from "./EmptyStateWithAddHabit.jsx";
@@ -83,7 +84,7 @@ export const HabitGrid = ({
 
         // Check if we have entries for all dates in the range
         const missingDates = weekDates.filter(({ date }) => {
-          return !habitEntries || !habitEntries.hasOwnProperty(date);
+          return !habitEntries || !Object.prototype.hasOwnProperty.call(habitEntries, date);
         });
 
         // Only fetch if we have missing dates (not just incomplete data)
@@ -94,34 +95,40 @@ export const HabitGrid = ({
     }
   }, [habits, weekDates, fetchHabitEntries, propEntries]); // Added propEntries to dependencies
 
-  // Note: Debug logging removed to prevent circular reference errors
   // Calculate week statistics
   const weekStats = useMemo(() => {
-    let totalCells = habits.length * weekDates.length;
+    let totalCells = 0;
     let completedCells = 0;
     let perfectDays = 0;
 
-    const dailyCompletions = weekDates.map(({ date }) => {
-      const dayCompletions = habits.filter((habit) => {
+    const dailyCompletions = weekDates.map(({ date, dateObj }) => {
+      // Get only habits that are scheduled for this specific date
+      const scheduledHabits = habits.filter(habit => 
+        utilsHabitUtils.isHabitScheduledForDate(habit, dateObj)
+      );
+      
+      const dayCompletions = scheduledHabits.filter((habit) => {
         const habitEntries = entries[habit._id];
         const entry = habitEntries && habitEntries[date];
         // Only count as completed if entry exists AND is completed
         return entry && entry.completed;
       }).length;
 
+      // Update total cells based on scheduled habits for each day
+      totalCells += scheduledHabits.length;
       completedCells += dayCompletions;
 
-      const dayPercentage =
-        habits.length > 0
-          ? Math.round((dayCompletions / habits.length) * 100)
-          : 0;
+      const dayPercentage = scheduledHabits.length > 0
+        ? Math.round((dayCompletions / scheduledHabits.length) * 100)
+        : 100; // If no habits scheduled for this day, consider it 100%
 
-      if (dayPercentage === 100) perfectDays++;
+      if (dayPercentage === 100 && scheduledHabits.length > 0) perfectDays++;
 
       return {
         date,
         completions: dayCompletions,
         percentage: dayPercentage,
+        scheduledCount: scheduledHabits.length,
       };
     });
 
