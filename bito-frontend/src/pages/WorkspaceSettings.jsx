@@ -256,7 +256,7 @@ const WorkspaceSettings = () => {
             
             {canEditSettings && (
               <div className="pt-4 border-t border-[var(--color-border-primary)]/30">
-                <Button
+                <button
                   onClick={handleSaveSettings}
                   disabled={saving}
                   variant="solid"
@@ -273,7 +273,7 @@ const WorkspaceSettings = () => {
                       Save Settings
                     </>
                   )}
-                </Button>
+                </button>
               </div>
             )}
           </div>
@@ -573,7 +573,7 @@ const WorkspaceSettings = () => {
           {/* Save button */}
           {canEditSettings && (
             <div className="flex items-center gap-3">
-              <Button
+              <button
                 variant="solid"
                 size="3"
                 onClick={handleSaveSettings}
@@ -591,7 +591,7 @@ const WorkspaceSettings = () => {
                     Save Changes
                   </>
                 )}
-              </Button>
+              </button>
             </div>
           )}
         </div>
