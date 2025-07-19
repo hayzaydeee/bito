@@ -5,6 +5,7 @@ import { GalleryViewV2 } from "./GalleryViewV2.jsx";
 import { ProfessionalTableView } from "./ProfessionalTableView.jsx";
 import { useHabitData } from "../hooks/useHabitData.js";
 import { habitUtils, useHabits } from "../../../../contexts/HabitContext";
+import "../../widgets.css";
 
 const DatabaseWidgetV2 = memo(
   ({
@@ -228,14 +229,14 @@ const DatabaseWidgetV2 = memo(
     }
 
     return (
-      <div className="w-full h-full bg-[var(--color-surface-elevated)] rounded-2xl border border-[var(--color-border-primary)] overflow-hidden">
+      <div className="widget-container w-full h-full bg-[var(--color-surface-elevated)] rounded-2xl border border-[var(--color-border-primary)] flex flex-col overflow-hidden">
         <DatabaseHeader
           title={title}
           viewType={viewType}
           setViewType={handleViewTypeChange}
           filterComponent={filterComponent}
         />
-        <div className="flex-1 overflow-auto">
+        <div className="widget-content-area flex-1">
           {renderContent()}
         </div>
       </div>
