@@ -100,16 +100,16 @@ class WidgetErrorBoundary extends React.Component {
 
 // Lazy load widget components for better performance
 const ChartWidget = lazy(() => import('../widgets/ChartWidget'));
-const DatabaseWidgetV2 = lazy(() => import('../widgets/database/components/DatabaseWidgetV2'));
+const DatabaseWidget = lazy(() => import('../../features/dashboard/widgets/database/DatabaseWidget'));
 const QuickActionsWidget = lazy(() => import('../widgets/QuickActionsWidget'));
-const OverviewCardsWidget = lazy(() => import('../analytics/widgets/OverviewCardsWidget'));
-const HabitStreakChartWidget = lazy(() => import('../analytics/widgets/HabitStreakChartWidget'));
-const CompletionRateChartWidget = lazy(() => import('../analytics/widgets/CompletionRateChartWidget'));
+const OverviewCardsWidget = lazy(() => import('../../features/analytics/widgets/OverviewCardsWidget'));
+const HabitStreakChartWidget = lazy(() => import('../../features/analytics/widgets/HabitStreakChartWidget'));
+const CompletionRateChartWidget = lazy(() => import('../../features/analytics/widgets/CompletionRateChartWidget'));
 
 // Additional analytics widgets
-const WeeklyHeatmapWidget = lazy(() => import('../analytics/widgets/WeeklyHeatmapWidget'));
-const TopHabitsWidget = lazy(() => import('../analytics/widgets/TopHabitsWidget'));
-const InsightsPanelWidget = lazy(() => import('../analytics/widgets/InsightsPanelWidget'));
+const WeeklyHeatmapWidget = lazy(() => import('../../features/analytics/widgets/WeeklyHeatmapWidget'));
+const TopHabitsWidget = lazy(() => import('../../features/analytics/widgets/TopHabitsWidget'));
+const InsightsPanelWidget = lazy(() => import('../../features/analytics/widgets/InsightsPanelWidget'));
 
 // Group Accountability widgets
 const GroupOverviewWidget = lazy(() => import('../widgets/GroupOverviewWidget'));
@@ -343,7 +343,7 @@ const WidgetRenderer = ({
 
     case 'habit-list':
       try {
-        // Create super safe props for DatabaseWidgetV2 to prevent circular references
+        // Create super safe props for DatabaseWidget to prevent circular references
         const databaseProps = {
           habits: commonProps.habits,
           completions: commonProps.entries,
@@ -380,7 +380,7 @@ const WidgetRenderer = ({
 
         return (
           <Suspense fallback={<WidgetSkeleton title="My Habits" />}>
-            <DatabaseWidgetV2 {...databaseProps} />
+            <DatabaseWidget {...databaseProps} />
           </Suspense>
         );
       } catch (error) {
