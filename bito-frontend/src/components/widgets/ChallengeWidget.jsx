@@ -13,7 +13,7 @@ import {
   TargetIcon,
   StarIcon,
 } from "@radix-ui/react-icons";
-import { groupsAPI } from "../../services/api";
+import { groupsAPI } from "@services/api";
 import ChallengeCreateModal from "../ui/ChallengeCreateModal";
 
 const ChallengeWidget = ({ workspaceId, className = "" }) => {

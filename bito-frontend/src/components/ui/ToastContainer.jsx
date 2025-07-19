@@ -6,7 +6,7 @@ import {
   InfoCircledIcon, 
   Cross2Icon 
 } from '@radix-ui/react-icons';
-import { useNotifications } from '../../contexts/NotificationContext';
+import { useNotifications } from '@contexts/NotificationContext';
 
 const getIcon = (type) => {
   switch (type) {

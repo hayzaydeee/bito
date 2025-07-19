@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import LLMConfigService from '../../services/llmConfigService';
+import LLMConfigService from '@services/llmConfigService';
 
 const LLMSettingsModal = ({ isOpen, onClose }) => {
   const [apiKey, setApiKey] = useState('');

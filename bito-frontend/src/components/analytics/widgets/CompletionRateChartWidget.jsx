@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { useHabits } from '../../../contexts/HabitContext';
+import { useHabits } from '@contexts/HabitContext';
 import { ArrowUpIcon, ArrowDownIcon } from '@radix-ui/react-icons';
 import CompletionRateChart from '../components/CompletionRateChart.jsx';
 

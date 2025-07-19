@@ -1,6 +1,6 @@
 import React from "react";
 import { ChevronDownIcon } from "@radix-ui/react-icons";
-import { habitUtils } from '../../contexts/HabitContext';
+import { habitUtils } from '@utils/habitLogic';
 
 /**
  * Filter Dropdown Component

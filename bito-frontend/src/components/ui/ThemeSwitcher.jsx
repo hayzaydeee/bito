@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SunIcon, MoonIcon, DesktopIcon } from '@radix-ui/react-icons';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '@contexts/ThemeContext';
 
 const ThemeSwitcher = ({ compact = false }) => {
   const { theme, changeTheme, themeOptions } = useTheme();

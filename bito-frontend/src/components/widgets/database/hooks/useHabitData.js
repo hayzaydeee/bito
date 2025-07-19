@@ -1,5 +1,5 @@
 import { useMemo, useCallback } from "react";
-import { habitUtils } from "../../../../utils/habitLogic.js";
+import { habitUtils } from "@utils/habitLogic.js";
 
 /**
  * Custom hook for managing habit data and calculations

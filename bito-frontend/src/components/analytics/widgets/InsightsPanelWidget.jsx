@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { useHabits } from '../../../contexts/HabitContext';
+import { useHabits } from '@contexts/HabitContext';
 import InsightsPanel from '../components/InsightsPanel';
 
 const InsightsPanelWidget = ({ 

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
-import { useHabits } from '../../../contexts/HabitContext';
+import { useHabits } from '@contexts/HabitContext';
 import TopHabits from '../components/TopHabits';
-import { STORAGE_KEYS } from '../../shared/widgetRegistry';
+import { STORAGE_KEYS } from '@shared/widgetRegistry';
 
 const TopHabitsWidget = ({ 
   timeRange = '30d',

@@ -1,7 +1,7 @@
 import React from "react";
 import { CheckIcon } from "@radix-ui/react-icons";
-import { habitUtils } from "../../../../utils/habitLogic.js";
-import { EmptyStateWithAddHabit } from "../../../habitGrid/EmptyStateWithAddHabit.jsx";
+import { habitUtils } from "@utils/habitLogic.js";
+import { EmptyStateWithAddHabit } from "@components/habitGrid/EmptyStateWithAddHabit.jsx";
 
 /**
  * Professional Table View Component - Compact and styled like the reference

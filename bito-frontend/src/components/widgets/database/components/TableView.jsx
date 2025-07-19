@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
-import { useHabits } from "../../../../contexts/HabitContext";
-import { habitUtils } from "../../../../contexts/HabitContext.jsx";
-import { HabitCheckbox } from "../../../habitGrid/HabitCheckbox.jsx";
+import { useHabits } from "@contexts/HabitContext";
+import { habitUtils } from "@utils/habitLogic.js";
+import { HabitCheckbox } from "@components/habitGrid/HabitCheckbox.jsx";
 
 export const TableView = ({ startDate, endDate = null }) => {
   // Get data from HabitContext

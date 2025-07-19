@@ -16,8 +16,8 @@ import {
   Area,
   AreaChart,
 } from "recharts";
-import { useChartData } from "../../globalHooks/useChartData";
-import { EmptyStateWithAddHabit } from "../habitGrid/EmptyStateWithAddHabit.jsx";
+import { useChartData } from "@hooks/useChartData";
+import { EmptyStateWithAddHabit } from "@components/habitGrid/EmptyStateWithAddHabit.jsx";
 import "./widgets.css";
 
 // Helper function to generate chart data from props (for member dashboards)

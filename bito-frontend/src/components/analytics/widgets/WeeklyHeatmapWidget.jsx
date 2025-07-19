@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { useHabits } from '../../../contexts/HabitContext';
+import { useHabits } from '@contexts/HabitContext';
 import WeeklyHeatmap from '../components/WeeklyHeatmap';
 
 const WeeklyHeatmapWidget = ({ 

@@ -4,10 +4,10 @@
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { useHabits } from '../../contexts/HabitContext';
-import csvImportService from '../../services/csvImportService';
-import { analyzeCsvWithServerLLM, testServerLLMConnection } from '../../services/serverLlmCsvAnalyzer';
-import { applyCsvMappings, validateMappings } from '../../services/enhancedCsvTransformService';
+import { useHabits } from '@contexts/HabitContext';
+import csvImportService from '@services/csvImportService';
+import { analyzeCsvWithServerLLM, testServerLLMConnection } from '@services/serverLlmCsvAnalyzer';
+import { applyCsvMappings, validateMappings } from '@services/enhancedCsvTransformService';
 import LLMSettingsModal from './LLMSettingsModal';
 
 const EnhancedCsvImportModal = ({ isOpen, onClose, onImportComplete }) => {

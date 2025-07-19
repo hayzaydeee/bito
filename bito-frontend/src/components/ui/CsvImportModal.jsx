@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import csvImportService from '../../services/csvImportService';
+import csvImportService from '@services/csvImportService';
 import { useHabits } from '../../contexts/HabitContext';
 
 const { importCsvData, validateCsvStructure, executeImportWithBackend } = csvImportService;

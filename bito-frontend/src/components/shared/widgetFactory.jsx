@@ -100,16 +100,16 @@ class WidgetErrorBoundary extends React.Component {
 
 // Lazy load widget components for better performance
 const ChartWidget = lazy(() => import('../widgets/ChartWidget'));
-const DatabaseWidget = lazy(() => import('../../features/dashboard/widgets/database/DatabaseWidget'));
+const DatabaseWidget = lazy(() => import('@components/widgets/database/components/DatabaseWidget'));
 const QuickActionsWidget = lazy(() => import('../widgets/QuickActionsWidget'));
-const OverviewCardsWidget = lazy(() => import('../../features/analytics/widgets/OverviewCardsWidget'));
-const HabitStreakChartWidget = lazy(() => import('../../features/analytics/widgets/HabitStreakChartWidget'));
-const CompletionRateChartWidget = lazy(() => import('../../features/analytics/widgets/CompletionRateChartWidget'));
+const OverviewCardsWidget = lazy(() => import('@components/analytics/widgets/OverviewCardsWidget'));
+const HabitStreakChartWidget = lazy(() => import('@components/analytics/widgets/HabitStreakChartWidget'));
+const CompletionRateChartWidget = lazy(() => import('@components/analytics/widgets/CompletionRateChartWidget'));
 
 // Additional analytics widgets
-const WeeklyHeatmapWidget = lazy(() => import('../../features/analytics/widgets/WeeklyHeatmapWidget'));
-const TopHabitsWidget = lazy(() => import('../../features/analytics/widgets/TopHabitsWidget'));
-const InsightsPanelWidget = lazy(() => import('../../features/analytics/widgets/InsightsPanelWidget'));
+const WeeklyHeatmapWidget = lazy(() => import('@components/analytics/widgets/WeeklyHeatmapWidget'));
+const TopHabitsWidget = lazy(() => import('@components/analytics/widgets/TopHabitsWidget'));
+const InsightsPanelWidget = lazy(() => import('@components/analytics/widgets/InsightsPanelWidget'));
 
 // Group Accountability widgets
 const GroupOverviewWidget = lazy(() => import('../widgets/GroupOverviewWidget'));
