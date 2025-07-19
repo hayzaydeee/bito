@@ -13,10 +13,10 @@ const ChartWidget = lazy(() =>
   }))
 );
 
-const DatabaseWidgetBridge = lazy(() =>
-  import('../widgets/database/components/DatabaseWidgetBridge.jsx').then(
+const DatabaseWidgetV2 = lazy(() =>
+  import('../widgets/database/components/DatabaseWidgetV2.jsx').then(
     (module) => ({
-      default: module.DatabaseWidgetBridge,
+      default: module.DatabaseWidgetV2,
     })
   )
 );
@@ -290,7 +290,7 @@ const BaseGridContainer = ({
           const isInEditMode = isWidgetInEditMode("habit-list");
           return (
             <Suspense fallback={<WidgetSkeleton title="My Habits" />}>
-              <DatabaseWidgetBridge
+              <DatabaseWidgetV2
                 habits={habits}
                 completions={entries}
                 entries={entries} // Pass entries for HabitGrid to avoid context usage
