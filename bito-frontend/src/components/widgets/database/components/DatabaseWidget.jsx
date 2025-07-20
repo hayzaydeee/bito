@@ -48,6 +48,9 @@ const DatabaseWidget = memo(
     // Get week utilities for user's preferred week start
     const weekUtils = useWeekUtils();
     
+    // Debug: Log the week start day to see if it's changing
+    console.log('DatabaseWidget - weekStartDay:', weekUtils.weekStartDay);
+    
     const [viewType, setViewType] = useState(() => {
       // Try to load from localStorage if persistence key is provided
       if (persistenceKey) {

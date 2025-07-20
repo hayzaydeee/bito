@@ -16,7 +16,9 @@ export const useHabitData = ({ habits, completions, dateRange = null, mode = "we
       return weekUtils.generateDateRange(dateRange.start, dateRange.end);
     } else {
       // Use current week with user's preferred start day
-      return weekUtils.getCurrentWeek();
+      const currentWeek = weekUtils.getCurrentWeek();
+      console.log('useHabitData - current week dates:', currentWeek.map(d => ({ date: d.date, day: d.dayName })));
+      return currentWeek;
     }
   }, [dateRange, weekUtils]);
 
