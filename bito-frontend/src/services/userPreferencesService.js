@@ -138,16 +138,22 @@ class UserPreferencesService {
    * Add a listener for preference changes
    */
   addListener(callback) {
-    this.listeners.add(callback);
-    return () => this.listeners.delete(callback);
+    console.log('userPreferencesService - adding listener, total listeners:', this.listeners.length + 1);
+    this.listeners.push(callback);
+    return () => {
+      console.log('userPreferencesService - removing listener');
+      this.listeners = this.listeners.filter(cb => cb !== callback);
+    };
   }
 
   /**
    * Notify all listeners of a preference change
    */
   notifyListeners(key, value) {
-    this.listeners.forEach(callback => {
+    console.log('userPreferencesService - notifying', this.listeners.length, 'listeners for:', key, value);
+    this.listeners.forEach((callback, index) => {
       try {
+        console.log('userPreferencesService - calling listener', index);
         callback(key, value, this.preferences);
       } catch (error) {
         console.error('Error in preference change listener:', error);
