@@ -1,5 +1,6 @@
 import React, { useMemo, useEffect } from "react";
 import { useHabits, habitUtils } from "../../contexts/HabitContext.jsx";
+import { useWeekDates } from "../../hooks/useWeekUtils.js";
 import { HabitRow } from "./HabitRow.jsx";
 import { WeekHeader } from "./WeekHeader.jsx";
 import { EmptyStateWithAddHabit } from "./EmptyStateWithAddHabit.jsx";
@@ -20,10 +21,8 @@ export const HabitGrid = ({
   isInEditMode = false,
   onHabitReorder = null,
 }) => {
-  // Memoize the start date to prevent infinite re-renders
-  const memoizedStartDate = useMemo(() => {
-    return startDate || habitUtils.getWeekStart(new Date());
-  }, [startDate]);
+  // Use the week utils hook for reactive week calculations
+  const { weekDates: hookWeekDates, weekUtils } = useWeekDates(startDate, endDate);
 
   // Get data from habit context
   const {
@@ -41,30 +40,9 @@ export const HabitGrid = ({
   // Use propEntries if provided (to avoid API calls in member dashboard), otherwise use context entries
   const entries = propEntries || contextEntries;
 
-  // Calculate week dates
-  const weekDates = useMemo(() => {
-    let dates;
-    if (endDate) {
-      // Custom date range
-      dates = [];
-      const current = new Date(memoizedStartDate);
-      while (current <= endDate) {
-        dates.push({
-          date: habitUtils.normalizeDate(current),
-          dayName: current.toLocaleDateString("en-US", { weekday: "long" }),
-          shortDay: current.toLocaleDateString("en-US", { weekday: "short" }),
-          isToday: habitUtils.isToday(current),
-          dateObj: new Date(current),
-        });
-        current.setDate(current.getDate() + 1);
-      }
-    } else {
-      // Standard week view
-      dates = habitUtils.getWeekDates(memoizedStartDate);
-    }
-    
-    return dates;
-  }, [memoizedStartDate, endDate]);
+  // Use week dates from hook (automatically respects user's week start preference)
+  const weekDates = hookWeekDates;
+  
   // Fetch entries for visible habits and date range
   // Only fetch if we're using context entries (not if entries are passed as props)
   useEffect(() => {

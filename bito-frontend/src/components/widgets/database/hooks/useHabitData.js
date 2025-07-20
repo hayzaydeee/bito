@@ -1,64 +1,28 @@
 import { useMemo, useCallback } from "react";
 import { habitUtils } from "../../../../utils/habitLogic.js";
+import { useWeekUtils } from "../../../hooks/useWeekUtils.js";
 
 /**
  * Custom hook for managing habit data and calculations
+ * Now uses reactive week utilities that respect user's week start preference
  */
 export const useHabitData = ({ habits, completions, dateRange = null, mode = "week" }) => {
+  const weekUtils = useWeekUtils();
+  
   // Get the actual dates to display based on dateRange or current week
   const weekDates = useMemo(() => {
     if (dateRange && dateRange.start && dateRange.end) {
-      // Use the provided date range
-      const dates = [];
-      const current = new Date(dateRange.start);
-        while (current <= dateRange.end) {
-        dates.push({
-          day: current.toLocaleDateString('en-US', { weekday: 'long' }),
-          date: `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`, // Local YYYY-MM-DD format
-        });
-        current.setDate(current.getDate() + 1);
-      }
-      
-      return dates;
+      // Use the provided date range with user's week preference
+      return weekUtils.generateDateRange(dateRange.start, dateRange.end);
     } else {
-      // Fallback to current week with user's preferred week start
-      const today = new Date();
-      let startOfWeek;
-      
-      try {
-        // Import lazily to avoid circular dependencies
-        const userPreferencesService = require('../../../services/userPreferencesService').default;
-        const weekStartDay = userPreferencesService.getWeekStartDay();
-        
-        const currentDay = today.getDay();
-        const daysToSubtract = (currentDay - weekStartDay + 7) % 7;
-        startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - daysToSubtract);
-      } catch {
-        // Fallback to Monday if service not available
-        const currentDay = today.getDay();
-        const daysToSubtract = currentDay === 0 ? 6 : currentDay - 1;
-        startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - daysToSubtract);
-      }
-
-      const dates = [];
-      for (let i = 0; i < 7; i++) {
-        const date = new Date(startOfWeek);
-        date.setDate(startOfWeek.getDate() + i);
-        dates.push({
-          day: date.toLocaleDateString('en-US', { weekday: 'long' }),
-          date: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`, // Local YYYY-MM-DD format
-        });
-      }
-      
-      return dates;
+      // Use current week with user's preferred start day
+      return weekUtils.getCurrentWeek();
     }
-  }, [dateRange]);
+  }, [dateRange, weekUtils]);
 
   // Extract day names from the actual dates
   const daysOfWeek = useMemo(() => {
-    return weekDates.map(d => d.day);
+    return weekDates.map(d => d.dayName);
   }, [weekDates]);
   // Helper function to get current week dates (now uses the actual date range)
   const getCurrentWeekDates = weekDates;

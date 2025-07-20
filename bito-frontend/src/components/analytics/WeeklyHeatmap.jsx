@@ -1,7 +1,9 @@
 import React, { useMemo } from 'react';
 import { CalendarIcon, ActivityLogIcon } from '@radix-ui/react-icons';
+import { useWeekUtils } from '../../hooks/useWeekUtils';
 
 const WeeklyHeatmap = ({ habits, entries, timeRange }) => {
+  const weekUtils = useWeekUtils();
   const heatmapData = useMemo(() => {
     if (!habits.length) return { weeks: [], maxActivity: 0, totalDays: 0 };
 
@@ -10,13 +12,14 @@ const WeeklyHeatmap = ({ habits, entries, timeRange }) => {
     const startDate = new Date(endDate);
     startDate.setDate(startDate.getDate() - days);
 
-    // Generate weeks structure
+    // Generate weeks structure using user's preferred week start
     const weeks = [];
     let currentDate = new Date(startDate);
     
-    // Adjust to start from Sunday
+    // Adjust to start from user's preferred week start day
     const dayOfWeek = currentDate.getDay();
-    currentDate.setDate(currentDate.getDate() - dayOfWeek);
+    const daysToSubtract = (dayOfWeek - weekUtils.weekStartDay + 7) % 7;
+    currentDate.setDate(currentDate.getDate() - daysToSubtract);
 
     while (currentDate <= endDate) {
       const week = [];
