@@ -7,20 +7,13 @@ import {
   ProfessionalTableView,
   HabitsTableView,
 } from "../index.js";
+import { useWeekUtils } from "../../../../hooks/useWeekUtils.js";
 
-// Helper function to get current week range
-const getCurrentWeekRange = () => {
-  const today = new Date();
-  const currentDay = today.getDay();
-  const startOfWeek = new Date(today);
-
-  // Calculate start of week (Monday)
-  const daysToSubtract = currentDay === 0 ? 6 : currentDay - 1;
-  startOfWeek.setDate(today.getDate() - daysToSubtract);
-
-  // Calculate end of week (Sunday)
-  const endOfWeek = new Date(startOfWeek);
-  endOfWeek.setDate(startOfWeek.getDate() + 6);
+// Helper function to get current week range based on user preference
+const getCurrentWeekRange = (weekUtils) => {
+  const weekStart = weekUtils.getWeekStart(new Date());
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
 
   // Format dates as DD/MM/YY
   const formatDate = (date) => {
@@ -30,7 +23,7 @@ const getCurrentWeekRange = () => {
     return `${day}/${month}/${year}`;
   };
 
-  return `${formatDate(startOfWeek)} - ${formatDate(endOfWeek)}`;
+  return `${formatDate(weekStart)} - ${formatDate(weekEnd)}`;
 };
 
 const DatabaseWidget = memo(
@@ -52,6 +45,9 @@ const DatabaseWidget = memo(
     mode = "week",
     readOnly = false, // Add readOnly prop for member dashboards
   }) => {    
+    // Get week utilities for user's preferred week start
+    const weekUtils = useWeekUtils();
+    
     const [viewType, setViewType] = useState(() => {
       // Try to load from localStorage if persistence key is provided
       if (persistenceKey) {
@@ -102,7 +98,7 @@ const DatabaseWidget = memo(
           
           return `${modeLabel} (${startStr} - ${endStr})`;
         } else {
-          return `Week ${getCurrentWeekRange()}`;
+          return `Week ${getCurrentWeekRange(weekUtils)}`;
         }
       }
       return title;

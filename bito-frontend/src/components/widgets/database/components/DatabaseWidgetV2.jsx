@@ -5,6 +5,7 @@ import { GalleryViewV2 } from "./GalleryViewV2.jsx";
 import { ProfessionalTableView } from "./ProfessionalTableView.jsx";
 import { useHabitData } from "../hooks/useHabitData.js";
 import { habitUtils, useHabits } from "../../../../contexts/HabitContext";
+import { useWeekUtils } from "../../../../hooks/useWeekUtils.js";
 import "../../widgets.css";
 
 const DatabaseWidgetV2 = memo(
@@ -94,16 +95,18 @@ const DatabaseWidgetV2 = memo(
       
       return completions;
     }, [entries]);
+    // Get week utilities for user's preferred week start
+    const weekUtils = useWeekUtils();
 
     // Calculate date range
     const startDate = useMemo(() => {
       try {
-        return dateRange?.start || habitUtils.getWeekStart(new Date());
+        return dateRange?.start || weekUtils.getWeekStart(new Date());
       } catch (error) {
         console.warn('Error calculating start date:', error);
         return new Date();
       }
-    }, [dateRange?.start]);
+    }, [dateRange?.start, weekUtils]);
 
     const endDate = useMemo(() => {
       try {
@@ -201,32 +204,6 @@ const DatabaseWidgetV2 = memo(
         );
       }
     };
-
-    if (isLoading && habits === null) {
-      return (
-        <div className="w-full h-full bg-[var(--color-surface-elevated)] rounded-2xl border border-[var(--color-border-primary)] p-6">
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-brand-500)] mx-auto mb-4"></div>
-              <p className="text-[var(--color-text-secondary)]">Loading habits...</p>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    if (error && habits === null) {
-      return (
-        <div className="w-full h-full bg-[var(--color-surface-elevated)] rounded-2xl border border-[var(--color-border-primary)] p-6">
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <p className="text-red-400 mb-2">Error loading habits</p>
-              <p className="text-[var(--color-text-secondary)] text-sm">{error}</p>
-            </div>
-          </div>
-        </div>
-      );
-    }
 
     return (
       <div className="widget-container w-full h-full bg-[var(--color-surface-elevated)] rounded-2xl border border-[var(--color-border-primary)] flex flex-col overflow-hidden">
