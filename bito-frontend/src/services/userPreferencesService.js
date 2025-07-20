@@ -70,7 +70,12 @@ class UserPreferencesService {
     this.preferences[key] = value;
     this.saveToStorage();
     console.log('userPreferencesService - notifying listeners for:', key, value);
-    this.notifyListeners(key, value);
+    
+    // Add a small delay to ensure listeners are ready
+    setTimeout(() => {
+      console.log('userPreferencesService - delayed notification for:', key, value, 'listeners:', this.listeners.size);
+      this.notifyListeners(key, value);
+    }, 0);
   }
 
   /**
@@ -141,7 +146,7 @@ class UserPreferencesService {
     console.log('userPreferencesService - adding listener, total listeners:', this.listeners.size + 1);
     this.listeners.add(callback);
     return () => {
-      console.log('userPreferencesService - removing listener');
+      console.log('userPreferencesService - removing listener, remaining:', this.listeners.size - 1);
       this.listeners.delete(callback);
     };
   }
