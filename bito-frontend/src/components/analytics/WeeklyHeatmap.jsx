@@ -115,7 +115,7 @@ const WeeklyHeatmap = ({ habits, entries, timeRange }) => {
     );
   }
 
-  const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dayLabels = weekUtils.getDayNamesInOrder('short');
 
   return (
     <div className="glass-card p-6 rounded-2xl">
