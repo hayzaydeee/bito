@@ -174,6 +174,9 @@ const DatabaseWidget = memo(
     // Debug: Check if daysOfWeek is updating
     console.log('DatabaseWidget - daysOfWeek from useHabitData:', daysOfWeek);
 
+    // Debug: Check what dateRange is being passed
+    console.log('DatabaseWidget - dateRange prop:', dateRange);
+
     const {
       newHabitName,
       setNewHabitName,
