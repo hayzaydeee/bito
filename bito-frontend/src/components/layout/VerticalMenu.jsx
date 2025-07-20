@@ -18,7 +18,7 @@ import {
 } from "@radix-ui/react-icons";
 import { groupsAPI } from "../../services/api";
 
-const VerticalMenu = ({ isCollapsed }) => {
+const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () => {} }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [workspaces, setWorkspaces] = useState([]);
@@ -64,10 +64,22 @@ const VerticalMenu = ({ isCollapsed }) => {
           isPublic: false,
         });
         // Navigate to the new group
-        navigate(`/app/groups/${response.workspace._id}`);
+        handleNavigation(`/app/groups/${response.workspace._id}`);
+        // Close mobile menu after navigation
+        if (isMobile) {
+          onMobileMenuClose();
+        }
       }
     } catch (error) {
       console.error("Error creating group:", error);
+    }
+  };
+
+  // Handle navigation with mobile menu closure
+  const handleNavigation = (path) => {
+    navigate(path);
+    if (isMobile) {
+      onMobileMenuClose();
     }
   };
 
@@ -124,7 +136,7 @@ const VerticalMenu = ({ isCollapsed }) => {
                 ? `bg-gradient-to-r ${item.color} shadow-lg shadow-black/20 scale-105`
                 : "hover:bg-[var(--color-surface-hover)] hover:scale-105 bg-transparent"
             }`}
-            onClick={() => navigate(item.path)}
+            onClick={() => handleNavigation(item.path)}
             title={item.label}
           >
             <Icon
@@ -154,7 +166,7 @@ const VerticalMenu = ({ isCollapsed }) => {
               ? `bg-gradient-to-r ${item.color} shadow-lg shadow-black/20 transform scale-[1.02]`
               : "hover:bg-[var(--color-surface-hover)] hover:scale-[1.01] bg-transparent"
           }`}
-          onClick={() => navigate(item.path)}
+          onClick={() => handleNavigation(item.path)}
         >
           {/* Background pattern for active state */}
           {isActive && (
@@ -201,7 +213,7 @@ const VerticalMenu = ({ isCollapsed }) => {
                 ? "bg-gradient-to-r from-purple-500 to-purple-600 shadow-lg shadow-black/20 scale-105"
                 : "hover:bg-[var(--color-surface-hover)] hover:scale-105 bg-transparent"
             }`}
-            onClick={() => navigate('/app/groups')}
+            onClick={() => handleNavigation('/app/groups')}
             title="Groups"
           >
             <BackpackIcon
@@ -232,7 +244,7 @@ const VerticalMenu = ({ isCollapsed }) => {
               ? "bg-gradient-to-r from-purple-500 to-purple-600 shadow-lg shadow-black/20 transform scale-[1.02]"
               : "hover:bg-[var(--color-surface-hover)] hover:scale-[1.01] bg-transparent"
           }`}
-          onClick={() => navigate('/app/groups')}
+          onClick={() => handleNavigation('/app/groups')}
         >
           {/* Background pattern for active state */}
           {isGroupsActive && location.pathname === '/app/groups' && (
@@ -305,7 +317,7 @@ const VerticalMenu = ({ isCollapsed }) => {
                 return (
                   <button
                     key={workspace._id}
-                    onClick={() => navigate(`/app/groups/${workspace._id}`)}
+                    onClick={() => handleNavigation(`/app/groups/${workspace._id}`)}
                     className={`w-full p-2 rounded-lg text-left transition-all duration-200 flex items-center gap-2 group ${
                       isActive
                         ? 'bg-[var(--color-brand-500)] text-white shadow-sm'
@@ -338,7 +350,7 @@ const VerticalMenu = ({ isCollapsed }) => {
             
             {workspaces.length > 5 && (
               <button
-                onClick={() => navigate('/app/groups')}
+                onClick={() => handleNavigation('/app/groups')}
                 className="w-full p-2 text-left transition-all duration-200 hover:bg-[var(--color-surface-hover)] rounded-lg"
               >
                 <p className="text-xs font-medium text-[var(--color-text-tertiary)] hover:text-[var(--color-brand-500)]">
@@ -356,13 +368,15 @@ const VerticalMenu = ({ isCollapsed }) => {
     <div
       className={`${
         isCollapsed ? "w-16" : "w-64"
-      } h-screen relative z-10 transition-all duration-300 border-r border-[var(--color-border-primary)]`}
+      } h-screen relative z-10 transition-all duration-300 border-r border-[var(--color-border-primary)] ${
+        isMobile ? 'w-64' : '' // Always full width on mobile
+      }`}
       style={{ backgroundColor: "var(--color-surface-primary)" }}
     >
       <div className="h-full flex flex-col p-3">
         {/* Header */}
         <div className="mb-6">
-          {!isCollapsed && (
+          {(!isCollapsed || isMobile) && (
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-brand-500)] to-[var(--color-brand-700)] flex items-center justify-center shadow-lg">
                 <TargetIcon className="w-6 h-6 text-white" />
@@ -374,7 +388,7 @@ const VerticalMenu = ({ isCollapsed }) => {
               </div>
             </div>
           )}
-          {isCollapsed && (
+          {isCollapsed && !isMobile && (
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-brand-500)] to-[var(--color-brand-700)] flex items-center justify-center shadow-lg mx-auto">
               <TargetIcon className="w-6 h-6 text-white" />
             </div>

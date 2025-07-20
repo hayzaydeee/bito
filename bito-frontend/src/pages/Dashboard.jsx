@@ -485,7 +485,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="p-6 page-container space-y-8">
+    <div className="p-3 md:p-6 page-container space-y-4 md:space-y-8">
       {/* Welcome Section */}
       <div className="relative">
         <WelcomeCard userName={user?.name || user?.username || 'User'} />
@@ -531,8 +531,8 @@ const Dashboard = () => {
       </div>
 
       {/* Help Text */}
-      <div className="mt-8 text-center">
-        <p className="text-sm text-[var(--color-text-tertiary)] font-outfit">
+      <div className="mt-4 md:mt-8 text-center px-4">
+        <p className="text-xs md:text-sm text-[var(--color-text-tertiary)] font-outfit">
           💡 <strong>Pro tip:</strong> Use "Edit All" to customize your dashboard layout, or click the pencil icon on individual widgets to edit them.
         </p>
       </div>

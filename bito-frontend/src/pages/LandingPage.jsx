@@ -305,7 +305,7 @@ const LandingPage = () => {
       <section
         ref={heroRef}
         id="hero"
-        className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-20"
+        className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-16 md:pt-20"
       >
         {/* Background Effects */}
         <div className="absolute inset-0 overflow-hidden">
@@ -323,48 +323,48 @@ const LandingPage = () => {
         </div>
 
         <div
-          className={`relative z-10 max-w-4xl mx-auto text-center transition-all duration-1000 ${
+          className={`relative z-10 max-w-4xl mx-auto text-center transition-all duration-1000 hero-mobile ${
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}
         >
           {/* Badge */}
           <div
             onClick={() => navigate("/signup")}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-surface-elevated)]/80 backdrop-blur-sm border border-[var(--color-border-primary)]/30 mb-8 hover:scale-105 transition-transform duration-300"
+            className="inline-flex items-center gap-2 px-3 md:px-4 py-2 rounded-full bg-[var(--color-surface-elevated)]/80 backdrop-blur-sm border border-[var(--color-border-primary)]/30 mb-6 md:mb-8 hover:scale-105 transition-transform duration-300 touch-target"
           >
             <div className="w-2 h-2 bg-[var(--color-success)] rounded-full animate-pulse"></div>
-            <span className="text-sm font-medium text-[var(--color-text-primary)]">
+            <span className="text-xs md:text-sm font-medium text-[var(--color-text-primary)]">
               bito v1 is live!
             </span>
-            <ChevronRightIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
+            <ChevronRightIcon className="w-3 md:w-4 h-3 md:h-4 text-[var(--color-text-tertiary)]" />
           </div>
 
           {/* Main Headline */}
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-[var(--color-text-primary)] via-[var(--color-brand-400)] to-[var(--color-brand-500)] bg-clip-text text-transparent font-dmSerif mb-6 leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-[var(--color-text-primary)] via-[var(--color-brand-400)] to-[var(--color-brand-500)] bg-clip-text text-transparent font-dmSerif mb-4 md:mb-6 leading-tight px-2">
             Build habits that
             <br />
             actually stick
           </h1>
 
           {/* Subtitle */}
-          <p className="text-lg md:text-xl text-[var(--color-text-secondary)] mb-10 max-w-2xl mx-auto leading-relaxed font-outfit">
+          <p className="text-base md:text-lg lg:text-xl text-[var(--color-text-secondary)] mb-8 md:mb-10 max-w-2xl mx-auto leading-relaxed font-outfit px-4">
             The most effective way to track, analyze, and optimize your daily
             routines with beautiful insights and AI-powered recommendations.
           </p>
 
           {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 font-outfit">
+          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center mb-8 md:mb-12 font-outfit button-group-mobile px-4">
             <button
               onClick={() => navigate("/signup")}
-              className="group px-8 py-4 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-xl text-base font-semibold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+              className="group px-6 md:px-8 py-3 md:py-4 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-xl text-base font-semibold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 touch-target"
             >
               Start for free
-              <ArrowRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              <ArrowRightIcon className="w-4 md:w-5 h-4 md:h-5 group-hover:translate-x-1 transition-transform" />
             </button>
 
             <button
               onClick={() => scrollToSection(howItWorksRef)}
-              className="px-8 py-4 bg-[var(--color-surface-elevated)]/80 hover:bg-[var(--color-surface-hover)] backdrop-blur-sm border border-[var(--color-border-primary)]/30 text-[var(--color-text-primary)] rounded-xl text-base font-semibold transition-all duration-300 hover:scale-105 shadow-lg"
+              className="px-6 md:px-8 py-3 md:py-4 bg-[var(--color-surface-elevated)]/80 hover:bg-[var(--color-surface-hover)] backdrop-blur-sm border border-[var(--color-border-primary)]/30 text-[var(--color-text-primary)] rounded-xl text-base font-semibold transition-all duration-300 hover:scale-105 shadow-lg touch-target"
             >
               How it works
             </button>
@@ -376,22 +376,22 @@ const LandingPage = () => {
       <section
         ref={featuresRef}
         id="features"
-        className="py-24 px-4 sm:px-6 lg:px-8 relative"
+        className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 relative"
       >
         <div className="max-w-7xl mx-auto">
           {/* Section Header */}
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-brand-400)] bg-clip-text text-transparent font-dmSerif mb-4">
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-brand-400)] bg-clip-text text-transparent font-dmSerif mb-3 md:mb-4 px-4">
               Everything you need to succeed
             </h2>
-            <p className="text-lg text-[var(--color-text-secondary)] max-w-2xl mx-auto font-outfit">
+            <p className="text-base md:text-lg text-[var(--color-text-secondary)] max-w-2xl mx-auto font-outfit px-4">
               Powerful features designed for effective habit building, from
               tracking to insights
             </p>
           </div>
 
           {/* Features Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 font-outfit">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 font-outfit features-mobile">
             {features.map((feature, index) => (
               <div
                 key={index}

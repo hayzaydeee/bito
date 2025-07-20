@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { useHabits, habitUtils } from "../../contexts/HabitContext.jsx";
 import { useWeekDates } from "../../hooks/useWeekUtils.js";
 import { HabitRow } from "./HabitRow.jsx";
@@ -21,6 +21,19 @@ export const HabitGrid = ({
   isInEditMode = false,
   onHabitReorder = null,
 }) => {
+  // Mobile detection
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Use the week utils hook for reactive week calculations
   const { weekDates: hookWeekDates, weekUtils } = useWeekDates(startDate, endDate);
 
@@ -185,7 +198,7 @@ export const HabitGrid = ({
   // If table style is requested, use the TableView component
   if (tableStyle) {
     return (
-      <div className={`habit-grid ${className}`}>
+      <div className={`habit-grid ${className} ${isMobile ? 'habit-grid-mobile' : ''}`}>
         {" "}
         <TableView
           habits={habits}
@@ -197,6 +210,7 @@ export const HabitGrid = ({
           isInEditMode={isInEditMode}
           onHabitReorder={onHabitReorder}
           onAddHabit={onAddHabit}
+          isMobile={isMobile}
         />
         {showStats && <WeekStats stats={weekStats} />}
       </div>
@@ -205,10 +219,10 @@ export const HabitGrid = ({
 
   // Default card-style layout
   return (
-    <div className={`habit-grid ${className}`}>
-      {showHeader && <WeekHeader dates={weekDates} />}
+    <div className={`habit-grid ${className} ${isMobile ? 'habit-grid-mobile' : ''}`}>
+      {showHeader && <WeekHeader dates={weekDates} isMobile={isMobile} />}
 
-      <div className="habit-rows space-y-2">
+      <div className={`habit-rows space-y-2 ${isMobile ? 'space-y-1' : 'space-y-2'}`}>
         {habits.map((habit, index) => {
           // Safe key generation to prevent React key errors
           const safeKey = (() => {
@@ -231,6 +245,7 @@ export const HabitGrid = ({
               entries={entries[habit._id] || {}}
               onToggle={handleToggleCompletion}
               onEditHabit={onEditHabit}
+              isMobile={isMobile}
             />
           );
         })}

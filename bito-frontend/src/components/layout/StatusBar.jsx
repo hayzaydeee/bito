@@ -19,6 +19,9 @@ const StatusBar = ({
   isMenuCollapsed,
   setIsMenuCollapsed,
   userName = "User",
+  isMobile = false,
+  mobileMenuOpen = false,
+  setMobileMenuOpen = () => {},
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -75,20 +78,34 @@ const StatusBar = ({
   };
 
   return (
-    <div className="bg-[var(--color-surface-secondary)]/90 border-b border-[var(--color-border-primary)] px-4 py-2 flex items-center justify-between font-outfit backdrop-blur-sm relative z-30">
+    <div className={`bg-[var(--color-surface-secondary)]/90 border-b border-[var(--color-border-primary)] px-4 py-2 flex items-center justify-between font-outfit backdrop-blur-sm relative z-30 ${
+      isMobile ? 'status-bar-mobile' : ''
+    }`}>
       <div className="flex items-center">
-        {/* Menu toggle button */}
+        {/* Menu toggle button - behavior changes for mobile */}
         <button
-          onClick={() => setIsMenuCollapsed(!isMenuCollapsed)}
-          className="mr-3 p-1 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
-          aria-label={isMenuCollapsed ? "Expand menu" : "Collapse menu"}
+          onClick={() => {
+            if (isMobile) {
+              setMobileMenuOpen(!mobileMenuOpen);
+            } else {
+              setIsMenuCollapsed(!isMenuCollapsed);
+            }
+          }}
+          className={`mr-3 p-1 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors touch-target ${
+            isMobile ? 'touch-target' : ''
+          }`}
+          aria-label={
+            isMobile 
+              ? (mobileMenuOpen ? "Close menu" : "Open menu")
+              : (isMenuCollapsed ? "Expand menu" : "Collapse menu")
+          }
           style={{ color: "var(--color-text-secondary)" }}
         >
           <HamburgerMenuIcon className="w-4 h-4" />
         </button>
 
-        {/* Breadcrumbs */}
-        <div className="flex items-center text-sm">
+        {/* Breadcrumbs - hide on very small screens */}
+        <div className={`flex items-center text-sm ${isMobile ? 'hidden sm:flex' : ''}`}>
           <span style={{ color: "var(--color-text-secondary)" }}>Home</span>
           <ChevronRightIcon
             className="mx-1 w-3 h-3"
@@ -101,21 +118,35 @@ const StatusBar = ({
             {getBreadcrumbTitle()}
           </span>
         </div>
+
+        {/* Mobile title - show only on small screens */}
+        {isMobile && (
+          <div className="flex sm:hidden">
+            <span
+              className="font-medium text-sm"
+              style={{ color: "var(--color-brand-500)" }}
+            >
+              {getBreadcrumbTitle()}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Right Section - User Actions */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 md:gap-3">
 
-        {/* Theme Switcher */}
-        <ThemeSwitcher compact={true} />
+        {/* Theme Switcher - hide on small mobile */}
+        <div className={isMobile ? 'hidden sm:block' : ''}>
+          <ThemeSwitcher compact={true} />
+        </div>
 
         {/* User Actions from WelcomeBar */}
-        <div className="flex items-center gap-2 pl-3 border-l border-[var(--color-border-primary)]/50">
+        <div className="flex items-center gap-1 md:gap-2 pl-2 md:pl-3 border-l border-[var(--color-border-primary)]/50">
           {/* Notifications */}
           <div className="relative">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative group p-1.5 rounded-lg hover:bg-[var(--color-surface-hover)]/60 transition-all duration-200"
+              className="relative group p-1.5 rounded-lg hover:bg-[var(--color-surface-hover)]/60 transition-all duration-200 touch-target"
             >
               <BellIcon className="w-4 h-4 text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors" />
               {notificationCount > 0 && (
@@ -134,19 +165,21 @@ const StatusBar = ({
             />
           </div>
 
-          {/* Settings */}
+          {/* Settings - hide on very small screens, show in user menu instead */}
           <button 
             onClick={() => navigate('/app/settings')}
-            className="group p-1.5 rounded-lg hover:bg-[var(--color-surface-hover)]/60 transition-all duration-200"
+            className={`group p-1.5 rounded-lg hover:bg-[var(--color-surface-hover)]/60 transition-all duration-200 touch-target ${
+              isMobile ? 'hidden sm:block' : ''
+            }`}
           >
             <GearIcon className="w-4 h-4 text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors" />
           </button>
 
           {/* User Avatar with Dropdown */}
-          <div className="relative flex items-center gap-2 pl-2 ml-1 border-l border-[var(--color-border-primary)]/50 z-50">
+          <div className="relative flex items-center gap-1 md:gap-2 pl-1 md:pl-2 ml-1 border-l border-[var(--color-border-primary)]/50 z-50">
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-2 p-1 rounded-lg hover:bg-[var(--color-surface-hover)]/60 transition-all duration-200"
+              className="flex items-center gap-1 md:gap-2 p-1 rounded-lg hover:bg-[var(--color-surface-hover)]/60 transition-all duration-200 touch-target"
             >
               <Avatar
                 src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}&backgroundColor=6366f1`}
@@ -155,7 +188,7 @@ const StatusBar = ({
                 size="1"
                 className="ring-1 ring-[var(--color-brand-500)]/30"
               />
-              <span className="hidden md:block text-sm font-medium font-outfit text-[var(--color-text-primary)]">
+              <span className="hidden lg:block text-sm font-medium font-outfit text-[var(--color-text-primary)]">
                 {userName}
               </span>
             </button>
@@ -170,13 +203,28 @@ const StatusBar = ({
                 />
                 
                 {/* Menu */}
-                <div className="absolute top-full right-0 mt-2 w-48 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)] rounded-lg shadow-lg z-50 py-1">
+                <div className={`absolute top-full right-0 mt-2 w-48 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)] rounded-lg shadow-lg z-50 py-1 ${
+                  isMobile ? 'modal-mobile' : ''
+                }`}>
+                  {/* Show theme switcher in mobile menu */}
+                  {isMobile && (
+                    <>
+                      <div className="px-3 py-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-[var(--color-text-primary)]">Theme</span>
+                          <ThemeSwitcher compact={true} />
+                        </div>
+                      </div>
+                      <div className="border-t border-[var(--color-border-primary)] my-1" />
+                    </>
+                  )}
+                  
                   <button
                     onClick={() => {
                       setShowUserMenu(false);
                       navigate('/app/settings');
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-colors touch-target"
                   >
                     <GearIcon className="w-4 h-4" />
                     Settings
@@ -187,7 +235,7 @@ const StatusBar = ({
                       setShowUserMenu(false);
                       handleLogout();
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors touch-target"
                   >
                     <ExitIcon className="w-4 h-4" />
                     Sign out
