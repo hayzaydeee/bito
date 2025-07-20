@@ -1,4 +1,4 @@
-import React from "react";
+import React from "re}) => {";
 import { PlusIcon, CheckIcon, Pencil1Icon } from "@radix-ui/react-icons";
 import { habitUtils } from "../../../../utils/habitLogic.js";
 import { EmptyStateWithAddHabit } from "../../../HabitGrid/EmptyStateWithAddHabit.jsx";

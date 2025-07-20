@@ -20,8 +20,6 @@ export const ProfessionalTableView = ({
   onAddHabit, // Add onAddHabit prop for habit creation
   breakpoint,
 }) => {
-  // Debug: Check what daysOfWeek we're receiving
-  console.log('ProfessionalTableView - received daysOfWeek:', daysOfWeek);
 
   // Empty state when no habits are available
   if (!displayHabits || displayHabits.length === 0) {

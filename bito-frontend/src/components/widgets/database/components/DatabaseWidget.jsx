@@ -48,13 +48,6 @@ const DatabaseWidget = memo(
     // Get week utilities for user's preferred week start
     const weekUtils = useWeekUtils();
     
-    // Debug: Log the week start day to see if it's changing
-    console.log('DatabaseWidget - weekStartDay:', weekUtils.weekStartDay);
-    
-    // Debug: Test current week generation
-    const testWeek = weekUtils.getCurrentWeek();
-    console.log('DatabaseWidget - test current week day names:', testWeek.map(d => d.dayName).join(', '));
-    
     const [viewType, setViewType] = useState(() => {
       // Try to load from localStorage if persistence key is provided
       if (persistenceKey) {
@@ -92,7 +85,8 @@ const DatabaseWidget = memo(
     // Calculate dynamic title with date range
     const displayTitle = useMemo(() => {
       if (title === "Today's Habits" || title === "Habit Tracker" || title === "My Habits") {
-        if (dateRange && dateRange.start && dateRange.end) {
+        if (dateRange && dateRange.start && dateRange.end && mode !== 'week') {
+          // For non-week modes, show the actual dateRange
           const formatDate = (date) => {
             const day = date.getDate().toString().padStart(2, '0');
             const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -105,11 +99,12 @@ const DatabaseWidget = memo(
           
           return `${modeLabel} (${startStr} - ${endStr})`;
         } else {
+          // For week mode, always use user's current week preference regardless of dateRange
           return `Week ${getCurrentWeekRange(weekUtils)}`;
         }
       }
       return title;
-    }, [title, dateRange, mode]);
+    }, [title, dateRange, mode, weekUtils]);
 
     // Transform entries to completions format if entries are provided (for member dashboard)
     const transformedCompletions = useMemo(() => {
@@ -168,14 +163,7 @@ const DatabaseWidget = memo(
       habits: transformedHabits, 
       completions: transformedCompletions, 
       dateRange, 
-      mode
-    });
-
-    // Debug: Check if daysOfWeek is updating
-    console.log('DatabaseWidget - daysOfWeek from useHabitData:', daysOfWeek);
-
-    // Debug: Check what dateRange is being passed
-    console.log('DatabaseWidget - dateRange prop:', dateRange);
+      mode    });
 
     const {
       newHabitName,

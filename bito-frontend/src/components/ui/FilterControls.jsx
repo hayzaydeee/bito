@@ -135,9 +135,6 @@ export const DatabaseFilterControls = ({
   // Use reactive week utilities that respect user's week start preference
   const weekUtils = useWeekUtils();
   
-  // Debug: Log when filters recalculate week options
-  console.log('DatabaseFilterControls - weekStartDay:', weekUtils.weekStartDay, 'selectedMonth:', selectedMonth);
-  
   // Generate calendar weeks using user's preferred week start
   const weekOptions = useMemo(() => {
     if (selectedMonth) {
