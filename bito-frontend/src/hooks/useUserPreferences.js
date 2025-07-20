@@ -89,6 +89,7 @@ export const useWeekStartDay = () => {
   });
 
   useEffect(() => {
+    console.log('useWeekStartDay - effect running, adding listener');
     const unsubscribe = userPreferencesService.addListener((key, value) => {
       console.log('useWeekStartDay - preference changed:', key, value);
       if (key === 'weekStartsOn') {
@@ -102,7 +103,10 @@ export const useWeekStartDay = () => {
     console.log('useWeekStartDay - current value on mount:', current);
     setWeekStartDay(current);
 
-    return unsubscribe;
+    return () => {
+      console.log('useWeekStartDay - cleanup, removing listener');
+      unsubscribe();
+    };
   }, []);
 
   const updateWeekStartDay = useCallback((day) => {
