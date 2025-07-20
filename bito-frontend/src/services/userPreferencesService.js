@@ -62,12 +62,14 @@ class UserPreferencesService {
    * Set a preference value
    */
   set(key, value) {
+    console.log('userPreferencesService.set called:', key, value);
     if (!this.preferences) {
       this.init();
     }
     
     this.preferences[key] = value;
     this.saveToStorage();
+    console.log('userPreferencesService - notifying listeners for:', key, value);
     this.notifyListeners(key, value);
   }
 
