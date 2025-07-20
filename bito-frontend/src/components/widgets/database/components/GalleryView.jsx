@@ -38,7 +38,7 @@ export const GalleryView = ({
             const dayCompletion = getDayCompletion(day);
             
             // Find the actual date for this day and compare with today's date
-            const dayInfo = getCurrentWeekDates?.find((d) => d.day === day);
+            const dayInfo = getCurrentWeekDates?.find((d) => d.dayName === day);
             // Get today's date in local timezone (YYYY-MM-DD format)
             const today = new Date();
             const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -111,7 +111,7 @@ export const GalleryView = ({
                 <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">
                   {(() => {
                     const scheduledDays = daysOfWeek.filter(day => {
-                      const dayInfo = getCurrentWeekDates?.find((d) => d.day === day);
+                      const dayInfo = getCurrentWeekDates?.find((d) => d.dayName === day);
                       if (!dayInfo) return false;
                       const dateObj = new Date(dayInfo.date + 'T00:00:00');
                       return habitUtils.isHabitScheduledForDate(habit, dateObj);
@@ -136,7 +136,7 @@ export const GalleryView = ({
                 const isCompleted = getCompletionStatus(day, habit.id);
                 
                 // Find the actual date for this day and compare with today's date
-                const dayInfo = getCurrentWeekDates?.find((d) => d.day === day);
+                const dayInfo = getCurrentWeekDates?.find((d) => d.dayName === day);
                 // Get today's date in local timezone (YYYY-MM-DD format)
                 const today = new Date();
                 const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -202,7 +202,7 @@ export const GalleryView = ({
                 <span>
                   {(() => {
                     const scheduledDays = daysOfWeek.filter(day => {
-                      const dayInfo = getCurrentWeekDates?.find((d) => d.day === day);
+                      const dayInfo = getCurrentWeekDates?.find((d) => d.dayName === day);
                       if (!dayInfo) return false;
                       const dateObj = new Date(dayInfo.date + 'T00:00:00');
                       return habitUtils.isHabitScheduledForDate(habit, dateObj);
@@ -219,7 +219,7 @@ export const GalleryView = ({
                     backgroundColor: habit.color,
                     width: `${(() => {
                       const scheduledDays = daysOfWeek.filter(day => {
-                        const dayInfo = getCurrentWeekDates?.find((d) => d.day === day);
+                        const dayInfo = getCurrentWeekDates?.find((d) => d.dayName === day);
                         if (!dayInfo) return false;
                         const dateObj = new Date(dayInfo.date + 'T00:00:00');
                         return habitUtils.isHabitScheduledForDate(habit, dateObj);

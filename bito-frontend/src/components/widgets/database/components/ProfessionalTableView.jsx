@@ -59,7 +59,7 @@ export const ProfessionalTableView = ({
           <tbody>
             {daysOfWeek.map((day, dayIndex) => {
               // Find the actual date for this day and compare with today's date
-              const dayInfo = getCurrentWeekDates?.find((d) => d.day === day);
+              const dayInfo = getCurrentWeekDates?.find((d) => d.dayName === day);
               // Get today's date in local timezone (YYYY-MM-DD format)
               const today = new Date();
               const todayString = `${today.getFullYear()}-${String(
