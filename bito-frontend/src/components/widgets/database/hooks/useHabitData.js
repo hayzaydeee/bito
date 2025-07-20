@@ -14,18 +14,23 @@ export const useHabitData = ({ habits, completions, dateRange = null, mode = "we
     console.log('useHabitData - recalculating weekDates, weekStartDay:', weekUtils.weekStartDay);
     if (dateRange && dateRange.start && dateRange.end) {
       // Use the provided date range with user's week preference
-      return weekUtils.generateDateRange(dateRange.start, dateRange.end);
+      const result = weekUtils.generateDateRange(dateRange.start, dateRange.end);
+      console.log('useHabitData - using dateRange, result:', result.map(d => ({ date: d.date, dayName: d.dayName })));
+      return result;
     } else {
       // Use current week with user's preferred start day
       const currentWeek = weekUtils.getCurrentWeek();
-      console.log('useHabitData - current week dates:', currentWeek.map(d => ({ date: d.date, day: d.dayName })));
+      console.log('useHabitData - using getCurrentWeek, result:', currentWeek.map(d => ({ date: d.date, dayName: d.dayName })));
       return currentWeek;
     }
   }, [dateRange, weekUtils]);
 
   // Extract day names from the actual dates
   const daysOfWeek = useMemo(() => {
-    return weekDates.map(d => d.dayName);
+    console.log('useHabitData - weekDates for daysOfWeek extraction:', weekDates.map(d => ({ date: d.date, dayName: d.dayName })));
+    const result = weekDates.map(d => d.dayName);
+    console.log('useHabitData - extracted daysOfWeek:', result);
+    return result;
   }, [weekDates]);
   // Helper function to get current week dates (now uses the actual date range)
   const getCurrentWeekDates = weekDates;
