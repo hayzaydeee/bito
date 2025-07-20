@@ -82,22 +82,31 @@ export const useUserPreferences = () => {
  * Hook specifically for week start day preference
  */
 export const useWeekStartDay = () => {
-  const [weekStartDay, setWeekStartDay] = useState(() => userPreferencesService.getWeekStartDay());
+  const [weekStartDay, setWeekStartDay] = useState(() => {
+    const initial = userPreferencesService.getWeekStartDay();
+    console.log('useWeekStartDay - initial value:', initial);
+    return initial;
+  });
 
   useEffect(() => {
     const unsubscribe = userPreferencesService.addListener((key, value) => {
+      console.log('useWeekStartDay - preference changed:', key, value);
       if (key === 'weekStartsOn') {
+        console.log('useWeekStartDay - updating weekStartDay to:', value);
         setWeekStartDay(value);
       }
     });
 
     // Initialize
-    setWeekStartDay(userPreferencesService.getWeekStartDay());
+    const current = userPreferencesService.getWeekStartDay();
+    console.log('useWeekStartDay - current value on mount:', current);
+    setWeekStartDay(current);
 
     return unsubscribe;
   }, []);
 
   const updateWeekStartDay = useCallback((day) => {
+    console.log('useWeekStartDay - updateWeekStartDay called with:', day);
     userPreferencesService.setWeekStartDay(day);
   }, []);
 
