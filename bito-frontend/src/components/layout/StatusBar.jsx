@@ -103,43 +103,8 @@ const StatusBar = ({
         </div>
       </div>
 
-      {/* Right Section - Search + User Actions */}
+      {/* Right Section - User Actions */}
       <div className="flex items-center gap-3">
-        {/* Search */}
-        <div className="relative">
-          {isSearchOpen ? (
-            <div className="flex items-center bg-[var(--color-surface-elevated)] rounded-md overflow-hidden pr-1 border border-[var(--color-border-primary)]">
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-transparent px-3 py-1 text-sm outline-none w-48 font-outfit"
-                style={{ color: "var(--color-text-primary)" }}
-                autoFocus
-              />
-              <button
-                onClick={() => {
-                  setIsSearchOpen(false);
-                  setSearchQuery("");
-                }}
-                className="p-1 rounded hover:bg-[var(--color-surface-hover)] transition-colors"
-                style={{ color: "var(--color-text-secondary)" }}
-              >
-                <Cross1Icon className="w-3 h-3" />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setIsSearchOpen(true)}
-              className="p-1 rounded hover:bg-[var(--color-surface-hover)] transition-colors"
-              style={{ color: "var(--color-text-secondary)" }}
-              aria-label="Search"
-            >
-              <MagnifyingGlassIcon className="w-4 h-4" />
-            </button>
-          )}
-        </div>
 
         {/* Theme Switcher */}
         <ThemeSwitcher compact={true} />
