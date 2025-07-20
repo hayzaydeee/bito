@@ -9,6 +9,7 @@ import {
 import { groupsAPI } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { habitUtils } from "../contexts/HabitContext";
+import { useWeekUtils } from "../globalHooks/useWeekUtils";
 import { ContextGridAdapter } from "../components/shared";
 import {
   ChartFilterControls,
@@ -60,6 +61,7 @@ const MemberDashboardView = () => {
   const { groupId, memberId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const weekUtils = useWeekUtils();
 
   const [memberData, setMemberData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -123,7 +125,7 @@ const MemberDashboardView = () => {
       const weekPeriod = filterObj.chartPeriod || 1;
 
       const monthStart = new Date(currentYear, selectedMonth, 1);
-      const firstWeekStart = habitUtils.getWeekStart(monthStart);
+      const firstWeekStart = weekUtils.getWeekStart(monthStart);
 
       const weekStart = new Date(firstWeekStart);
       weekStart.setDate(firstWeekStart.getDate() + (weekPeriod - 1) * 7);
@@ -143,7 +145,7 @@ const MemberDashboardView = () => {
       startDate.setDate(endDate.getDate() - 89);
       return { start: startDate, end: endDate };
     }
-  }, []);
+  }, [weekUtils]);
 
   // Calculate date ranges
   const chartDateRange = useMemo(() => {
@@ -173,7 +175,7 @@ const MemberDashboardView = () => {
       const monthStart = new Date(year, month - 1, 1);
       const monthEnd = new Date(year, month, 0);
 
-      let currentWeekStart = habitUtils.getWeekStart(monthStart);
+      let currentWeekStart = weekUtils.getWeekStart(monthStart);
       let weekNumber = 1;
 
       while (currentWeekStart <= monthEnd) {
@@ -228,7 +230,7 @@ const MemberDashboardView = () => {
         { value: 12, label: "December" },
       ],
     };
-  }, [chartFilters.selectedMonth, databaseFilters.selectedMonth]);
+  }, [chartFilters.selectedMonth, databaseFilters.selectedMonth, weekUtils]);
 
   // Filter update handlers
   const updateChartFilter = useCallback((mode, period) => {

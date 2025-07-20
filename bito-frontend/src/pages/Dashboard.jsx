@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useHabits, habitUtils } from '../contexts/HabitContext';
+import { useWeekUtils } from '../hooks/useWeekUtils';
 import { ContextGridAdapter } from '../components/shared';
 import WelcomeCard from '../components/dashboard/WelcomeCard';
 import { ChartFilterControls, DatabaseFilterControls } from '../components/ui/FilterControls';
@@ -75,6 +76,7 @@ const STORAGE_KEYS = {
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const weekUtils = useWeekUtils();
   const { 
     habits, 
     entries, 
@@ -182,7 +184,7 @@ const Dashboard = () => {
       const weekPeriod = filterObj.chartPeriod || 1;
 
       const monthStart = new Date(currentYear, selectedMonth, 1);
-      const firstWeekStart = habitUtils.getWeekStart(monthStart);
+      const firstWeekStart = weekUtils.getWeekStart(monthStart);
       
       const weekStart = new Date(firstWeekStart);
       weekStart.setDate(firstWeekStart.getDate() + (weekPeriod - 1) * 7);
@@ -203,7 +205,7 @@ const Dashboard = () => {
       startDate.setDate(endDate.getDate() - 89);
       return { start: startDate, end: endDate };
     }
-  }, []);
+  }, [weekUtils]);
 
   // Calculate date ranges
   const chartDateRange = useMemo(() => {
