@@ -12,18 +12,19 @@ export const useHabitData = ({ habits, completions, dateRange = null, mode = "we
   // Get the actual dates to display based on dateRange or current week
   const weekDates = useMemo(() => {
     console.log('useHabitData - recalculating weekDates, weekStartDay:', weekUtils.weekStartDay);
-    if (dateRange && dateRange.start && dateRange.end) {
-      // Use the provided date range with user's week preference
+    if (dateRange && dateRange.start && dateRange.end && mode !== "week") {
+      // For non-week modes, use the provided date range as-is
       const result = weekUtils.generateDateRange(dateRange.start, dateRange.end);
-      console.log('useHabitData - using dateRange, result:', result.map(d => ({ date: d.date, dayName: d.dayName })));
+      console.log('useHabitData - using dateRange (non-week mode), result:', result.map(d => ({ date: d.date, dayName: d.dayName })));
       return result;
     } else {
-      // Use current week with user's preferred start day
+      // For week mode, always use current week with user's preferred start day
+      // This ensures the week view respects the user's week start preference
       const currentWeek = weekUtils.getCurrentWeek();
-      console.log('useHabitData - using getCurrentWeek, result:', currentWeek.map(d => ({ date: d.date, dayName: d.dayName })));
+      console.log('useHabitData - using getCurrentWeek (week mode), result:', currentWeek.map(d => ({ date: d.date, dayName: d.dayName })));
       return currentWeek;
     }
-  }, [dateRange, weekUtils]);
+  }, [dateRange, weekUtils, mode]);
 
   // Extract day names from the actual dates
   const daysOfWeek = useMemo(() => {
