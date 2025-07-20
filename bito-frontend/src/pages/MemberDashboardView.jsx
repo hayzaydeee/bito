@@ -9,7 +9,7 @@ import {
 import { groupsAPI } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { habitUtils } from "../contexts/HabitContext";
-import { useWeekUtils } from "../globalHooks/useWeekUtils";
+import { useWeekUtils } from "../hooks/useWeekUtils";
 import { ContextGridAdapter } from "../components/shared";
 import {
   ChartFilterControls,
