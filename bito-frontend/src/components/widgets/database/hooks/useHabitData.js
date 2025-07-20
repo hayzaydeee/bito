@@ -37,7 +37,7 @@ export const useHabitData = ({ habits, completions, dateRange = null, mode = "we
   const getCompletionStatus = useCallback(
     (day, habitId) => {
       // Try to find the date for this day
-      const dayInfo = getCurrentWeekDates.find((d) => d.day === day);
+      const dayInfo = getCurrentWeekDates.find((d) => d.dayName === day);
       if (dayInfo) {
         // When we have a specific date (from dateRange), only use date-based keys
         // This ensures completions are only shown for the specific date being viewed
@@ -61,7 +61,7 @@ export const useHabitData = ({ habits, completions, dateRange = null, mode = "we
   const getDayCompletion = useCallback(
     (day) => {
       // Find the date for this day
-      const dayInfo = getCurrentWeekDates.find((d) => d.day === day);
+      const dayInfo = getCurrentWeekDates.find((d) => d.dayName === day);
       if (!dayInfo) return 0;
       
       const dateObj = new Date(dayInfo.date + 'T00:00:00');
@@ -91,7 +91,7 @@ export const useHabitData = ({ habits, completions, dateRange = null, mode = "we
       
       // Filter days to only those where this habit is scheduled
       const scheduledDays = daysOfWeek.filter(day => {
-        const dayInfo = getCurrentWeekDates.find((d) => d.day === day);
+        const dayInfo = getCurrentWeekDates.find((d) => d.dayName === day);
         if (!dayInfo) return false;
         const dateObj = new Date(dayInfo.date + 'T00:00:00');
         return habitUtils.isHabitScheduledForDate(habit, dateObj);
@@ -116,7 +116,7 @@ export const useHabitData = ({ habits, completions, dateRange = null, mode = "we
     
     displayHabits.forEach(habit => {
       daysOfWeek.forEach(day => {
-        const dayInfo = getCurrentWeekDates.find((d) => d.day === day);
+        const dayInfo = getCurrentWeekDates.find((d) => d.dayName === day);
         if (dayInfo) {
           const dateObj = new Date(dayInfo.date + 'T00:00:00');
           if (habitUtils.isHabitScheduledForDate(habit, dateObj)) {

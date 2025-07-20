@@ -57,6 +57,7 @@ export const useWeekUtils = () => {
         
         dates.push({
           date: dateStr,
+          day: dayName,  // For compatibility with existing code
           dayName: dayName,
           shortDay: shortDay,
           isToday: isToday,
@@ -91,19 +92,20 @@ export const useWeekUtils = () => {
         
         const dayName = current.toLocaleDateString('en-US', { weekday: 'long' });
         const shortDay = current.toLocaleDateString('en-US', { weekday: 'short' });
-        
         const today = new Date();
         const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
         const isToday = dateStr === todayStr;
         
         dates.push({
           date: dateStr,
+          day: dayName,  // For compatibility with existing code
           dayName: dayName,
           shortDay: shortDay,
           isToday: isToday,
           dateObj: new Date(current)
         });
         
+        current.setDate(current.getDate() + 1);
         current.setDate(current.getDate() + 1);
       }
       
