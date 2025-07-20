@@ -106,7 +106,6 @@ export const useWeekUtils = () => {
         });
         
         current.setDate(current.getDate() + 1);
-        current.setDate(current.getDate() + 1);
       }
       
       return dates;
