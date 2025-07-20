@@ -85,8 +85,8 @@ const DatabaseWidget = memo(
     // Calculate dynamic title with date range
     const displayTitle = useMemo(() => {
       if (title === "Today's Habits" || title === "Habit Tracker" || title === "My Habits") {
-        if (dateRange && dateRange.start && dateRange.end && mode !== 'week') {
-          // For non-week modes, show the actual dateRange
+        if (dateRange && dateRange.start && dateRange.end) {
+          // Show the actual dateRange that's being filtered
           const formatDate = (date) => {
             const day = date.getDate().toString().padStart(2, '0');
             const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -99,7 +99,7 @@ const DatabaseWidget = memo(
           
           return `${modeLabel} (${startStr} - ${endStr})`;
         } else {
-          // For week mode, always use user's current week preference regardless of dateRange
+          // For week mode without dateRange, show current week preference
           return `Week ${getCurrentWeekRange(weekUtils)}`;
         }
       }

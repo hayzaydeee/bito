@@ -11,12 +11,12 @@ export const useHabitData = ({ habits, completions, dateRange = null, mode = "we
   
   // Get the actual dates to display based on dateRange or current week
   const weekDates = useMemo(() => {
-    if (dateRange && dateRange.start && dateRange.end && mode !== "week") {
-      // For non-week modes, use the provided date range as-is
+    if (dateRange && dateRange.start && dateRange.end) {
+      // Use the provided date range for any mode
       const result = weekUtils.generateDateRange(dateRange.start, dateRange.end);
       return result;
     } else {
-      // For week mode, always use current week with user's preferred start day
+      // For week mode without dateRange, use current week with user's preferred start day
       // This ensures the week view respects the user's week start preference
       const currentWeek = weekUtils.getCurrentWeek();
       return currentWeek;
