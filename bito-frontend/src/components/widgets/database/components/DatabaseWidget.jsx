@@ -168,7 +168,8 @@ const DatabaseWidget = memo(
       habits: transformedHabits, 
       completions: transformedCompletions, 
       dateRange, 
-      mode 
+      mode,
+      weekStartDay: weekUtils.weekStartDay // Force re-render when week start changes
     });
 
     const {
