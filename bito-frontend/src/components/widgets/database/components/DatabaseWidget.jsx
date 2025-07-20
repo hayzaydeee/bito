@@ -51,6 +51,10 @@ const DatabaseWidget = memo(
     // Debug: Log the week start day to see if it's changing
     console.log('DatabaseWidget - weekStartDay:', weekUtils.weekStartDay);
     
+    // Debug: Test current week generation
+    const testWeek = weekUtils.getCurrentWeek();
+    console.log('DatabaseWidget - test current week:', testWeek.map(d => d.dayName));
+    
     const [viewType, setViewType] = useState(() => {
       // Try to load from localStorage if persistence key is provided
       if (persistenceKey) {
