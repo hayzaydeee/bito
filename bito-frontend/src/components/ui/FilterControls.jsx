@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { ChevronDownIcon } from "@radix-ui/react-icons";
-import { habitUtils } from '../../contexts/HabitContext';
+import { useWeekUtils } from '../../hooks/useWeekUtils';
 
 /**
  * Filter Dropdown Component
@@ -132,8 +132,14 @@ export const DatabaseFilterControls = ({
   onMonthChange,
   options 
 }) => {
-  // Generate calendar weeks using HabitContext's logic (fixed timezone issues)
-  const getCalendarWeeksForMonth = () => {
+  // Use reactive week utilities that respect user's week start preference
+  const weekUtils = useWeekUtils();
+  
+  // Debug: Log when filters recalculate week options
+  console.log('DatabaseFilterControls - weekStartDay:', weekUtils.weekStartDay, 'selectedMonth:', selectedMonth);
+  
+  // Generate calendar weeks using user's preferred week start
+  const weekOptions = useMemo(() => {
     if (selectedMonth) {
       const year = new Date().getFullYear();
       const weeks = [];
@@ -142,8 +148,8 @@ export const DatabaseFilterControls = ({
       const monthStart = new Date(year, selectedMonth - 1, 1);
       const monthEnd = new Date(year, selectedMonth, 0);
       
-      // Start from the Monday of the week containing the first day of month
-      let currentWeekStart = habitUtils.getWeekStart(monthStart);
+      // Start from user's preferred week start day containing the first day of month
+      let currentWeekStart = weekUtils.getWeekStart(monthStart);
       let weekNumber = 1;
       
       // Generate weeks that overlap with this month
@@ -177,9 +183,7 @@ export const DatabaseFilterControls = ({
       return weeks;
     }
     return [];
-  };
-
-  const weekOptions = getCalendarWeeksForMonth();
+  }, [selectedMonth, weekUtils]);
 
   return (
     <div className="flex items-center gap-3 flex-wrap">
