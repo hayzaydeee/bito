@@ -168,9 +168,11 @@ const DatabaseWidget = memo(
       habits: transformedHabits, 
       completions: transformedCompletions, 
       dateRange, 
-      mode,
-      weekStartDay: weekUtils.weekStartDay // Force re-render when week start changes
+      mode
     });
+
+    // Debug: Check if daysOfWeek is updating
+    console.log('DatabaseWidget - daysOfWeek from useHabitData:', daysOfWeek);
 
     const {
       newHabitName,

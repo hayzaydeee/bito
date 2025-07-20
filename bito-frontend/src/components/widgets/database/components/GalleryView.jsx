@@ -20,10 +20,16 @@ export const GalleryView = ({
   readOnly = false, // Add readOnly prop
   onAddHabit, // Add onAddHabit prop for modal-based habit creation
 }) => {
+  // Debug: Check what daysOfWeek we're receiving
+  console.log("GalleryView - received daysOfWeek:", daysOfWeek);
+
   // Show empty state if no habits exist
   if (!displayHabits || displayHabits.length === 0) {
     return (
-      <EmptyStateWithAddHabit className="w-full h-full" onAddHabit={readOnly ? null : onAddHabit} />
+      <EmptyStateWithAddHabit
+        className="w-full h-full"
+        onAddHabit={readOnly ? null : onAddHabit}
+      />
     );
   }
 
@@ -33,17 +39,20 @@ export const GalleryView = ({
       <div className="bg-[var(--color-surface-elevated)] rounded-lg p-4 border border-[var(--color-border-primary)]">
         <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-3 font-outfit">
           Week Overview
-        </h3>        <div className="grid grid-cols-7 gap-2">
+        </h3>
+        <div className="grid grid-cols-7 gap-2">
           {daysOfWeek.map((day) => {
             const dayCompletion = getDayCompletion(day);
-            
+
             // Find the actual date for this day and compare with today's date
             const dayInfo = getCurrentWeekDates?.find((d) => d.dayName === day);
             // Get today's date in local timezone (YYYY-MM-DD format)
             const today = new Date();
-            const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            const todayString = `${today.getFullYear()}-${String(
+              today.getMonth() + 1
+            ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
             const isToday = dayInfo?.date === todayString;
-            
+
             return (
               <div
                 key={day}
@@ -84,13 +93,17 @@ export const GalleryView = ({
       </div>
 
       {/* Habits Grid */}
-      <div className="grid gap-4" style={{
-        gridTemplateColumns: breakpoint === "xs" 
-          ? "1fr" 
-          : breakpoint === "sm" 
-          ? "repeat(auto-fit, minmax(280px, 1fr))"
-          : "repeat(auto-fit, minmax(320px, 1fr))"
-      }}>
+      <div
+        className="grid gap-4"
+        style={{
+          gridTemplateColumns:
+            breakpoint === "xs"
+              ? "1fr"
+              : breakpoint === "sm"
+              ? "repeat(auto-fit, minmax(280px, 1fr))"
+              : "repeat(auto-fit, minmax(320px, 1fr))",
+        }}
+      >
         {displayHabits.map((habit) => (
           <div
             key={habit.id}
@@ -110,13 +123,17 @@ export const GalleryView = ({
                 </h4>
                 <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">
                   {(() => {
-                    const scheduledDays = daysOfWeek.filter(day => {
-                      const dayInfo = getCurrentWeekDates?.find((d) => d.dayName === day);
+                    const scheduledDays = daysOfWeek.filter((day) => {
+                      const dayInfo = getCurrentWeekDates?.find(
+                        (d) => d.dayName === day
+                      );
                       if (!dayInfo) return false;
-                      const dateObj = new Date(dayInfo.date + 'T00:00:00');
+                      const dateObj = new Date(dayInfo.date + "T00:00:00");
                       return habitUtils.isHabitScheduledForDate(habit, dateObj);
                     });
-                    const completedScheduledDays = scheduledDays.filter(day => getCompletionStatus(day, habit.id));
+                    const completedScheduledDays = scheduledDays.filter((day) =>
+                      getCompletionStatus(day, habit.id)
+                    );
                     return `${completedScheduledDays.length}/${scheduledDays.length} scheduled days completed`;
                   })()}
                 </p>
@@ -132,19 +149,25 @@ export const GalleryView = ({
               )}
             </div>
 
-            {/* Daily Checkboxes */}            <div className="grid grid-cols-7 gap-2">              {daysOfWeek.map((day) => {
+            {/* Daily Checkboxes */}
+            <div className="grid grid-cols-7 gap-2">
+              {daysOfWeek.map((day) => {
                 const isCompleted = getCompletionStatus(day, habit.id);
-                
+
                 // Find the actual date for this day and compare with today's date
                 const dayInfo = getCurrentWeekDates?.find((d) => d.dayName === day);
                 // Get today's date in local timezone (YYYY-MM-DD format)
                 const today = new Date();
-                const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                const todayString = `${today.getFullYear()}-${String(
+                  today.getMonth() + 1
+                ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
                 const isToday = dayInfo?.date === todayString;
 
                 // Check if habit is scheduled for this day
-                const dateObj = dayInfo ? new Date(dayInfo.date + 'T00:00:00') : null;
-                const isScheduled = dateObj ? habitUtils.isHabitScheduledForDate(habit, dateObj) : false;
+                const dateObj = dayInfo ? new Date(dayInfo.date + "T00:00:00") : null;
+                const isScheduled = dateObj
+                  ? habitUtils.isHabitScheduledForDate(habit, dateObj)
+                  : false;
 
                 return (
                   <div key={day} className="text-center">
@@ -159,13 +182,13 @@ export const GalleryView = ({
                     </div>
                     {isScheduled ? (
                       <button
-                        onClick={() => 
+                        onClick={() =>
                           !readOnly && handleToggleCompletion(day, habit.id, displayCompletions)
                         }
                         disabled={readOnly}
                         className={`w-8 h-8 rounded-lg transition-all duration-200 flex items-center justify-center ${
-                          readOnly 
-                            ? "cursor-not-allowed opacity-60" 
+                          readOnly
+                            ? "cursor-not-allowed opacity-60"
                             : "hover:scale-110 active:scale-95"
                         } ${
                           isCompleted
@@ -201,13 +224,17 @@ export const GalleryView = ({
                 <span>Weekly Progress</span>
                 <span>
                   {(() => {
-                    const scheduledDays = daysOfWeek.filter(day => {
-                      const dayInfo = getCurrentWeekDates?.find((d) => d.dayName === day);
+                    const scheduledDays = daysOfWeek.filter((day) => {
+                      const dayInfo = getCurrentWeekDates?.find(
+                        (d) => d.dayName === day
+                      );
                       if (!dayInfo) return false;
-                      const dateObj = new Date(dayInfo.date + 'T00:00:00');
+                      const dateObj = new Date(dayInfo.date + "T00:00:00");
                       return habitUtils.isHabitScheduledForDate(habit, dateObj);
                     });
-                    const completedScheduledDays = scheduledDays.filter(day => getCompletionStatus(day, habit.id));
+                    const completedScheduledDays = scheduledDays.filter((day) =>
+                      getCompletionStatus(day, habit.id)
+                    );
                     return `${completedScheduledDays.length}/${scheduledDays.length}`;
                   })()}
                 </span>
@@ -218,14 +245,18 @@ export const GalleryView = ({
                   style={{
                     backgroundColor: habit.color,
                     width: `${(() => {
-                      const scheduledDays = daysOfWeek.filter(day => {
-                        const dayInfo = getCurrentWeekDates?.find((d) => d.dayName === day);
+                      const scheduledDays = daysOfWeek.filter((day) => {
+                        const dayInfo = getCurrentWeekDates?.find(
+                          (d) => d.dayName === day
+                        );
                         if (!dayInfo) return false;
-                        const dateObj = new Date(dayInfo.date + 'T00:00:00');
+                        const dateObj = new Date(dayInfo.date + "T00:00:00");
                         return habitUtils.isHabitScheduledForDate(habit, dateObj);
                       });
                       if (scheduledDays.length === 0) return 100; // If no scheduled days, show full progress
-                      const completedScheduledDays = scheduledDays.filter(day => getCompletionStatus(day, habit.id));
+                      const completedScheduledDays = scheduledDays.filter((day) =>
+                        getCompletionStatus(day, habit.id)
+                      );
                       return (completedScheduledDays.length / scheduledDays.length) * 100;
                     })()}%`,
                   }}
