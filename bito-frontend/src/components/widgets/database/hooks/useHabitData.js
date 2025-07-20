@@ -11,6 +11,7 @@ export const useHabitData = ({ habits, completions, dateRange = null, mode = "we
   
   // Get the actual dates to display based on dateRange or current week
   const weekDates = useMemo(() => {
+    console.log('useHabitData - recalculating weekDates, weekStartDay:', weekUtils.weekStartDay);
     if (dateRange && dateRange.start && dateRange.end) {
       // Use the provided date range with user's week preference
       return weekUtils.generateDateRange(dateRange.start, dateRange.end);
