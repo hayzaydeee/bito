@@ -1,4 +1,4 @@
-import React from "re}) => {";
+import React from "react";
 import { PlusIcon, CheckIcon, Pencil1Icon } from "@radix-ui/react-icons";
 import { habitUtils } from "../../../../utils/habitLogic.js";
 import { EmptyStateWithAddHabit } from "../../../HabitGrid/EmptyStateWithAddHabit.jsx";
@@ -20,9 +20,6 @@ export const GalleryView = ({
   readOnly = false, // Add readOnly prop
   onAddHabit, // Add onAddHabit prop for modal-based habit creation
 }) => {
-  // Debug: Check what daysOfWeek we're receiving
-  console.log("GalleryView - received daysOfWeek:", daysOfWeek);
-
   // Show empty state if no habits exist
   if (!displayHabits || displayHabits.length === 0) {
     return (
