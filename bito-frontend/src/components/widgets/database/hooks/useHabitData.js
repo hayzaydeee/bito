@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from "react";
 import { habitUtils } from "../../../../utils/habitLogic.js";
-import { useWeekUtils } from "../../../hooks/useWeekUtils.js";
+import { useWeekUtils } from "../../../../hooks/useWeekUtils.js";
 
 /**
  * Custom hook for managing habit data and calculations
