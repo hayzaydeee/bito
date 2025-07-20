@@ -53,7 +53,7 @@ const DatabaseWidget = memo(
     
     // Debug: Test current week generation
     const testWeek = weekUtils.getCurrentWeek();
-    console.log('DatabaseWidget - test current week:', testWeek.map(d => d.dayName));
+    console.log('DatabaseWidget - test current week day names:', testWeek.map(d => d.dayName).join(', '));
     
     const [viewType, setViewType] = useState(() => {
       // Try to load from localStorage if persistence key is provided
