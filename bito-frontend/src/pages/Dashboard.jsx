@@ -235,7 +235,7 @@ const Dashboard = () => {
       const monthStart = new Date(year, month - 1, 1);
       const monthEnd = new Date(year, month, 0);
 
-      let currentWeekStart = habitUtils.getWeekStart(monthStart);
+      let currentWeekStart = weekUtils.getWeekStart(monthStart);
       let weekNumber = 1;
 
       while (currentWeekStart <= monthEnd) {
@@ -290,7 +290,7 @@ const Dashboard = () => {
         { value: 12, label: "December" },
       ],
     };
-  }, [chartFilters.selectedMonth, databaseFilters.selectedMonth]);
+  }, [chartFilters.selectedMonth, databaseFilters.selectedMonth, weekUtils]);
 
   // Filter update handlers with localStorage persistence
   const updateChartFilter = useCallback((mode, period) => {

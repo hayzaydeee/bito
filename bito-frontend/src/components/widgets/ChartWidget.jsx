@@ -17,18 +17,18 @@ import {
   AreaChart,
 } from "recharts";
 import { useChartData } from "../../globalHooks/useChartData";
+import { useWeekUtils } from "../../hooks/useWeekUtils";
 import { EmptyStateWithAddHabit } from "../HabitGrid/EmptyStateWithAddHabit.jsx";
 import "./widgets.css";
 
 // Helper function to generate chart data from props (for member dashboards)
-const generateChartDataFromProps = (habits, entries, chartType, dateRange) => {
+const generateChartDataFromProps = (habits, entries, chartType, dateRange, weekUtils) => {
   if (!habits || habits.length === 0) {
     return [];
   }
 
   const today = new Date();
-  const weekStart = new Date(today);
-  weekStart.setDate(today.getDate() - today.getDay());
+  const weekStart = weekUtils ? weekUtils.getWeekStart(today) : new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay());
   
   // Default to current week if no date range provided
   const startDate = dateRange?.start || weekStart;
@@ -124,6 +124,7 @@ export const ChartWidget = ({
   habits = null, // Add habits prop
   entries = null, // Add entries prop
 }) => {
+  const weekUtils = useWeekUtils();
   // Get real habit data based on chart type - but only if habits/entries props aren't provided
   const habitChartData = useChartData(chartType, dateRange);
 
@@ -132,7 +133,7 @@ export const ChartWidget = ({
     // If habits and entries are provided as props, use them directly
     if (habits !== null && entries !== null) {
       // Generate chart data from the provided habits and entries
-      const generatedData = generateChartDataFromProps(habits, entries, chartType, dateRange);
+      const generatedData = generateChartDataFromProps(habits, entries, chartType, dateRange, weekUtils);
       return generatedData;
     }
     
@@ -156,7 +157,7 @@ export const ChartWidget = ({
       { name: "Sun", value: 0 },
     ];
     return fallbackData;
-  }, [habitChartData, data, habits, entries, chartType, dateRange]);
+  }, [habitChartData, data, habits, entries, chartType, dateRange, weekUtils]);
   const pieData = [
     { name: "Completed", value: 27, color: "var(--color-success)" },
     { name: "Missed", value: 8, color: "var(--color-error)" },

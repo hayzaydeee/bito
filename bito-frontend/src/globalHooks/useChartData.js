@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useHabits, habitUtils } from '../contexts/HabitContext';
 import { habitUtils as scheduleUtils } from '../utils/habitLogic';
+import { useWeekUtils } from '../hooks/useWeekUtils';
 
 // Helper function to normalize dates to local time (consistent with HabitContext)
 const normalizeDate = (date) => {
@@ -14,6 +15,7 @@ const normalizeDate = (date) => {
 // Custom hook for generating chart data from habit data
 export const useChartData = (chartType = 'completion', dateRange = null) => {
   const { habits, entries, stats } = useHabits();
+  const weekUtils = useWeekUtils();
 
   const chartData = useMemo(() => {
     if (!habits.length) {
@@ -21,7 +23,7 @@ export const useChartData = (chartType = 'completion', dateRange = null) => {
     }
 
     const today = new Date();
-    const weekStart = habitUtils.getWeekStart(today); // Use HabitContext's week calculation!
+    const weekStart = weekUtils.getWeekStart(today); // Use reactive week calculation!
     
     // Default to current week if no date range provided
     const startDate = dateRange?.start || weekStart;
@@ -43,7 +45,7 @@ export const useChartData = (chartType = 'completion', dateRange = null) => {
       default:
         return generateCompletionChart(habits, entries, startDate, endDate);
     }
-  }, [habits, entries, chartType, dateRange]);
+  }, [habits, entries, chartType, dateRange, weekUtils]);
 
   return chartData;
 };
