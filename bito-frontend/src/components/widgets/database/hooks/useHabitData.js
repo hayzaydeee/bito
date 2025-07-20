@@ -21,14 +21,28 @@ export const useHabitData = ({ habits, completions, dateRange = null, mode = "we
       
       return dates;
     } else {
-      // Fallback to current week
+      // Fallback to current week with user's preferred week start
       const today = new Date();
-      const currentDay = today.getDay();
-      const startOfWeek = new Date(today);
+      let startOfWeek;
+      
+      try {
+        // Import lazily to avoid circular dependencies
+        const userPreferencesService = require('../../../services/userPreferencesService').default;
+        const weekStartDay = userPreferencesService.getWeekStartDay();
+        
+        const currentDay = today.getDay();
+        const daysToSubtract = (currentDay - weekStartDay + 7) % 7;
+        startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - daysToSubtract);
+      } catch {
+        // Fallback to Monday if service not available
+        const currentDay = today.getDay();
+        const daysToSubtract = currentDay === 0 ? 6 : currentDay - 1;
+        startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - daysToSubtract);
+      }
 
-      // Calculate start of week (Monday)
-      const daysToSubtract = currentDay === 0 ? 6 : currentDay - 1;
-      startOfWeek.setDate(today.getDate() - daysToSubtract);      const dates = [];
+      const dates = [];
       for (let i = 0; i < 7; i++) {
         const date = new Date(startOfWeek);
         date.setDate(startOfWeek.getDate() + i);

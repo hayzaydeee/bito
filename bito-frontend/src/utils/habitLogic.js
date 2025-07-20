@@ -48,12 +48,26 @@ export const habitUtils = {
     return habitUtils.getHabitsForDate(habits, new Date());
   },
   
-  // Week calculations
-  getWeekStart: (date) => {
+  // Week calculations with configurable start day
+  getWeekStart: (date, weekStartDay = null) => {
     const d = new Date(date);
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday start
-    d.setDate(diff);
+    const currentDay = d.getDay();
+    
+    // If no weekStartDay provided, try to get from preferences service, default to Monday (1)
+    let startDay = weekStartDay;
+    if (startDay === null) {
+      try {
+        // Import lazily to avoid circular dependencies
+        const userPreferencesService = require('../services/userPreferencesService').default;
+        startDay = userPreferencesService.getWeekStartDay();
+      } catch {
+        startDay = 1; // Default to Monday
+      }
+    }
+    
+    // Calculate days to subtract to get to the desired week start
+    const daysToSubtract = (currentDay - startDay + 7) % 7;
+    d.setDate(d.getDate() - daysToSubtract);
     
     // Use local time formatting to avoid timezone issues
     const year = d.getFullYear();
@@ -64,7 +78,7 @@ export const habitUtils = {
     return new Date(`${year}-${month}-${dayOfMonth}T00:00:00`);
   },
   
-  getWeekDates: (startDate) => {
+  getWeekDates: (startDate, weekStartDay = null) => {
     const dates = [];
     const current = new Date(startDate);
     

@@ -23,11 +23,13 @@ import {
   InfoCircledIcon,
   Cross2Icon,
   CheckIcon,
-  CheckCircledIcon
+  CheckCircledIcon,
+  CalendarIcon
 } from "@radix-ui/react-icons";
 import BaseGridContainer from '../components/shared/BaseGridContainer';
 import { WIDGET_TYPES, DEFAULT_WIDGETS, DEFAULT_LAYOUTS, STORAGE_KEYS } from '../components/shared/widgetRegistry';
 import { userAPI } from '../services/api';
+import userPreferencesService from '../services/userPreferencesService';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import ThemeSwitcher from '../components/ui/ThemeSwitcher';
@@ -113,6 +115,7 @@ const SettingsPage = ({ section }) => {
     autoBackup: true,
     language: "en",
     timezone: "UTC",
+    weekStartsOn: 1, // Monday (0=Sunday, 1=Monday, etc.)
     theme: "auto", // Default to auto as per backend
     workspaceNotifications: true,
     shareProgress: "progress-only",
@@ -135,8 +138,12 @@ const SettingsPage = ({ section }) => {
           ...prev,
           emailNotifications: userData.preferences?.emailNotifications ?? true,
           timezone: userData.preferences?.timezone ?? "UTC",
+          weekStartsOn: userData.preferences?.weekStartsOn ?? 1,
           theme: userData.preferences?.theme ?? "auto"
         }));
+        
+        // Sync preferences service with backend data
+        userPreferencesService.syncWithBackend(userData);
       } catch (error) {
         console.error('Failed to load user profile:', error);
       } finally {
@@ -173,12 +180,16 @@ const SettingsPage = ({ section }) => {
       return;
     }
 
-    // Save supported settings to backend
-    const supportedBackendSettings = ['emailNotifications', 'timezone'];
+    // Save supported settings to backend and preferences service
+    const supportedBackendSettings = ['emailNotifications', 'timezone', 'weekStartsOn'];
     
     if (supportedBackendSettings.includes(key)) {
       try {
         setIsSaving(true);
+        
+        // Update preferences service immediately for instant UI updates
+        userPreferencesService.set(key, value);
+        
         await userAPI.updateProfile({
           preferences: {
             ...userProfile?.preferences,
@@ -196,16 +207,23 @@ const SettingsPage = ({ section }) => {
         }));
 
         // Show success notification
-        showNotification(`${key === 'emailNotifications' ? 'Email notifications' : 'Timezone'} updated successfully!`, 'success');
+        const settingNames = {
+          'emailNotifications': 'Email notifications',
+          'timezone': 'Timezone',
+          'weekStartsOn': 'Week start day'
+        };
+        showNotification(`${settingNames[key] || key} updated successfully!`, 'success');
         
       } catch (error) {
         console.error('Failed to save setting:', error);
-        // Revert local state on error
+        // Revert local state and preferences service on error
+        const originalValue = userProfile?.preferences?.[key] ?? settings[key];
         setSettings(prev => ({
           ...prev,
-          [key]: userProfile?.preferences?.[key] ?? prev[key]
+          [key]: originalValue
         }));
-        showNotification(`Failed to update ${key}. Please try again.`, 'error');
+        userPreferencesService.set(key, originalValue);
+        showNotification(`Failed to update ${settingNames[key] || key}. Please try again.`, 'error');
       } finally {
         setIsSaving(false);
       }
@@ -603,6 +621,25 @@ const SettingsPage = ({ section }) => {
                     ]}
                     onChange={(value) => handleSettingChange('timezone', value)}
                     icon={<GlobeIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />}
+                    isDisabled={isSaving}
+                  />
+                  
+                  <SettingItem
+                    label="Week Start Day"
+                    description="Choose which day your week starts on"
+                    value={settings.weekStartsOn}
+                    type="select"
+                    options={[
+                      { label: "Sunday", value: 0 },
+                      { label: "Monday", value: 1 },
+                      { label: "Tuesday", value: 2 },
+                      { label: "Wednesday", value: 3 },
+                      { label: "Thursday", value: 4 },
+                      { label: "Friday", value: 5 },
+                      { label: "Saturday", value: 6 }
+                    ]}
+                    onChange={(value) => handleSettingChange('weekStartsOn', value)}
+                    icon={<CalendarIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />}
                     isDisabled={isSaving}
                   />
                 </div>

@@ -419,21 +419,26 @@ export const useHabits = () => {
 
 // Utility functions for compatibility with existing code
 export const habitUtils = {
-  // Get week start date (Monday)
-  getWeekStart: (date) => {
+  // Get week start date with configurable start day
+  getWeekStart: (date, weekStartDay = null) => {
     const d = new Date(date);
     
-    const day = d.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const currentDay = d.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
     
-    // Calculate days to subtract to get to Monday
-    let daysToSubtract;
-    if (day === 0) {
-      // If it's Sunday, go back 6 days to get to Monday
-      daysToSubtract = 6;
-    } else {
-      // For Monday-Saturday, go back (day-1) days to get to Monday
-      daysToSubtract = day - 1;
+    // If no weekStartDay provided, try to get from preferences service, default to Monday (1)
+    let startDay = weekStartDay;
+    if (startDay === null) {
+      try {
+        // Import lazily to avoid circular dependencies
+        const userPreferencesService = require('../services/userPreferencesService').default;
+        startDay = userPreferencesService.getWeekStartDay();
+      } catch {
+        startDay = 1; // Default to Monday
+      }
     }
+    
+    // Calculate days to subtract to get to the desired week start
+    let daysToSubtract = (currentDay - startDay + 7) % 7;
     
     d.setDate(d.getDate() - daysToSubtract);
     
@@ -446,8 +451,8 @@ export const habitUtils = {
     return new Date(`${year}-${month}-${dayOfMonth}T00:00:00`);
   },
 
-  // Get week dates
-  getWeekDates: (startDate) => {
+  // Get week dates with configurable start day
+  getWeekDates: (startDate, weekStartDay = null) => {
     const dates = [];
     
     // Start from the given date and ensure we're working with local dates
