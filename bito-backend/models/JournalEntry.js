@@ -116,20 +116,33 @@ journalEntrySchema.statics.findOrCreateDaily = async function(userId, date) {
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
   
-  let entry = await this.findOne({
-    userId,
-    date: startOfDay
-  });
-  
-  if (!entry) {
-    entry = new this({
+  // Use findOneAndUpdate with upsert to prevent duplicate key errors
+  const entry = await this.findOneAndUpdate(
+    {
       userId,
-      date: startOfDay,
-      richContent: null,
-      plainTextContent: '',
-      createdVia: 'modal'
-    });
-  }
+      date: startOfDay
+    },
+    {
+      $setOnInsert: {
+        userId,
+        date: startOfDay,
+        richContent: null,
+        plainTextContent: '',
+        createdVia: 'modal',
+        mood: null,
+        energy: null,
+        tags: [],
+        referencedHabits: [],
+        wordCount: 0,
+        readingTime: 0
+      }
+    },
+    {
+      upsert: true,
+      new: true,
+      runValidators: true
+    }
+  );
   
   return entry;
 };

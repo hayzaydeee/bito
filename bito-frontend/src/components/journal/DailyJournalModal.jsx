@@ -83,7 +83,41 @@ const DailyJournalModal = ({
       const journalEntry = await journalService.getDailyJournal(dateStr);
 
       if (journalEntry) {
-        setEntry(journalEntry);
+        // Validate richContent structure
+        const hasValidContent = journalEntry.richContent && 
+          Array.isArray(journalEntry.richContent) &&
+          journalEntry.richContent.every(block => 
+            block && 
+            typeof block === 'object' && 
+            block.type &&
+            block.content !== undefined
+          );
+        
+        if (!hasValidContent) {
+          console.warn('Journal entry has corrupted richContent, creating clean entry');
+          // Create a clean entry with the plain text content
+          const cleanEntry = {
+            ...journalEntry,
+            richContent: [
+              {
+                id: crypto.randomUUID?.() || 'clean-block',
+                type: "paragraph",
+                props: {},
+                content: journalEntry.plainTextContent ? [
+                  {
+                    type: "text",
+                    text: journalEntry.plainTextContent,
+                    styles: {}
+                  }
+                ] : []
+              }
+            ]
+          };
+          setEntry(cleanEntry);
+        } else {
+          setEntry(journalEntry);
+        }
+        
         setMood(journalEntry.mood);
         setEnergy(journalEntry.energy);
         setTags(journalEntry.tags || []);
@@ -121,7 +155,7 @@ const DailyJournalModal = ({
   // Debounced save function
   const debouncedSave = useCallback(
     debounce(async (content) => {
-      if (!date) return;
+      if (!date || isSaving) return; // Prevent duplicate saves
 
       if (!isAuthenticated) {
         setErrorMessage("Please log in to save your journal entries");
@@ -148,8 +182,16 @@ const DailyJournalModal = ({
           tags 
         }); // Debug log
 
+        // Sanitize content for storage - remove any BlockNote internal properties
+        const sanitizedContent = Array.isArray(content) ? content.map(block => ({
+          id: block.id || crypto.randomUUID?.() || Math.random().toString(36),
+          type: block.type || 'paragraph',
+          props: block.props || {},
+          content: Array.isArray(block.content) ? block.content : []
+        })) : null;
+
         const updateData = {
-          richContent: content,
+          richContent: sanitizedContent,
           plainTextContent: plainText,
           wordCount: newWordCount,
           mood,
@@ -179,7 +221,7 @@ const DailyJournalModal = ({
         setSaving(false);
       }
     }, 1500),
-    [date, mood, energy, tags, onSave]
+    [date, mood, energy, tags, onSave, isSaving]
   );
 
   // Handle editor content changes
@@ -228,26 +270,55 @@ const DailyJournalModal = ({
     if (
       entry &&
       entry._id && // Only save metadata if entry exists in database
+      !isSaving && // Don't save metadata if content save is in progress
       (mood !== entry.mood ||
         energy !== entry.energy ||
         JSON.stringify(tags) !== JSON.stringify(entry.tags))
     ) {
       const saveMetadata = async () => {
+        if (isSaving) return; // Double-check before starting
+        
         try {
+          setSaving(true);
+          setSaveStatus("saving");
           const dateStr = journalService.formatDateForAPI(date);
-          const updateData = { mood, energy, tags };
-          await journalService.updateDailyJournal(dateStr, updateData);
+          
+          // Get current content from editor if available
+          let currentContent = entry.richContent;
+          let currentPlainText = entry.plainTextContent;
+          
+          if (editor) {
+            try {
+              currentContent = editor.document;
+              currentPlainText = journalService.extractPlainText(currentContent);
+            } catch (error) {
+              console.warn('Could not get current editor content:', error);
+            }
+          }
+          
+          const updateData = { 
+            richContent: currentContent,
+            plainTextContent: currentPlainText,
+            mood, 
+            energy, 
+            tags 
+          };
+          
+          const updatedEntry = await journalService.updateDailyJournal(dateStr, updateData);
+          setEntry(updatedEntry);
           setSaveStatus("saved");
         } catch (error) {
           console.error("Error saving metadata:", error);
           setSaveStatus("error");
+        } finally {
+          setSaving(false);
         }
       };
 
       const timeoutId = setTimeout(saveMetadata, 1000);
       return () => clearTimeout(timeoutId);
     }
-  }, [mood, energy, tags, entry, date]);
+  }, [mood, energy, tags, entry, date, editor, isSaving]);
 
   // Handle modal close
   const handleClose = () => {
