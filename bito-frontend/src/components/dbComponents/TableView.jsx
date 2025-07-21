@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { CheckIcon, DragHandleDots2Icon } from "@radix-ui/react-icons";
 import { HabitCheckbox } from "./HabitCheckbox.jsx";
 import { EmptyStateWithAddHabit } from "./EmptyStateWithAddHabit.jsx";
-import { JournalButton, DailyJournalModal } from "../journal";
-import { journalService } from "../../services/journalService";
+import { JournalButton, DailyJournalModal } from "../journal/index.js";
+import { journalService } from "../../services/journalService.js";
 import { habitUtils } from "../../utils/habitLogic.js";
 import {
   DndContext,
