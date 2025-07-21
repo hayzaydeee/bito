@@ -100,7 +100,7 @@ class WidgetErrorBoundary extends React.Component {
 
 // Lazy load widget components for better performance
 const ChartWidget = lazy(() => import('../widgets/ChartWidget'));
-const DatabaseWidgetV2 = lazy(() => import('../widgets/database/components/DatabaseWidgetV2'));
+const DatabaseWidget = lazy(() => import('../widgets/database/components/DatabaseWidget'));
 const QuickActionsWidget = lazy(() => import('../widgets/QuickActionsWidget'));
 const OverviewCardsWidget = lazy(() => import('../analytics/widgets/OverviewCardsWidget'));
 const HabitStreakChartWidget = lazy(() => import('../analytics/widgets/HabitStreakChartWidget'));
@@ -343,7 +343,7 @@ const WidgetRenderer = ({
 
     case 'habit-list':
       try {
-        // Create super safe props for DatabaseWidgetV2 to prevent circular references
+        // Create props for DatabaseWidget
         const databaseProps = {
           habits: commonProps.habits,
           completions: commonProps.entries,
@@ -380,7 +380,7 @@ const WidgetRenderer = ({
 
         return (
           <Suspense fallback={<WidgetSkeleton title="My Habits" />}>
-            <DatabaseWidgetV2 {...databaseProps} />
+            <DatabaseWidget {...databaseProps} />
           </Suspense>
         );
       } catch (error) {
