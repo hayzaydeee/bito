@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const JournalEntry = require('../models/JournalEntry');
-const auth = require('../middleware/auth');
+const { authenticateJWT } = require('../middleware/auth');
 const { body, param, query, validationResult } = require('express-validator');
 
 // Validation middleware
@@ -29,7 +29,7 @@ const normalizeDate = (date) => {
 };
 
 // GET /api/journal/:date - Get daily journal entry
-router.get('/:date', auth, validateDate, async (req, res) => {
+router.get('/:date', authenticateJWT, validateDate, async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -56,7 +56,7 @@ router.get('/:date', auth, validateDate, async (req, res) => {
 });
 
 // POST /api/journal/:date - Create or update daily journal entry
-router.post('/:date', auth, validateDate, validateJournalEntry, async (req, res) => {
+router.post('/:date', authenticateJWT, validateDate, validateJournalEntry, async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -128,7 +128,7 @@ router.post('/:date', auth, validateDate, validateJournalEntry, async (req, res)
 });
 
 // PATCH /api/journal/:date - Update specific fields of daily journal entry
-router.patch('/:date', auth, validateDate, validateJournalEntry, async (req, res) => {
+router.patch('/:date', authenticateJWT, validateDate, validateJournalEntry, async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -166,7 +166,7 @@ router.patch('/:date', auth, validateDate, validateJournalEntry, async (req, res
 });
 
 // DELETE /api/journal/:date - Delete daily journal entry
-router.delete('/:date', auth, validateDate, async (req, res) => {
+router.delete('/:date', authenticateJWT, validateDate, async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -189,7 +189,7 @@ router.delete('/:date', auth, validateDate, async (req, res) => {
 });
 
 // GET /api/journal - Get journal entries with pagination
-router.get('/', auth, [
+router.get('/', authenticateJWT, [
   query('page').optional().isInt({ min: 1 }).toInt(),
   query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
   query('startDate').optional().isISO8601().toDate(),
@@ -246,7 +246,7 @@ router.get('/', auth, [
 });
 
 // GET /api/journal/search - Search journal entries
-router.get('/search', auth, [
+router.get('/search', authenticateJWT, [
   query('q').isString().isLength({ min: 1, max: 200 }),
   query('page').optional().isInt({ min: 1 }).toInt(),
   query('limit').optional().isInt({ min: 1, max: 50 }).toInt()
@@ -296,7 +296,7 @@ router.get('/search', auth, [
 });
 
 // GET /api/journal/stats - Get journal statistics
-router.get('/stats', auth, async (req, res) => {
+router.get('/stats', authenticateJWT, async (req, res) => {
   try {
     const userId = req.user.id;
 
