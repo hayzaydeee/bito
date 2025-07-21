@@ -8,8 +8,12 @@ const { body, param, query, validationResult } = require('express-validator');
 const validateJournalEntry = [
   body('richContent').optional().isObject(),
   body('plainTextContent').optional().isString().isLength({ max: 10000 }),
-  body('mood').optional().isInt({ min: 1, max: 5 }),
-  body('energy').optional().isInt({ min: 1, max: 5 }),
+  body('mood').optional().custom(value => {
+    return value === null || value === undefined || (Number.isInteger(value) && value >= 1 && value <= 5);
+  }),
+  body('energy').optional().custom(value => {
+    return value === null || value === undefined || (Number.isInteger(value) && value >= 1 && value <= 5);
+  }),
   body('tags').optional().isArray(),
   body('tags.*').optional().isString().isLength({ max: 50 }),
   body('referencedHabits').optional().isArray(),

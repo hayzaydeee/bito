@@ -35,14 +35,18 @@ export const journalService = {
   // Create or update daily journal entry
   async saveDailyJournal(date, data) {
     try {
+      console.log('Saving journal entry:', { date, data }); // Debug log
       const result = await api.post(`/api/journal/${date}`, data);
       return result;
     } catch (error) {
+      console.error('Journal save error details:', error); // Enhanced error logging
       if (error.message?.includes('401') || error.message?.includes('Access denied')) {
         throw new Error('Please log in to save journal entries');
       }
       if (error.message?.includes('400')) {
-        throw new Error('Invalid data provided. Please check your journal entry.');
+        // Try to extract more specific error from the response
+        const errorDetails = error.response?.data?.errors || error.response?.data?.message || 'Invalid data provided';
+        throw new Error(`Validation error: ${errorDetails}. Please check your journal entry.`);
       }
       console.error('Error saving journal:', error);
       throw error;
