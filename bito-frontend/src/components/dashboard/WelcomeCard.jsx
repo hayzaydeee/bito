@@ -398,29 +398,6 @@ const WelcomeCard = memo(({ userName = "User" }) => {
             </div>
           </div>
         )}
-
-        {/* Action Buttons */}
-        <div className={`${stats.todayTotal > 0 ? 'mt-6' : 'mt-4'} flex gap-3 ${isMobile ? 'flex-col' : 'flex-row'}`}>
-          <button 
-            className={`group flex items-center justify-center gap-3 bg-gradient-to-r from-[var(--color-brand-400)] to-[var(--color-brand-500)] hover:from-[var(--color-brand-500)] hover:to-[var(--color-brand-600)] text-white rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg backdrop-blur-sm border border-[var(--color-brand-400)]/20 ${
-              isMobile ? 'px-4 py-3 text-sm' : 'px-6 py-3'
-            }`}
-            onClick={() => window.location.href = '/habits'}
-          >
-            <PlusIcon className={`transition-transform group-hover:rotate-90 ${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
-            <span className="font-semibold font-outfit">Add New Habit</span>
-          </button>
-          
-          <button 
-            className={`group flex items-center justify-center gap-3 bg-[var(--color-surface-elevated)]/80 hover:bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] rounded-xl transition-all duration-300 backdrop-blur-sm border border-[var(--color-border-primary)]/20 hover:border-[var(--color-brand-400)]/30 ${
-              isMobile ? 'px-4 py-3 text-sm' : 'px-6 py-3'
-            }`}
-            onClick={() => window.location.href = '/analytics'}
-          >
-            <BarChartIcon className={`text-[var(--color-brand-400)] transition-transform group-hover:scale-110 ${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
-            <span className="font-semibold font-outfit">View Analytics</span>
-          </button>
-        </div>
       </div>
     </div>
   );

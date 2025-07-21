@@ -71,7 +71,8 @@ if (process.env.NODE_ENV === 'production') {
 
 // CORS configuration
 const allowedOrigins = [
-  'http://localhost:5174', // Vite dev server
+  'http://localhost:5173', // Vite dev server (default)
+  'http://localhost:5174', // Vite dev server (alternative)
   'http://localhost:3000', // Alternative dev server
   'http://localhost:4173', // Vite preview server
   'https://bito.works',    // Production

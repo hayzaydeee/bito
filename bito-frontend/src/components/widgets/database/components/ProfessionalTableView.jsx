@@ -32,16 +32,16 @@ export const ProfessionalTableView = ({
 
   // Load journal indicators for the week
   useEffect(() => {
-    const weekDates = getCurrentWeekDates();
-    if (weekDates.length > 0) {
+    const weekDates = getCurrentWeekDates;
+    if (weekDates && weekDates.length > 0) {
       loadJournalIndicators(weekDates);
     }
   }, [getCurrentWeekDates]);
 
   const loadJournalIndicators = async (weekDates) => {
     try {
-      const startDate = weekDates[0]?.dateString;
-      const endDate = weekDates[weekDates.length - 1]?.dateString;
+      const startDate = weekDates[0]?.date;
+      const endDate = weekDates[weekDates.length - 1]?.date;
       
       if (startDate && endDate) {
         const indicators = await journalService.getJournalIndicators(startDate, endDate);

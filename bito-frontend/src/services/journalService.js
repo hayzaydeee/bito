@@ -5,7 +5,7 @@ export const journalService = {
   // Get daily journal entry
   async getDailyJournal(date) {
     try {
-      const response = await api.get(`/journal/${date}`);
+      const response = await api.get(`/api/journal/${date}`);
       return response.data;
     } catch (error) {
       if (error.response?.status === 404) {
@@ -18,7 +18,7 @@ export const journalService = {
   // Create or update daily journal entry
   async saveDailyJournal(date, data) {
     try {
-      const response = await api.post(`/journal/${date}`, data);
+      const response = await api.post(`/api/journal/${date}`, data);
       return response.data;
     } catch (error) {
       console.error('Error saving journal:', error);
@@ -29,7 +29,7 @@ export const journalService = {
   // Update specific fields of daily journal entry
   async updateDailyJournal(date, data) {
     try {
-      const response = await api.patch(`/journal/${date}`, data);
+      const response = await api.patch(`/api/journal/${date}`, data);
       return response.data;
     } catch (error) {
       console.error('Error updating journal:', error);
@@ -40,7 +40,7 @@ export const journalService = {
   // Delete daily journal entry
   async deleteDailyJournal(date) {
     try {
-      const response = await api.delete(`/journal/${date}`);
+      const response = await api.delete(`/api/journal/${date}`);
       return response.data;
     } catch (error) {
       console.error('Error deleting journal:', error);
@@ -57,7 +57,7 @@ export const journalService = {
       if (params.startDate) queryParams.append('startDate', params.startDate);
       if (params.endDate) queryParams.append('endDate', params.endDate);
 
-      const response = await api.get(`/journal?${queryParams.toString()}`);
+      const response = await api.get(`/api/journal?${queryParams.toString()}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching journal entries:', error);
@@ -73,7 +73,7 @@ export const journalService = {
       if (params.page) queryParams.append('page', params.page);
       if (params.limit) queryParams.append('limit', params.limit);
 
-      const response = await api.get(`/journal/search?${queryParams.toString()}`);
+      const response = await api.get(`/api/journal/search?${queryParams.toString()}`);
       return response.data;
     } catch (error) {
       console.error('Error searching journals:', error);
@@ -84,7 +84,7 @@ export const journalService = {
   // Get journal statistics
   async getJournalStats() {
     try {
-      const response = await api.get('/journal/stats');
+      const response = await api.get('/api/journal/stats');
       return response.data;
     } catch (error) {
       console.error('Error fetching journal stats:', error);
@@ -113,10 +113,12 @@ export const journalService = {
       
       // Convert to a simple map of date -> boolean
       const indicators = {};
-      response.entries?.forEach(entry => {
-        const date = new Date(entry.date).toISOString().split('T')[0];
-        indicators[date] = true;
-      });
+      if (response && response.entries && Array.isArray(response.entries)) {
+        response.entries.forEach(entry => {
+          const date = new Date(entry.date).toISOString().split('T')[0];
+          indicators[date] = true;
+        });
+      }
       
       return indicators;
     } catch (error) {
