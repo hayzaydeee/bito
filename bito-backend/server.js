@@ -21,10 +21,8 @@ const userRoutes = require('./routes/users');
 const habitRoutes = require('./routes/habits');
 const workspaceRoutes = require('./routes/workspaces');
 const encouragementRoutes = require('./routes/encouragements');
+const journalRoutes = require('./routes/journal');
 const testRoutes = require('./routes/test');
-// Temporarily disabled CSV functionality for deployment
-// const csvAnalysisRoutes = require('./routes/csvAnalysis');
-// const csvRoutes = require('./routes/csv');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -330,10 +328,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/habits', habitRoutes);
 app.use('/api/workspaces', workspaceRoutes);
 app.use('/api/encouragements', encouragementRoutes);
-// Temporarily disabled CSV functionality for deployment
-// app.use('/api/csv-analysis', csvAnalysisRoutes);
-// app.use('/api/csv', csvRoutes);
-
+app.use('/api/journal', journalRoutes);
 // API documentation endpoint
 app.get('/api', (req, res) => {
   res.json({
@@ -361,11 +356,6 @@ app.get('/api', (req, res) => {
         'POST /api/habits/:id/check',
         'GET /api/habits/stats'
       ]
-      // Temporarily disabled CSV functionality for deployment
-      // 'csv-analysis': [
-      //   'POST /api/csv-analysis/analyze',
-      //   'GET /api/csv-analysis/results'
-      // ]
     }
   });
 });

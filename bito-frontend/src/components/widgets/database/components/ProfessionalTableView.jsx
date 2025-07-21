@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { CheckIcon } from "@radix-ui/react-icons";
 import { habitUtils } from "../../../../utils/habitLogic.js";
 import { EmptyStateWithAddHabit } from "../../../HabitGrid/EmptyStateWithAddHabit.jsx";
+import { JournalButton, DailyJournalModal } from "../../../journal";
+import { journalService } from "../../../../services/journalService";
 
 /**
  * Professional Table View Component - Compact and styled like the reference
@@ -20,6 +22,61 @@ export const ProfessionalTableView = ({
   onAddHabit, // Add onAddHabit prop for habit creation
   breakpoint,
 }) => {
+  // Journal state
+  const [journalModal, setJournalModal] = useState({
+    isOpen: false,
+    date: null,
+    focusHabit: null
+  });
+  const [journalIndicators, setJournalIndicators] = useState({});
+
+  // Load journal indicators for the week
+  useEffect(() => {
+    const weekDates = getCurrentWeekDates();
+    if (weekDates.length > 0) {
+      loadJournalIndicators(weekDates);
+    }
+  }, [getCurrentWeekDates]);
+
+  const loadJournalIndicators = async (weekDates) => {
+    try {
+      const startDate = weekDates[0]?.dateString;
+      const endDate = weekDates[weekDates.length - 1]?.dateString;
+      
+      if (startDate && endDate) {
+        const indicators = await journalService.getJournalIndicators(startDate, endDate);
+        setJournalIndicators(indicators);
+      }
+    } catch (error) {
+      console.error('Error loading journal indicators:', error);
+    }
+  };
+
+  // Handle journal modal
+  const openJournal = (date, focusHabit = null) => {
+    setJournalModal({
+      isOpen: true,
+      date,
+      focusHabit
+    });
+  };
+
+  const closeJournal = () => {
+    setJournalModal({
+      isOpen: false,
+      date: null,
+      focusHabit: null
+    });
+  };
+
+  const handleJournalSave = (savedEntry) => {
+    // Update journal indicators
+    const dateStr = journalService.formatDateForAPI(savedEntry.date);
+    setJournalIndicators(prev => ({
+      ...prev,
+      [dateStr]: true
+    }));
+  };
 
   // Empty state when no habits are available
   if (!displayHabits || displayHabits.length === 0) {
@@ -204,6 +261,17 @@ export const ProfessionalTableView = ({
                   {/* Actions */}
                   <td className="py-3 px-4 text-center">
                     <div className="flex items-center justify-center gap-2">
+                      <JournalButton
+                        date={daysOfWeek.dateString}
+                        hasJournal={!!journalIndicators[daysOfWeek.dateString]}
+                        onClick={openJournal}
+                        showLabel={false}
+                        className="text-xs"
+                        isReadOnly={readOnly}
+                      />
+                      <span className="text-[var(--color-border-primary)]">
+                        •
+                      </span>
                       <button
                         className={`text-xs font-outfit font-medium transition-colors ${
                           readOnly 
@@ -294,6 +362,19 @@ export const ProfessionalTableView = ({
           </div>
         </div>
       </div>
+      
+      {/* Journal Modal */}
+      <DailyJournalModal
+        isOpen={journalModal.isOpen}
+        onClose={closeJournal}
+        date={journalModal.date}
+        focusHabit={journalModal.focusHabit}
+        habits={displayHabits}
+        habitEntries={{}} // TODO: Add habit entries if needed
+        onSave={handleJournalSave}
+      />
     </div>
   );
 };
+
+

@@ -17,7 +17,6 @@ export const useAppNotifications = () => {
     archived: (habitName) => showInfo(`📦 "${habitName}" archived`),
     restored: (habitName) => showSuccess(`🔄 "${habitName}" restored`),
     adopted: (habitName) => showSuccess(`🎯 Successfully adopted "${habitName}"!`),
-    csvImported: (count) => showSuccess(`📊 Successfully imported ${count} habits from CSV`),
     error: (action, error) => showError(`Failed to ${action} habit: ${error}`),
   };
 
