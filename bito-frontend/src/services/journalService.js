@@ -5,16 +5,29 @@ export const journalService = {
   // Get daily journal entry
   async getDailyJournal(date) {
     try {
-      const response = await api.get(`/api/journal/${date}`);
-      return response.data;
+      const data = await api.get(`/api/journal/${date}`);
+      return data;
     } catch (error) {
-      if (error.response?.status === 404) {
+      console.log('Journal fetch error:', error.message); // Debug log
+      
+      // Check if it's a 404 error (journal entry doesn't exist yet)
+      if (error.message?.includes('Journal entry not found') || 
+          error.message?.includes('404') || 
+          error.message?.includes('Not Found')) {
+        console.log('Returning null for 404 error'); // Debug log
         return null; // No journal entry for this date
       }
-      if (error.response?.status === 401 || error.message?.includes('Access denied')) {
+      
+      // Check for authentication errors
+      if (error.message?.includes('401') || 
+          error.message?.includes('Access denied') || 
+          error.message?.includes('Authentication') ||
+          error.message?.includes('Unauthorized')) {
         console.warn('Authentication required for journal access');
         return null; // Return null when not authenticated
       }
+      
+      console.error('Error fetching journal entry:', error);
       throw error;
     }
   },
@@ -22,18 +35,13 @@ export const journalService = {
   // Create or update daily journal entry
   async saveDailyJournal(date, data) {
     try {
-      const response = await api.post(`/api/journal/${date}`, data);
-      return response.data;
+      const result = await api.post(`/api/journal/${date}`, data);
+      return result;
     } catch (error) {
-      if (error.response?.status === 401 || error.message?.includes('Access denied')) {
+      if (error.message?.includes('401') || error.message?.includes('Access denied')) {
         throw new Error('Please log in to save journal entries');
       }
-      if (error.response?.status === 400) {
-        const validationErrors = error.response?.data?.errors;
-        if (validationErrors && Array.isArray(validationErrors)) {
-          const errorMessages = validationErrors.map(err => err.msg).join(', ');
-          throw new Error(`Validation error: ${errorMessages}`);
-        }
+      if (error.message?.includes('400')) {
         throw new Error('Invalid data provided. Please check your journal entry.');
       }
       console.error('Error saving journal:', error);
@@ -41,11 +49,12 @@ export const journalService = {
     }
   },
 
-  // Update specific fields of daily journal entry
+  // Update specific fields of daily journal entry (uses POST since backend handles create/update)
   async updateDailyJournal(date, data) {
     try {
-      const response = await api.patch(`/api/journal/${date}`, data);
-      return response.data;
+      // Use POST route which handles both create and update via findOrCreateDaily
+      const result = await api.post(`/api/journal/${date}`, data);
+      return result;
     } catch (error) {
       console.error('Error updating journal:', error);
       throw error;
@@ -55,8 +64,8 @@ export const journalService = {
   // Delete daily journal entry
   async deleteDailyJournal(date) {
     try {
-      const response = await api.delete(`/api/journal/${date}`);
-      return response.data;
+      const result = await api.delete(`/api/journal/${date}`);
+      return result;
     } catch (error) {
       console.error('Error deleting journal:', error);
       throw error;
@@ -72,8 +81,8 @@ export const journalService = {
       if (params.startDate) queryParams.append('startDate', params.startDate);
       if (params.endDate) queryParams.append('endDate', params.endDate);
 
-      const response = await api.get(`/api/journal?${queryParams.toString()}`);
-      return response.data;
+      const result = await api.get(`/api/journal?${queryParams.toString()}`);
+      return result;
     } catch (error) {
       console.error('Error fetching journal entries:', error);
       throw error;
@@ -88,8 +97,8 @@ export const journalService = {
       if (params.page) queryParams.append('page', params.page);
       if (params.limit) queryParams.append('limit', params.limit);
 
-      const response = await api.get(`/api/journal/search?${queryParams.toString()}`);
-      return response.data;
+      const result = await api.get(`/api/journal/search?${queryParams.toString()}`);
+      return result;
     } catch (error) {
       console.error('Error searching journals:', error);
       throw error;
@@ -99,8 +108,8 @@ export const journalService = {
   // Get journal statistics
   async getJournalStats() {
     try {
-      const response = await api.get('/api/journal/stats');
-      return response.data;
+      const result = await api.get('/api/journal/stats');
+      return result;
     } catch (error) {
       console.error('Error fetching journal stats:', error);
       throw error;

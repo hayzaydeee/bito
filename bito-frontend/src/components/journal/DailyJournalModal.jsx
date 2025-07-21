@@ -213,10 +213,11 @@ const DailyJournalModal = ({
     setSaveStatus("saving");
   };
 
-  // Save metadata changes
+  // Save metadata changes (only if entry exists in database)
   useEffect(() => {
     if (
       entry &&
+      entry._id && // Only save metadata if entry exists in database
       (mood !== entry.mood ||
         energy !== entry.energy ||
         JSON.stringify(tags) !== JSON.stringify(entry.tags))
