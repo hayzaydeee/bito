@@ -6,7 +6,10 @@ const { body, param, query, validationResult } = require('express-validator');
 
 // Validation middleware
 const validateJournalEntry = [
-  body('richContent').optional().isObject(),
+  body('richContent').optional().custom(value => {
+    // Allow null, undefined, objects, or arrays (BlockNote can send arrays)
+    return value === null || value === undefined || typeof value === 'object';
+  }),
   body('plainTextContent').optional().isString().isLength({ max: 10000 }),
   body('mood').optional().custom(value => {
     return value === null || value === undefined || (Number.isInteger(value) && value >= 1 && value <= 5);
@@ -62,8 +65,15 @@ router.get('/:date', authenticateJWT, validateDate, async (req, res) => {
 // POST /api/journal/:date - Create or update daily journal entry
 router.post('/:date', authenticateJWT, validateDate, validateJournalEntry, async (req, res) => {
   try {
+    console.log('Journal POST request:', { 
+      date: req.params.date, 
+      userId: req.user.id,
+      body: req.body 
+    }); // Debug log
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array()); // Debug log
       return res.status(400).json({ errors: errors.array() });
     }
 

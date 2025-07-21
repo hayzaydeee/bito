@@ -37,18 +37,21 @@ export const journalService = {
     try {
       console.log('Saving journal entry:', { date, data }); // Debug log
       const result = await api.post(`/api/journal/${date}`, data);
+      console.log('Journal save success:', result); // Debug log
       return result;
     } catch (error) {
       console.error('Journal save error details:', error); // Enhanced error logging
+      console.error('Error response:', error.response?.data); // Log response data
+      
       if (error.message?.includes('401') || error.message?.includes('Access denied')) {
         throw new Error('Please log in to save journal entries');
       }
       if (error.message?.includes('400')) {
         // Try to extract more specific error from the response
         const errorDetails = error.response?.data?.errors || error.response?.data?.message || 'Invalid data provided';
-        throw new Error(`Validation error: ${errorDetails}. Please check your journal entry.`);
+        console.error('Validation errors:', errorDetails);
+        throw new Error(`Validation error: ${JSON.stringify(errorDetails)}. Please check your journal entry.`);
       }
-      console.error('Error saving journal:', error);
       throw error;
     }
   },

@@ -138,12 +138,15 @@ const DailyJournalModal = ({
         const plainText = journalService.extractPlainText(content);
         const newWordCount = journalService.getWordCount(plainText);
 
-        // Only save if there's actual content or metadata changes
-        if (newWordCount === 0 && !mood && !energy && (!tags || tags.length === 0)) {
-          console.log('Skipping save - no content or metadata to save');
-          setSaving(false);
-          return;
-        }
+        console.log('Attempting to save journal:', { 
+          dateStr, 
+          plainText, 
+          newWordCount, 
+          content, 
+          mood, 
+          energy, 
+          tags 
+        }); // Debug log
 
         const updateData = {
           richContent: content,
