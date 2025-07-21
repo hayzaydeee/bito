@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { CheckIcon } from "@radix-ui/react-icons";
 import { habitUtils } from "../../../../utils/habitLogic.js";
-import { EmptyStateWithAddHabit } from "../../../habitGrid/EmptyStateWithAddHabit.jsx";
+import { EmptyStateWithAddHabit } from "../../../HabitGrid/EmptyStateWithAddHabit";
 import { JournalButton, DailyJournalModal } from "../../../journal";
 import { journalService } from "../../../../services/journalService";
 
