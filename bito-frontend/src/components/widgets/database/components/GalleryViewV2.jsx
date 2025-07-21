@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useHabits } from '../../../../contexts/HabitContext';
-import { EmptyStateWithAddHabit } from '../../../HabitGrid/EmptyStateWithAddHabit';
+import { EmptyStateWithAddHabit } from '../../../habitGrid/EmptyStateWithAddHabit';
 import { HabitCheckbox } from '../../../habitGrid/HabitCheckbox';
 import { habitUtils } from '../../../../contexts/HabitContext';
 import { CheckIcon, Pencil1Icon } from '@radix-ui/react-icons';
