@@ -276,24 +276,6 @@ export const ProfessionalTableView = ({
                         className={`text-xs font-outfit font-medium transition-colors ${
                           readOnly 
                             ? "text-[var(--color-text-tertiary)] cursor-not-allowed" 
-                            : "text-[var(--color-brand-400)] hover:text-[var(--color-brand-300)]"
-                        }`}
-                        disabled={readOnly}
-                        onClick={() => {
-                          if (!readOnly) {
-                            /* Handle view day details */
-                          }
-                        }}
-                      >
-                        View
-                      </button>
-                      <span className="text-[var(--color-border-primary)]">
-                        •
-                      </span>
-                      <button
-                        className={`text-xs font-outfit font-medium transition-colors ${
-                          readOnly 
-                            ? "text-[var(--color-text-tertiary)] cursor-not-allowed" 
                             : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
                         }`}
                         disabled={readOnly}

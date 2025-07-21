@@ -1226,3 +1226,44 @@ body.onboarding-active [data-tour]:hover {
     line-height: 1.4 !important;
   }
 }
+
+/* BlockNote Editor Theme Overrides */
+.blocknote-editor {
+  /* Dark theme overrides */
+  --bn-colors-editor-background: var(--color-surface-primary);
+  --bn-colors-editor-text: var(--color-text-primary);
+  --bn-colors-menu-background: var(--color-surface-secondary);
+  --bn-colors-menu-text: var(--color-text-primary);
+  --bn-colors-tooltip-background: var(--color-surface-elevated);
+  --bn-colors-tooltip-text: var(--color-text-primary);
+  --bn-colors-hovered-background: var(--color-surface-hover);
+  --bn-colors-selected-background: var(--color-surface-hover);
+  --bn-colors-disabled-background: var(--color-surface-secondary);
+  --bn-colors-disabled-text: var(--color-text-tertiary);
+  --bn-colors-shadow: rgba(0, 0, 0, 0.1);
+  --bn-colors-border: var(--color-border-primary);
+  --bn-colors-side-menu: var(--color-surface-secondary);
+  --bn-colors-highlights-gray-background: var(--color-surface-hover);
+  --bn-colors-highlights-gray-text: var(--color-text-primary);
+}
+
+/* Force BlockNote editor background */
+.blocknote-editor .ProseMirror {
+  background-color: var(--color-surface-primary) !important;
+  color: var(--color-text-primary) !important;
+}
+
+.blocknote-editor .bn-editor {
+  background-color: var(--color-surface-primary) !important;
+}
+
+/* BlockNote placeholder text */
+.blocknote-editor .ProseMirror p.is-empty::before {
+  color: var(--color-text-tertiary) !important;
+}
+
+/* BlockNote selection */
+.blocknote-editor .ProseMirror ::selection {
+  background-color: var(--color-brand-500) !important;
+  background-color: rgba(99, 102, 241, 0.3) !important;
+}

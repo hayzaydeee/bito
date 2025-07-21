@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { useCreateBlockNote } from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/mantine';
+import { useTheme } from '../../contexts/ThemeContext';
 
 // Import BlockNote styles
 import '@blocknote/core/fonts/inter.css';
@@ -12,9 +13,9 @@ const BlockNoteEditor = ({
   onReady,
   placeholder = "Start writing your journal entry...",
   editable = true,
-  theme = "light",
   className = ""
 }) => {
+  const { effectiveTheme } = useTheme();
   // Create editor instance
   const editor = useCreateBlockNote({
     initialContent: initialContent || [
@@ -67,8 +68,8 @@ const BlockNoteEditor = ({
 
   if (!editor) {
     return (
-      <div className="flex items-center justify-center h-64 bg-gray-50 rounded-lg">
-        <div className="text-gray-500">Loading editor...</div>
+      <div className="flex items-center justify-center h-64 bg-[var(--color-surface-secondary)] rounded-lg">
+        <div className="text-[var(--color-text-secondary)]">Loading editor...</div>
       </div>
     );
   }
@@ -77,7 +78,7 @@ const BlockNoteEditor = ({
     <div className={`blocknote-editor ${className}`}>
       <BlockNoteView
         editor={editor}
-        theme={theme}
+        theme={effectiveTheme}
         editable={editable}
         className="min-h-[400px] focus:outline-none"
         placeholder={placeholder}

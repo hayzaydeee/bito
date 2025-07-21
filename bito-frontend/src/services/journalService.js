@@ -11,6 +11,10 @@ export const journalService = {
       if (error.response?.status === 404) {
         return null; // No journal entry for this date
       }
+      if (error.response?.status === 401 || error.message?.includes('Access denied')) {
+        console.warn('Authentication required for journal access');
+        return null; // Return null when not authenticated
+      }
       throw error;
     }
   },
@@ -21,6 +25,17 @@ export const journalService = {
       const response = await api.post(`/api/journal/${date}`, data);
       return response.data;
     } catch (error) {
+      if (error.response?.status === 401 || error.message?.includes('Access denied')) {
+        throw new Error('Please log in to save journal entries');
+      }
+      if (error.response?.status === 400) {
+        const validationErrors = error.response?.data?.errors;
+        if (validationErrors && Array.isArray(validationErrors)) {
+          const errorMessages = validationErrors.map(err => err.msg).join(', ');
+          throw new Error(`Validation error: ${errorMessages}`);
+        }
+        throw new Error('Invalid data provided. Please check your journal entry.');
+      }
       console.error('Error saving journal:', error);
       throw error;
     }

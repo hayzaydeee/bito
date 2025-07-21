@@ -1,37 +1,46 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Cross2Icon, CheckCircledIcon, FileTextIcon } from '@radix-ui/react-icons';
-import BlockNoteEditor from './BlockNoteEditor';
-import { journalService } from '../../services/journalService';
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
+import {
+  Cross2Icon,
+  CheckCircledIcon,
+  FileTextIcon,
+  ExclamationTriangleIcon,
+} from "@radix-ui/react-icons";
+import BlockNoteEditor from "./BlockNoteEditor";
+import { journalService } from "../../services/journalService";
+import { useAuth } from "../../contexts/AuthContext";
 
-const DailyJournalModal = ({ 
-  isOpen, 
-  onClose, 
-  date, 
+const DailyJournalModal = ({
+  isOpen,
+  onClose,
+  date,
   focusHabit = null,
   habits = [],
   habitEntries = {},
-  onSave
+  onSave,
 }) => {
+  const { user, isAuthenticated } = useAuth();
   const [entry, setEntry] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState('saved'); // 'saving', 'saved', 'error'
+  const [saveStatus, setSaveStatus] = useState("saved"); // 'saving', 'saved', 'error'
+  const [errorMessage, setErrorMessage] = useState("");
   const [editor, setEditor] = useState(null);
   const [wordCount, setWordCount] = useState(0);
   const [mood, setMood] = useState(null);
   const [energy, setEnergy] = useState(null);
   const [tags, setTags] = useState([]);
-  const [newTag, setNewTag] = useState('');
+  const [newTag, setNewTag] = useState("");
 
   // Format date for display
   const formattedDate = useMemo(() => {
-    if (!date) return '';
+    if (!date) return "";
     const d = new Date(date);
-    return d.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    return d.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   }, [date]);
 
@@ -44,10 +53,35 @@ const DailyJournalModal = ({
 
   const loadJournalEntry = async () => {
     setIsLoading(true);
+    setErrorMessage("");
+
     try {
+      if (!isAuthenticated) {
+        // Create a blank entry for unauthenticated users
+        const dateStr = journalService.formatDateForAPI(date);
+        const newEntry = {
+          _id: null,
+          userId: null,
+          date: dateStr,
+          richContent: null,
+          plainTextContent: "",
+          mood: null,
+          energy: null,
+          tags: [],
+          wordCount: 0,
+        };
+        setEntry(newEntry);
+        setMood(null);
+        setEnergy(null);
+        setTags([]);
+        setWordCount(0);
+        setErrorMessage("Please log in to save and sync your journal entries");
+        return;
+      }
+
       const dateStr = journalService.formatDateForAPI(date);
       const journalEntry = await journalService.getDailyJournal(dateStr);
-      
+
       if (journalEntry) {
         setEntry(journalEntry);
         setMood(journalEntry.mood);
@@ -59,11 +93,11 @@ const DailyJournalModal = ({
         const newEntry = {
           date: dateStr,
           richContent: null,
-          plainTextContent: '',
+          plainTextContent: "",
           mood: null,
           energy: null,
           tags: [],
-          wordCount: 0
+          wordCount: 0,
         };
         setEntry(newEntry);
         setMood(null);
@@ -72,8 +106,13 @@ const DailyJournalModal = ({
         setWordCount(0);
       }
     } catch (error) {
-      console.error('Error loading journal entry:', error);
-      setSaveStatus('error');
+      console.error("Error loading journal entry:", error);
+      setErrorMessage(
+        error.message?.includes("log in")
+          ? "Please log in to access your journal"
+          : "Failed to load journal entry"
+      );
+      setSaveStatus("error");
     } finally {
       setIsLoading(false);
     }
@@ -84,8 +123,15 @@ const DailyJournalModal = ({
     debounce(async (content) => {
       if (!date) return;
 
+      if (!isAuthenticated) {
+        setErrorMessage("Please log in to save your journal entries");
+        setSaveStatus("error");
+        return;
+      }
+
       setSaving(true);
-      setSaveStatus('saving');
+      setSaveStatus("saving");
+      setErrorMessage(""); // Clear any previous errors
 
       try {
         const dateStr = journalService.formatDateForAPI(date);
@@ -99,21 +145,26 @@ const DailyJournalModal = ({
           mood,
           energy,
           tags,
-          createdVia: 'modal'
+          createdVia: "modal",
         };
 
-        const savedEntry = await journalService.saveDailyJournal(dateStr, updateData);
+        const savedEntry = await journalService.saveDailyJournal(
+          dateStr,
+          updateData
+        );
         setEntry(savedEntry);
         setWordCount(newWordCount);
-        setSaveStatus('saved');
+        setSaveStatus("saved");
+        setErrorMessage(""); // Clear any previous errors
 
         // Notify parent of save
         if (onSave) {
           onSave(savedEntry);
         }
       } catch (error) {
-        console.error('Error saving journal:', error);
-        setSaveStatus('error');
+        console.error("Error saving journal:", error);
+        setErrorMessage(error.message || "Failed to save journal entry");
+        setSaveStatus("error");
       } finally {
         setSaving(false);
       }
@@ -122,25 +173,28 @@ const DailyJournalModal = ({
   );
 
   // Handle editor content changes
-  const handleEditorChange = useCallback((content, editorInstance) => {
-    const plainText = journalService.extractPlainText(content);
-    const newWordCount = journalService.getWordCount(plainText);
-    setWordCount(newWordCount);
-    
-    // Auto-save
-    debouncedSave(content);
-  }, [debouncedSave]);
+  const handleEditorChange = useCallback(
+    (content, editorInstance) => {
+      const plainText = journalService.extractPlainText(content);
+      const newWordCount = journalService.getWordCount(plainText);
+      setWordCount(newWordCount);
+
+      // Auto-save
+      debouncedSave(content);
+    },
+    [debouncedSave]
+  );
 
   // Handle mood change
   const handleMoodChange = (newMood) => {
     setMood(newMood);
-    setSaveStatus('saving');
+    setSaveStatus("saving");
   };
 
   // Handle energy change
   const handleEnergyChange = (newEnergy) => {
     setEnergy(newEnergy);
-    setSaveStatus('saving');
+    setSaveStatus("saving");
   };
 
   // Handle tag management
@@ -148,29 +202,34 @@ const DailyJournalModal = ({
     if (newTag.trim() && !tags.includes(newTag.trim())) {
       const updatedTags = [...tags, newTag.trim()];
       setTags(updatedTags);
-      setNewTag('');
-      setSaveStatus('saving');
+      setNewTag("");
+      setSaveStatus("saving");
     }
   };
 
   const removeTag = (tagToRemove) => {
-    const updatedTags = tags.filter(tag => tag !== tagToRemove);
+    const updatedTags = tags.filter((tag) => tag !== tagToRemove);
     setTags(updatedTags);
-    setSaveStatus('saving');
+    setSaveStatus("saving");
   };
 
   // Save metadata changes
   useEffect(() => {
-    if (entry && (mood !== entry.mood || energy !== entry.energy || JSON.stringify(tags) !== JSON.stringify(entry.tags))) {
+    if (
+      entry &&
+      (mood !== entry.mood ||
+        energy !== entry.energy ||
+        JSON.stringify(tags) !== JSON.stringify(entry.tags))
+    ) {
       const saveMetadata = async () => {
         try {
           const dateStr = journalService.formatDateForAPI(date);
           const updateData = { mood, energy, tags };
           await journalService.updateDailyJournal(dateStr, updateData);
-          setSaveStatus('saved');
+          setSaveStatus("saved");
         } catch (error) {
-          console.error('Error saving metadata:', error);
-          setSaveStatus('error');
+          console.error("Error saving metadata:", error);
+          setSaveStatus("error");
         }
       };
 
@@ -185,260 +244,282 @@ const DailyJournalModal = ({
     setMood(null);
     setEnergy(null);
     setTags([]);
-    setNewTag('');
+    setNewTag("");
     setWordCount(0);
-    setSaveStatus('saved');
+    setSaveStatus("saved");
     onClose();
   };
 
   // Handle escape key
   useEffect(() => {
     const handleEscape = (e) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === "Escape" && isOpen) {
         handleClose();
       }
     };
 
     if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
+      document.addEventListener("keydown", handleEscape);
+      document.body.style.overflow = "hidden";
     }
 
     return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'unset';
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "unset";
     };
   }, [isOpen, handleClose]);
 
   if (!isOpen) return null;
 
-  return (
-    <>
+  return createPortal(
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div 
-        className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
+      <div
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-200"
         onClick={handleClose}
       />
-      
+
       {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex border border-slate-200 overflow-hidden">
-          {/* Sidebar */}
-          <div className="w-72 border-r border-slate-200 bg-slate-50/50 p-6 overflow-auto">
-            <div className="space-y-6">
-              {/* Date and basic info */}
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-1">
-                  Daily Journal
-                </h3>
-                <p className="text-sm text-slate-600">
-                  {formattedDate}
-                </p>
-              </div>
-              
-              {/* Mood selector */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-3">
-                  How was your mood today?
-                </label>
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map((value) => (
-                    <button
-                      key={value}
-                      onClick={() => handleMoodChange(value)}
-                      className={`
+      <div className="relative bg-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)] shadow-xl max-w-6xl w-full max-h-[90vh] flex overflow-hidden z-10 transform transition-all duration-200 scale-100">
+        {/* Authentication Warning Banner */}
+        {!isAuthenticated && (
+          <div className="absolute top-0 left-0 right-0 bg-amber-50 border-b border-amber-200 px-6 py-3 z-20">
+            <div className="flex items-center gap-3 text-amber-800">
+              <ExclamationTriangleIcon className="w-5 h-5 text-amber-600" />
+              <span className="text-sm font-medium">
+                Please log in to save your journal entries
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Sidebar */}
+        <div
+          className={`w-72 border-r border-[var(--color-border-primary)] bg-[var(--color-surface-secondary)] p-6 overflow-auto ${
+            !isAuthenticated ? "pt-20" : ""
+          }`}
+        >
+          <div className="space-y-6">
+            {/* Date and basic info */}
+            <div>
+              <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-1">
+                Daily Journal
+              </h3>
+              <p className="text-sm text-[var(--color-text-secondary)]">
+                {formattedDate}
+              </p>
+            </div>
+
+            {/* Mood selector */}
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-3">
+                How was your mood today?
+              </label>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map((value) => (
+                  <button
+                    key={value}
+                    onClick={() => handleMoodChange(value)}
+                    className={`
                         w-10 h-10 rounded-lg text-sm font-medium transition-all duration-200
-                        ${mood === value
-                          ? 'bg-blue-500 text-white shadow-md scale-105'
-                          : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
+                        ${
+                          mood === value
+                            ? "bg-blue-600 text-white shadow-md scale-105"
+                            : "bg-[var(--color-surface-primary)] border border-[var(--color-border-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] hover:border-blue-300"
                         }
                       `}
-                    >
-                      {value}
-                    </button>
-                  ))}
-                </div>
+                  >
+                    {value}
+                  </button>
+                ))}
               </div>
+            </div>
 
-              {/* Energy selector */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-3">
-                  What was your energy level?
-                </label>
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map((value) => (
-                    <button
-                      key={value}
-                      onClick={() => handleEnergyChange(value)}
-                      className={`
+            {/* Energy selector */}
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-3">
+                What was your energy level?
+              </label>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map((value) => (
+                  <button
+                    key={value}
+                    onClick={() => handleEnergyChange(value)}
+                    className={`
                         w-10 h-10 rounded-lg text-sm font-medium transition-all duration-200
-                        ${energy === value
-                          ? 'bg-green-500 text-white shadow-md scale-105'
-                          : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
+                        ${
+                          energy === value
+                            ? "bg-green-600 text-white shadow-md scale-105"
+                            : "bg-[var(--color-surface-primary)] border border-[var(--color-border-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] hover:border-green-300"
                         }
                       `}
-                    >
-                      {value}
-                    </button>
-                  ))}
-                </div>
+                  >
+                    {value}
+                  </button>
+                ))}
               </div>
+            </div>
 
-              {/* Today's habits */}
-              {habits.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-medium text-slate-700 mb-3">Today's Habits</h4>
-                  <div className="space-y-2">
-                    {habits.map(habit => {
-                      const habitEntry = habitEntries[habit.id];
-                      const isCompleted = habitEntry?.completed;
-                      const isFocused = focusHabit?.id === habit.id;
-                      
-                      return (
-                        <div 
-                          key={habit.id}
-                          className={`
+            {/* Today's habits */}
+            {habits.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-[var(--color-text-primary)] mb-3">
+                  Today's Habits
+                </h4>
+                <div className="space-y-2">
+                  {habits.map((habit) => {
+                    const habitEntry = habitEntries[habit.id];
+                    const isCompleted = habitEntry?.completed;
+                    const isFocused = focusHabit?.id === habit.id;
+
+                    return (
+                      <div
+                        key={habit.id}
+                        className={`
                             flex items-center gap-3 p-3 rounded-lg text-sm transition-colors
-                            ${isFocused 
-                              ? 'bg-purple-50 border border-purple-200' 
-                              : 'bg-white border border-slate-200 hover:bg-slate-50'
+                            ${
+                              isFocused
+                                ? "bg-purple-50 dark:bg-purple-900/20 border border-purple-300 dark:border-purple-600"
+                                : "bg-[var(--color-surface-primary)] border border-[var(--color-border-primary)] hover:bg-[var(--color-surface-hover)]"
                             }
                           `}
-                        >
-                          <span className="text-lg">{habit.icon}</span>
-                          <span className={`flex-1 font-medium ${isCompleted ? 'text-slate-900' : 'text-slate-500'}`}>
-                            {habit.name}
-                          </span>
-                          {isCompleted && <CheckCircledIcon className="w-4 h-4 text-green-500" />}
-                          {habitEntry?.notes && <FileTextIcon className="w-4 h-4 text-blue-500" />}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Tags */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-3">
-                  Tags
-                </label>
-                <div className="space-y-3">
-                  {tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {tags.map((tag, index) => (
+                      >
+                        <span className="text-lg">{habit.icon}</span>
                         <span
-                          key={index}
-                          className="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 text-slate-700 text-sm rounded-full border border-slate-200"
+                          className={`flex-1 font-medium ${
+                            isCompleted
+                              ? "text-[var(--color-text-primary)]"
+                              : "text-[var(--color-text-secondary)]"
+                          }`}
                         >
-                          {tag}
-                          <button
-                            onClick={() => removeTag(tag)}
-                            className="text-slate-400 hover:text-slate-600 ml-1"
-                          >
-                            <Cross2Icon className="w-3 h-3" />
-                          </button>
+                          {habit.name}
                         </span>
-                      ))}
-                    </div>
-                  )}
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={newTag}
-                      onChange={(e) => setNewTag(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && addTag()}
-                      placeholder="Add a tag..."
-                      className="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                    <button
-                      onClick={addTag}
-                      disabled={!newTag.trim()}
-                      className="px-4 py-2 text-sm bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      Add
-                    </button>
-                  </div>
+                        {isCompleted && (
+                          <CheckCircledIcon className="w-4 h-4 text-green-500" />
+                        )}
+                        {habitEntry?.notes && (
+                          <FileTextIcon className="w-4 h-4 text-blue-500" />
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
+            )}
+          </div>
+        </div>
+
+        {/* Main editor area */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-[var(--color-border-primary)] bg-[var(--color-surface-primary)]">
+            <div>
+              <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
+                Write your thoughts
+              </h2>
+              <p className="text-sm text-[var(--color-text-secondary)] mt-1">
+                Reflect on your day, habits, and experiences
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              {/* Save status */}
+              <div className="flex items-center gap-2 text-sm">
+                {saveStatus === "saving" && (
+                  <div className="flex items-center gap-2 text-blue-700">
+                    <div className="w-4 h-4 border-2 border-blue-700 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="font-medium">Saving...</span>
+                  </div>
+                )}
+                {saveStatus === "saved" && (
+                  <span className="text-green-700 font-medium">✓ Saved</span>
+                )}
+                {saveStatus === "error" && (
+                  <span className="text-red-700 font-bold">Error saving</span>
+                )}
+              </div>
+
+              <button
+                onClick={handleClose}
+                className="p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] rounded-lg transition-colors"
+              >
+                <Cross2Icon className="w-5 h-5" />
+              </button>
             </div>
           </div>
 
-          {/* Main editor area */}
-          <div className="flex-1 flex flex-col min-w-0">
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-white">
-              <div>
-                <h2 className="text-xl font-semibold text-slate-900">Write your thoughts</h2>
-                <p className="text-sm text-slate-500 mt-1">
-                  Reflect on your day, habits, and experiences
-                </p>
+          {/* Editor */}
+          <div className="flex-1 p-6 overflow-auto">
+            {isLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="flex items-center gap-3 text-[var(--color-text-secondary)]">
+                  <div className="w-6 h-6 border-2 border-[var(--color-text-tertiary)] border-t-blue-600 rounded-full animate-spin"></div>
+                  <span className="font-medium">Loading your journal...</span>
+                </div>
               </div>
-              <div className="flex items-center gap-4">
-                {/* Save status */}
-                <div className="flex items-center gap-2 text-sm">
-                  {saveStatus === 'saving' && (
-                    <div className="flex items-center gap-2 text-blue-600">
-                      <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                      <span>Saving...</span>
-                    </div>
-                  )}
-                  {saveStatus === 'saved' && (
-                    <span className="text-green-600 font-medium">✓ Saved</span>
-                  )}
-                  {saveStatus === 'error' && (
-                    <span className="text-red-600 font-medium">Error saving</span>
-                  )}
-                </div>
-                
-                <button 
-                  onClick={handleClose}
-                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                >
-                  <Cross2Icon className="w-5 h-5" />
-                </button>
+            ) : (
+              <div className="max-w-4xl mx-auto">
+                <BlockNoteEditor
+                  initialContent={entry?.richContent}
+                  onChange={handleEditorChange}
+                  onReady={setEditor}
+                  placeholder="How did today go? Reflect on your habits, mood, and experiences..."
+                  className="prose prose-lg max-w-none"
+                />
               </div>
-            </div>
+            )}
+          </div>
 
-            {/* Editor */}
-            <div className="flex-1 p-6 overflow-auto">
-              {isLoading ? (
-                <div className="flex items-center justify-center h-64">
-                  <div className="flex items-center gap-3 text-slate-500">
-                    <div className="w-6 h-6 border-2 border-slate-300 border-t-blue-500 rounded-full animate-spin"></div>
-                    <span>Loading your journal...</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="max-w-4xl mx-auto">
-                  <BlockNoteEditor
-                    initialContent={entry?.richContent}
-                    onChange={handleEditorChange}
-                    onReady={setEditor}
-                    placeholder="How did today go? Reflect on your habits, mood, and experiences..."
-                    className="prose prose-lg max-w-none"
-                  />
-                </div>
-              )}
-            </div>
+          {/* Footer */}
+          <div className="border-t border-[var(--color-border-primary)] bg-[var(--color-surface-secondary)] px-6 py-4">
+            <div className="flex justify-between items-center text-sm">
+              <div className="flex items-center gap-4 text-[var(--color-text-secondary)]">
+                <span className="font-medium">{wordCount} words</span>
+                <span>•</span>
+                <span>{journalService.getReadingTime(wordCount)} min read</span>
+                {entry?.lastEditedAt && (
+                  <>
+                    <span>•</span>
+                    <span>
+                      Last edited{" "}
+                      {new Date(entry.lastEditedAt).toLocaleTimeString()}
+                    </span>
+                  </>
+                )}
 
-            {/* Footer */}
-            <div className="border-t border-slate-200 bg-slate-50/50 px-6 py-4">
-              <div className="flex justify-between items-center text-sm text-slate-500">
-                <div className="flex items-center gap-4">
-                  <span className="font-medium">{wordCount} words</span>
-                  <span>•</span>
-                  <span>{journalService.getReadingTime(wordCount)} min read</span>
-                  {entry?.lastEditedAt && (
+                {/* Save status indicator */}
+                <span>•</span>
+                <div className="flex items-center gap-2">
+                  {saveStatus === "saving" && (
                     <>
-                      <span>•</span>
-                      <span>
-                        Last edited {new Date(entry.lastEditedAt).toLocaleTimeString()}
+                      <div className="w-3 h-3 border border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-blue-700 font-medium">
+                        Saving...
                       </span>
                     </>
                   )}
+                  {saveStatus === "saved" && (
+                    <>
+                      <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+                      <span className="text-green-700 font-medium">Saved</span>
+                    </>
+                  )}
+                  {saveStatus === "error" && (
+                    <>
+                      <div className="w-3 h-3 bg-red-600 rounded-full"></div>
+                      <span className="text-red-700 font-bold">Error</span>
+                    </>
+                  )}
                 </div>
-                <div className="text-xs text-slate-400">
+              </div>
+
+              <div className="flex items-center gap-4">
+                {/* Error message */}
+                {errorMessage && (
+                  <div className="text-red-800 font-bold bg-red-100 px-3 py-1 rounded-md border border-red-200">
+                    {errorMessage}
+                  </div>
+                )}
+                <div className="text-xs text-[var(--color-text-tertiary)]">
                   Press Esc to close
                 </div>
               </div>
@@ -446,7 +527,8 @@ const DailyJournalModal = ({
           </div>
         </div>
       </div>
-    </>
+    </div>,
+    document.body
   );
 };
 
