@@ -31,6 +31,18 @@ const DailyJournalModal = ({
   const [energy, setEnergy] = useState(null);
   const [tags, setTags] = useState([]);
   const [newTag, setNewTag] = useState("");
+  const [editorInitialized, setEditorInitialized] = useState(false);
+
+  // Handle editor being ready
+  const handleEditorReady = useCallback((editorInstance) => {
+    console.log('Editor ready, setting initialized state');
+    setEditor(editorInstance);
+    // Wait a moment for content to be fully loaded before allowing saves
+    setTimeout(() => {
+      setEditorInitialized(true);
+      console.log('Editor marked as initialized');
+    }, 100);
+  }, []);
 
   // Format date for display
   const formattedDate = useMemo(() => {
@@ -47,7 +59,13 @@ const DailyJournalModal = ({
   // Load journal entry when modal opens
   useEffect(() => {
     if (isOpen && date) {
+      setEditorInitialized(false); // Reset editor state
       loadJournalEntry();
+    } else if (!isOpen) {
+      // Reset states when modal closes
+      setEntry(null);
+      setEditor(null);
+      setEditorInitialized(false);
     }
   }, [isOpen, date]);
 
@@ -227,26 +245,98 @@ const DailyJournalModal = ({
   // Handle editor content changes
   const handleEditorChange = useCallback(
     (content, editorInstance) => {
+      // Check if content actually changed from initial state
+      if (!entry || !editorInitialized) {
+        console.log('Skipping save - no entry or editor not initialized');
+        return;
+      }
+      
       const plainText = journalService.extractPlainText(content);
       const newWordCount = journalService.getWordCount(plainText);
       setWordCount(newWordCount);
 
-      // Auto-save
-      debouncedSave(content);
+      // Only trigger save if content meaningfully changed
+      const currentPlainText = journalService.extractPlainText(entry.richContent || []);
+      if (plainText !== currentPlainText) {
+        console.log('Content changed, triggering save:', { 
+          newPlainText: plainText, 
+          originalPlainText: currentPlainText 
+        });
+        debouncedSave(content);
+      } else {
+        console.log('Content unchanged, skipping save');
+      }
     },
-    [debouncedSave]
+    [debouncedSave, entry, editorInitialized]
+  );
+
+  // Create a debounced metadata save function
+  const debouncedMetadataSave = useCallback(
+    debounce(async (updatedEntry) => {
+      if (!updatedEntry?._id || isSaving) return;
+      
+      setSaving(true);
+      setSaveStatus("saving");
+      try {
+        const dateStr = journalService.formatDateForAPI(date);
+        
+        // Get current content from editor if available
+        let currentContent = updatedEntry.richContent;
+        let currentPlainText = updatedEntry.plainTextContent;
+        
+        if (editor) {
+          try {
+            currentContent = editor.document;
+            currentPlainText = journalService.extractPlainText(currentContent);
+          } catch (error) {
+            console.warn('Could not get current editor content:', error);
+          }
+        }
+        
+        const updateData = { 
+          richContent: currentContent,
+          plainTextContent: currentPlainText,
+          mood: updatedEntry.mood, 
+          energy: updatedEntry.energy, 
+          tags: updatedEntry.tags 
+        };
+        
+        const savedEntry = await journalService.updateDailyJournal(dateStr, updateData);
+        setEntry(savedEntry);
+        setSaveStatus("saved");
+        console.log('Metadata saved successfully');
+      } catch (error) {
+        console.error("Error saving metadata:", error);
+        setSaveStatus("error");
+      } finally {
+        setSaving(false);
+      }
+    }, 1000),
+    [date, editor, isSaving]
   );
 
   // Handle mood change
   const handleMoodChange = (newMood) => {
     setMood(newMood);
     setSaveStatus("saving");
+    
+    if (entry?._id) {
+      const updatedEntry = { ...entry, mood: newMood };
+      setEntry(updatedEntry);
+      debouncedMetadataSave(updatedEntry);
+    }
   };
 
   // Handle energy change
   const handleEnergyChange = (newEnergy) => {
     setEnergy(newEnergy);
     setSaveStatus("saving");
+    
+    if (entry?._id) {
+      const updatedEntry = { ...entry, energy: newEnergy };
+      setEntry(updatedEntry);
+      debouncedMetadataSave(updatedEntry);
+    }
   };
 
   // Handle tag management
@@ -256,6 +346,12 @@ const DailyJournalModal = ({
       setTags(updatedTags);
       setNewTag("");
       setSaveStatus("saving");
+      
+      if (entry?._id) {
+        const updatedEntry = { ...entry, tags: updatedTags };
+        setEntry(updatedEntry);
+        debouncedMetadataSave(updatedEntry);
+      }
     }
   };
 
@@ -263,62 +359,13 @@ const DailyJournalModal = ({
     const updatedTags = tags.filter((tag) => tag !== tagToRemove);
     setTags(updatedTags);
     setSaveStatus("saving");
-  };
-
-  // Save metadata changes (only if entry exists in database)
-  useEffect(() => {
-    if (
-      entry &&
-      entry._id && // Only save metadata if entry exists in database
-      !isSaving && // Don't save metadata if content save is in progress
-      (mood !== entry.mood ||
-        energy !== entry.energy ||
-        JSON.stringify(tags) !== JSON.stringify(entry.tags))
-    ) {
-      const saveMetadata = async () => {
-        if (isSaving) return; // Double-check before starting
-        
-        try {
-          setSaving(true);
-          setSaveStatus("saving");
-          const dateStr = journalService.formatDateForAPI(date);
-          
-          // Get current content from editor if available
-          let currentContent = entry.richContent;
-          let currentPlainText = entry.plainTextContent;
-          
-          if (editor) {
-            try {
-              currentContent = editor.document;
-              currentPlainText = journalService.extractPlainText(currentContent);
-            } catch (error) {
-              console.warn('Could not get current editor content:', error);
-            }
-          }
-          
-          const updateData = { 
-            richContent: currentContent,
-            plainTextContent: currentPlainText,
-            mood, 
-            energy, 
-            tags 
-          };
-          
-          const updatedEntry = await journalService.updateDailyJournal(dateStr, updateData);
-          setEntry(updatedEntry);
-          setSaveStatus("saved");
-        } catch (error) {
-          console.error("Error saving metadata:", error);
-          setSaveStatus("error");
-        } finally {
-          setSaving(false);
-        }
-      };
-
-      const timeoutId = setTimeout(saveMetadata, 1000);
-      return () => clearTimeout(timeoutId);
+    
+    if (entry?._id) {
+      const updatedEntry = { ...entry, tags: updatedTags };
+      setEntry(updatedEntry);
+      debouncedMetadataSave(updatedEntry);
     }
-  }, [mood, energy, tags, entry, date, editor, isSaving]);
+  };
 
   // Handle modal close
   const handleClose = () => {
@@ -329,6 +376,8 @@ const DailyJournalModal = ({
     setNewTag("");
     setWordCount(0);
     setSaveStatus("saved");
+    setEditor(null);
+    setEditorInitialized(false);
     onClose();
   };
 
@@ -543,7 +592,7 @@ const DailyJournalModal = ({
                 <BlockNoteEditor
                   initialContent={entry?.richContent}
                   onChange={handleEditorChange}
-                  onReady={setEditor}
+                  onReady={handleEditorReady}
                   placeholder="How did today go? Reflect on your habits, mood, and experiences..."
                   className="prose prose-lg max-w-none"
                 />
