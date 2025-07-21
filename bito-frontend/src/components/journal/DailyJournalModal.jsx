@@ -553,21 +553,7 @@ const DailyJournalModal = ({
               </p>
             </div>
             <div className="flex items-center gap-4">
-              {/* Save status */}
-              <div className="flex items-center gap-2 text-sm">
-                {saveStatus === "saving" && (
-                  <div className="flex items-center gap-2 text-blue-700">
-                    <div className="w-4 h-4 border-2 border-blue-700 border-t-transparent rounded-full animate-spin"></div>
-                    <span className="font-medium">Saving...</span>
-                  </div>
-                )}
-                {saveStatus === "saved" && (
-                  <span className="text-green-700 font-medium">✓ Saved</span>
-                )}
-                {saveStatus === "error" && (
-                  <span className="text-red-700 font-bold">Error saving</span>
-                )}
-              </div>
+
 
               <button
                 onClick={handleClose}
