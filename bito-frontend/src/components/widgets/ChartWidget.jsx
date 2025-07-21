@@ -18,7 +18,7 @@ import {
 } from "recharts";
 import { useChartData } from "../../globalHooks/useChartData";
 import { useWeekUtils } from "../../hooks/useWeekUtils";
-import { EmptyStateWithAddHabit } from "../habitGrid/EmptyStateWithAddHabit.jsx";
+import { EmptyStateWithAddHabit } from "../habitGrid/EmptyStateWithAddHabit";
 import "./widgets.css";
 
 // Helper function to generate chart data from props (for member dashboards)
