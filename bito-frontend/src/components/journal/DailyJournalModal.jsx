@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Cross2Icon, CheckCircleIcon } from '@radix-ui/react-icons';
-import { StickyNoteIcon } from '@heroicons/react/24/solid';
+import { Cross2Icon, CheckCircledIcon, FileTextIcon } from '@radix-ui/react-icons';
 import BlockNoteEditor from './BlockNoteEditor';
 import { journalService } from '../../services/journalService';
 
@@ -310,8 +309,8 @@ const DailyJournalModal = ({
                           <span className={`flex-1 font-medium ${isCompleted ? 'text-slate-900' : 'text-slate-500'}`}>
                             {habit.name}
                           </span>
-                          {isCompleted && <CheckCircleIcon className="w-4 h-4 text-green-500" />}
-                          {habitEntry?.notes && <StickyNoteIcon className="w-4 h-4 text-blue-500" />}
+                          {isCompleted && <CheckCircledIcon className="w-4 h-4 text-green-500" />}
+                          {habitEntry?.notes && <FileTextIcon className="w-4 h-4 text-blue-500" />}
                         </div>
                       );
                     })}

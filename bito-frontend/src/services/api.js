@@ -818,3 +818,23 @@ export const verifyHabitCounts = async () => {
   
   return { success: true, results };
 };
+
+// Default API client for general use
+const api = {
+  get: (endpoint) => apiRequest(endpoint, { method: 'GET' }),
+  post: (endpoint, data) => apiRequest(endpoint, { 
+    method: 'POST', 
+    body: JSON.stringify(data) 
+  }),
+  patch: (endpoint, data) => apiRequest(endpoint, { 
+    method: 'PATCH', 
+    body: JSON.stringify(data) 
+  }),
+  delete: (endpoint) => apiRequest(endpoint, { method: 'DELETE' }),
+  put: (endpoint, data) => apiRequest(endpoint, { 
+    method: 'PUT', 
+    body: JSON.stringify(data) 
+  })
+};
+
+export default api;
