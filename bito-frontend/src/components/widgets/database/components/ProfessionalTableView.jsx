@@ -262,8 +262,8 @@ export const ProfessionalTableView = ({
                   <td className="py-3 px-4 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <JournalButton
-                        date={daysOfWeek.dateString}
-                        hasJournal={!!journalIndicators[daysOfWeek.dateString]}
+                        date={dayInfo?.date}
+                        hasJournal={!!journalIndicators[dayInfo?.date]}
                         onClick={openJournal}
                         showLabel={false}
                         className="text-xs"
