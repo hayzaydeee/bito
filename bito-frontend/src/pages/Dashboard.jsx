@@ -29,7 +29,7 @@ const AVAILABLE_WIDGET_TYPES = {
   },
 };
 
-// Default layouts (optimized for better content display)
+// Default layouts (optimized for better content display and mobile experience)
 const getDefaultLayouts = () => ({
   lg: [
     { i: "habits-overview", x: 0, y: 0, w: 8, h: 6, moved: false, static: false },
@@ -37,24 +37,24 @@ const getDefaultLayouts = () => ({
     { i: "habit-list", x: 0, y: 6, w: 12, h: 10, moved: false, static: false },
   ],
   md: [
-    { i: "habits-overview", x: 0, y: 0, w: 12, h: 6, moved: false, static: false },
-    { i: "quick-actions", x: 3, y: 0, w: 6, h: 4, moved: false, static: false },
-    { i: "habit-list", x: 0, y: 4, w: 12, h: 10, moved: false, static: false },
+    { i: "habits-overview", x: 0, y: 0, w: 12, h: 5, moved: false, static: false },
+    { i: "quick-actions", x: 0, y: 5, w: 12, h: 4, moved: false, static: false },
+    { i: "habit-list", x: 0, y: 9, w: 12, h: 8, moved: false, static: false },
   ],
   sm: [
-    { i: "habits-overview", x: 0, y: 0, w: 12, h: 6, moved: false, static: false },
-    { i: "quick-actions", x: 0, y: 4, w: 12, h: 4, moved: false, static: false },
-    { i: "habit-list", x: 0, y: 8, w: 12, h: 10, moved: false, static: false },
+    { i: "habits-overview", x: 0, y: 0, w: 12, h: 5, moved: false, static: false },
+    { i: "quick-actions", x: 0, y: 5, w: 12, h: 4, moved: false, static: false },
+    { i: "habit-list", x: 0, y: 9, w: 12, h: 8, moved: false, static: false },
   ],
   xs: [
-    { i: "habits-overview", x: 0, y: 0, w: 4, h: 6, moved: false, static: false },
-    { i: "quick-actions", x: 0, y: 3, w: 4, h: 4, moved: false, static: false },
-    { i: "habit-list", x: 0, y: 6, w: 4, h: 10, moved: false, static: false },
+    { i: "habits-overview", x: 0, y: 0, w: 4, h: 5, moved: false, static: false }, // Increased height for mobile
+    { i: "quick-actions", x: 0, y: 5, w: 4, h: 4, moved: false, static: false }, // Increased height for mobile
+    { i: "habit-list", x: 0, y: 9, w: 4, h: 8, moved: false, static: false },
   ],
   xxs: [
-    { i: "habits-overview", x: 0, y: 0, w: 2, h: 3, moved: false, static: false },
-    { i: "quick-actions", x: 0, y: 3, w: 2, h: 3, moved: false, static: false },
-    { i: "habit-list", x: 0, y: 6, w: 2, h: 6, moved: false, static: false },
+    { i: "habits-overview", x: 0, y: 0, w: 2, h: 4, moved: false, static: false }, // Increased height for mobile
+    { i: "quick-actions", x: 0, y: 4, w: 2, h: 3, moved: false, static: false }, // Increased height for mobile
+    { i: "habit-list", x: 0, y: 7, w: 2, h: 6, moved: false, static: false },
   ],
 });
 

@@ -369,7 +369,7 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
       className={`${
         isCollapsed ? "w-16" : "w-64"
       } h-screen relative z-10 transition-all duration-300 border-r border-[var(--color-border-primary)] ${
-        isMobile ? 'w-64' : '' // Always full width on mobile
+        isMobile ? 'w-60' : '' // Slightly smaller width on mobile (240px)
       }`}
       style={{ backgroundColor: "var(--color-surface-primary)" }}
     >

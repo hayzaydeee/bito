@@ -1,4 +1,4 @@
-import React, { useMemo, memo, useCallback } from "react";
+import React, { useMemo, memo, useCallback, useState, useEffect } from "react";
 import {
   PlusIcon,
   GearIcon,
@@ -6,7 +6,7 @@ import {
   CheckIcon,
   UploadIcon,
 } from "@radix-ui/react-icons";
-import { EmptyStateWithAddHabit } from "../HabitGrid/EmptyStateWithAddHabit.jsx";
+import { EmptyStateWithAddHabit } from "../habitGrid/EmptyStateWithAddHabit.jsx";
 import { habitUtils } from "../../utils/habitLogic.js";
 
 const QuickActionsWidget = memo(
@@ -21,6 +21,18 @@ const QuickActionsWidget = memo(
     onShowCsvImport,
     entries = {}, // Add entries to get completion status
   }) => {
+    // Mobile detection
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+      const checkMobile = () => {
+        setIsMobile(window.innerWidth <= 768);
+      };
+      
+      checkMobile();
+      window.addEventListener('resize', checkMobile);
+      return () => window.removeEventListener('resize', checkMobile);
+    }, []);
     // Action handlers
     const handleAddHabit = useCallback(() => {
       if (onAddHabit) {
@@ -106,11 +118,12 @@ const QuickActionsWidget = memo(
     const buttonLayout = useMemo(() => {
       const totalButtons = actions.length;
 
-      if (breakpoint === "xs") {
+      // Mobile-first approach
+      if (isMobile || breakpoint === "xs") {
         return {
           columns: 1,
           rows: Math.min(totalButtons, availableRows),
-          buttonSize: "large",
+          buttonSize: "medium", // Changed from large to medium for better fit
           showLabels: true,
           showProgress: false,
         };
@@ -118,7 +131,7 @@ const QuickActionsWidget = memo(
 
       if (breakpoint === "sm") {
         return {
-          columns: 2, // Changed back to 2 for better layout with 5 buttons
+          columns: 2,
           rows: Math.ceil(totalButtons / 2),
           buttonSize: "medium",
           showLabels: true,
@@ -126,11 +139,11 @@ const QuickActionsWidget = memo(
         };
       }
 
-      // For md, lg, xl - use optimal columns for 5 buttons
+      // For md, lg, xl - use optimal columns for buttons
       const maxCols = Math.floor(availableColumns);
       const maxRows = Math.floor(availableRows);
       const preferredCols =
-        totalButtons <= 3 ? totalButtons : Math.min(3, maxCols); // Use 3 columns for 4-5 buttons
+        totalButtons <= 3 ? totalButtons : Math.min(3, maxCols);
 
       return {
         columns: preferredCols,
@@ -160,14 +173,18 @@ const QuickActionsWidget = memo(
 
       const sizeClasses = {
         large: "p-4 space-y-2 flex-col",
-        medium: "p-3 space-y-1 flex-col",
-        small: "p-2 space-x-2 flex-row",
+        medium: isMobile ? "p-3 space-y-1 flex-col min-h-[44px]" : "p-3 space-y-1 flex-col", // Add min-height for mobile
+        small: "p-2 space-x-2 flex-row min-h-[44px]", // Add min-height for touch targets
       };
 
       return `${baseClasses} ${sizeClasses[buttonLayout.buttonSize]}`;
     };
 
     const getIconSize = () => {
+      if (isMobile) {
+        return "w-5 h-5"; // Consistent size for mobile
+      }
+      
       switch (buttonLayout.buttonSize) {
         case "large":
           return "w-6 h-6";
@@ -217,7 +234,9 @@ const QuickActionsWidget = memo(
                     <div className="text-center">
                       <span
                         className={`font-medium leading-tight font-outfit block ${
-                          buttonLayout.buttonSize === "large"
+                          isMobile 
+                            ? "text-sm" // Larger text on mobile for better readability
+                            : buttonLayout.buttonSize === "large"
                             ? "text-sm"
                             : buttonLayout.buttonSize === "medium"
                             ? "text-xs"
@@ -229,7 +248,9 @@ const QuickActionsWidget = memo(
                       {action.subtitle && (
                         <span
                           className={`text-xs opacity-75 font-outfit block ${
-                            buttonLayout.buttonSize === "large"
+                            isMobile
+                              ? "text-xs" // Consistent subtitle size on mobile
+                              : buttonLayout.buttonSize === "large"
                               ? "text-xs"
                               : "text-[10px]"
                           }`}

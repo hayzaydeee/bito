@@ -648,358 +648,239 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
-/* Enhanced Transitions */
-* {
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Focus Visible Enhancement */
-*:focus-visible {
-  outline: 2px solid var(--color-brand-500);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-/* Accessibility Improvements */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* Enhanced Mobile Responsiveness */
+/* Improved Mobile Widget Styling */
 @media (max-width: 768px) {
-  /* Global mobile adjustments */
-  html {
-    font-size: 14px; /* Slightly smaller base font size for mobile */
+  /* Widget containers */
+  .react-grid-item {
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
   }
   
-  body {
-    -webkit-text-size-adjust: 100%; /* Prevent iOS text size adjustment */
+  /* Widget headers and titles */
+  .widget-header {
+    padding: 0.75rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
   }
   
-  /* Glass cards responsive */
-  .glass-card {
-    margin: 0.75rem;
-    padding: 1.25rem;
+  /* Widget content padding */
+  .widget-content {
+    padding: 0.75rem !important;
   }
   
-  .glass-card-minimal {
-    margin: 0.5rem;
-    padding: 1.5rem 1rem;
+  /* Better text contrast for mobile */
+  .mobile-text-primary {
+    color: var(--color-text-primary) !important;
+    font-weight: 500 !important;
   }
   
-  /* Typography adjustments */
-  .heading-display {
-    font-size: 2.5rem; /* Reduced from 3.75rem */
-    line-height: 1.2;
+  .mobile-text-secondary {
+    color: var(--color-text-secondary) !important;
+    font-size: 0.875rem !important;
   }
   
-  .heading-xl {
-    font-size: 1.875rem; /* Reduced from 2.25rem */
+  /* Habit grid mobile improvements */
+  .habit-row-mobile {
+    padding: 0.5rem !important;
+    margin-bottom: 0.25rem !important;
+    border-radius: 8px !important;
+    background: var(--color-surface-elevated) !important;
   }
   
-  .heading-lg {
-    font-size: 1.5rem; /* Reduced from 1.875rem */
+  .habit-checkbox-mobile {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 8px !important;
+    border: 2px solid var(--color-border-primary) !important;
   }
   
-  .heading-md {
-    font-size: 1.25rem; /* Reduced from 1.5rem */
+  .habit-name-mobile {
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    color: var(--color-text-primary) !important;
   }
   
-  /* Button adjustments for touch */
-  .btn {
-    min-height: 44px; /* iOS touch target minimum */
-    padding: 0.75rem 1.25rem;
+  /* Quick actions mobile */
+  .quick-action-btn-mobile {
+    padding: 0.75rem !important;
+    font-size: 0.875rem !important;
+    border-radius: 8px !important;
+    min-height: 44px !important;
   }
   
-  .btn-sm {
-    min-height: 40px;
-    padding: 0.625rem 1rem;
+  /* Stats cards mobile */
+  .stats-card-mobile {
+    padding: 0.75rem !important;
+    border-radius: 8px !important;
+    text-align: center !important;
+  }
+  
+  .stats-value-mobile {
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    color: var(--color-text-primary) !important;
+  }
+  
+  .stats-label-mobile {
+    font-size: 0.75rem !important;
+    color: var(--color-text-secondary) !important;
+    margin-top: 0.25rem !important;
+  }
+}
+
+/* Mobile Chart Widget Improvements */
+@media (max-width: 768px) {
+  .mobile-chart-widget {
     font-size: 0.875rem;
   }
   
-  /* Card adjustments */
-  .card {
-    margin-bottom: 1rem;
-    border-radius: 12px;
+  .mobile-chart-widget .recharts-text {
+    font-size: 10px !important;
   }
   
-  /* Animate adjustments */
-  .animate-slide-up {
-    animation-duration: 0.6s;
+  .mobile-chart-widget .recharts-cartesian-axis-tick-value {
+    font-size: 10px !important;
   }
   
-  /* Form adjustments */
-  .floating-label label {
-    font-size: 0.875rem;
+  .mobile-chart-widget .recharts-tooltip-wrapper {
+    font-size: 0.75rem !important;
+  }
+}
+
+/* Improved Mobile Dashboard Layout */
+@media (max-width: 768px) {
+  /* Dashboard padding adjustments */
+  .dashboard-grid {
+    padding: 0.5rem !important;
   }
   
-  /* Page container adjustments */
-  .page-container {
-    padding: 0;
-  }
-}
-
-@media (max-width: 640px) {
-  /* Extra small screens */
-  html {
-    font-size: 13px;
+  /* React Grid Layout mobile improvements */
+  .react-grid-layout {
+    margin: 0 !important;
   }
   
-  .heading-display {
-    font-size: 2rem;
-    line-height: 1.1;
+  .react-grid-item {
+    transition: none !important; /* Disable animations on mobile for better performance */
   }
   
-  .heading-xl {
-    font-size: 1.5rem;
+  .react-grid-item.cssTransforms {
+    transition-duration: 0ms !important;
   }
   
-  .heading-lg {
-    font-size: 1.25rem;
+  /* Widget spacing mobile */
+  .react-grid-item > div {
+    border-radius: 12px !important;
+    overflow: hidden !important;
   }
   
-  .glass-card {
-    margin: 0.5rem;
-    padding: 1rem;
+  /* Better scrolling for mobile */
+  .widget-content-area {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+}
+
+/* Status bar mobile specific fixes */
+@media (max-width: 768px) {
+  .status-bar-mobile {
+    min-height: 56px !important; /* Consistent height */
+    padding: 0.75rem 1rem !important;
   }
   
-  .glass-card-minimal {
-    margin: 0.25rem;
-    padding: 1rem 0.75rem;
+  .status-bar-mobile .touch-target {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+}
+
+/* Welcome card mobile adjustments */
+@media (max-width: 768px) {
+  .welcome-card-mobile {
+    padding: 1rem !important;
+    margin-bottom: 1rem !important;
   }
   
-  /* Smaller buttons for very small screens */
-  .btn-sm {
-    min-height: 36px;
-    padding: 0.5rem 0.875rem;
-    font-size: 0.8125rem;
-  }
-}
-
-@media (max-width: 480px) {
-  /* Very small screens */
-  html {
-    font-size: 12px;
+  .welcome-card-mobile h1 {
+    font-size: 1.5rem !important;
+    line-height: 1.3 !important;
   }
   
-  .heading-display {
-    font-size: 1.75rem;
+  .welcome-card-mobile p {
+    font-size: 0.875rem !important;
+  }
+}
+
+/* Better mobile navigation */
+@media (max-width: 768px) {
+  /* Sidebar improvements */
+  .sidebar-mobile {
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3) !important;
   }
   
-  .glass-card {
-    margin: 0.25rem;
-    padding: 0.875rem;
+  /* Menu items mobile */
+  .sidebar-mobile button {
+    min-height: 48px !important;
+    padding: 0.75rem !important;
+  }
+  
+  .sidebar-mobile .menu-text {
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
   }
 }
 
-/* Additional smooth animations and modern effects */
-@keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
+/* Improved mobile forms and inputs */
+@media (max-width: 768px) {
+  .form-mobile input[type="text"],
+  .form-mobile input[type="email"],
+  .form-mobile input[type="password"],
+  .form-mobile textarea,
+  .form-mobile select {
+    font-size: 16px !important; /* Prevent zoom on iOS */
+    padding: 0.875rem !important;
+    border-radius: 8px !important;
+    border: 1.5px solid var(--color-border-primary) !important;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
+  
+  .form-mobile label {
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    margin-bottom: 0.5rem !important;
+    display: block !important;
   }
 }
 
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(30px);
+/* Mobile modal improvements */
+@media (max-width: 768px) {
+  .modal-mobile {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    z-index: 60 !important;
   }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-    opacity: 0;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-}
-
-/* Additional Landing Page Animations */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(40px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  
+  .modal-content-mobile {
+    height: 100% !important;
+    overflow-y: auto !important;
+    padding: 1rem !important;
   }
 }
 
-@keyframes fadeInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-40px);
+/* Better mobile loading states */
+@media (max-width: 768px) {
+  .loading-skeleton-mobile {
+    height: 120px !important;
+    border-radius: 8px !important;
+    margin-bottom: 0.75rem !important;
   }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes fadeInRight {
-  from {
-    opacity: 0;
-    transform: translateX(40px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-}
-
-@keyframes gradient-shift {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-.animate-fadeInUp {
-  animation: fadeInUp 0.8s ease-out;
-}
-
-.animate-fadeInLeft {
-  animation: fadeInLeft 0.8s ease-out;
-}
-
-.animate-fadeInRight {
-  animation: fadeInRight 0.8s ease-out;
-}
-
-.animate-pulse-slow {
-  animation: pulse 3s ease-in-out infinite;
-}
-
-.animate-gradient {
-  background-size: 200% 200%;
-  animation: gradient-shift 3s ease infinite;
-}
-
-/* Apply animations to components */
-.animate-in {
-  animation: slideInUp 0.6s ease-out;
-}
-
-.animate-in-left {
-  animation: slideInLeft 0.6s ease-out;
-}
-
-.animate-in-right {
-  animation: slideInRight 0.6s ease-out;
-}
-
-.animate-shimmer {
-  animation: shimmer 2s ease-in-out infinite;
-}
-
-/* Enhanced hover effects for interactive elements */
-.hover-lift {
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.hover-lift:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-}
-
-/* Landing Page Specific Enhancements */
-.landing-hero {
-  background: linear-gradient(135deg, 
-    var(--color-bg-primary) 0%, 
-    var(--color-bg-secondary) 50%, 
-    var(--color-bg-tertiary) 100%);
-}
-
-.landing-feature-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 
-    0 25px 50px rgba(0, 0, 0, 0.25),
-    0 0 0 1px rgba(99, 102, 241, 0.1);
-}
-
-.landing-cta-button {
-  position: relative;
-  overflow: hidden;
-}
-
-.landing-cta-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.6s;
-}
-
-.landing-cta-button:hover::before {
-  left: 100%;
-}
-
-/* Testimonial card enhancements */
-.testimonial-card {
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.testimonial-card:hover {
-  transform: translateY(-6px) rotate(1deg);
-}
-
-/* Enhanced glass effect for landing */
-.landing-glass {
-  background: rgba(30, 30, 66, 0.3);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(99, 102, 241, 0.15);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
 }
 
 /* ========================================
@@ -1119,7 +1000,7 @@ body.onboarding-active [data-tour]:hover {
     left: -100% !important;
     top: 0 !important;
     height: 100vh !important;
-    width: 280px !important;
+    width: 240px !important; /* Reduced from 280px */
     z-index: 50 !important;
     transition: left 0.3s ease !important;
     background: var(--color-surface-primary) !important;
@@ -1271,52 +1152,77 @@ body.onboarding-active [data-tour]:hover {
 }
 
 @media (max-width: 480px) {
-  /* Extra small mobile adjustments */
-  .text-mobile-tiny {
-    font-size: 0.75rem !important;
+  /* Very small screens */
+  html {
+    font-size: 12px;
   }
   
-  .spacing-mobile-tight {
-    padding: 0.5rem !important;
-    margin: 0.25rem !important;
+  .heading-display {
+    font-size: 1.75rem;
+  }
+  
+  .glass-card {
+    margin: 0.25rem;
+    padding: 0.875rem;
   }
 }
 
-/* Touch-friendly adjustments */
-@media (hover: none) and (pointer: coarse) {
-  /* Touch device specific styles */
-  .touch-target {
-    min-height: 44px;
-    min-width: 44px;
-  }
-  
-  .hover-effects-disabled:hover {
-    transform: none !important;
-    box-shadow: initial !important;
-  }
-  
-  /* Remove hover states on touch devices */
-  .card:hover {
-    transform: none;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  }
-  
-  .btn:hover {
-    transform: none;
-  }
-}
-
-/* Accessibility for mobile */
+/* Enhanced Mobile Text Contrast and Readability */
 @media (max-width: 768px) {
-  /* Focus indicators for mobile */
-  *:focus-visible {
-    outline: 3px solid var(--color-brand-500);
-    outline-offset: 2px;
+  /* Enhanced mobile text contrast and readability */
+  .text-mobile-enhanced {
+    color: var(--color-text-primary) !important;
+    font-weight: 500 !important;
+    font-size: 15px !important;
+    line-height: 1.4 !important;
   }
-  
-  /* Larger text for readability */
-  .accessibility-large-text {
-    font-size: 1.125rem !important;
-    line-height: 1.6 !important;
+
+  .text-mobile-secondary-enhanced {
+    color: var(--color-text-secondary) !important;
+    font-weight: 450 !important;
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+  }
+
+  .text-mobile-number {
+    color: var(--color-brand-500) !important;
+    font-weight: 700 !important;
+    font-size: 18px !important;
+  }
+
+  .text-mobile-number-lg {
+    color: var(--color-brand-500) !important;
+    font-weight: 700 !important;
+    font-size: 20px !important;
+  }
+
+  /* Base font size improvement for mobile */
+  body {
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+  }
+
+  /* Button and interactive element improvements */
+  .btn-mobile-enhanced {
+    min-height: 44px !important;
+    min-width: 44px !important;
+    padding: 12px 16px !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+  }
+
+  /* Widget content text improvements */
+  .widget-mobile-text {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: var(--color-text-primary) !important;
+    line-height: 1.4 !important;
+  }
+
+  .widget-mobile-text-secondary {
+    font-size: 13px !important;
+    font-weight: 450 !important;
+    color: var(--color-text-secondary) !important;
+    line-height: 1.4 !important;
   }
 }

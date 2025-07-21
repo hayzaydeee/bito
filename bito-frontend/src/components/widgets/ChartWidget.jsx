@@ -1,4 +1,4 @@
-import { useMemo, memo } from "react";
+import { useMemo, memo, useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -18,7 +18,7 @@ import {
 } from "recharts";
 import { useChartData } from "../../globalHooks/useChartData";
 import { useWeekUtils } from "../../hooks/useWeekUtils";
-import { EmptyStateWithAddHabit } from "../HabitGrid/EmptyStateWithAddHabit.jsx";
+import { EmptyStateWithAddHabit } from "../habitGrid/EmptyStateWithAddHabit.jsx";
 import "./widgets.css";
 
 // Helper function to generate chart data from props (for member dashboards)
@@ -124,6 +124,19 @@ export const ChartWidget = ({
   habits = null, // Add habits prop
   entries = null, // Add entries prop
 }) => {
+  // Mobile detection
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const weekUtils = useWeekUtils();
   // Get real habit data based on chart type - but only if habits/entries props aren't provided
   const habitChartData = useChartData(chartType, dateRange);
@@ -437,10 +450,12 @@ export const ChartWidget = ({
   };
 
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className={`w-full h-full flex flex-col ${isMobile ? 'mobile-chart-widget' : ''}`}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-4 px-4 pt-4 flex-shrink-0">
-        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] font-outfit">
+      <div className={`flex items-center justify-between mb-4 px-4 pt-4 flex-shrink-0 ${isMobile ? 'mb-2 px-2 pt-2' : ''}`}>
+        <h3 className={`font-semibold text-[var(--color-text-primary)] font-outfit ${
+          isMobile ? 'text-base' : 'text-lg'
+        }`}>
           {title}
         </h3>
         {filterComponent && (
@@ -449,11 +464,11 @@ export const ChartWidget = ({
       </div>
       
       {/* Chart Container */}
-      <div className="widget-content-area px-4 pb-4">
+      <div className={`widget-content-area ${isMobile ? 'px-2 pb-2' : 'px-4 pb-4'}`}>
         {finalData && finalData.length > 0 ? (
           <div
             className={`w-full h-full ${
-              type === "line" ? "p-4" : ""
+              type === "line" ? (isMobile ? "p-2" : "p-4") : ""
             }`}
           >
             {renderChart()}

@@ -6,12 +6,25 @@ import {
   TargetIcon,
   PlusIcon,
   PlayIcon,
+  BarChartIcon,
 } from "@radix-ui/react-icons";
 import { useHabits, habitUtils } from "../../contexts/HabitContext";
 import { habitUtils as habitLogic } from "../../utils/habitLogic";
 
 const WelcomeCard = memo(({ userName = "User" }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Extract first name from the full name
   const firstName = useMemo(() => {
@@ -169,31 +182,40 @@ const WelcomeCard = memo(({ userName = "User" }) => {
   }
 
   return (
-    <div className="glass-card p-6 rounded-2xl relative overflow-hidden">
+    <div className={`glass-card rounded-2xl relative overflow-hidden ${
+      isMobile ? 'p-4 welcome-card-mobile' : 'p-6'
+    }`}>
       {/* Subtle Background Pattern */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-brand-500)]/3 via-[var(--color-brand-400)]/2 to-transparent"></div>
-        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[var(--color-brand-400)]/8 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
+        <div className={`absolute top-0 right-0 bg-gradient-to-bl from-[var(--color-brand-400)]/8 to-transparent rounded-full ${
+          isMobile ? 'w-24 h-24 -translate-y-12 translate-x-12' : 'w-32 h-32 -translate-y-16 translate-x-16'
+        }`}></div>
       </div>
 
       <div className="relative z-10">
         {/* Header - More Compact */}
-        <div className="flex items-center justify-between mb-6">
+        <div className={`flex items-center justify-between ${isMobile ? 'mb-4' : 'mb-6'}`}>
           {/* Left - Greeting */}
-          <div>
-            {" "}
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-brand-400)] bg-clip-text text-transparent font-dmSerif leading-tight mb-1">
+          <div className="flex-1 min-w-0">
+            <h1 className={`font-bold bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-brand-400)] bg-clip-text text-transparent font-dmSerif leading-tight mb-1 ${
+              isMobile ? 'text-xl' : 'text-2xl'
+            }`}>
               {timeData.greeting}, {firstName}!
             </h1>
-            <div className="flex items-center gap-3 text-sm">
+            <div className={`flex items-center gap-2 md:gap-3 text-sm ${isMobile ? 'flex-wrap' : ''}`}>
               <div className="flex items-center gap-1.5">
-                <CalendarIcon className="w-4 h-4 text-[var(--color-brand-400)]" />
-                <span className="font-outfit text-[var(--color-text-secondary)] font-medium">
+                <CalendarIcon className={`text-[var(--color-brand-400)] ${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
+                <span className={`font-outfit text-[var(--color-text-secondary)] font-medium ${
+                  isMobile ? 'text-xs' : 'text-sm'
+                }`}>
                   {timeData.currentDate}
                 </span>
               </div>
               <div className="w-1 h-1 rounded-full bg-[var(--color-text-tertiary)]"></div>
-              <span className="font-outfit text-[var(--color-text-tertiary)] font-medium tabular-nums">
+              <span className={`font-outfit text-[var(--color-text-tertiary)] font-medium tabular-nums ${
+                isMobile ? 'text-xs' : 'text-sm'
+              }`}>
                 {timeData.timeString}
               </span>
             </div>
@@ -204,72 +226,143 @@ const WelcomeCard = memo(({ userName = "User" }) => {
         {/* Progress Overview - Conditional based on habits */}
         {stats.todayTotal === 0 ? (
           // Empty state when no habits exist
-          <div className="text-center p-6 bg-[var(--color-surface-elevated)]/30 backdrop-blur-sm rounded-xl border border-[var(--color-border-primary)]/20">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[var(--color-brand-400)]/20 to-[var(--color-brand-500)]/10 border border-[var(--color-brand-400)]/20 flex items-center justify-center mx-auto mb-4">
-              <PlusIcon className="w-8 h-8 text-[var(--color-brand-400)]" />
+          <div className={`text-center bg-[var(--color-surface-elevated)]/30 backdrop-blur-sm rounded-xl border border-[var(--color-border-primary)]/20 ${
+            isMobile ? 'p-4' : 'p-6'
+          }`}>
+            <div className={`rounded-full bg-gradient-to-br from-[var(--color-brand-400)]/20 to-[var(--color-brand-500)]/10 border border-[var(--color-brand-400)]/20 flex items-center justify-center mx-auto mb-4 ${
+              isMobile ? 'w-12 h-12' : 'w-16 h-16'
+            }`}>
+              <PlusIcon className={`text-[var(--color-brand-400)] ${isMobile ? 'w-6 h-6' : 'w-8 h-8'}`} />
             </div>
-            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] font-dmSerif mb-2">
+            <h3 className={`font-semibold text-[var(--color-text-primary)] font-dmSerif mb-2 ${
+              isMobile ? 'text-base' : 'text-lg'
+            }`}>
               Ready to start your journey?
             </h3>
-            <p className="text-sm text-[var(--color-text-secondary)] font-outfit mb-4">
+            <p className={`text-[var(--color-text-secondary)] font-outfit mb-4 ${
+              isMobile ? 'text-xs' : 'text-sm'
+            }`}>
               You haven't added any habits yet. Add one using one of the widgets below!
             </p>
           </div>
         ) : (
           // Normal progress display when habits exist
-          <div className="flex items-center justify-between p-4 bg-[var(--color-surface-elevated)]/30 backdrop-blur-sm rounded-xl border border-[var(--color-border-primary)]/20">
-            {/* Today's Progress */}
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--color-success)]/20 to-[var(--color-success)]/10 border border-[var(--color-success)]/20 flex items-center justify-center">
-                  <CheckCircledIcon className="w-5 h-5 text-[var(--color-success)]" />
+          <div className={`bg-[var(--color-surface-elevated)]/30 backdrop-blur-sm rounded-xl border border-[var(--color-border-primary)]/20 ${
+            isMobile ? 'p-3' : 'p-4'
+          }`}>
+            {isMobile ? (
+              // Mobile Layout - Stacked
+              <div className="space-y-3">
+                {/* Today's Progress */}
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--color-success)]/20 to-[var(--color-success)]/10 border border-[var(--color-success)]/20 flex items-center justify-center">
+                      <CheckCircledIcon className="w-4 h-4 text-[var(--color-success)]" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-[var(--color-success)] rounded-full flex items-center justify-center">
+                      <span className="text-xs text-white font-bold">
+                        {stats.completed}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold font-dmSerif text-[var(--color-text-primary)]">
+                      {stats.completed} of {stats.todayTotal}
+                    </div>
+                    <div className="text-xs font-outfit text-[var(--color-text-tertiary)]">
+                      {stats.completed === 0
+                        ? "No habits completed yet today"
+                        : stats.completed === stats.todayTotal
+                        ? "All habits completed! 🎉"
+                        : "habits completed today"}
+                    </div>
+                  </div>
                 </div>
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-[var(--color-success)] rounded-full flex items-center justify-center">
-                  <span className="text-xs text-white font-bold">
-                    {stats.completed}
-                  </span>
-                </div>
-              </div>
-              <div>
-                <div className="text-lg font-bold font-dmSerif text-[var(--color-text-primary)]">
-                  {stats.completed} of {stats.todayTotal}
-                </div>
-                <div className="text-xs font-outfit text-[var(--color-text-tertiary)]">
-                  {stats.completed === 0
-                    ? "No habits completed yet today"
-                    : stats.completed === stats.todayTotal
-                    ? "All habits completed! 🎉"
-                    : "habits completed today"}
-                </div>
-              </div>
-            </div>
 
-            {/* Streak & Progress */}
-            <div className="flex items-center gap-6">
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <DoubleArrowUpIcon className="w-4 h-4 text-[var(--color-brand-400)]" />
-                  <span className="text-xl font-bold font-dmSerif text-[var(--color-brand-400)]">
-                    {stats.streak}
-                  </span>
-                </div>
-                <div className="text-xs font-outfit text-[var(--color-text-tertiary)]">
-                  day streak
-                </div>
-              </div>
+                {/* Streak & Progress - Mobile Row */}
+                <div className="flex items-center justify-around pt-2 border-t border-[var(--color-border-primary)]/20">
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <DoubleArrowUpIcon className="w-3 h-3 text-[var(--color-brand-400)]" />
+                      <span className="text-lg font-bold font-dmSerif text-[var(--color-brand-400)]">
+                        {stats.streak}
+                      </span>
+                    </div>
+                    <div className="text-xs font-outfit text-[var(--color-text-tertiary)]">
+                      day streak
+                    </div>
+                  </div>
 
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <TargetIcon className="w-4 h-4 text-[var(--color-brand-500)]" />
-                  <span className="text-xl font-bold font-dmSerif text-[var(--color-brand-500)]">
-                    {stats.progress}%
-                  </span>
-                </div>
-                <div className="text-xs font-outfit text-[var(--color-text-tertiary)]">
-                  weekly goal
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <TargetIcon className="w-3 h-3 text-[var(--color-brand-400)]" />
+                      <span className="text-lg font-bold font-dmSerif text-[var(--color-brand-400)]">
+                        {stats.progress}%
+                      </span>
+                    </div>
+                    <div className="text-xs font-outfit text-[var(--color-text-tertiary)]">
+                      weekly goal
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              // Desktop Layout - Horizontal
+              <div className="flex items-center justify-between">
+                {/* Today's Progress */}
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--color-success)]/20 to-[var(--color-success)]/10 border border-[var(--color-success)]/20 flex items-center justify-center">
+                      <CheckCircledIcon className="w-5 h-5 text-[var(--color-success)]" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-[var(--color-success)] rounded-full flex items-center justify-center">
+                      <span className="text-xs text-white font-bold">
+                        {stats.completed}
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold font-dmSerif text-[var(--color-text-primary)]">
+                      {stats.completed} of {stats.todayTotal}
+                    </div>
+                    <div className="text-xs font-outfit text-[var(--color-text-tertiary)]">
+                      {stats.completed === 0
+                        ? "No habits completed yet today"
+                        : stats.completed === stats.todayTotal
+                        ? "All habits completed! 🎉"
+                        : "habits completed today"}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Streak & Progress */}
+                <div className="flex items-center gap-6">
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <DoubleArrowUpIcon className="w-4 h-4 text-[var(--color-brand-400)]" />
+                      <span className="text-xl font-bold font-dmSerif text-[var(--color-brand-400)]">
+                        {stats.streak}
+                      </span>
+                    </div>
+                    <div className="text-xs font-outfit text-[var(--color-text-tertiary)]">
+                      day streak
+                    </div>
+                  </div>
+
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <TargetIcon className="w-4 h-4 text-[var(--color-brand-400)]" />
+                      <span className="text-xl font-bold font-dmSerif text-[var(--color-brand-400)]">
+                        {stats.progress}%
+                      </span>
+                    </div>
+                    <div className="text-xs font-outfit text-[var(--color-text-tertiary)]">
+                      weekly goal
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -277,10 +370,14 @@ const WelcomeCard = memo(({ userName = "User" }) => {
         {stats.todayTotal > 0 && (
           <div className="mt-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-outfit text-[var(--color-text-secondary)]">
+              <span className={`font-outfit text-[var(--color-text-secondary)] ${
+                isMobile ? 'text-xs' : 'text-sm'
+              }`}>
                 Daily Progress
               </span>
-              <span className="text-sm font-outfit font-medium text-[var(--color-brand-500)]">
+              <span className={`font-outfit font-medium text-[var(--color-brand-500)] ${
+                isMobile ? 'text-xs' : 'text-sm'
+              }`}>
                 {stats.todayTotal > 0
                   ? Math.round((stats.completed / stats.todayTotal) * 100)
                   : 0}
@@ -301,11 +398,32 @@ const WelcomeCard = memo(({ userName = "User" }) => {
             </div>
           </div>
         )}
+
+        {/* Action Buttons */}
+        <div className={`${stats.todayTotal > 0 ? 'mt-6' : 'mt-4'} flex gap-3 ${isMobile ? 'flex-col' : 'flex-row'}`}>
+          <button 
+            className={`group flex items-center justify-center gap-3 bg-gradient-to-r from-[var(--color-brand-400)] to-[var(--color-brand-500)] hover:from-[var(--color-brand-500)] hover:to-[var(--color-brand-600)] text-white rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg backdrop-blur-sm border border-[var(--color-brand-400)]/20 ${
+              isMobile ? 'px-4 py-3 text-sm' : 'px-6 py-3'
+            }`}
+            onClick={() => window.location.href = '/habits'}
+          >
+            <PlusIcon className={`transition-transform group-hover:rotate-90 ${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
+            <span className="font-semibold font-outfit">Add New Habit</span>
+          </button>
+          
+          <button 
+            className={`group flex items-center justify-center gap-3 bg-[var(--color-surface-elevated)]/80 hover:bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] rounded-xl transition-all duration-300 backdrop-blur-sm border border-[var(--color-border-primary)]/20 hover:border-[var(--color-brand-400)]/30 ${
+              isMobile ? 'px-4 py-3 text-sm' : 'px-6 py-3'
+            }`}
+            onClick={() => window.location.href = '/analytics'}
+          >
+            <BarChartIcon className={`text-[var(--color-brand-400)] transition-transform group-hover:scale-110 ${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
+            <span className="font-semibold font-outfit">View Analytics</span>
+          </button>
+        </div>
       </div>
     </div>
   );
 });
-
-WelcomeCard.displayName = "WelcomeCard";
 
 export default WelcomeCard;
