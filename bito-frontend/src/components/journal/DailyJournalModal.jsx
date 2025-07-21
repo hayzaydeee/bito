@@ -5,8 +5,12 @@ import {
   CheckCircledIcon,
   FileTextIcon,
   ExclamationTriangleIcon,
+  GearIcon,
+  ReaderIcon,
 } from "@radix-ui/react-icons";
 import BlockNoteEditor from "./BlockNoteEditor";
+import TemplateSelector from "./TemplateSelector";
+import TemplateManager from "./TemplateManager";
 import { journalService } from "../../services/journalService";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -32,6 +36,11 @@ const DailyJournalModal = ({
   const [tags, setTags] = useState([]);
   const [newTag, setNewTag] = useState("");
   const [editorInitialized, setEditorInitialized] = useState(false);
+  
+  // Template-related state
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+  const [showTemplateManager, setShowTemplateManager] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   // Handle editor being ready
   const handleEditorReady = useCallback((editorInstance) => {
@@ -270,6 +279,74 @@ const DailyJournalModal = ({
     [debouncedSave, entry, editorInitialized]
   );
 
+  // Template handling functions
+  const handleSelectTemplate = useCallback((template) => {
+    if (template && template.content) {
+      setSelectedTemplate(template);
+      
+      // If we already have an entry, we'll update it with template content
+      if (entry) {
+        const updatedEntry = {
+          ...entry,
+          richContent: template.content,
+          templateId: template._id || null
+        };
+        setEntry(updatedEntry);
+        
+        // Update word count
+        const plainText = journalService.extractPlainText(template.content);
+        const newWordCount = journalService.getWordCount(plainText);
+        setWordCount(newWordCount);
+        
+        // If editor is ready, update its content
+        if (editor && editorInitialized) {
+          try {
+            // Wait a moment to ensure editor is ready
+            setTimeout(() => {
+              if (editor.replaceBlocks) {
+                editor.replaceBlocks(editor.document, template.content);
+              }
+            }, 100);
+          } catch (error) {
+            console.warn('Could not update editor with template content:', error);
+          }
+        }
+      }
+    }
+    setShowTemplateSelector(false);
+  }, [entry, editor, editorInitialized]);
+
+  const handleOpenTemplateSelector = useCallback(() => {
+    if (!isAuthenticated) {
+      setErrorMessage("Please log in to use templates");
+      return;
+    }
+    setShowTemplateSelector(true);
+  }, [isAuthenticated]);
+
+  const handleOpenTemplateManager = useCallback(() => {
+    if (!isAuthenticated) {
+      setErrorMessage("Please log in to manage templates");
+      return;
+    }
+    setShowTemplateManager(true);
+  }, [isAuthenticated]);
+
+  const handleCreateTemplateFromCurrent = useCallback(() => {
+    if (!isAuthenticated) {
+      setErrorMessage("Please log in to create templates");
+      return;
+    }
+    
+    if (!entry || !entry.richContent || entry.richContent.length === 0) {
+      setErrorMessage("Write some content first before creating a template");
+      return;
+    }
+    
+    // Open template manager in create mode with current content
+    setShowTemplateManager(true);
+  }, [isAuthenticated, entry]);
+
   // Create a debounced metadata save function
   const debouncedMetadataSave = useCallback(
     debounce(async (updatedEntry) => {
@@ -378,6 +455,9 @@ const DailyJournalModal = ({
     setSaveStatus("saved");
     setEditor(null);
     setEditorInitialized(false);
+    setShowTemplateSelector(false);
+    setShowTemplateManager(false);
+    setSelectedTemplate(null);
     onClose();
   };
 
@@ -439,6 +519,14 @@ const DailyJournalModal = ({
               <p className="text-sm text-[var(--color-text-secondary)]">
                 {formattedDate}
               </p>
+              
+              {/* Template indicator */}
+              {selectedTemplate && (
+                <div className="mt-2 flex items-center gap-2 text-xs text-[var(--color-brand-500)]">
+                  <ReaderIcon className="w-3 h-3" />
+                  <span>Using template: {selectedTemplate.name}</span>
+                </div>
+              )}
             </div>
 
             {/* Mood selector */}
@@ -553,7 +641,26 @@ const DailyJournalModal = ({
               </p>
             </div>
             <div className="flex items-center gap-4">
-
+              {/* Template Actions */}
+              {isAuthenticated && (
+                <>
+                  <button
+                    onClick={handleOpenTemplateSelector}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-brand-500)] hover:bg-[var(--color-surface-hover)] rounded-lg transition-all duration-200"
+                    title="Use Template"
+                  >
+                    <ReaderIcon className="w-4 h-4" />
+                    Templates
+                  </button>
+                  <button
+                    onClick={handleOpenTemplateManager}
+                    className="p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] rounded-lg transition-colors"
+                    title="Manage Templates"
+                  >
+                    <GearIcon className="w-4 h-4" />
+                  </button>
+                </>
+              )}
 
               <button
                 onClick={handleClose}
@@ -644,6 +751,19 @@ const DailyJournalModal = ({
           </div>
         </div>
       </div>
+
+      {/* Template Modals */}
+      <TemplateSelector
+        isOpen={showTemplateSelector}
+        onClose={() => setShowTemplateSelector(false)}
+        onSelectTemplate={handleSelectTemplate}
+        onCreateTemplate={handleOpenTemplateManager}
+      />
+      
+      <TemplateManager
+        isOpen={showTemplateManager}
+        onClose={() => setShowTemplateManager(false)}
+      />
     </div>,
     document.body
   );
