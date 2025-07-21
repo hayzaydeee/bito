@@ -1,7 +1,7 @@
 import React, { useState, memo, useMemo, useCallback } from "react";
-import { DatabaseHeader } from "./DatabaseHeader.jsx";
-import { GalleryViewV2 } from "./GalleryViewV2.jsx";
-import { ProfessionalTableView } from "./ProfessionalTableView.jsx";
+import { DatabaseHeader } from "./DatabaseHeader";
+import { GalleryViewV2 } from "./GalleryViewV2";
+import { ProfessionalTableView } from "./ProfessionalTableView";
 import { useHabitData } from "../hooks/useHabitData.js";
 import { habitUtils, useHabits } from "../../../../contexts/HabitContext";
 import { useWeekUtils } from "../../../../hooks/useWeekUtils.js";
