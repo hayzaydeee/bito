@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { CheckIcon, DragHandleDots2Icon } from "@radix-ui/react-icons";
 import { HabitCheckbox } from "./HabitCheckbox.jsx";
 import { EmptyStateWithAddHabit } from "./EmptyStateWithAddHabit.jsx";
+import { JournalButton, DailyJournalModal } from "../journal";
+import { journalService } from "../../services/journalService";
 import { habitUtils } from "../../utils/habitLogic.js";
 import {
   DndContext,
@@ -70,6 +72,61 @@ export const TableView = ({
   onHabitReorder,
   onAddHabit,
 }) => {
+  // Journal state
+  const [journalModal, setJournalModal] = useState({
+    isOpen: false,
+    date: null,
+    focusHabit: null
+  });
+  const [journalIndicators, setJournalIndicators] = useState({});
+
+  // Load journal indicators for the week
+  useEffect(() => {
+    if (weekDates.length > 0) {
+      loadJournalIndicators();
+    }
+  }, [weekDates]);
+
+  const loadJournalIndicators = async () => {
+    try {
+      const startDate = weekDates[0]?.date;
+      const endDate = weekDates[weekDates.length - 1]?.date;
+      
+      if (startDate && endDate) {
+        const indicators = await journalService.getJournalIndicators(startDate, endDate);
+        setJournalIndicators(indicators);
+      }
+    } catch (error) {
+      console.error('Error loading journal indicators:', error);
+    }
+  };
+
+  // Handle journal modal
+  const openJournal = (date, focusHabit = null) => {
+    setJournalModal({
+      isOpen: true,
+      date,
+      focusHabit
+    });
+  };
+
+  const closeJournal = () => {
+    setJournalModal({
+      isOpen: false,
+      date: null,
+      focusHabit: null
+    });
+  };
+
+  const handleJournalSave = (savedEntry) => {
+    // Update journal indicators
+    const dateStr = journalService.formatDateForAPI(savedEntry.date);
+    setJournalIndicators(prev => ({
+      ...prev,
+      [dateStr]: true
+    }));
+  };
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -285,8 +342,14 @@ export const TableView = ({
                   </td>
                   {/* Actions Column */}
                   <td className="py-3 px-4 text-center">
-                    <div className="text-xs text-[var(--color-text-quaternary)] font-outfit">
-                      {/* Placeholder for future actions */}
+                    <div className="flex items-center justify-center">
+                      <JournalButton
+                        date={date}
+                        hasJournal={!!journalIndicators[date]}
+                        onClick={openJournal}
+                        showLabel={false}
+                        className="text-xs"
+                      />
                     </div>
                   </td>
                 </tr>
@@ -298,15 +361,30 @@ export const TableView = ({
     </div>
   );
 
+  const tableWithModal = (
+    <>
+      {tableContent}
+      <DailyJournalModal
+        isOpen={journalModal.isOpen}
+        onClose={closeJournal}
+        date={journalModal.date}
+        focusHabit={journalModal.focusHabit}
+        habits={habits}
+        habitEntries={{}} // TODO: Add habit entries if needed
+        onSave={handleJournalSave}
+      />
+    </>
+  );
+
   return isInEditMode ? (
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
     >
-      {tableContent}
+      {tableWithModal}
     </DndContext>
   ) : (
-    tableContent
+    tableWithModal
   );
 };
