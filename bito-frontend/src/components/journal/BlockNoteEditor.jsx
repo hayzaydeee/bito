@@ -1,6 +1,12 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { useCreateBlockNote } from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/mantine';
+import { 
+  BlockNoteSchema,
+  defaultBlockSpecs,
+  defaultInlineContentSpecs,
+  defaultStyleSpecs
+} from '@blocknote/core';
 import { useTheme } from '../../contexts/ThemeContext';
 
 // Import BlockNote styles
@@ -20,20 +26,23 @@ const BlockNoteEditor = ({
   // State to handle editor errors
   const [editorError, setEditorError] = React.useState(null);
   
-  // Reset error when initialContent changes
-  React.useEffect(() => {
-    setEditorError(null);
-  }, [initialContent]);
-  
-  // Safely process initial content - ensure it's always a valid BlockNote structure
-  const processedInitialContent = useMemo(() => {
-    // Helper function to sanitize block content
-    const sanitizeBlockContent = (content) => {
-      if (!Array.isArray(content)) {
-        return [];
-      }
-      
-      return content.map(item => {
+  // Utility function to create a valid block with proper sanitization
+  const createValidBlock = useCallback((block) => {
+    if (!block || typeof block !== 'object') {
+      return {
+        id: crypto.randomUUID?.() || Math.random().toString(36),
+        type: "paragraph",
+        props: {},
+        content: []
+      };
+    }
+    
+    const blockType = block.type || "paragraph";
+    
+    // Sanitize block content
+    let blockContent = [];
+    if (Array.isArray(block.content)) {
+      blockContent = block.content.map(item => {
         if (typeof item === 'string') {
           return item;
         }
@@ -58,30 +67,34 @@ const BlockNoteEditor = ({
         
         return '';
       }).filter(item => item !== ''); // Remove empty items
-    };
+    }
     
-    // Helper function to create a valid block
-    const createValidBlock = (block) => {
-      if (!block || typeof block !== 'object') {
-        return {
-          id: crypto.randomUUID?.() || Math.random().toString(36),
-          type: "paragraph",
-          props: {},
-          content: []
-        };
+    // Ensure props is a valid object
+    const sanitizedProps = {};
+    if (block.props && typeof block.props === 'object' && !Array.isArray(block.props)) {
+      // Only copy valid properties
+      for (const [key, value] of Object.entries(block.props)) {
+        if (value !== null && value !== undefined) {
+          sanitizedProps[key] = value;
+        }
       }
-      
-      const blockType = block.type || "paragraph";
-      const blockContent = sanitizeBlockContent(block.content || []);
-      
-      return {
-        id: block.id || crypto.randomUUID?.() || Math.random().toString(36),
-        type: blockType,
-        props: block.props || {},
-        content: blockContent
-      };
+    }
+
+    return {
+      id: block.id || crypto.randomUUID?.() || Math.random().toString(36),
+      type: blockType,
+      props: sanitizedProps,
+      content: blockContent
     };
-    
+  }, []);
+  
+  // Reset error when initialContent changes
+  React.useEffect(() => {
+    setEditorError(null);
+  }, [initialContent]);
+  
+  // Safely process initial content - ensure it's always a valid BlockNote structure
+  const processedInitialContent = useMemo(() => {
     // If no initial content or invalid format, return default empty paragraph
     if (!initialContent) {
       return [createValidBlock(null)];
@@ -111,18 +124,32 @@ const BlockNoteEditor = ({
     }
     
     return validatedContent;
-  }, [initialContent]);
+  }, [initialContent, createValidBlock]);
   
   // Add debug logging
   console.log('BlockNote initialContent received:', initialContent);
   console.log('BlockNote processedInitialContent:', processedInitialContent);
   
-  // Create editor instance - let React handle errors with error boundaries
+  // Create custom schema with all block types enabled
+  const schema = useMemo(() => BlockNoteSchema.create({
+    blockSpecs: {
+      // Add all default blocks
+      ...defaultBlockSpecs,
+      // All these should now be available:
+      // - paragraph, heading, bulletListItem, numberedListItem, 
+      // - checkListItem, quote, codeBlock, table
+      // - image, video, audio, file
+    },
+    inlineContentSpecs: defaultInlineContentSpecs,
+    styleSpecs: defaultStyleSpecs,
+  }), []);
+
   const editor = useCreateBlockNote({
+    schema,
     initialContent: processedInitialContent,
     animations: true,
     defaultStyles: true,
-    trailingBlock: true
+    trailingBlock: true,
   });
   
   // If editor creation failed, the component will unmount and remount
@@ -173,7 +200,32 @@ const BlockNoteEditor = ({
         const newContent = JSON.stringify(initialContent);
         
         if (currentContent !== newContent) {
-          editor.replaceBlocks(editor.document, initialContent);
+          // Sanitize the content before passing to replaceBlocks
+          const sanitizedContent = initialContent.map(block => {
+            if (!block || typeof block !== 'object') {
+              return createValidBlock(null);
+            }
+            
+            // Ensure props is a valid object without null/undefined values
+            const sanitizedProps = {};
+            if (block.props && typeof block.props === 'object' && !Array.isArray(block.props)) {
+              for (const [key, value] of Object.entries(block.props)) {
+                if (value !== null && value !== undefined) {
+                  sanitizedProps[key] = value;
+                }
+              }
+            }
+            
+            return {
+              ...block,
+              id: block.id || crypto.randomUUID?.() || Math.random().toString(36),
+              type: block.type || "paragraph",
+              props: sanitizedProps,
+              content: Array.isArray(block.content) ? block.content : []
+            };
+          });
+          
+          editor.replaceBlocks(editor.document, sanitizedContent);
         }
       } catch (error) {
         console.error('Error updating editor content:', error);

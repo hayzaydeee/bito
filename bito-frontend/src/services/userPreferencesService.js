@@ -62,18 +62,15 @@ class UserPreferencesService {
    * Set a preference value
    */
   set(key, value) {
-    console.log('userPreferencesService.set called:', key, value);
     if (!this.preferences) {
       this.init();
     }
     
     this.preferences[key] = value;
     this.saveToStorage();
-    console.log('userPreferencesService - notifying listeners for:', key, value);
     
     // Add a small delay to ensure listeners are ready
     setTimeout(() => {
-      console.log('userPreferencesService - delayed notification for:', key, value, 'listeners:', this.listeners.size);
       this.notifyListeners(key, value);
     }, 0);
   }
@@ -143,10 +140,8 @@ class UserPreferencesService {
    * Add a listener for preference changes
    */
   addListener(callback) {
-    console.log('userPreferencesService - adding listener, total listeners:', this.listeners.size + 1);
     this.listeners.add(callback);
     return () => {
-      console.log('userPreferencesService - removing listener, remaining:', this.listeners.size - 1);
       this.listeners.delete(callback);
     };
   }
@@ -155,13 +150,9 @@ class UserPreferencesService {
    * Notify all listeners of a preference change
    */
   notifyListeners(key, value) {
-    console.log('userPreferencesService - notifying', this.listeners.size, 'listeners for:', key, value);
-    let index = 0;
     this.listeners.forEach((callback) => {
       try {
-        console.log('userPreferencesService - calling listener', index);
         callback(key, value, this.preferences);
-        index++;
       } catch (error) {
         console.error('Error in preference change listener:', error);
       }

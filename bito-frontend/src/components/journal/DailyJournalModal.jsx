@@ -44,12 +44,10 @@ const DailyJournalModal = ({
 
   // Handle editor being ready
   const handleEditorReady = useCallback((editorInstance) => {
-    console.log('Editor ready, setting initialized state');
     setEditor(editorInstance);
     // Wait a moment for content to be fully loaded before allowing saves
     setTimeout(() => {
       setEditorInitialized(true);
-      console.log('Editor marked as initialized');
     }, 100);
   }, []);
 
@@ -199,16 +197,6 @@ const DailyJournalModal = ({
         const plainText = journalService.extractPlainText(content);
         const newWordCount = journalService.getWordCount(plainText);
 
-        console.log('Attempting to save journal:', { 
-          dateStr, 
-          plainText, 
-          newWordCount, 
-          content, 
-          mood, 
-          energy, 
-          tags 
-        }); // Debug log
-
         // Sanitize content for storage - remove any BlockNote internal properties
         const sanitizedContent = Array.isArray(content) ? content.map(block => ({
           id: block.id || crypto.randomUUID?.() || Math.random().toString(36),
@@ -256,7 +244,6 @@ const DailyJournalModal = ({
     (content, editorInstance) => {
       // Check if content actually changed from initial state
       if (!entry || !editorInitialized) {
-        console.log('Skipping save - no entry or editor not initialized');
         return;
       }
       
@@ -267,13 +254,7 @@ const DailyJournalModal = ({
       // Only trigger save if content meaningfully changed
       const currentPlainText = journalService.extractPlainText(entry.richContent || []);
       if (plainText !== currentPlainText) {
-        console.log('Content changed, triggering save:', { 
-          newPlainText: plainText, 
-          originalPlainText: currentPlainText 
-        });
         debouncedSave(content);
-      } else {
-        console.log('Content unchanged, skipping save');
       }
     },
     [debouncedSave, entry, editorInitialized]
@@ -381,7 +362,6 @@ const DailyJournalModal = ({
         const savedEntry = await journalService.updateDailyJournal(dateStr, updateData);
         setEntry(savedEntry);
         setSaveStatus("saved");
-        console.log('Metadata saved successfully');
       } catch (error) {
         console.error("Error saving metadata:", error);
         setSaveStatus("error");
