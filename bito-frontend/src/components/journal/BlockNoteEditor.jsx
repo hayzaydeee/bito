@@ -1,12 +1,6 @@
 import React, { useEffect, useMemo, useCallback } from 'react';
 import { useCreateBlockNote } from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/mantine';
-import { 
-  BlockNoteSchema,
-  defaultBlockSpecs,
-  defaultInlineContentSpecs,
-  defaultStyleSpecs
-} from '@blocknote/core';
 import { useTheme } from '../../contexts/ThemeContext';
 
 // Import BlockNote styles
@@ -130,22 +124,8 @@ const BlockNoteEditor = ({
   console.log('BlockNote initialContent received:', initialContent);
   console.log('BlockNote processedInitialContent:', processedInitialContent);
   
-  // Create custom schema with all block types enabled
-  const schema = useMemo(() => BlockNoteSchema.create({
-    blockSpecs: {
-      // Add all default blocks
-      ...defaultBlockSpecs,
-      // All these should now be available:
-      // - paragraph, heading, bulletListItem, numberedListItem, 
-      // - checkListItem, quote, codeBlock, table
-      // - image, video, audio, file
-    },
-    inlineContentSpecs: defaultInlineContentSpecs,
-    styleSpecs: defaultStyleSpecs,
-  }), []);
-
+  // Create editor with default configuration - BlockNote includes all block types by default
   const editor = useCreateBlockNote({
-    schema,
     initialContent: processedInitialContent,
     animations: true,
     defaultStyles: true,
