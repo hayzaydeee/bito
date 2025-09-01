@@ -123,6 +123,12 @@ const WorkspaceSettings = () => {
           ...prev,
           ...response.workspace,
         }));
+        
+        // Emit custom event to notify other components of workspace update
+        window.dispatchEvent(new CustomEvent('workspaceUpdated', {
+          detail: { workspace: response.workspace }
+        }));
+        
         notifications.updated("Workspace settings");
       }
     } catch (error) {

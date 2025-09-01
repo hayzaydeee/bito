@@ -48,6 +48,24 @@ const GroupSelection = () => {
   useEffect(() => {
     fetchGroups();
     
+    // Listen for workspace updates from other components
+    const handleWorkspaceUpdate = (event) => {
+      const updatedWorkspace = event.detail.workspace;
+      setGroups(prev => 
+        prev.map(group => 
+          group._id === updatedWorkspace._id ? { ...group, ...updatedWorkspace } : group
+        )
+      );
+    };
+
+    window.addEventListener('workspaceUpdated', handleWorkspaceUpdate);
+    
+    return () => {
+      window.removeEventListener('workspaceUpdated', handleWorkspaceUpdate);
+    };
+  }, []);
+
+  useEffect(() => {
     // Check if we have a notification from navigation state
     if (location.state?.notification) {
       showNotification(location.state.notification.message, location.state.notification.type);

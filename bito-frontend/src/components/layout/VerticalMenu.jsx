@@ -35,6 +35,22 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
   // Fetch user's workspaces
   useEffect(() => {
     fetchGroups();
+    
+    // Listen for workspace updates from other components
+    const handleWorkspaceUpdate = (event) => {
+      const updatedWorkspace = event.detail.workspace;
+      setWorkspaces(prev => 
+        prev.map(ws => 
+          ws._id === updatedWorkspace._id ? { ...ws, ...updatedWorkspace } : ws
+        )
+      );
+    };
+
+    window.addEventListener('workspaceUpdated', handleWorkspaceUpdate);
+    
+    return () => {
+      window.removeEventListener('workspaceUpdated', handleWorkspaceUpdate);
+    };
   }, []);
 
   const fetchGroups = async () => {

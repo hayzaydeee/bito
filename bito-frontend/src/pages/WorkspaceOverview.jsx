@@ -180,7 +180,21 @@ const WorkspaceOverview = () => {
 
   useEffect(() => {
     fetchGroupData();
-  }, [groupId]);
+    
+    // Listen for workspace updates from other components
+    const handleWorkspaceUpdate = (event) => {
+      const updatedWorkspace = event.detail.workspace;
+      if (group && group._id === updatedWorkspace._id) {
+        setGroup(prev => ({ ...prev, ...updatedWorkspace }));
+      }
+    };
+
+    window.addEventListener('workspaceUpdated', handleWorkspaceUpdate);
+    
+    return () => {
+      window.removeEventListener('workspaceUpdated', handleWorkspaceUpdate);
+    };
+  }, [groupId, group?._id]);
 
   const fetchGroupData = async () => {
     try {
