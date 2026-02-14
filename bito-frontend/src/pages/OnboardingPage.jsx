@@ -9,7 +9,7 @@ import {
 } from "@radix-ui/react-icons";
 import { useAuth } from "../contexts/AuthContext";
 import { useHabits } from "../contexts/HabitContext";
-import { userAPI, habitsAPI } from "../services/api";
+import { userAPI } from "../services/api";
 
 /* ─────────────────────────────────────────────
    Phase 4 — Onboarding Interactive Playground
@@ -129,7 +129,7 @@ const TIME_OPTIONS = [
 const OnboardingPage = () => {
   const navigate = useNavigate();
   const { user, updateUser, isAuthenticated, isLoading } = useAuth();
-  const { fetchHabits } = useHabits();
+  const { createHabit: contextCreateHabit } = useHabits();
   const [step, setStep] = useState(0); // 0=welcome, 1=goals, 2=capacity, 3=time, 4=preview, 5=done
   const [selectedGoals, setSelectedGoals] = useState([]);
   const [dailyCapacity, setDailyCapacity] = useState(null); // "light" | "balanced" | "full"
@@ -218,10 +218,10 @@ const OnboardingPage = () => {
         ? "19:00"
         : null;
 
-      // Create habits in parallel
+      // Create habits via context so state is updated inline
       if (suggestedHabits.length > 0) {
         const createPromises = suggestedHabits.map((habit) =>
-          habitsAPI.createHabit({
+          contextCreateHabit({
             name: habit.name,
             icon: habit.icon,
             category: habit.category,
@@ -232,14 +232,9 @@ const OnboardingPage = () => {
               days: [0, 1, 2, 3, 4, 5, 6],
               ...(reminderTime && { reminderTime, reminderEnabled: true }),
             },
-          }).catch((err) => {
-            console.warn(`Failed to create habit "${habit.name}":`, err);
-            return null;
           })
         );
         await Promise.all(createPromises);
-        // Refresh the HabitContext so the dashboard has fresh data
-        await fetchHabits();
       }
 
       // Mark onboarding as complete
