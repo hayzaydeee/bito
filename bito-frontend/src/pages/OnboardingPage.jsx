@@ -95,11 +95,44 @@ const GOAL_OPTIONS = [
   },
 ];
 
+const CAPACITY_OPTIONS = [
+  {
+    id: "light",
+    emoji: "🌱",
+    label: "Start small",
+    count: "3–4 habits",
+    description: "Perfect for building consistency first",
+  },
+  {
+    id: "balanced",
+    emoji: "⚖️",
+    label: "Balanced",
+    count: "5–6 habits",
+    description: "A healthy mix across your goals",
+  },
+  {
+    id: "full",
+    emoji: "🚀",
+    label: "All in",
+    count: "7+ habits",
+    description: "For those ready to commit big",
+  },
+];
+
+const TIME_OPTIONS = [
+  { id: "morning", emoji: "🌅", label: "Morning", time: "6 AM – 12 PM", description: "Start the day strong" },
+  { id: "afternoon", emoji: "☀️", label: "Afternoon", time: "12 – 5 PM", description: "Midday momentum" },
+  { id: "evening", emoji: "🌙", label: "Evening", time: "5 – 10 PM", description: "Wind down right" },
+];
+
 const OnboardingPage = () => {
   const navigate = useNavigate();
   const { user, updateUser, isAuthenticated, isLoading } = useAuth();
-  const [step, setStep] = useState(0); // 0=welcome, 1=goals, 2=preview, 3=done
+  const [step, setStep] = useState(0); // 0=welcome, 1=goals, 2=capacity, 3=time, 4=preview, 5=done
   const [selectedGoals, setSelectedGoals] = useState([]);
+  const [dailyCapacity, setDailyCapacity] = useState(null); // "light" | "balanced" | "full"
+  const [preferredTimes, setPreferredTimes] = useState([]);
+  const [triedHabitIndex, setTriedHabitIndex] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [animatingOut, setAnimatingOut] = useState(false);
 
@@ -125,11 +158,35 @@ const OnboardingPage = () => {
     );
   };
 
-  // Get all suggested habits from selected goals (with full metadata)
+  const toggleTime = (timeId) => {
+    setPreferredTimes((prev) =>
+      prev.includes(timeId) ? prev.filter((t) => t !== timeId) : [...prev, timeId]
+    );
+  };
+
+  // Get selected goal objects
   const selectedGoalObjects = GOAL_OPTIONS.filter((g) => selectedGoals.includes(g.id));
-  const suggestedHabits = selectedGoalObjects.flatMap((g) =>
-    g.habits.map((h) => ({ ...h, category: g.category, color: g.color }))
-  );
+
+  // Filter habits based on capacity preference
+  const suggestedHabits = (() => {
+    if (selectedGoalObjects.length === 0) return [];
+    if (dailyCapacity === "light") {
+      return selectedGoalObjects
+        .map((g) => ({ ...g.habits[0], category: g.category, color: g.color }))
+        .slice(0, 4);
+    }
+    if (dailyCapacity === "balanced") {
+      return selectedGoalObjects
+        .flatMap((g) =>
+          g.habits.slice(0, 2).map((h) => ({ ...h, category: g.category, color: g.color }))
+        )
+        .slice(0, 6);
+    }
+    // "full" or null — everything
+    return selectedGoalObjects.flatMap((g) =>
+      g.habits.map((h) => ({ ...h, category: g.category, color: g.color }))
+    );
+  })();
 
   const goNext = () => {
     setAnimatingOut(true);
@@ -150,6 +207,15 @@ const OnboardingPage = () => {
   const handleComplete = async () => {
     setIsSubmitting(true);
     try {
+      // Determine reminder time from preferred times
+      const reminderTime = preferredTimes.includes("morning")
+        ? "08:00"
+        : preferredTimes.includes("afternoon")
+        ? "13:00"
+        : preferredTimes.includes("evening")
+        ? "19:00"
+        : null;
+
       // Create habits in parallel
       if (suggestedHabits.length > 0) {
         const createPromises = suggestedHabits.map((habit) =>
@@ -160,10 +226,13 @@ const OnboardingPage = () => {
             color: habit.color,
             frequency: "daily",
             target: habit.target,
-            schedule: { days: [0, 1, 2, 3, 4, 5, 6] },
+            schedule: {
+              days: [0, 1, 2, 3, 4, 5, 6],
+              ...(reminderTime && { reminderTime, reminderEnabled: true }),
+            },
           }).catch((err) => {
             console.warn(`Failed to create habit "${habit.name}":`, err);
-            return null; // Don't fail the whole batch
+            return null;
           })
         );
         await Promise.all(createPromises);
@@ -175,7 +244,6 @@ const OnboardingPage = () => {
       navigate("/app/dashboard");
     } catch (err) {
       console.error("Failed to complete onboarding:", err);
-      // Still proceed — don't block the user
       updateUser({ onboardingComplete: true });
       navigate("/app/dashboard");
     }
@@ -353,8 +421,216 @@ const OnboardingPage = () => {
       </div>
     ),
 
-    /* ── Step 2: Preview dashboard ── */
+    /* ── Step 2: Daily capacity ── */
     2: (
+      <div className="max-w-xl mx-auto">
+        <div className="text-center mb-10">
+          <h2
+            className="heading-lg font-garamond mb-3"
+            style={{ color: "var(--color-text-primary)" }}
+          >
+            How many habits feel manageable?
+          </h2>
+          <p
+            className="text-base font-spartan"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
+            Starting smaller leads to consistency. You can always add more later.
+          </p>
+        </div>
+
+        <div className="space-y-3 mb-10">
+          {CAPACITY_OPTIONS.map((opt) => {
+            const isSelected = dailyCapacity === opt.id;
+            return (
+              <button
+                key={opt.id}
+                onClick={() => setDailyCapacity(opt.id)}
+                className="w-full text-left rounded-xl border p-5 transition-all duration-150 flex items-center gap-4"
+                style={{
+                  backgroundColor: isSelected
+                    ? "var(--color-brand-600)"
+                    : "var(--color-surface-primary)",
+                  borderColor: isSelected
+                    ? "var(--color-brand-500)"
+                    : "var(--color-border-primary)",
+                  transform: isSelected ? "scale(1.01)" : "scale(1)",
+                }}
+              >
+                <span className="text-3xl">{opt.emoji}</span>
+                <div className="flex-1">
+                  <div className="flex items-baseline gap-2">
+                    <h4
+                      className="text-base font-spartan font-semibold"
+                      style={{
+                        color: isSelected ? "#fff" : "var(--color-text-primary)",
+                      }}
+                    >
+                      {opt.label}
+                    </h4>
+                    <span
+                      className="text-sm font-spartan"
+                      style={{
+                        color: isSelected
+                          ? "rgba(255,255,255,0.7)"
+                          : "var(--color-text-tertiary)",
+                      }}
+                    >
+                      {opt.count}
+                    </span>
+                  </div>
+                  <p
+                    className="text-sm font-spartan mt-0.5"
+                    style={{
+                      color: isSelected
+                        ? "rgba(255,255,255,0.7)"
+                        : "var(--color-text-secondary)",
+                    }}
+                  >
+                    {opt.description}
+                  </p>
+                </div>
+                {isSelected && (
+                  <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                    <CheckIcon className="w-4 h-4 text-white" />
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex items-center justify-between">
+          <button
+            onClick={goBack}
+            className="flex items-center gap-2 text-sm font-spartan transition-colors"
+            style={{ color: "var(--color-text-secondary)" }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.color = "var(--color-text-primary)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.color = "var(--color-text-secondary)")
+            }
+          >
+            <ArrowLeftIcon className="w-4 h-4" />
+            Back
+          </button>
+          <button
+            onClick={goNext}
+            disabled={!dailyCapacity}
+            className="btn btn-primary btn-md group"
+            style={{
+              opacity: !dailyCapacity ? 0.4 : 1,
+              cursor: !dailyCapacity ? "not-allowed" : "pointer",
+            }}
+          >
+            Continue
+            <ArrowRightIcon className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+          </button>
+        </div>
+      </div>
+    ),
+
+    /* ── Step 3: Time of day ── */
+    3: (
+      <div className="max-w-xl mx-auto">
+        <div className="text-center mb-10">
+          <h2
+            className="heading-lg font-garamond mb-3"
+            style={{ color: "var(--color-text-primary)" }}
+          >
+            When do you build habits?
+          </h2>
+          <p
+            className="text-base font-spartan"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
+            Pick when you're most active — we'll set reminders accordingly.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+          {TIME_OPTIONS.map((opt) => {
+            const isSelected = preferredTimes.includes(opt.id);
+            return (
+              <button
+                key={opt.id}
+                onClick={() => toggleTime(opt.id)}
+                className="text-center rounded-xl border p-5 transition-all duration-150"
+                style={{
+                  backgroundColor: isSelected
+                    ? "var(--color-brand-600)"
+                    : "var(--color-surface-primary)",
+                  borderColor: isSelected
+                    ? "var(--color-brand-500)"
+                    : "var(--color-border-primary)",
+                  transform: isSelected ? "scale(1.02)" : "scale(1)",
+                }}
+              >
+                <span className="text-3xl block mb-2">{opt.emoji}</span>
+                <h4
+                  className="text-sm font-spartan font-semibold mb-0.5"
+                  style={{
+                    color: isSelected ? "#fff" : "var(--color-text-primary)",
+                  }}
+                >
+                  {opt.label}
+                </h4>
+                <p
+                  className="text-xs font-spartan"
+                  style={{
+                    color: isSelected
+                      ? "rgba(255,255,255,0.6)"
+                      : "var(--color-text-tertiary)",
+                  }}
+                >
+                  {opt.time}
+                </p>
+                {isSelected && (
+                  <div className="mt-2 mx-auto w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
+                    <CheckIcon className="w-3 h-3 text-white" />
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        <p
+          className="text-center text-xs font-spartan mb-8"
+          style={{ color: "var(--color-text-tertiary)" }}
+        >
+          Pick all that apply — or skip to continue
+        </p>
+
+        <div className="flex items-center justify-between">
+          <button
+            onClick={goBack}
+            className="flex items-center gap-2 text-sm font-spartan transition-colors"
+            style={{ color: "var(--color-text-secondary)" }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.color = "var(--color-text-primary)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.color = "var(--color-text-secondary)")
+            }
+          >
+            <ArrowLeftIcon className="w-4 h-4" />
+            Back
+          </button>
+          <button
+            onClick={goNext}
+            className="btn btn-primary btn-md group"
+          >
+            Continue
+            <ArrowRightIcon className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+          </button>
+        </div>
+      </div>
+    ),
+
+    /* ── Step 4: Preview with try-it ── */
+    4: (
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-8">
           <h2
@@ -367,13 +643,15 @@ const OnboardingPage = () => {
             className="text-base font-spartan"
             style={{ color: "var(--color-text-secondary)" }}
           >
-            These habits are ready to go. You can always customize later.
+            {triedHabitIndex === null
+              ? "Try tapping a habit to see how easy it is 👇"
+              : "These habits are ready to go. You can always customize later."}
           </p>
         </div>
 
         {/* Faux dashboard preview */}
         <div
-          className="rounded-xl border overflow-hidden mb-8"
+          className="rounded-xl border overflow-hidden mb-4"
           style={{
             backgroundColor: "var(--color-bg-primary)",
             borderColor: "var(--color-border-primary)",
@@ -395,35 +673,73 @@ const OnboardingPage = () => {
               className="text-xs font-spartan mt-0.5"
               style={{ color: "var(--color-text-tertiary)" }}
             >
-              0 of {suggestedHabits.length} completed today
+              {triedHabitIndex !== null ? 1 : 0} of {suggestedHabits.length}{" "}
+              completed today
             </p>
           </div>
 
           {/* Habit list */}
           <div className="p-4 space-y-2">
-            {suggestedHabits.map((habit, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors"
-                style={{
-                  backgroundColor: "var(--color-surface-primary)",
-                  borderColor: "var(--color-border-primary)",
-                }}
-              >
-                {/* Unchecked circle */}
+            {suggestedHabits.map((habit, i) => {
+              const isTried = triedHabitIndex === i;
+              return (
                 <div
-                  className="w-5 h-5 rounded-md border-2 flex-shrink-0"
-                  style={{ borderColor: "var(--color-border-secondary)" }}
-                />
-                <span className="text-sm mr-1">{habit.icon}</span>
-                <span
-                  className="text-sm font-spartan"
-                  style={{ color: "var(--color-text-primary)" }}
+                  key={i}
+                  onClick={() =>
+                    triedHabitIndex === null && setTriedHabitIndex(i)
+                  }
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg border transition-all duration-300"
+                  style={{
+                    backgroundColor: isTried
+                      ? "rgba(99,102,241,0.06)"
+                      : "var(--color-surface-primary)",
+                    borderColor: isTried
+                      ? "rgba(99,102,241,0.3)"
+                      : "var(--color-border-primary)",
+                    cursor:
+                      triedHabitIndex === null ? "pointer" : "default",
+                    transform: isTried ? "scale(1.01)" : "scale(1)",
+                  }}
                 >
-                  {habit.name}
-                </span>
-              </div>
-            ))}
+                  {/* Checkbox */}
+                  <div
+                    className="w-5 h-5 rounded-md border-2 flex-shrink-0 flex items-center justify-center transition-all duration-300"
+                    style={{
+                      borderColor: isTried
+                        ? "var(--color-brand-500)"
+                        : "var(--color-border-secondary)",
+                      backgroundColor: isTried
+                        ? "var(--color-brand-500)"
+                        : "transparent",
+                    }}
+                  >
+                    {isTried && (
+                      <CheckIcon className="w-3 h-3 text-white" />
+                    )}
+                  </div>
+                  <span className="text-sm mr-1">{habit.icon}</span>
+                  <span
+                    className="text-sm font-spartan transition-colors duration-300"
+                    style={{
+                      color: isTried
+                        ? "var(--color-text-tertiary)"
+                        : "var(--color-text-primary)",
+                      textDecoration: isTried ? "line-through" : "none",
+                    }}
+                  >
+                    {habit.name}
+                  </span>
+                  {isTried && (
+                    <span
+                      className="ml-auto text-xs font-spartan font-medium"
+                      style={{ color: "var(--color-brand-500)" }}
+                    >
+                      ✓
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {/* Mini stat bar */}
@@ -435,57 +751,90 @@ const OnboardingPage = () => {
             }}
           >
             <div className="flex items-center gap-1.5">
-              <span className="text-xs" style={{ color: "var(--color-warning)" }}>🔥</span>
-              <span className="text-xs font-spartan font-medium" style={{ color: "var(--color-text-tertiary)" }}>
-                0 day streak
+              <span
+                className="text-xs"
+                style={{ color: "var(--color-warning)" }}
+              >
+                🔥
+              </span>
+              <span
+                className="text-xs font-spartan font-medium"
+                style={{ color: "var(--color-text-tertiary)" }}
+              >
+                {triedHabitIndex !== null ? "1" : "0"} day streak
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <BarChartIcon className="w-3 h-3" style={{ color: "var(--color-text-tertiary)" }} />
-              <span className="text-xs font-spartan font-medium" style={{ color: "var(--color-text-tertiary)" }}>
+              <BarChartIcon
+                className="w-3 h-3"
+                style={{ color: "var(--color-text-tertiary)" }}
+              />
+              <span
+                className="text-xs font-spartan font-medium"
+                style={{ color: "var(--color-text-tertiary)" }}
+              >
                 Your insights will appear here
               </span>
             </div>
           </div>
         </div>
 
-        {/* Action buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* Try-it feedback */}
+        {triedHabitIndex !== null && (
+          <div
+            className="text-center mb-4 px-4 py-3 rounded-lg"
+            style={{ backgroundColor: "rgba(99,102,241,0.06)" }}
+          >
+            <p
+              className="text-sm font-spartan"
+              style={{ color: "var(--color-brand-600)" }}
+            >
+              That's the feeling! Just one tap, every day. 🎯
+            </p>
+          </div>
+        )}
+
+        {/* Action buttons — separated to fix clustering */}
+        <div className="flex items-center justify-between mt-6">
           <button
             onClick={goBack}
             className="flex items-center gap-2 text-sm font-spartan transition-colors"
             style={{ color: "var(--color-text-secondary)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-text-primary)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-secondary)")}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.color = "var(--color-text-primary)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.color = "var(--color-text-secondary)")
+            }
           >
             <ArrowLeftIcon className="w-4 h-4" />
-            Change goals
+            Back
           </button>
-
-          <div className="flex items-center gap-6">
-            <button
-              onClick={handleSkip}
-              className="text-sm font-spartan transition-colors"
-              style={{ color: "var(--color-text-tertiary)" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-text-secondary)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-tertiary)")}
-            >
-              Start fresh instead
-            </button>
-            <button
-              onClick={goNext}
-              className="btn btn-primary btn-md group"
-            >
-              Looks good — let's go!
-              <ArrowRightIcon className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
+          <button onClick={goNext} className="btn btn-primary btn-md group">
+            Looks good — let's go!
+            <ArrowRightIcon className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+          </button>
+        </div>
+        <div className="text-center mt-4">
+          <button
+            onClick={handleSkip}
+            className="text-xs font-spartan transition-colors"
+            style={{ color: "var(--color-text-tertiary)" }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.color = "var(--color-text-secondary)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.color = "var(--color-text-tertiary)")
+            }
+          >
+            or start fresh instead
+          </button>
         </div>
       </div>
     ),
 
-    /* ── Step 3: Done / celebration ── */
-    3: (
+    /* ── Step 5: Done / celebration ── */
+    5: (
       <div className="text-center max-w-lg mx-auto">
         {/* Celebration emoji */}
         <div className="text-6xl mb-6">🎉</div>
@@ -501,7 +850,7 @@ const OnboardingPage = () => {
           style={{ color: "var(--color-text-secondary)" }}
         >
           {suggestedHabits.length > 0
-            ? `We've added ${suggestedHabits.length} habits to get you started. Check in daily to start building your streaks.`
+            ? `We'll add ${suggestedHabits.length} habits to get you started. Check in daily to build your streaks.`
             : "Your dashboard is ready. Add your first habit whenever you're ready."}
         </p>
 
@@ -588,7 +937,7 @@ const OnboardingPage = () => {
 
         {/* Step dots */}
         <div className="flex items-center gap-2">
-          {[0, 1, 2, 3].map((s) => (
+          {[0, 1, 2, 3, 4, 5].map((s) => (
             <div
               key={s}
               className="h-1.5 rounded-full transition-all duration-300"
