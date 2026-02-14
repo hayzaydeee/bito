@@ -450,7 +450,7 @@ const OnboardingPage = () => {
         </div>
 
         {/* Action buttons */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <button
             onClick={goBack}
             className="flex items-center gap-2 text-sm font-spartan transition-colors"
@@ -462,7 +462,7 @@ const OnboardingPage = () => {
             Change goals
           </button>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-6">
             <button
               onClick={handleSkip}
               className="text-sm font-spartan transition-colors"
