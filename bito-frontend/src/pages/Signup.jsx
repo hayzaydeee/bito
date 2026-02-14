@@ -108,7 +108,7 @@ const Signup = () => {
       const result = await register(formData);
 
       if (result.success) {
-        navigate("/app/dashboard");
+        navigate("/onboarding");
       } else {
         setErrors({ general: result.error });
       }

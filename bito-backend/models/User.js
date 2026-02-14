@@ -46,6 +46,12 @@ const userSchema = new mongoose.Schema({  // Basic user information
     type: Boolean,
     default: true
   },
+
+  // Onboarding
+  onboardingComplete: {
+    type: Boolean,
+    default: false
+  },
   
   // User preferences
   preferences: {

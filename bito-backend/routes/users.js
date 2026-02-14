@@ -43,7 +43,7 @@ router.get('/profile', (req, res) => {
 // @access  Private
 router.put('/profile', validateUserUpdate, async (req, res) => {
   try {
-    const allowedUpdates = ['name', 'avatar', 'preferences'];
+    const allowedUpdates = ['name', 'avatar', 'preferences', 'onboardingComplete'];
     const updates = {};
 
     // Filter allowed updates
@@ -77,6 +77,7 @@ router.put('/profile', validateUserUpdate, async (req, res) => {
           name: user.name,
           avatar: user.avatar,
           preferences: user.preferences,
+          onboardingComplete: user.onboardingComplete,
           updatedAt: user.updatedAt
         }
       }

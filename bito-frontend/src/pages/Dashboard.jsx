@@ -1,4 +1,5 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useHabits, habitUtils } from '../contexts/HabitContext';
 import { useWeekUtils } from '../hooks/useWeekUtils';
@@ -75,8 +76,16 @@ const STORAGE_KEYS = {
 };
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const weekUtils = useWeekUtils();
+
+  // Redirect to onboarding if not completed
+  useEffect(() => {
+    if (user && user.onboardingComplete === false) {
+      navigate('/onboarding');
+    }
+  }, [user, navigate]);
   const { 
     habits, 
     entries, 

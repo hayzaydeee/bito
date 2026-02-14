@@ -55,6 +55,7 @@ router.post('/register', validateUserRegistration, async (req, res) => {
           name: user.name,
           avatar: user.avatar,
           preferences: user.preferences,
+          onboardingComplete: user.onboardingComplete,
           createdAt: user.createdAt
         }
       }
@@ -101,6 +102,7 @@ router.post('/login', validateUserLogin, (req, res, next) => {
           name: user.name,
           avatar: user.avatar,
           preferences: user.preferences,
+          onboardingComplete: user.onboardingComplete,
           lastLogin: user.lastLogin
         }
       }
@@ -131,6 +133,7 @@ router.get('/me', authenticateJWT, (req, res) => {
         name: req.user.name,
         avatar: req.user.avatar,
         preferences: req.user.preferences,
+        onboardingComplete: req.user.onboardingComplete,
         isVerified: req.user.isVerified,
         lastLogin: req.user.lastLogin,
         createdAt: req.user.createdAt

@@ -14,6 +14,7 @@ import WorkspaceOverview from "./pages/WorkspaceOverview";
 import WorkspaceSettings from "./pages/WorkspaceSettings";
 import MemberDashboardView from "./pages/MemberDashboardView";
 import GroupSelection from "./pages/GroupSelection";
+import OnboardingPage from "./pages/OnboardingPage";
 import InvitationPage from "./pages/InvitationPage";
 import { HabitProvider } from "./contexts/HabitContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
@@ -56,6 +57,9 @@ const ThemedApp = () => {
             
             {/* Invitation route without layout */}
             <Route path="/invite/:token" element={<InvitationPage />} />
+            
+            {/* Onboarding (no layout) */}
+            <Route path="/onboarding" element={<OnboardingPage />} />
             
             {/* App routes with layout */}
             <Route path="/app" element={<Layout />}>
