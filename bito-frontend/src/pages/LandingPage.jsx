@@ -1,274 +1,481 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  PlayIcon,
   ArrowRightIcon,
   CheckCircledIcon,
   TargetIcon,
-  CalendarIcon,
   BarChartIcon,
-  LightningBoltIcon,
-  ChevronRightIcon,
   GitHubLogoIcon,
-  TwitterLogoIcon,
   Cross2Icon,
   HamburgerMenuIcon,
+  CheckIcon,
 } from "@radix-ui/react-icons";
 import { useAuth } from "../contexts/AuthContext";
 import ContactModal from "../components/ui/ContactModal";
-import HowItWorksSection from "../components/landingPage/HowItWorksSection";
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading } = useAuth();
-  const [isVisible, setIsVisible] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState("hero");
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
-  const heroRef = useRef(null);
   const featuresRef = useRef(null);
-  const testimonialsRef = useRef(null);
   const howItWorksRef = useRef(null);
+  const testimonialsRef = useRef(null);
 
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
-
-  // Redirect authenticated users to the app
+  // Redirect authenticated users
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
       navigate("/app");
     }
   }, [isAuthenticated, isLoading, navigate]);
 
-  // Intersection Observer for active section tracking
+  // Navbar scroll effect
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-          }
-        });
-      },
-      { threshold: 0.3 }
-    );
-
-    [heroRef, featuresRef, testimonialsRef, howItWorksRef].forEach((ref) => {
-      if (ref.current) observer.observe(ref.current);
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  // Handle scroll event to change navbar background
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY;
-      if (scrollPosition > 50) {
-        setHasScrolled(true);
-      } else {
-        setHasScrolled(false);
-      }
-    };
-
+    const handleScroll = () => setHasScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
-
-    // Initial check
     handleScroll();
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Show loading state while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--color-bg-primary)] via-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)]">
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: "var(--color-bg-primary)" }}
+      >
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-brand-500)] mx-auto mb-4"></div>
-          <p className="text-[var(--color-text-secondary)]">Loading...</p>
+          <div
+            className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-4"
+            style={{ borderColor: "var(--color-brand-500)" }}
+          />
+          <p style={{ color: "var(--color-text-secondary)" }}>Loading...</p>
         </div>
       </div>
     );
   }
-
-  const features = [
-    {
-      icon: <TargetIcon className="w-5 h-5" />,
-      title: "Smart Goal Tracking",
-      description:
-        "Set meaningful goals with AI-powered insights and personalized recommendations that adapt to your progress.",
-      badge: "AI-Powered",
-    },
-    {
-      icon: <CalendarIcon className="w-5 h-5" />,
-      title: "Visual Progress",
-      description:
-        "Beautiful calendar and chart views help you visualize consistency patterns and celebrate your wins.",
-      badge: "Visual",
-    },
-    {
-      icon: <BarChartIcon className="w-5 h-5" />,
-      title: "Deep Analytics",
-      description:
-        "Understand your habits with detailed analytics, trend analysis, and correlation insights.",
-      badge: "Analytics",
-    },
-    {
-      icon: <LightningBoltIcon className="w-5 h-5" />,
-      title: "Quick Actions",
-      description:
-        "Lightning-fast habit logging with shortcuts, automation, and seamless integrations.",
-      badge: "Fast",
-    },
-  ];
-
-  const testimonials = [
-    {
-      name: "Sarah Chen",
-      role: "Product Manager at Stripe",
-      content:
-        "Bito has completely transformed how I approach personal development. The visual progress tracking keeps me motivated every single day.",
-      rating: 5,
-      avatar: "SC",
-    },
-    {
-      name: "Michael Rodriguez",
-      role: "Software Engineer at Vercel",
-      content:
-        "The analytics dashboard is incredible. I can see exactly what's working and what isn't in my daily routines.",
-      rating: 5,
-      avatar: "MR",
-    },
-    {
-      name: "Emily Johnson",
-      role: "Designer at Figma",
-      content:
-        "Beautiful design and incredibly intuitive. Building habits has never felt this engaging and rewarding.",
-      rating: 5,
-      avatar: "EJ",
-    },
-  ];
-
-  const stats = [
-    { value: "10K+", label: "Active Users" },
-    { value: "500K+", label: "Habits Tracked" },
-    { value: "98%", label: "Success Rate" },
-    { value: "4.9/5", label: "User Rating" },
-  ];
 
   const scrollToSection = (ref) => {
     ref.current?.scrollIntoView({ behavior: "smooth" });
     setMobileMenuOpen(false);
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-[var(--color-bg-primary)] via-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] overflow-hidden">
-      {/* Navigation Bar - Cal.com Inspired */}
-      <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          hasScrolled
-            ? "bg-[var(--color-surface-primary)]/95 backdrop-blur-md border-b border-[var(--color-border-primary)]/20"
-            : "bg-transparent border-b border-transparent"
-        }`}
+  /* ─── Data ─── */
+  const featureShowcases = [
+    {
+      label: "Track",
+      title: "Small actions, measured daily",
+      description:
+        "One-click habit logging, smart streaks, and a clean daily view that keeps you focused on what matters. No clutter, no friction — just the habits you care about.",
+      bullets: [
+        "One-click daily check-ins",
+        "Streak tracking with milestone celebrations",
+        "Flexible schedules — daily, weekly, or custom",
+      ],
+      visual: "track",
+    },
+    {
+      label: "Understand",
+      title: "See patterns you'd otherwise miss",
+      description:
+        "Beautiful charts and heatmaps reveal the story behind your data. AI-powered insights surface correlations and trends so you can double down on what works.",
+      bullets: [
+        "Visual heatmaps and progress charts",
+        "AI-generated insights and nudges",
+        "Trend analysis across weeks and months",
+      ],
+      visual: "understand",
+    },
+    {
+      label: "Together",
+      title: "Accountability changes everything",
+      description:
+        "Invite friends, family, or teammates into shared workspaces. Celebrate wins together, run challenges, and build habits as a group.",
+      bullets: [
+        "Shared workspaces and team habits",
+        "Group challenges and competitions",
+        "Encouragement and activity feeds",
+      ],
+      visual: "together",
+    },
+  ];
+
+  const howItWorksSteps = [
+    {
+      step: "01",
+      title: "Add your habits",
+      description:
+        "Pick from smart templates or create your own. Set your frequency, reminders, and goals in under a minute.",
+    },
+    {
+      step: "02",
+      title: "Check in daily",
+      description:
+        "Open bito, tap to complete. Your streaks, progress rings, and weekly overview update in real time.",
+    },
+    {
+      step: "03",
+      title: "Grow with insights",
+      description:
+        "As data accumulates, bito surfaces patterns and suggestions. The longer you use it, the smarter it gets.",
+    },
+  ];
+
+  const testimonials = [
+    {
+      name: "Sarah Chen",
+      role: "Product Manager",
+      content:
+        "Bito completely changed how I approach personal development. The visual progress tracking keeps me motivated every single day.",
+      avatar: "SC",
+    },
+    {
+      name: "Michael Rodriguez",
+      role: "Software Engineer",
+      content:
+        "The analytics are incredible. I can finally see exactly which habits are driving real results in my routines.",
+      avatar: "MR",
+    },
+    {
+      name: "Emily Johnson",
+      role: "Designer",
+      content:
+        "Beautiful design and incredibly intuitive. Building habits has never felt this engaging and rewarding.",
+      avatar: "EJ",
+    },
+  ];
+
+  const comparisonRows = [
+    { feature: "Habit tracking", bito: true, others: true },
+    { feature: "Team workspaces", bito: true, others: false },
+    { feature: "AI-powered insights", bito: true, others: false },
+    { feature: "Beautiful analytics", bito: true, others: "Basic" },
+    { feature: "Journal integration", bito: true, others: false },
+    { feature: "Free to use", bito: true, others: "Freemium" },
+  ];
+
+  /* ─── Visual placeholders for feature showcases ─── */
+  const FeatureVisual = ({ type }) => {
+    const baseBg = "var(--color-surface-secondary)";
+    const border = "var(--color-border-primary)";
+
+    if (type === "track") {
+      return (
+        <div
+          className="rounded-xl border p-6 space-y-3"
+          style={{ backgroundColor: baseBg, borderColor: border }}
+        >
+          {["Morning meditation", "Read 20 pages", "Exercise", "Journal"].map(
+            (habit, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 rounded-lg px-4 py-3 border"
+                style={{
+                  backgroundColor: "var(--color-surface-primary)",
+                  borderColor: border,
+                }}
+              >
+                <div
+                  className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0"
+                  style={{
+                    backgroundColor:
+                      i < 2 ? "var(--color-success)" : "var(--color-surface-hover)",
+                  }}
+                >
+                  {i < 2 && <CheckIcon className="w-3 h-3 text-white" />}
+                </div>
+                <span
+                  className="text-sm font-spartan"
+                  style={{
+                    color:
+                      i < 2
+                        ? "var(--color-text-tertiary)"
+                        : "var(--color-text-primary)",
+                    textDecoration: i < 2 ? "line-through" : "none",
+                  }}
+                >
+                  {habit}
+                </span>
+                {i === 0 && (
+                  <span
+                    className="ml-auto text-xs font-spartan font-medium"
+                    style={{ color: "var(--color-warning)" }}
+                  >
+                    12-day streak
+                  </span>
+                )}
+              </div>
+            )
+          )}
+          <div className="flex items-center gap-2 pt-2">
+            <div
+              className="h-2 flex-1 rounded-full overflow-hidden"
+              style={{ backgroundColor: "var(--color-surface-hover)" }}
+            >
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: "50%",
+                  backgroundColor: "var(--color-brand-500)",
+                }}
+              />
+            </div>
+            <span
+              className="text-xs font-spartan font-medium"
+              style={{ color: "var(--color-text-tertiary)" }}
+            >
+              2 / 4 today
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    if (type === "understand") {
+      return (
+        <div
+          className="rounded-xl border p-6"
+          style={{ backgroundColor: baseBg, borderColor: border }}
+        >
+          {/* Mini chart */}
+          <div className="flex items-end gap-1.5 h-28 mb-4">
+            {[40, 65, 55, 80, 70, 90, 85, 60, 95, 75, 88, 92].map((h, i) => (
+              <div
+                key={i}
+                className="flex-1 rounded-sm transition-all"
+                style={{
+                  height: `${h}%`,
+                  backgroundColor:
+                    i >= 10
+                      ? "var(--color-brand-500)"
+                      : "var(--color-brand-500)",
+                  opacity: 0.3 + (i / 12) * 0.7,
+                }}
+              />
+            ))}
+          </div>
+          <div
+            className="text-xs font-spartan mb-4"
+            style={{ color: "var(--color-text-tertiary)" }}
+          >
+            Completion rate — last 12 weeks
+          </div>
+          {/* Insight nudge */}
+          <div
+            className="rounded-lg border-l-3 px-4 py-3"
+            style={{
+              backgroundColor: "var(--color-surface-primary)",
+              borderLeft: "3px solid var(--color-secondary-400)",
+            }}
+          >
+            <p
+              className="text-xs font-spartan"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
+              Your morning habits have a 92% completion rate — 34% higher than
+              evening ones. Consider shifting "Read 20 pages" to the AM.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // together
+    return (
+      <div
+        className="rounded-xl border p-6 space-y-4"
+        style={{ backgroundColor: baseBg, borderColor: border }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="flex -space-x-2">
+            {["S", "M", "E", "J"].map((l, i) => (
+              <div
+                key={i}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white border-2"
+                style={{
+                  backgroundColor: `var(--color-brand-${400 + i * 100})`,
+                  borderColor: baseBg,
+                }}
+              >
+                {l}
+              </div>
+            ))}
+          </div>
+          <span
+            className="text-xs font-spartan font-medium"
+            style={{ color: "var(--color-text-tertiary)" }}
+          >
+            Team Fitness
+          </span>
+        </div>
+        {[
+          { user: "Sarah", action: "completed Morning Run", time: "2m ago" },
+          { user: "Michael", action: "started 30-Day Challenge", time: "1h ago" },
+          { user: "Emily", action: "hit a 7-day streak!", time: "3h ago" },
+        ].map((item, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-3 rounded-lg px-3 py-2.5 border"
+            style={{
+              backgroundColor: "var(--color-surface-primary)",
+              borderColor: border,
+            }}
+          >
+            <div
+              className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
+              style={{ backgroundColor: "var(--color-brand-500)" }}
+            >
+              {item.user[0]}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-spartan truncate" style={{ color: "var(--color-text-primary)" }}>
+                <span className="font-medium">{item.user}</span>{" "}
+                <span style={{ color: "var(--color-text-secondary)" }}>
+                  {item.action}
+                </span>
+              </p>
+            </div>
+            <span
+              className="text-[10px] font-spartan flex-shrink-0"
+              style={{ color: "var(--color-text-tertiary)" }}
+            >
+              {item.time}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div
+      className="min-h-screen overflow-hidden"
+      style={{ backgroundColor: "var(--color-bg-primary)" }}
+    >
+      {/* ─── Navigation ─── */}
+      <nav
+        className="fixed top-0 left-0 right-0 z-50 transition-all duration-200"
+        style={{
+          backgroundColor: hasScrolled
+            ? "var(--color-surface-primary)"
+            : "transparent",
+          borderBottom: hasScrolled
+            ? "1px solid var(--color-border-primary)"
+            : "1px solid transparent",
+        }}
+      >
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center h-16">
             {/* Logo */}
-            <div className="flex-shrink-0 flex items-center gap-2 w-48">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-brand-500)] to-[var(--color-brand-700)] flex items-center justify-center shadow-lg">
-                <TargetIcon className="w-6 h-6 text-white" />
+            <div className="flex-shrink-0 flex items-center gap-2.5">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ backgroundColor: "var(--color-brand-600)" }}
+              >
+                <TargetIcon className="w-5 h-5 text-white" />
               </div>
-              <div>
-                <p className="text-lg font-bold gradient-text font-outfit">
-                  bito
-                </p>
-              </div>
+              <span
+                className="text-lg font-bold font-garamond"
+                style={{ color: "var(--color-text-primary)" }}
+              >
+                bito
+              </span>
             </div>
 
-            {/* Desktop Navigation - Centered */}
-            <div className="hidden md:flex flex-1 justify-center items-center font-outfit">
+            {/* Desktop nav links */}
+            <div className="hidden md:flex flex-1 justify-center items-center">
               <div className="flex items-center gap-8">
-                <button
-                  onClick={() => scrollToSection(featuresRef)}
-                  className={`text-sm font-medium transition-colors hover:text-[var(--color-text-primary)] ${
-                    activeSection === "features"
-                      ? "text-[var(--color-brand-500)]"
-                      : "text-[var(--color-text-secondary)]"
-                  }`}
-                >
-                  Features
-                </button>
-                <button
-                  onClick={() => scrollToSection(howItWorksRef)}
-                  className={`text-sm font-medium transition-colors hover:text-[var(--color-text-primary)] ${
-                    activeSection === "howItWorks"
-                      ? "text-[var(--color-brand-500)]"
-                      : "text-[var(--color-text-secondary)]"
-                  }`}
-                >
-                  How It Works
-                </button>
+                {[
+                  { label: "Features", ref: featuresRef },
+                  { label: "How It Works", ref: howItWorksRef },
+                  { label: "Testimonials", ref: testimonialsRef },
+                ].map((item) => (
+                  <button
+                    key={item.label}
+                    onClick={() => scrollToSection(item.ref)}
+                    className="text-sm font-medium font-spartan transition-colors"
+                    style={{ color: "var(--color-text-secondary)" }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.color = "var(--color-text-primary)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.color = "var(--color-text-secondary)")
+                    }
+                  >
+                    {item.label}
+                  </button>
+                ))}
                 <button
                   onClick={() => setContactModalOpen(true)}
-                  className="text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+                  className="text-sm font-medium font-spartan transition-colors"
+                  style={{ color: "var(--color-text-secondary)" }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.color = "var(--color-text-primary)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.color = "var(--color-text-secondary)")
+                  }
                 >
-                  Contact Us
+                  Contact
                 </button>
               </div>
             </div>
 
-            {/* Auth Buttons */}
-            <div className="hidden md:flex items-center gap-4 font-outfit w-48 justify-end">
+            {/* Auth buttons */}
+            <div className="hidden md:flex items-center gap-3">
               <button
                 onClick={() => navigate("/login")}
-                className="whitespace-nowrap px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+                className="px-4 py-2 text-sm font-medium font-spartan transition-colors"
+                style={{ color: "var(--color-text-secondary)" }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.color = "var(--color-text-primary)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color = "var(--color-text-secondary)")
+                }
               >
                 Sign In
               </button>
               <button
                 onClick={() => navigate("/signup")}
-                className="whitespace-nowrap px-5 py-2 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl"
+                className="btn btn-primary btn-sm"
               >
                 Get Started
               </button>
             </div>
 
-            {/* Mobile Menu Button */}
+            {/* Mobile menu toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
+              className="md:hidden ml-auto p-2 rounded-lg transition-colors"
+              style={{ color: "var(--color-text-primary)" }}
             >
               {mobileMenuOpen ? (
-                <Cross2Icon className="w-5 h-5 text-[var(--color-text-primary)]" />
+                <Cross2Icon className="w-5 h-5" />
               ) : (
-                <HamburgerMenuIcon className="w-5 h-5 text-[var(--color-text-primary)]" />
+                <HamburgerMenuIcon className="w-5 h-5" />
               )}
             </button>
           </div>
 
-          {/* Mobile Menu */}
+          {/* Mobile menu */}
           {mobileMenuOpen && (
             <div
-              className={`md:hidden py-4 ${
-                hasScrolled
-                  ? "border-t border-[var(--color-border-primary)]/20"
-                  : "bg-[var(--color-surface-primary)]/95 backdrop-blur-md rounded-b-lg"
-              }`}
+              className="md:hidden py-4 border-t"
+              style={{ borderColor: "var(--color-border-primary)" }}
             >
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-4 font-spartan">
                 <button
                   onClick={() => scrollToSection(featuresRef)}
-                  className="text-left text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+                  className="text-left text-sm font-medium"
+                  style={{ color: "var(--color-text-secondary)" }}
                 >
                   Features
                 </button>
                 <button
                   onClick={() => scrollToSection(howItWorksRef)}
-                  className="text-left text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+                  className="text-left text-sm font-medium"
+                  style={{ color: "var(--color-text-secondary)" }}
                 >
                   How It Works
                 </button>
@@ -277,20 +484,25 @@ const LandingPage = () => {
                     setContactModalOpen(true);
                     setMobileMenuOpen(false);
                   }}
-                  className="text-left text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+                  className="text-left text-sm font-medium"
+                  style={{ color: "var(--color-text-secondary)" }}
                 >
-                  Contact Us
+                  Contact
                 </button>
-                <div className="pt-4 border-t border-[var(--color-border-primary)]/20 flex flex-col gap-3">
+                <div
+                  className="pt-4 border-t flex flex-col gap-3"
+                  style={{ borderColor: "var(--color-border-primary)" }}
+                >
                   <button
                     onClick={() => navigate("/login")}
-                    className="text-left text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors px-2 py-1"
+                    className="text-left text-sm font-medium"
+                    style={{ color: "var(--color-text-secondary)" }}
                   >
                     Sign In
                   </button>
                   <button
                     onClick={() => navigate("/signup")}
-                    className="px-5 py-2 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg text-sm font-medium transition-all duration-200 text-center shadow-md"
+                    className="btn btn-primary btn-sm text-center"
                   >
                     Get Started
                   </button>
@@ -301,271 +513,559 @@ const LandingPage = () => {
         </div>
       </nav>
 
-      {/* Hero Section - Cal.com Style */}
-      <section
-        ref={heroRef}
-        id="hero"
-        className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-16 md:pt-20"
-      >
-        {/* Background Effects */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-brand-500)]/5 via-transparent to-[var(--color-brand-400)]/3"></div>
-          {/* Floating Elements */}
-          <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-[var(--color-brand-400)]/40 rounded-full animate-float"></div>
-          <div
-            className="absolute top-1/3 right-1/3 w-1 h-1 bg-[var(--color-brand-500)]/60 rounded-full animate-float"
-            style={{ animationDelay: "1s" }}
-          ></div>
-          <div
-            className="absolute bottom-1/3 left-1/5 w-1.5 h-1.5 bg-[var(--color-brand-300)]/50 rounded-full animate-float"
-            style={{ animationDelay: "2s" }}
-          ></div>
-        </div>
-
+      {/* ─── Hero Section — dark editorial ─── */}
+      <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 px-4 sm:px-6 lg:px-8">
+        {/* Subtle radial glow — no particles */}
         <div
-          className={`relative z-10 max-w-4xl mx-auto text-center transition-all duration-1000 hero-mobile ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-        >
-          {/* Badge */}
-          <div
-            onClick={() => navigate("/signup")}
-            className="inline-flex items-center gap-2 px-3 md:px-4 py-2 rounded-full bg-[var(--color-surface-elevated)]/80 backdrop-blur-sm border border-[var(--color-border-primary)]/30 mb-6 md:mb-8 hover:scale-105 transition-transform duration-300 touch-target"
-          >
-            <div className="w-2 h-2 bg-[var(--color-success)] rounded-full animate-pulse"></div>
-            <span className="text-xs md:text-sm font-medium text-[var(--color-text-primary)]">
-              bito v1 is live!
-            </span>
-            <ChevronRightIcon className="w-3 md:w-4 h-3 md:h-4 text-[var(--color-text-tertiary)]" />
-          </div>
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse 60% 50% at 50% 30%, var(--color-brand-950) 0%, transparent 70%)",
+            opacity: 0.5,
+          }}
+        />
 
-          {/* Main Headline */}
-          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-[var(--color-text-primary)] via-[var(--color-brand-400)] to-[var(--color-brand-500)] bg-clip-text text-transparent font-dmSerif mb-4 md:mb-6 leading-tight px-2">
+        <div className="relative z-10 max-w-4xl mx-auto text-center">
+          <h1
+            className="heading-display mb-6 px-2 font-garamond"
+            style={{ color: "var(--color-text-primary)" }}
+          >
             Build habits that
             <br />
-            actually stick
+            <span className="gradient-text">actually stick</span>
           </h1>
 
-          {/* Subtitle */}
-          <p className="text-base md:text-lg lg:text-xl text-[var(--color-text-secondary)] mb-8 md:mb-10 max-w-2xl mx-auto leading-relaxed font-outfit px-4">
-            The most effective way to track, analyze, and optimize your daily
-            routines with beautiful insights and AI-powered recommendations.
+          <p
+            className="text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-spartan px-4"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
+            Track, understand, and grow — alone or with your team. Bito turns
+            daily routines into lasting change with beautiful insights and
+            gentle intelligence.
           </p>
 
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center mb-8 md:mb-12 font-outfit button-group-mobile px-4">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-12 font-spartan px-4">
             <button
               onClick={() => navigate("/signup")}
-              className="group px-6 md:px-8 py-3 md:py-4 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-xl text-base font-semibold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 touch-target"
+              className="btn btn-primary btn-lg group"
             >
               Start for free
-              <ArrowRightIcon className="w-4 md:w-5 h-4 md:h-5 group-hover:translate-x-1 transition-transform" />
+              <ArrowRightIcon className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
             </button>
-
             <button
               onClick={() => scrollToSection(howItWorksRef)}
-              className="px-6 md:px-8 py-3 md:py-4 bg-[var(--color-surface-elevated)]/80 hover:bg-[var(--color-surface-hover)] backdrop-blur-sm border border-[var(--color-border-primary)]/30 text-[var(--color-text-primary)] rounded-xl text-base font-semibold transition-all duration-300 hover:scale-105 shadow-lg touch-target"
+              className="btn btn-secondary btn-lg"
             >
-              How it works
+              See how it works
             </button>
+          </div>
+
+          {/* Product screenshot placeholder */}
+          <div className="max-w-3xl mx-auto">
+            <div
+              className="rounded-xl border overflow-hidden"
+              style={{
+                backgroundColor: "var(--color-surface-secondary)",
+                borderColor: "var(--color-border-primary)",
+                boxShadow: "0 24px 48px rgba(0,0,0,0.2)",
+              }}
+            >
+              {/* Browser chrome bar */}
+              <div
+                className="flex items-center gap-2 px-4 py-2.5 border-b"
+                style={{ borderColor: "var(--color-border-primary)" }}
+              >
+                <div className="flex gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-400/60" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/60" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-400/60" />
+                </div>
+                <div
+                  className="flex-1 mx-8 h-5 rounded-md"
+                  style={{ backgroundColor: "var(--color-surface-hover)" }}
+                />
+              </div>
+              {/* Dashboard mockup */}
+              <div className="p-6 md:p-8 space-y-4">
+                {/* Stat pills */}
+                <div className="flex gap-3 flex-wrap">
+                  {[
+                    { label: "Streak", value: "12 days", color: "var(--color-warning)" },
+                    { label: "Today", value: "3 / 5", color: "var(--color-brand-500)" },
+                    { label: "This week", value: "87%", color: "var(--color-success)" },
+                  ].map((stat, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg border"
+                      style={{
+                        backgroundColor: "var(--color-surface-primary)",
+                        borderColor: "var(--color-border-primary)",
+                      }}
+                    >
+                      <div
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: stat.color }}
+                      />
+                      <span
+                        className="text-xs font-spartan"
+                        style={{ color: "var(--color-text-tertiary)" }}
+                      >
+                        {stat.label}
+                      </span>
+                      <span
+                        className="text-xs font-spartan font-semibold"
+                        style={{ color: "var(--color-text-primary)" }}
+                      >
+                        {stat.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                {/* Habit rows */}
+                {["Morning meditation", "Read 20 pages", "Exercise"].map(
+                  (h, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-3 rounded-lg px-4 py-3 border"
+                      style={{
+                        backgroundColor: "var(--color-surface-primary)",
+                        borderColor: "var(--color-border-primary)",
+                      }}
+                    >
+                      <div
+                        className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0"
+                        style={{
+                          backgroundColor:
+                            i < 2
+                              ? "var(--color-success)"
+                              : "var(--color-surface-hover)",
+                        }}
+                      >
+                        {i < 2 && (
+                          <CheckIcon className="w-3 h-3 text-white" />
+                        )}
+                      </div>
+                      <span
+                        className="text-sm font-spartan"
+                        style={{ color: "var(--color-text-primary)" }}
+                      >
+                        {h}
+                      </span>
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section - Modern Grid */}
+      {/* ─── Problem → Solution narrative ─── */}
       <section
-        ref={featuresRef}
-        id="features"
-        className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 relative"
+        className="py-20 md:py-28 px-4 sm:px-6 lg:px-8"
+        style={{ backgroundColor: "var(--color-bg-secondary)" }}
       >
-        <div className="max-w-7xl mx-auto">
-          {/* Section Header */}
-          <div className="text-center mb-12 md:mb-16">
-            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-brand-400)] bg-clip-text text-transparent font-dmSerif mb-3 md:mb-4 px-4">
-              Everything you need to succeed
+        <div className="max-w-3xl mx-auto text-center">
+          <p
+            className="text-base md:text-lg leading-relaxed font-spartan mb-8"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
+            Most habit apps overload you with streaks, badges, and gamification
+            that feels hollow after a week. They track <em>everything</em> but
+            help you understand <em>nothing</em>.
+          </p>
+          <h2
+            className="heading-lg font-garamond mb-6"
+            style={{ color: "var(--color-text-primary)" }}
+          >
+            Bito takes a quieter approach.
+          </h2>
+          <p
+            className="text-base md:text-lg leading-relaxed font-spartan"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
+            We believe lasting change comes from clarity, not noise. A clean
+            daily view, honest analytics, and just enough intelligence to help
+            you see what's working — that's it.
+          </p>
+        </div>
+      </section>
+
+      {/* ─── Feature Showcases — alternating layout ─── */}
+      <section ref={featuresRef} id="features" className="py-20 md:py-28 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto space-y-24 md:space-y-32">
+          {featureShowcases.map((feat, idx) => (
+            <div
+              key={feat.label}
+              className={`grid md:grid-cols-2 gap-12 md:gap-16 items-center ${
+                idx % 2 === 1 ? "md:[direction:rtl]" : ""
+              }`}
+            >
+              {/* Text side */}
+              <div className={idx % 2 === 1 ? "md:[direction:ltr]" : ""}>
+                <span
+                  className="text-xs font-spartan font-semibold uppercase tracking-widest mb-3 inline-block"
+                  style={{ color: "var(--color-brand-400)" }}
+                >
+                  {feat.label}
+                </span>
+                <h3
+                  className="heading-lg font-garamond mb-4"
+                  style={{ color: "var(--color-text-primary)" }}
+                >
+                  {feat.title}
+                </h3>
+                <p
+                  className="text-base leading-relaxed font-spartan mb-6"
+                  style={{ color: "var(--color-text-secondary)" }}
+                >
+                  {feat.description}
+                </p>
+                <ul className="space-y-3">
+                  {feat.bullets.map((b, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <CheckCircledIcon
+                        className="w-4 h-4 mt-0.5 flex-shrink-0"
+                        style={{ color: "var(--color-success)" }}
+                      />
+                      <span
+                        className="text-sm font-spartan"
+                        style={{ color: "var(--color-text-secondary)" }}
+                      >
+                        {b}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Visual side */}
+              <div className={idx % 2 === 1 ? "md:[direction:ltr]" : ""}>
+                <FeatureVisual type={feat.visual} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── How It Works — 3 steps ─── */}
+      <section
+        ref={howItWorksRef}
+        id="howItWorks"
+        className="py-20 md:py-28 px-4 sm:px-6 lg:px-8"
+        style={{ backgroundColor: "var(--color-bg-secondary)" }}
+      >
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <h2
+              className="heading-lg font-garamond mb-4"
+              style={{ color: "var(--color-text-primary)" }}
+            >
+              Three steps. That's it.
             </h2>
-            <p className="text-base md:text-lg text-[var(--color-text-secondary)] max-w-2xl mx-auto font-outfit px-4">
-              Powerful features designed for effective habit building, from
-              tracking to insights
+            <p
+              className="text-base font-spartan max-w-xl mx-auto"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
+              No complex setup, no learning curve. You'll be tracking habits in
+              under two minutes.
             </p>
           </div>
 
-          {/* Features Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 font-outfit features-mobile">
-            {features.map((feature, index) => (
-              <div
-                key={index}
-                className="group relative p-6 glass-card rounded-2xl border border-[var(--color-border-primary)]/20 transition-all duration-500 hover:border-[var(--color-brand-500)]/30 hover:transform hover:scale-105"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                {/* Badge */}
-                <div className="absolute top-4 right-4">
-                  <span className="px-2 py-1 bg-[var(--color-brand-500)]/10 text-[var(--color-brand-400)] text-xs font-medium rounded-full border border-[var(--color-brand-500)]/20">
-                    {feature.badge}
-                  </span>
-                </div>
-
-                {/* Icon */}
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[var(--color-brand-500)]/20 to-[var(--color-brand-400)]/10 border border-[var(--color-brand-500)]/20 text-[var(--color-brand-400)] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                  {feature.icon}
-                </div>
-
-                {/* Content */}
-                <h3 className="text-lg font-bold font-dmSerif mb-3 text-[var(--color-text-primary)] group-hover:text-[var(--color-brand-400)] transition-colors">
-                  {feature.title}
+          <div className="grid md:grid-cols-3 gap-8">
+            {howItWorksSteps.map((step) => (
+              <div key={step.step} className="text-center md:text-left">
+                <span
+                  className="text-4xl font-garamond font-bold mb-4 inline-block"
+                  style={{ color: "var(--color-brand-500)" }}
+                >
+                  {step.step}
+                </span>
+                <h3
+                  className="heading-sm font-garamond mb-3"
+                  style={{ color: "var(--color-text-primary)" }}
+                >
+                  {step.title}
                 </h3>
-                <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                  {feature.description}
+                <p
+                  className="text-sm font-spartan leading-relaxed"
+                  style={{ color: "var(--color-text-secondary)" }}
+                >
+                  {step.description}
                 </p>
-
-                {/* Hover Effect */}
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[var(--color-brand-500)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <HowItWorksSection ref={howItWorksRef} />
+      {/* ─── Testimonials ─── */}
+      <section ref={testimonialsRef} id="testimonials" className="py-20 md:py-28 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <h2
+              className="heading-lg font-garamond mb-4"
+              style={{ color: "var(--color-text-primary)" }}
+            >
+              Loved by people who ship
+            </h2>
+          </div>
 
-      {/* CTA Section */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 relative">
-        <div className="max-w-4xl mx-auto">
-          <div className="relative p-12 glass-card rounded-3xl border border-[var(--color-border-primary)]/20 text-center overflow-hidden">
-            {/* Background Effects */}
-            <div className="absolute inset-0">
-              <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-brand-500)]/5 via-[var(--color-brand-400)]/3 to-transparent"></div>
-              <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-[var(--color-brand-400)]/10 to-transparent rounded-full -translate-y-20 translate-x-20"></div>
-              <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-[var(--color-brand-500)]/10 to-transparent rounded-full translate-y-20 -translate-x-20"></div>
-            </div>
-
-            <div className="relative z-10">
-              <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-brand-400)] bg-clip-text text-transparent font-dmSerif mb-4">
-                Ready to build better habits?
-              </h2>
-
-              <p className="text-lg text-[var(--color-text-secondary)] mb-8 max-w-2xl mx-auto font-outfit">
-                Let's help set the building blocks for the life you want.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-                <button
-                  className="font-outfit group px-8 py-4 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-xl text-base font-semibold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-                  onClick={() => navigate("/signup")}
+          <div className="grid md:grid-cols-3 gap-6">
+            {testimonials.map((t, i) => (
+              <div
+                key={i}
+                className="card p-6"
+              >
+                <p
+                  className="text-sm font-spartan leading-relaxed mb-6"
+                  style={{ color: "var(--color-text-secondary)" }}
                 >
-                  Start Your Journey
-                  <ArrowRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </button>
+                  "{t.content}"
+                </p>
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                    style={{ backgroundColor: "var(--color-brand-500)" }}
+                  >
+                    {t.avatar}
+                  </div>
+                  <div>
+                    <p
+                      className="text-sm font-spartan font-medium"
+                      style={{ color: "var(--color-text-primary)" }}
+                    >
+                      {t.name}
+                    </p>
+                    <p
+                      className="text-xs font-spartan"
+                      style={{ color: "var(--color-text-tertiary)" }}
+                    >
+                      {t.role}
+                    </p>
+                  </div>
+                </div>
               </div>
-
-              <div className="flex items-center justify-center gap-2 text-sm text-[var(--color-text-tertiary)] font-outfit">
-                <CheckCircledIcon className="w-4 h-4 text-[var(--color-success)]" />
-                <span>No credit card required • 2-minute setup</span>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-[var(--color-border-primary)]/20">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-            {/* Logo & Description */}
-            <div className="flex flex-col items-center md:items-start gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center">
-                  <TargetIcon className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-xl font-bold font-outfit gradient-text">
-                  bito
-                </span>
-              </div>
-              <p className="text-sm text-[var(--color-text-secondary)] max-w-xs text-center md:text-left font-outfit">
-                Build better habits, bit by bit.
-              </p>
-            </div>
-
-            {/* Links */}
-            <div className="flex flex-wrap font-outfit justify-center md:justify-end gap-8">
-              <div className="flex flex-col gap-3">
-                <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">
-                  Product
-                </h4>
-                <a
-                  onClick={() => scrollToSection(featuresRef)}
-                  className="text-sm text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
-                >
-                  Features
-                </a>
-                {/* <a
-                  href="#"
-                  className="text-sm text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
-                >
-                  Pricing
-                </a>
-                <a
-                  href="#"
-                  className="text-sm text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
-                >
-                  Changelog
-                </a> */}
-              </div>
-              {/* <div className="flex flex-col gap-3">
-                <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">
-                  Company
-                </h4>
-                <a
-                  href="#"
-                  className="text-sm text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
-                >
-                  About
-                </a>
-                <a
-                  href="#"
-                  className="text-sm text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
-                >
-                  Blog
-                </a>
-                <a
-                  href="#"
-                  className="text-sm text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
-                >
-                  Careers
-                </a>
-              </div> */}
-              <div className="flex flex-col gap-3">
-                <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">
-                  Support
-                </h4>
-                <button
-                  onClick={() => setContactModalOpen(true)}
-                  className="text-sm text-left text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
-                >
-                  Contact
-                </button>
-              </div>
-            </div>
+      {/* ─── Comparison Table ─── */}
+      <section
+        className="py-20 md:py-28 px-4 sm:px-6 lg:px-8"
+        style={{ backgroundColor: "var(--color-bg-secondary)" }}
+      >
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-12">
+            <h2
+              className="heading-lg font-garamond mb-4"
+              style={{ color: "var(--color-text-primary)" }}
+            >
+              Why bito?
+            </h2>
           </div>
 
-          <div className="mt-12 pt-8 border-t border-[var(--color-border-primary)]/20 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm font-outfit text-[var(--color-text-tertiary)]">
-              © 2025 hayzaydee. All rights reserved.
-            </p>
-            <div className="flex items-center gap-4">
-              <a
-                href="https://github.com/hayzaydeee/bito"
-                className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+          <div
+            className="rounded-xl border overflow-hidden"
+            style={{
+              backgroundColor: "var(--color-surface-primary)",
+              borderColor: "var(--color-border-primary)",
+            }}
+          >
+            {/* Header */}
+            <div
+              className="grid grid-cols-3 px-5 py-3 border-b"
+              style={{ borderColor: "var(--color-border-primary)" }}
+            >
+              <span
+                className="text-xs font-spartan font-semibold uppercase tracking-wider"
+                style={{ color: "var(--color-text-tertiary)" }}
               >
-                <GitHubLogoIcon className="w-5 h-5" />
-              </a>
+                Feature
+              </span>
+              <span
+                className="text-xs font-spartan font-semibold uppercase tracking-wider text-center"
+                style={{ color: "var(--color-brand-400)" }}
+              >
+                Bito
+              </span>
+              <span
+                className="text-xs font-spartan font-semibold uppercase tracking-wider text-center"
+                style={{ color: "var(--color-text-tertiary)" }}
+              >
+                Others
+              </span>
             </div>
+            {/* Rows */}
+            {comparisonRows.map((row, i) => (
+              <div
+                key={i}
+                className="grid grid-cols-3 px-5 py-3 border-b last:border-b-0"
+                style={{ borderColor: "var(--color-border-primary)" }}
+              >
+                <span
+                  className="text-sm font-spartan"
+                  style={{ color: "var(--color-text-primary)" }}
+                >
+                  {row.feature}
+                </span>
+                <div className="flex justify-center">
+                  {row.bito === true ? (
+                    <CheckCircledIcon
+                      className="w-4 h-4"
+                      style={{ color: "var(--color-success)" }}
+                    />
+                  ) : (
+                    <span
+                      className="text-sm font-spartan"
+                      style={{ color: "var(--color-text-secondary)" }}
+                    >
+                      {row.bito}
+                    </span>
+                  )}
+                </div>
+                <div className="flex justify-center">
+                  {row.others === true ? (
+                    <CheckCircledIcon
+                      className="w-4 h-4"
+                      style={{ color: "var(--color-success)" }}
+                    />
+                  ) : row.others === false ? (
+                    <span
+                      className="text-sm font-spartan"
+                      style={{ color: "var(--color-text-tertiary)" }}
+                    >
+                      —
+                    </span>
+                  ) : (
+                    <span
+                      className="text-sm font-spartan"
+                      style={{ color: "var(--color-text-tertiary)" }}
+                    >
+                      {row.others}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
+        </div>
+      </section>
+
+      {/* ─── Final CTA ─── */}
+      <section className="py-24 md:py-32 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2
+            className="heading-display font-garamond mb-6"
+            style={{ color: "var(--color-text-primary)" }}
+          >
+            Ready to begin?
+          </h2>
+          <p
+            className="text-lg font-spartan mb-10 max-w-xl mx-auto"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
+            Start building the life you want — one small habit at a time.
+          </p>
+
+          <button
+            onClick={() => navigate("/signup")}
+            className="btn btn-primary btn-lg group font-spartan"
+          >
+            Start for free
+            <ArrowRightIcon className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
+          </button>
+
+          <p
+            className="mt-6 text-sm font-spartan flex items-center justify-center gap-2"
+            style={{ color: "var(--color-text-tertiary)" }}
+          >
+            <CheckCircledIcon
+              className="w-4 h-4"
+              style={{ color: "var(--color-success)" }}
+            />
+            No credit card required — 2-minute setup
+          </p>
+        </div>
+      </section>
+
+      {/* ─── Footer — minimal ─── */}
+      <footer
+        className="py-10 px-4 sm:px-6 lg:px-8 border-t"
+        style={{ borderColor: "var(--color-border-primary)" }}
+      >
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+          {/* Logo */}
+          <div className="flex items-center gap-2">
+            <div
+              className="w-7 h-7 rounded-md flex items-center justify-center"
+              style={{ backgroundColor: "var(--color-brand-600)" }}
+            >
+              <TargetIcon className="w-4 h-4 text-white" />
+            </div>
+            <span
+              className="text-base font-bold font-garamond"
+              style={{ color: "var(--color-text-primary)" }}
+            >
+              bito
+            </span>
+          </div>
+
+          {/* Links */}
+          <div className="flex items-center gap-6 font-spartan text-sm">
+            <button
+              onClick={() => scrollToSection(featuresRef)}
+              className="transition-colors"
+              style={{ color: "var(--color-text-tertiary)" }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.color = "var(--color-text-primary)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.color = "var(--color-text-tertiary)")
+              }
+            >
+              Features
+            </button>
+            <button
+              onClick={() => setContactModalOpen(true)}
+              className="transition-colors"
+              style={{ color: "var(--color-text-tertiary)" }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.color = "var(--color-text-primary)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.color = "var(--color-text-tertiary)")
+              }
+            >
+              Contact
+            </button>
+            <a
+              href="https://github.com/hayzaydeee/bito"
+              className="transition-colors"
+              style={{ color: "var(--color-text-tertiary)" }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.color = "var(--color-text-primary)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.color = "var(--color-text-tertiary)")
+              }
+            >
+              <GitHubLogoIcon className="w-4 h-4" />
+            </a>
+          </div>
+
+          {/* Copyright */}
+          <p
+            className="text-xs font-spartan"
+            style={{ color: "var(--color-text-tertiary)" }}
+          >
+            &copy; 2025 hayzaydee
+          </p>
         </div>
       </footer>
 
-      {/* Contact Modal - Initial State Hidden */}
+      {/* Contact Modal */}
       <ContactModal
         isOpen={contactModalOpen}
         onClose={() => setContactModalOpen(false)}

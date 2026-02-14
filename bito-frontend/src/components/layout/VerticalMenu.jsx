@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Flex, Text, Button } from "@radix-ui/themes";
+import { Flex, Button } from "@radix-ui/themes";
 import {
   DashboardIcon,
   BarChartIcon,
@@ -145,29 +145,29 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
 
     if (isCollapsed) {
       return (
-        <div key={item.id} className="group relative mb-2">
+        <div key={item.id} className="group relative mb-1">
           <button
-            className={`w-full h-10 rounded-xl transition-all duration-300 flex items-center justify-center relative overflow-hidden ${
+            className={`w-full h-10 rounded-lg transition-all duration-200 flex items-center justify-center relative ${
               isActive
-                ? `bg-gradient-to-r ${item.color} shadow-lg shadow-black/20 scale-105`
-                : "hover:bg-[var(--color-surface-hover)] hover:scale-105 bg-transparent"
+                ? "bg-[var(--color-surface-hover)]"
+                : "hover:bg-[var(--color-surface-hover)] bg-transparent"
             }`}
             onClick={() => handleNavigation(item.path)}
             title={item.label}
+            style={isActive ? { borderLeft: "3px solid var(--color-brand-500)" } : {}}
           >
             <Icon
-              className={`w-5 h-5 transition-colors ${
-                isActive ? "text-white" : "text-[var(--color-text-accent)]"
-              }`}
+              className="w-5 h-5 transition-colors"
+              style={{ color: isActive ? "var(--color-brand-500)" : "var(--color-text-secondary)" }}
             />
           </button>
 
           {/* Tooltip for collapsed mode */}
           <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
             <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)] rounded-lg px-3 py-2 shadow-lg">
-              <Text className="text-sm font-medium font-outfit text-[var(--color-text-primary)]">
+              <span className="text-sm font-medium font-spartan" style={{ color: "var(--color-text-primary)" }}>
                 {item.label}
-              </Text>
+              </span>
             </div>
           </div>
         </div>
@@ -175,43 +175,26 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
     }
 
     return (
-      <div key={item.id} className="mb-1">
+      <div key={item.id} className="mb-0.5">
         <button
-          className={`w-full p-3 rounded-xl transition-all duration-300 flex items-center gap-3 relative overflow-hidden group ${
+          className={`w-full px-3 py-2.5 rounded-lg transition-all duration-200 flex items-center gap-3 relative ${
             isActive
-              ? `bg-gradient-to-r ${item.color} shadow-lg shadow-black/20 transform scale-[1.02]`
-              : "hover:bg-[var(--color-surface-hover)] hover:scale-[1.01] bg-transparent"
+              ? "bg-[var(--color-surface-hover)]"
+              : "hover:bg-[var(--color-surface-hover)] bg-transparent"
           }`}
           onClick={() => handleNavigation(item.path)}
+          style={isActive ? { borderLeft: "3px solid var(--color-brand-500)" } : {}}
         >
-          {/* Background pattern for active state */}
-          {isActive && (
-            <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-white/5 rounded-xl" />
-          )}
-          {/* Icon container */}
-          <div
-            className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 ${
-              isActive
-                ? "bg-white/20 shadow-lg"
-                : "bg-[var(--color-surface-secondary)] group-hover:bg-[var(--color-surface-elevated)]"
-            }`}
+          <Icon
+            className="w-[18px] h-[18px] flex-shrink-0 transition-colors"
+            style={{ color: isActive ? "var(--color-brand-500)" : "var(--color-text-secondary)" }}
+          />
+          <span
+            className="font-medium text-sm font-spartan transition-colors"
+            style={{ color: isActive ? "var(--color-text-primary)" : "var(--color-text-secondary)" }}
           >
-            <Icon
-              className={`w-5 h-5 transition-colors ${
-                isActive ? "text-white" : "text-[var(--color-text-accent)]"
-              }`}
-            />
-          </div>
-          {/* Text content */}
-          <div className="flex-1 text-left min-w-0">
-            <Text
-              className={`font-medium text-sm font-outfit transition-colors ${
-                isActive ? "text-white" : "text-[var(--color-text-primary)]"
-              }`}
-            >
-              {item.label}
-            </Text>
-          </div>
+            {item.label}
+          </span>
         </button>
       </div>
     );
@@ -222,29 +205,29 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
     
     if (isCollapsed) {
       return (
-        <div className="group relative mb-2">
+        <div className="group relative mb-1">
           <button
-            className={`w-full h-10 rounded-xl transition-all duration-300 flex items-center justify-center relative overflow-hidden ${
+            className={`w-full h-10 rounded-lg transition-all duration-200 flex items-center justify-center relative ${
               isGroupsActive
-                ? "bg-gradient-to-r from-purple-500 to-purple-600 shadow-lg shadow-black/20 scale-105"
-                : "hover:bg-[var(--color-surface-hover)] hover:scale-105 bg-transparent"
+                ? "bg-[var(--color-surface-hover)]"
+                : "hover:bg-[var(--color-surface-hover)] bg-transparent"
             }`}
             onClick={() => handleNavigation('/app/groups')}
             title="Groups"
+            style={isGroupsActive ? { borderLeft: "3px solid var(--color-brand-500)" } : {}}
           >
             <BackpackIcon
-              className={`w-5 h-5 transition-colors ${
-                isGroupsActive ? "text-white" : "text-[var(--color-text-accent)]"
-              }`}
+              className="w-5 h-5 transition-colors"
+              style={{ color: isGroupsActive ? "var(--color-brand-500)" : "var(--color-text-secondary)" }}
             />
           </button>
 
           {/* Tooltip for collapsed mode */}
           <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
             <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)] rounded-lg px-3 py-2 shadow-lg">
-              <Text className="text-sm font-medium font-outfit text-[var(--color-text-primary)]">
+              <span className="text-sm font-medium font-spartan" style={{ color: "var(--color-text-primary)" }}>
                 Groups
-              </Text>
+              </span>
             </div>
           </div>
         </div>
@@ -252,58 +235,37 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
     }
 
     return (
-      <div className="mb-1">
+      <div className="mb-0.5">
         {/* Main Groups Button */}
         <button
-          className={`w-full p-3 rounded-xl transition-all duration-300 flex items-center gap-3 relative overflow-hidden group ${
+          className={`w-full px-3 py-2.5 rounded-lg transition-all duration-200 flex items-center gap-3 relative ${
             isGroupsActive && location.pathname === '/app/groups'
-              ? "bg-gradient-to-r from-purple-500 to-purple-600 shadow-lg shadow-black/20 transform scale-[1.02]"
-              : "hover:bg-[var(--color-surface-hover)] hover:scale-[1.01] bg-transparent"
+              ? "bg-[var(--color-surface-hover)]"
+              : "hover:bg-[var(--color-surface-hover)] bg-transparent"
           }`}
           onClick={() => handleNavigation('/app/groups')}
+          style={isGroupsActive && location.pathname === '/app/groups' ? { borderLeft: "3px solid var(--color-brand-500)" } : {}}
         >
-          {/* Background pattern for active state */}
-          {isGroupsActive && location.pathname === '/app/groups' && (
-            <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-white/5 rounded-xl" />
-          )}
+          <BackpackIcon
+            className="w-[18px] h-[18px] flex-shrink-0 transition-colors"
+            style={{ color: isGroupsActive ? "var(--color-brand-500)" : "var(--color-text-secondary)" }}
+          />
           
-          {/* Icon container */}
-          <div
-            className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 ${
-              isGroupsActive && location.pathname === '/app/groups'
-                ? "bg-white/20 shadow-lg"
-                : "bg-[var(--color-surface-secondary)] group-hover:bg-[var(--color-surface-elevated)]"
-            }`}
+          <span
+            className="font-medium text-sm font-spartan transition-colors flex-1 text-left"
+            style={{ color: isGroupsActive ? "var(--color-text-primary)" : "var(--color-text-secondary)" }}
           >
-            <BackpackIcon
-              className={`w-5 h-5 transition-colors ${
-                isGroupsActive && location.pathname === '/app/groups' ? "text-white" : "text-[var(--color-text-accent)]"
-              }`}
-            />
-          </div>
+            Groups
+          </span>
           
-          {/* Text content */}
-          <div className="flex-1 text-left min-w-0">
-            <Text
-              className={`font-medium text-sm font-outfit transition-colors ${
-                isGroupsActive && location.pathname === '/app/groups' ? "text-white" : "text-[var(--color-text-primary)]"
-              }`}
-            >
-              Groups
-            </Text>
-          </div>
-          
-          {/* Expand/Collapse indicator */}
-          <div className="flex items-center gap-2">
-            <span className={`text-xs font-outfit font-medium ${
-              isGroupsActive && location.pathname === '/app/groups' ? "text-white/70" : "text-[var(--color-text-tertiary)]"
-            }`}>
+          {/* Count + Collapse indicator */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-spartan font-medium" style={{ color: "var(--color-text-tertiary)" }}>
               {workspaces.length}
             </span>
             <ChevronDownIcon 
-              className={`w-4 h-4 transition-all duration-200 ${
-                isGroupsActive && location.pathname === '/app/groups' ? "text-white/70" : "text-[var(--color-text-tertiary)]"
-              } ${groupsCollapsed ? 'rotate-180' : ''}`}
+              className={`w-3.5 h-3.5 transition-transform duration-200 ${groupsCollapsed ? 'rotate-180' : ''}`}
+              style={{ color: "var(--color-text-tertiary)" }}
               onClick={(e) => {
                 e.stopPropagation();
                 setGroupsCollapsed(!groupsCollapsed);
@@ -314,51 +276,41 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
 
         {/* Expandable Groups List */}
         {!groupsCollapsed && (
-          <div className="mt-2 ml-11 space-y-1">
+          <div className="mt-1 ml-8 space-y-0.5">
             {loadingWorkspaces ? (
               <div className="flex items-center gap-2 px-3 py-2">
-                <div className="w-5 h-5 rounded-md bg-[var(--color-surface-elevated)] animate-pulse"></div>
+                <div className="w-4 h-4 rounded bg-[var(--color-surface-elevated)] animate-pulse"></div>
                 <div className="flex-1">
-                  <div className="h-3 bg-[var(--color-surface-elevated)] rounded animate-pulse mb-1"></div>
-                  <div className="h-2 bg-[var(--color-surface-elevated)] rounded w-16 animate-pulse"></div>
+                  <div className="h-3 bg-[var(--color-surface-elevated)] rounded animate-pulse"></div>
                 </div>
               </div>
             ) : workspaces.length === 0 ? (
               <div className="px-3 py-2">
-                <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">No groups yet</p>
+                <p className="text-xs font-spartan" style={{ color: "var(--color-text-tertiary)" }}>No groups yet</p>
               </div>
             ) : (
               workspaces.slice(0, 5).map((workspace) => {
-                const isActive = location.pathname === `/app/groups/${workspace._id}`;
+                const wsActive = location.pathname === `/app/groups/${workspace._id}`;
                 return (
                   <button
                     key={workspace._id}
                     onClick={() => handleNavigation(`/app/groups/${workspace._id}`)}
-                    className={`w-full p-2 rounded-lg text-left transition-all duration-200 flex items-center gap-2 group ${
-                      isActive
-                        ? 'bg-[var(--color-brand-500)] text-white shadow-sm'
-                        : 'hover:bg-[var(--color-surface-hover)] text-[var(--color-text-primary)]'
+                    className={`w-full px-3 py-2 rounded-lg text-left transition-all duration-200 flex items-center gap-2.5 ${
+                      wsActive
+                        ? 'bg-[var(--color-surface-hover)]'
+                        : 'hover:bg-[var(--color-surface-hover)]'
                     }`}
                   >
-                    <div className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold transition-all ${
-                      isActive 
-                        ? 'bg-white/20 text-white' 
-                        : 'bg-gradient-to-br from-[var(--color-brand-400)] to-[var(--color-brand-600)] text-white'
-                    }`}>
-                      {workspace.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-medium truncate font-outfit ${
-                        isActive ? 'text-white' : 'text-[var(--color-text-primary)]'
-                      }`}>
-                        {workspace.name}
-                      </p>
-                    </div>
-                    {!isActive && (
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                        <ChevronDownIcon className="w-3 h-3 text-[var(--color-text-tertiary)] rotate-[-90deg]" />
-                      </div>
-                    )}
+                    <div
+                      className="w-2 h-2 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: wsActive ? "var(--color-brand-500)" : "var(--color-text-tertiary)" }}
+                    />
+                    <p
+                      className="text-xs font-medium truncate font-spartan"
+                      style={{ color: wsActive ? "var(--color-text-primary)" : "var(--color-text-secondary)" }}
+                    >
+                      {workspace.name}
+                    </p>
                   </button>
                 );
               })
@@ -367,9 +319,9 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
             {workspaces.length > 5 && (
               <button
                 onClick={() => handleNavigation('/app/groups')}
-                className="w-full p-2 text-left transition-all duration-200 hover:bg-[var(--color-surface-hover)] rounded-lg"
+                className="w-full px-3 py-1.5 text-left transition-all duration-200 hover:bg-[var(--color-surface-hover)] rounded-lg"
               >
-                <p className="text-xs font-medium text-[var(--color-text-tertiary)] hover:text-[var(--color-brand-500)]">
+                <p className="text-xs font-medium font-spartan" style={{ color: "var(--color-text-tertiary)" }}>
                   View all {workspaces.length} groups →
                 </p>
               </button>
@@ -383,44 +335,59 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
   return (
     <div
       className={`${
-        isCollapsed ? "w-16" : "w-64"
-      } h-screen relative z-10 transition-all duration-300 border-r border-[var(--color-border-primary)] ${
-        isMobile ? 'w-60' : '' // Slightly smaller width on mobile (240px)
+        isCollapsed ? "w-16" : "w-60"
+      } h-screen relative z-10 transition-all duration-200 border-r border-[var(--color-border-primary)] ${
+        isMobile ? 'w-60' : ''
       }`}
       style={{ backgroundColor: "var(--color-surface-primary)" }}
     >
-      <div className="h-full flex flex-col p-3">
-        {/* Header */}
+      <div className="h-full flex flex-col px-3 py-4">
+        {/* Header — Logo */}
         <div className="mb-6">
           {(!isCollapsed || isMobile) && (
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-brand-500)] to-[var(--color-brand-700)] flex items-center justify-center shadow-lg">
-                <TargetIcon className="w-6 h-6 text-white" />
+            <div className="flex items-center gap-2.5 px-2">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: "var(--color-brand-600)" }}>
+                <TargetIcon className="w-5 h-5 text-white" />
               </div>
-              <div>
-                <p className="text-lg font-bold gradient-text font-outfit">
+              <span className="text-lg font-bold font-garamond" style={{ color: "var(--color-text-primary)" }}>
                 bito
-                </p>
-              </div>
+              </span>
             </div>
           )}
           {isCollapsed && !isMobile && (
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-brand-500)] to-[var(--color-brand-700)] flex items-center justify-center shadow-lg mx-auto">
-              <TargetIcon className="w-6 h-6 text-white" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center mx-auto" style={{ backgroundColor: "var(--color-brand-600)" }}>
+              <TargetIcon className="w-5 h-5 text-white" />
             </div>
           )}
         </div>
 
+        {/* Section label */}
+        {!isCollapsed && (
+          <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-wider font-spartan" style={{ color: "var(--color-text-tertiary)" }}>
+            Main
+          </p>
+        )}
+
         {/* Main Navigation */}
-        <div className="flex-1 space-y-1">
+        <div className="flex-1 space-y-0.5">
           {menuItems.map((item) => renderMenuItem(item))}
+          
+          {/* Separator */}
+          {!isCollapsed && (
+            <div className="pt-4 pb-2">
+              <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-wider font-spartan" style={{ color: "var(--color-text-tertiary)" }}>
+                Teams
+              </p>
+            </div>
+          )}
+          {isCollapsed && <div className="py-3"><div className="h-px mx-1" style={{ backgroundColor: "var(--color-border-primary)" }} /></div>}
           
           {/* Expandable Groups Menu Item */}
           {renderGroupsMenuItem()}
         </div>
 
         {/* Bottom Navigation */}
-        <div className="mt-auto">
+        <div className="mt-auto pt-2 border-t" style={{ borderColor: "var(--color-border-primary)" }}>
           {bottomItems.map((item) => renderMenuItem(item, true))}
         </div>
       </div>

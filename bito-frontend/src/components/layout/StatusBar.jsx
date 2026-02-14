@@ -4,8 +4,6 @@ import { Avatar } from "@radix-ui/themes";
 import {
   HamburgerMenuIcon,
   ChevronRightIcon,
-  MagnifyingGlassIcon,
-  Cross1Icon,
   GearIcon,
   BellIcon,
   ExitIcon,
@@ -20,14 +18,10 @@ const StatusBar = ({
   setIsMenuCollapsed,
   userName = "User",
   isMobile = false,
-  mobileMenuOpen = false,
-  setMobileMenuOpen = () => {},
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
@@ -78,53 +72,46 @@ const StatusBar = ({
   };
 
   return (
-    <div className={`bg-[var(--color-surface-secondary)]/90 border-b border-[var(--color-border-primary)] px-4 py-2 flex items-center justify-between font-outfit backdrop-blur-sm relative z-30 ${
-      isMobile ? 'status-bar-mobile' : ''
-    }`}>
+    <div
+      className="border-b px-4 py-2 flex items-center justify-between font-spartan relative z-30"
+      style={{
+        backgroundColor: "var(--color-surface-primary)",
+        borderColor: "var(--color-border-primary)",
+      }}
+    >
       <div className="flex items-center">
-        {/* Menu toggle button - behavior changes for mobile */}
-        <button
-          onClick={() => {
-            if (isMobile) {
-              setMobileMenuOpen(!mobileMenuOpen);
-            } else {
-              setIsMenuCollapsed(!isMenuCollapsed);
-            }
-          }}
-          className={`mr-3 p-1 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors touch-target ${
-            isMobile ? 'touch-target' : ''
-          }`}
-          aria-label={
-            isMobile 
-              ? (mobileMenuOpen ? "Close menu" : "Open menu")
-              : (isMenuCollapsed ? "Expand menu" : "Collapse menu")
-          }
-          style={{ color: "var(--color-text-secondary)" }}
-        >
-          <HamburgerMenuIcon className="w-4 h-4" />
-        </button>
+        {/* Sidebar collapse toggle — desktop only */}
+        {!isMobile && (
+          <button
+            onClick={() => setIsMenuCollapsed(!isMenuCollapsed)}
+            className="mr-3 p-1.5 rounded-lg transition-colors"
+            aria-label={isMenuCollapsed ? "Expand menu" : "Collapse menu"}
+            style={{ color: "var(--color-text-secondary)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--color-surface-hover)")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+          >
+            <HamburgerMenuIcon className="w-4 h-4" />
+          </button>
+        )}
 
-        {/* Breadcrumbs - hide on very small screens */}
-        <div className={`flex items-center text-sm ${isMobile ? 'hidden sm:flex' : ''}`}>
-          <span style={{ color: "var(--color-text-secondary)" }}>Home</span>
-          <ChevronRightIcon
-            className="mx-1 w-3 h-3"
-            style={{ color: "var(--color-brand-500)" }}
-          />
+        {/* Page title on mobile, breadcrumbs on desktop */}
+        {isMobile ? (
           <span
-            className="font-medium"
-            style={{ color: "var(--color-brand-500)" }}
+            className="font-semibold text-sm font-spartan"
+            style={{ color: "var(--color-text-primary)" }}
           >
             {getBreadcrumbTitle()}
           </span>
-        </div>
-
-        {/* Mobile title - show only on small screens */}
-        {isMobile && (
-          <div className="flex sm:hidden">
+        ) : (
+          <div className="flex items-center text-sm">
+            <span style={{ color: "var(--color-text-tertiary)" }}>Home</span>
+            <ChevronRightIcon
+              className="mx-1.5 w-3 h-3"
+              style={{ color: "var(--color-text-tertiary)" }}
+            />
             <span
-              className="font-medium text-sm"
-              style={{ color: "var(--color-brand-500)" }}
+              className="font-medium"
+              style={{ color: "var(--color-text-primary)" }}
             >
               {getBreadcrumbTitle()}
             </span>
@@ -132,63 +119,80 @@ const StatusBar = ({
         )}
       </div>
 
-      {/* Right Section - User Actions */}
-      <div className="flex items-center gap-2 md:gap-3">
+      {/* Right Section */}
+      <div className="flex items-center gap-1.5">
+        {/* Theme Switcher — desktop only */}
+        {!isMobile && (
+          <div>
+            <ThemeSwitcher compact={true} />
+          </div>
+        )}
 
-        {/* Theme Switcher - hide on small mobile */}
-        <div className={isMobile ? 'hidden sm:block' : ''}>
-          <ThemeSwitcher compact={true} />
+        {/* Notifications */}
+        <div className="relative">
+          <button
+            onClick={() => setShowNotifications(!showNotifications)}
+            className="relative p-1.5 rounded-lg transition-colors"
+            style={{ color: "var(--color-text-secondary)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--color-surface-hover)")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+          >
+            <BellIcon className="w-4 h-4" />
+            {notificationCount > 0 && (
+              <div
+                className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center border"
+                style={{
+                  backgroundColor: "var(--color-error)",
+                  borderColor: "var(--color-surface-primary)",
+                }}
+              >
+                <span className="text-[9px] text-white font-bold leading-none">
+                  {notificationCount > 99 ? '99+' : notificationCount}
+                </span>
+              </div>
+            )}
+          </button>
+          
+          <NotificationsDropdown
+            isOpen={showNotifications}
+            onClose={() => setShowNotifications(false)}
+            onNotificationCountChange={fetchNotificationCount}
+          />
         </div>
 
-        {/* User Actions from WelcomeBar */}
-        <div className="flex items-center gap-1 md:gap-2 pl-2 md:pl-3 border-l border-[var(--color-border-primary)]/50">
-          {/* Notifications */}
-          <div className="relative">
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="relative group p-1.5 rounded-lg hover:bg-[var(--color-surface-hover)]/60 transition-all duration-200 touch-target"
-            >
-              <BellIcon className="w-4 h-4 text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors" />
-              {notificationCount > 0 && (
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center border border-[var(--color-surface-primary)] shadow-sm">
-                  <span className="text-xs text-white font-bold leading-none">
-                    {notificationCount > 99 ? '99+' : notificationCount}
-                  </span>
-                </div>
-              )}
-            </button>
-            
-            <NotificationsDropdown
-              isOpen={showNotifications}
-              onClose={() => setShowNotifications(false)}
-              onNotificationCountChange={fetchNotificationCount}
-            />
-          </div>
-
-          {/* Settings - hide on very small screens, show in user menu instead */}
+        {/* Settings — desktop only */}
+        {!isMobile && (
           <button 
             onClick={() => navigate('/app/settings')}
-            className={`group p-1.5 rounded-lg hover:bg-[var(--color-surface-hover)]/60 transition-all duration-200 touch-target ${
-              isMobile ? 'hidden sm:block' : ''
-            }`}
+            className="p-1.5 rounded-lg transition-colors"
+            style={{ color: "var(--color-text-secondary)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--color-surface-hover)")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
           >
-            <GearIcon className="w-4 h-4 text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors" />
+            <GearIcon className="w-4 h-4" />
           </button>
+        )}
 
-          {/* User Avatar with Dropdown */}
-          <div className="relative flex items-center gap-1 md:gap-2 pl-1 md:pl-2 ml-1 border-l border-[var(--color-border-primary)]/50 z-50">
+        {/* User Avatar with Dropdown — desktop only */}
+        {!isMobile && (
+          <div className="relative flex items-center pl-2 ml-1 border-l z-50" style={{ borderColor: "var(--color-border-primary)" }}>
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-1 md:gap-2 p-1 rounded-lg hover:bg-[var(--color-surface-hover)]/60 transition-all duration-200 touch-target"
+              className="flex items-center gap-2 p-1 rounded-lg transition-colors"
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--color-surface-hover)")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
             >
               <Avatar
                 src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}&backgroundColor=6366f1`}
                 alt={userName}
                 fallback={userName.charAt(0).toUpperCase()}
                 size="1"
-                className="ring-1 ring-[var(--color-brand-500)]/30"
+                className="ring-1 ring-[var(--color-border-primary)]"
               />
-              <span className="hidden lg:block text-sm font-medium font-outfit text-[var(--color-text-primary)]">
+              <span
+                className="hidden lg:block text-sm font-medium font-spartan"
+                style={{ color: "var(--color-text-primary)" }}
+              >
                 {userName}
               </span>
             </button>
@@ -196,46 +200,37 @@ const StatusBar = ({
             {/* User Dropdown Menu */}
             {showUserMenu && (
               <>
-                {/* Backdrop */}
                 <div 
                   className="fixed inset-0 z-40" 
                   onClick={() => setShowUserMenu(false)}
                 />
-                
-                {/* Menu */}
-                <div className={`absolute top-full right-0 mt-2 w-48 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)] rounded-lg shadow-lg z-50 py-1 ${
-                  isMobile ? 'modal-mobile' : ''
-                }`}>
-                  {/* Show theme switcher in mobile menu */}
-                  {isMobile && (
-                    <>
-                      <div className="px-3 py-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-[var(--color-text-primary)]">Theme</span>
-                          <ThemeSwitcher compact={true} />
-                        </div>
-                      </div>
-                      <div className="border-t border-[var(--color-border-primary)] my-1" />
-                    </>
-                  )}
-                  
+                <div
+                  className="absolute top-full right-0 mt-2 w-48 rounded-xl border shadow-lg z-50 py-1"
+                  style={{
+                    backgroundColor: "var(--color-surface-elevated)",
+                    borderColor: "var(--color-border-primary)",
+                  }}
+                >
                   <button
                     onClick={() => {
                       setShowUserMenu(false);
                       navigate('/app/settings');
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-colors touch-target"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors"
+                    style={{ color: "var(--color-text-primary)" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--color-surface-hover)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                   >
                     <GearIcon className="w-4 h-4" />
                     Settings
                   </button>
-                  <div className="border-t border-[var(--color-border-primary)] my-1" />
+                  <div className="mx-2 h-px my-1" style={{ backgroundColor: "var(--color-border-primary)" }} />
                   <button
                     onClick={() => {
                       setShowUserMenu(false);
                       handleLogout();
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors touch-target"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
                   >
                     <ExitIcon className="w-4 h-4" />
                     Sign out
@@ -244,7 +239,7 @@ const StatusBar = ({
               </>
             )}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

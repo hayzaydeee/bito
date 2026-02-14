@@ -1,97 +1,108 @@
 @import "tailwindcss";
 
 @theme {
-  /* Font Imports */
-  --font-outfit: 'Outfit', sans-serif;
-  --font-dmSerif: 'DM Serif Text', serif;
+  /* Font Imports — EB Garamond (editorial serif) + League Spartan (geometric sans) */
+  --font-outfit: 'League Spartan', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-dmSerif: 'EB Garamond', 'Georgia', serif;
+  --font-garamond: 'EB Garamond', 'Georgia', serif;
+  --font-spartan: 'League Spartan', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 /* CSS Custom Properties for Themes */
 :root {
-  /* Brand Colors (consistent across themes) */
-  --color-brand-50: #eef2ff;
-  --color-brand-100: #e0e7ff;
-  --color-brand-200: #c7d2fe;
-  --color-brand-300: #a5b4fc;
-  --color-brand-400: #818cf8;
+  /* Brand Colors — dark purple / indigo / light blue tri-tone */
+  --color-brand-50: #f0ebff;
+  --color-brand-100: #e0d4ff;
+  --color-brand-200: #c4adff;
+  --color-brand-300: #a78bfa;
+  --color-brand-400: #8b6cf7;
   --color-brand-500: #6366f1;
   --color-brand-600: #4f46e5;
   --color-brand-700: #4338ca;
   --color-brand-800: #3730a3;
-  --color-brand-900: #312e81;
-  --color-brand-950: #1e1b4b;
-  
+  --color-brand-900: #2D1B69;
+  --color-brand-950: #1A0F40;
+
+  /* Secondary — light blue accent for highlights, charts, data viz */
+  --color-secondary-300: #7DD3FC;
+  --color-secondary-400: #38BDF8;
+  --color-secondary-500: #0EA5E9;
+  --color-secondary-600: #0284C7;
+
   /* Status Colors (consistent across themes) */
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-error: #ef4444;
   --color-info: #3b82f6;
+
+  /* Interactive glow */
+  --color-glow: rgba(99, 102, 241, 0.25);
 }
 
-/* Dark Theme (Default) */
+/* Dark Theme (Default) — deep purple tones */
 :root, [data-theme="dark"] {
   /* Background Colors */
-  --color-bg-primary: #0f0f23;
-  --color-bg-secondary: #1a1a3a;
-  --color-bg-tertiary: #262659;
-  --color-bg-accent: #2d2d66;
-  
-  /* Surface Colors */
-  --color-surface-primary: #1e1e42;
-  --color-surface-secondary: #252551;
-  --color-surface-elevated: #2a2a5c;
-  --color-surface-hover: #303066;
-  
+  --color-bg-primary: #0D0A1A;
+  --color-bg-secondary: #13102B;
+  --color-bg-tertiary: #1A1535;
+  --color-bg-accent: #221C45;
+
+  /* Surface Colors — solid, no glass by default */
+  --color-surface-primary: #1E1535;
+  --color-surface-secondary: #231D40;
+  --color-surface-elevated: #2A2045;
+  --color-surface-hover: #322A55;
+
   /* Text Colors */
-  --color-text-primary: #f8fafc;
-  --color-text-secondary: #cbd5e1;
-  --color-text-tertiary: #94a3b8;
-  --color-text-accent: #a5b4fc;
-  
+  --color-text-primary: #F1EDFF;
+  --color-text-secondary: #A89BC8;
+  --color-text-tertiary: #7B6FA0;
+  --color-text-accent: #a78bfa;
+
   /* Border Colors */
-  --color-border-primary: #334155;
-  --color-border-secondary: #475569;
+  --color-border-primary: rgba(139, 92, 246, 0.15);
+  --color-border-secondary: rgba(139, 92, 246, 0.25);
   --color-border-accent: #6366f1;
-  
-  /* Glass Effect Colors */
-  --glass-bg: rgba(30, 30, 66, 0.4);
-  --glass-bg-minimal: rgba(30, 30, 66, 0.3);
-  --glass-border: rgba(99, 102, 241, 0.2);
-  --glass-border-hover: rgba(99, 102, 241, 0.3);
-  --glass-inset: rgba(255, 255, 255, 0.1);
+
+  /* Glass Effect Colors — reserved for hero, modals, overlays */
+  --glass-bg: rgba(30, 21, 53, 0.6);
+  --glass-bg-minimal: rgba(30, 21, 53, 0.4);
+  --glass-border: rgba(139, 92, 246, 0.15);
+  --glass-border-hover: rgba(139, 92, 246, 0.25);
+  --glass-inset: rgba(255, 255, 255, 0.06);
 }
 
-/* Light Theme */
+/* Light Theme — soft lavender and clean whites */
 [data-theme="light"] {
   /* Background Colors */
-  --color-bg-primary: #fefefe;
-  --color-bg-secondary: #f8f9fc;
-  --color-bg-tertiary: #f1f3f9;
-  --color-bg-accent: #e8ebf5;
-  
+  --color-bg-primary: #FAFBFF;
+  --color-bg-secondary: #F5F3FF;
+  --color-bg-tertiary: #EDE9FE;
+  --color-bg-accent: #E0D4FF;
+
   /* Surface Colors */
-  --color-surface-primary: #ffffff;
-  --color-surface-secondary: #f8f9fc;
-  --color-surface-elevated: #ffffff;
-  --color-surface-hover: #f1f3f9;
-  
+  --color-surface-primary: #FFFFFF;
+  --color-surface-secondary: #F9F8FF;
+  --color-surface-elevated: #FFFFFF;
+  --color-surface-hover: #F0EBFF;
+
   /* Text Colors */
-  --color-text-primary: #1e1b4b;   /* Dark indigo instead of slate */
-  --color-text-secondary: #312e81; /* Medium indigo instead of slate */
-  --color-text-tertiary: #3730a3;  /* Lighter indigo instead of slate */
-  --color-text-accent: #4f46e5;
-  
+  --color-text-primary: #1A1033;
+  --color-text-secondary: #6B5F83;
+  --color-text-tertiary: #8E82A8;
+  --color-text-accent: #6366f1;
+
   /* Border Colors */
-  --color-border-primary: #e2e8f0;
-  --color-border-secondary: #cbd5e1;
+  --color-border-primary: rgba(99, 102, 241, 0.12);
+  --color-border-secondary: rgba(99, 102, 241, 0.2);
   --color-border-accent: #6366f1;
-  
-  /* Glass Effect Colors */
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-bg-minimal: rgba(255, 255, 255, 0.5);
-  --glass-border: rgba(99, 102, 241, 0.15);
-  --glass-border-hover: rgba(99, 102, 241, 0.25);
-  --glass-inset: rgba(99, 102, 241, 0.05);
+
+  /* Glass Effect Colors — reserved for hero, modals, overlays */
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-bg-minimal: rgba(255, 255, 255, 0.55);
+  --glass-border: rgba(99, 102, 241, 0.12);
+  --glass-border-hover: rgba(99, 102, 241, 0.2);
+  --glass-inset: rgba(99, 102, 241, 0.04);
 }
 
 /* Global Styles */
@@ -104,8 +115,8 @@ html {
 }
 
 body {
-  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  background: linear-gradient(135deg, var(--color-bg-primary) 0%, var(--color-bg-secondary) 100%);
+  font-family: 'League Spartan', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  background: var(--color-bg-primary);
   color: var(--color-text-primary);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -113,36 +124,11 @@ body {
   min-height: 100vh;
 }
 
-/* Enhance the page container */
+/* Page container — clean, no radial gradient noise */
 .page-container {
   min-height: calc(100vh - 4rem);
-  background: linear-gradient(135deg, 
-    rgba(99, 102, 241, 0.02) 0%, 
-    rgba(139, 92, 246, 0.02) 25%,
-    rgba(59, 130, 246, 0.02) 50%,
-    rgba(16, 185, 129, 0.02) 75%,
-    rgba(245, 158, 11, 0.02) 100%
-  );
+  background: var(--color-bg-primary);
   position: relative;
-}
-
-.page-container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.05) 0%, transparent 70%),
-              radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 70%),
-              radial-gradient(circle at 40% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.page-container > * {
-  position: relative;
-  z-index: 1;
 }
 
 /* Custom Scrollbar */
@@ -157,55 +143,62 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(45deg, var(--color-brand-500), var(--color-brand-600));
+  background: var(--color-border-secondary);
   border-radius: 4px;
-  transition: background 0.3s ease;
+  transition: background 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(45deg, var(--color-brand-600), var(--color-brand-700));
+  background: var(--color-brand-500);
 }
 
-/* Typography */
+/* Typography — EB Garamond for headings, League Spartan for body */
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'DM Serif Text', serif;
+  font-family: 'EB Garamond', 'Georgia', serif;
   font-weight: 600;
-  line-height: 1.3;
+  line-height: 1.25;
   color: var(--color-text-primary);
+  letter-spacing: -0.01em;
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, var(--color-brand-400) 0%, var(--color-brand-600) 100%);
+  background: linear-gradient(135deg, var(--color-brand-300) 0%, var(--color-brand-500) 50%, var(--color-secondary-400) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .heading-display {
+  font-family: 'EB Garamond', 'Georgia', serif;
   font-size: 3.75rem;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--color-brand-400) 0%, var(--color-brand-600) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
 }
 
 .heading-xl {
+  font-family: 'EB Garamond', 'Georgia', serif;
   font-size: 2.25rem;
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .heading-lg {
+  font-family: 'EB Garamond', 'Georgia', serif;
   font-size: 1.875rem;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .heading-md {
+  font-family: 'EB Garamond', 'Georgia', serif;
   font-size: 1.5rem;
   font-weight: 600;
 }
 
 .heading-sm {
+  font-family: 'EB Garamond', 'Georgia', serif;
   font-size: 1.25rem;
   font-weight: 600;
 }
@@ -215,29 +208,30 @@ h1, h2, h3, h4, h5, h6 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 10px;
   font-weight: 600;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   border: none;
   text-decoration: none;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'League Spartan', sans-serif;
+  letter-spacing: 0.01em;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--color-brand-600), var(--color-brand-700));
+  background: var(--color-brand-600);
   border: none;
   color: white;
   font-weight: 600;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, var(--color-brand-700), var(--color-brand-800));
+  background: var(--color-brand-700);
   transform: translateY(-1px);
-  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 16px var(--color-glow);
 }
 
 .btn-primary:active {
@@ -280,62 +274,83 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 1.125rem;
 }
 
-/* Card Styles */
+/* Card Styles — solid surfaces, clean borders */
 .card {
   background: var(--color-surface-primary);
   border: 1px solid var(--color-border-primary);
-  border-radius: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
 }
 
 .card:hover {
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  border-color: var(--color-border-accent);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: var(--color-border-secondary);
   transform: translateY(-2px);
 }
 
 .card-elevated {
   background: var(--color-surface-elevated);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--color-border-primary);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
-/* Glass Card Effect */
+/* Interactive card — glow border on hover */
+.card-interactive {
+  background: var(--color-surface-primary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.card-interactive:hover {
+  border-color: var(--color-brand-500);
+  box-shadow: 0 0 0 1px var(--color-brand-500), 0 4px 16px var(--color-glow);
+  transform: translateY(-2px);
+}
+
+/* Highlight card — left accent border for featured items */
+.card-highlight {
+  background: var(--color-surface-primary);
+  border: 1px solid var(--color-border-primary);
+  border-left: 3px solid var(--color-brand-500);
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+/* Glass Card Effect — RESERVED for hero overlays, modals, and command palette only */
 .glass-card {
   background: var(--glass-bg);
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 var(--glass-inset);
-  transition: all 0.3s ease;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  transition: all 0.2s ease;
 }
 
 .glass-card:hover {
   border-color: var(--glass-border-hover);
-  box-shadow: 
-    0 12px 40px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 var(--glass-inset);
-  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.16);
 }
 
-/* Minimal Glass Card Effect */
+/* Minimal Glass Card — reserved for subtle overlays */
 .glass-card-minimal {
   background: var(--glass-bg-minimal);
-  backdrop-filter: blur(16px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
-  box-shadow: 
-    0 4px 24px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 var(--glass-inset);
-  transition: all 0.3s ease;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
 }
 
 .glass-card-minimal:hover {
   border-color: var(--glass-border-hover);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 var(--glass-inset);
-  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 /* Input Styles */
@@ -345,7 +360,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 8px;
   padding: 0.75rem 1rem;
   color: var(--color-text-primary);
-  font-family: 'Outfit', sans-serif;
+  font-family: 'League Spartan', sans-serif;
   transition: all 0.2s ease;
 }
 
@@ -361,16 +376,16 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Minimal Input Styles */
 .input-minimal {
-  background: rgba(37, 37, 81, 0.5);
+  background: var(--color-surface-secondary);
   border: none;
-  border-bottom: 2px solid rgba(51, 65, 85, 0.3);
+  border-bottom: 2px solid var(--color-border-primary);
   border-radius: 8px 8px 0 0;
   transition: all 0.2s ease;
 }
 
 .input-minimal:focus {
   border-bottom-color: var(--color-brand-500);
-  background: rgba(37, 37, 81, 0.7);
+  background: var(--color-surface-elevated);
   transform: none;
   box-shadow: none;
 }
@@ -404,7 +419,7 @@ h1, h2, h3, h4, h5, h6 {
 .btn-minimal:hover {
   background: var(--color-brand-700);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px var(--color-glow);
 }
 
 .btn-minimal:active {
@@ -516,42 +531,21 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Social Button Minimal */
 .social-btn-minimal {
-  background: rgba(37, 37, 81, 0.5);
-  border: 1px solid rgba(51, 65, 85, 0.3);
+  background: var(--color-surface-secondary);
+  border: 1px solid var(--color-border-primary);
   color: var(--color-text-primary);
   transition: all 0.2s ease;
 }
 
 .social-btn-minimal:hover {
-  background: rgba(37, 37, 81, 0.7);
-  border-color: rgba(99, 102, 241, 0.3);
+  background: var(--color-surface-elevated);
+  border-color: var(--color-brand-500);
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Animation Classes */
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% { 
-    transform: translateY(0px) rotate(0deg);
-    opacity: 0.7;
-  }
-  25% { 
-    transform: translateY(-10px) rotate(2deg);
-    opacity: 0.9;
-  }
-  50% { 
-    transform: translateY(-20px) rotate(0deg);
-    opacity: 1;
-  }
-  75% { 
-    transform: translateY(-10px) rotate(-2deg);
-    opacity: 0.9;
-  }
-}
+/* .animate-float intentionally removed — distracting infinite animation */
 
 .animate-fade-in {
   animation: fadeIn 0.6s ease-out forwards;
@@ -1154,16 +1148,12 @@ body.onboarding-active [data-tour]:hover {
 @media (max-width: 480px) {
   /* Very small screens */
   html {
-    font-size: 12px;
+    font-size: 13px;
   }
-  
+
   .heading-display {
-    font-size: 1.75rem;
-  }
-  
-  .glass-card {
-    margin: 0.25rem;
-    padding: 0.875rem;
+    font-size: 2rem;
+    line-height: 1.15;
   }
 }
 
