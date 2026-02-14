@@ -8,7 +8,7 @@ import {
   BarChartIcon,
 } from "@radix-ui/react-icons";
 import { useAuth } from "../contexts/AuthContext";
-import { userAPI } from "../services/api";
+import { userAPI, habitsAPI } from "../services/api";
 
 /* ─────────────────────────────────────────────
    Phase 4 — Onboarding Interactive Playground
@@ -20,42 +20,78 @@ const GOAL_OPTIONS = [
     emoji: "💪",
     label: "Health & fitness",
     description: "Exercise, hydration, sleep",
-    habits: ["Drink 8 glasses of water", "Exercise for 30 min", "Sleep by 11 PM"],
+    category: "health",
+    color: "#22C55E",
+    habits: [
+      { name: "Drink 8 glasses of water", icon: "💧", target: { value: 8, unit: "glasses" } },
+      { name: "Exercise for 30 min", icon: "🏃", target: { value: 30, unit: "minutes" } },
+      { name: "Sleep by 11 PM", icon: "😴", target: { value: 1, unit: "times" } },
+    ],
   },
   {
     id: "productivity",
     emoji: "🎯",
     label: "Productivity",
     description: "Focus, planning, deep work",
-    habits: ["Plan 3 daily priorities", "Deep work session", "No phone first hour"],
+    category: "productivity",
+    color: "#6366F1",
+    habits: [
+      { name: "Plan 3 daily priorities", icon: "📝", target: { value: 3, unit: "times" } },
+      { name: "Deep work session", icon: "🧠", target: { value: 1, unit: "times" } },
+      { name: "No phone first hour", icon: "📵", target: { value: 1, unit: "times" } },
+    ],
   },
   {
     id: "mindfulness",
     emoji: "🧘",
     label: "Mindfulness",
     description: "Meditation, journaling, gratitude",
-    habits: ["Morning meditation", "Gratitude journal", "Digital sunset"],
+    category: "mindfulness",
+    color: "#8B5CF6",
+    habits: [
+      { name: "Morning meditation", icon: "🧘", target: { value: 10, unit: "minutes" } },
+      { name: "Gratitude journal", icon: "🙏", target: { value: 1, unit: "times" } },
+      { name: "Digital sunset", icon: "🌅", target: { value: 1, unit: "times" } },
+    ],
   },
   {
     id: "learning",
     emoji: "📚",
     label: "Learning",
     description: "Reading, courses, practice",
-    habits: ["Read for 20 minutes", "Learn something new", "Review notes"],
+    category: "learning",
+    color: "#3B82F6",
+    habits: [
+      { name: "Read for 20 minutes", icon: "📖", target: { value: 20, unit: "minutes" } },
+      { name: "Learn something new", icon: "💡", target: { value: 1, unit: "times" } },
+      { name: "Review notes", icon: "📝", target: { value: 1, unit: "times" } },
+    ],
   },
   {
     id: "social",
     emoji: "🤝",
     label: "Relationships",
     description: "Connection, kindness, outreach",
-    habits: ["Reach out to a friend", "Random act of kindness", "Quality time (no screens)"],
+    category: "social",
+    color: "#F59E0B",
+    habits: [
+      { name: "Reach out to a friend", icon: "📱", target: { value: 1, unit: "times" } },
+      { name: "Random act of kindness", icon: "💛", target: { value: 1, unit: "times" } },
+      { name: "Quality time (no screens)", icon: "🤝", target: { value: 30, unit: "minutes" } },
+    ],
   },
   {
     id: "creative",
     emoji: "✨",
     label: "Creativity",
     description: "Writing, art, side projects",
-    habits: ["Creative practice", "Capture an idea", "Work on side project"],
+    category: "creative",
+    color: "#EC4899",
+    habits: [
+      { name: "Creative practice", icon: "🎨", target: { value: 1, unit: "times" } },
+      { name: "Capture an idea", icon: "💡", target: { value: 1, unit: "times" } },
+      { name: "Work on side project", icon: "🛠️", target: { value: 1, unit: "times" } },
+    ],
   },
 ];
 
@@ -89,9 +125,10 @@ const OnboardingPage = () => {
     );
   };
 
-  // Get all suggested habits from selected goals
-  const suggestedHabits = GOAL_OPTIONS.filter((g) => selectedGoals.includes(g.id)).flatMap(
-    (g) => g.habits
+  // Get all suggested habits from selected goals (with full metadata)
+  const selectedGoalObjects = GOAL_OPTIONS.filter((g) => selectedGoals.includes(g.id));
+  const suggestedHabits = selectedGoalObjects.flatMap((g) =>
+    g.habits.map((h) => ({ ...h, category: g.category, color: g.color }))
   );
 
   const goNext = () => {
@@ -113,7 +150,26 @@ const OnboardingPage = () => {
   const handleComplete = async () => {
     setIsSubmitting(true);
     try {
-      // Mark onboarding as complete on backend
+      // Create habits in parallel
+      if (suggestedHabits.length > 0) {
+        const createPromises = suggestedHabits.map((habit) =>
+          habitsAPI.createHabit({
+            name: habit.name,
+            icon: habit.icon,
+            category: habit.category,
+            color: habit.color,
+            frequency: "daily",
+            target: habit.target,
+            schedule: { days: [0, 1, 2, 3, 4, 5, 6] },
+          }).catch((err) => {
+            console.warn(`Failed to create habit "${habit.name}":`, err);
+            return null; // Don't fail the whole batch
+          })
+        );
+        await Promise.all(createPromises);
+      }
+
+      // Mark onboarding as complete
       await userAPI.updateProfile({ onboardingComplete: true });
       updateUser({ onboardingComplete: true });
       navigate("/app/dashboard");
@@ -359,11 +415,12 @@ const OnboardingPage = () => {
                   className="w-5 h-5 rounded-md border-2 flex-shrink-0"
                   style={{ borderColor: "var(--color-border-secondary)" }}
                 />
+                <span className="text-sm mr-1">{habit.icon}</span>
                 <span
                   className="text-sm font-spartan"
                   style={{ color: "var(--color-text-primary)" }}
                 >
-                  {habit}
+                  {habit.name}
                 </span>
               </div>
             ))}
