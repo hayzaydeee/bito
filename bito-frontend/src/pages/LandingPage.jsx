@@ -127,21 +127,21 @@ const LandingPage = () => {
       role: "Student",
       content:
         "Bito completely changed how I approach personal development. The visual progress tracking keeps me motivated every single day.",
-      avatar: "SC",
+      avatar: "SN",
     },
     {
       name: "Henry Nwokolo",
       role: "Software Engineer",
       content:
         "The analytics are incredible. I can finally see exactly which habits are driving real results in my routines.",
-      avatar: "MR",
+      avatar: "HN",
     },
     {
       name: "David Arochukwu",
       role: "Writer",
       content:
         "Beautiful design and incredibly intuitive. Building habits has never felt this engaging and rewarding.",
-      avatar: "EJ",
+      avatar: "DA",
     },
   ];
 
@@ -560,19 +560,19 @@ const LandingPage = () => {
             </button>
           </div>
 
-          {/* Product screenshot placeholder */}
-          <div className="max-w-3xl mx-auto">
+          {/* Faux Dashboard — realistic, non-interactive product preview */}
+          <div className="max-w-5xl mx-auto">
             <div
-              className="rounded-xl border overflow-hidden"
+              className="rounded-xl border overflow-hidden text-left"
               style={{
-                backgroundColor: "var(--color-surface-secondary)",
+                backgroundColor: "var(--color-bg-primary)",
                 borderColor: "var(--color-border-primary)",
-                boxShadow: "0 24px 48px rgba(0,0,0,0.2)",
+                boxShadow: "0 24px 48px rgba(0,0,0,0.25)",
               }}
             >
               {/* Browser chrome bar */}
               <div
-                className="flex items-center gap-2 px-4 py-2.5 border-b"
+                className="flex items-center gap-2 px-4 py-2 border-b"
                 style={{ borderColor: "var(--color-border-primary)" }}
               >
                 <div className="flex gap-1.5">
@@ -585,75 +585,262 @@ const LandingPage = () => {
                   style={{ backgroundColor: "var(--color-surface-hover)" }}
                 />
               </div>
-              {/* Dashboard mockup */}
-              <div className="p-6 md:p-8 space-y-4">
-                {/* Stat pills */}
-                <div className="flex gap-3 flex-wrap">
-                  {[
-                    { label: "Streak", value: "12 days", color: "var(--color-warning)" },
-                    { label: "Today", value: "3 / 5", color: "var(--color-brand-500)" },
-                    { label: "This week", value: "87%", color: "var(--color-success)" },
-                  ].map((stat, i) => (
+
+              <div className="flex" style={{ minHeight: 380 }}>
+                {/* ── Mini sidebar ── */}
+                <div
+                  className="hidden md:flex flex-col w-48 border-r py-4 px-3 flex-shrink-0"
+                  style={{
+                    backgroundColor: "var(--color-bg-secondary)",
+                    borderColor: "var(--color-border-primary)",
+                  }}
+                >
+                  {/* Logo */}
+                  <div className="flex items-center gap-2 px-2 mb-5">
                     <div
-                      key={i}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg border"
-                      style={{
-                        backgroundColor: "var(--color-surface-primary)",
-                        borderColor: "var(--color-border-primary)",
-                      }}
+                      className="w-6 h-6 rounded-md flex items-center justify-center"
+                      style={{ backgroundColor: "var(--color-brand-600)" }}
                     >
+                      <TargetIcon className="w-3.5 h-3.5 text-white" />
+                    </div>
+                    <span
+                      className="text-sm font-bold font-garamond"
+                      style={{ color: "var(--color-text-primary)" }}
+                    >
+                      bito
+                    </span>
+                  </div>
+
+                  {/* MAIN section */}
+                  <p
+                    className="text-[9px] font-spartan font-semibold uppercase tracking-wider px-2 mb-1.5"
+                    style={{ color: "var(--color-text-tertiary)" }}
+                  >
+                    Main
+                  </p>
+                  <div
+                    className="flex items-center gap-2 px-2 py-1.5 rounded-md mb-0.5"
+                    style={{
+                      backgroundColor: "var(--color-brand-600)",
+                    }}
+                  >
+                    <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 15 15" fill="none"><path d="M2.5 2h4v5h-4zM8.5 2h4v5h-4zM2.5 8.5h4V13h-4zM8.5 8.5h4V13h-4z" stroke="currentColor" strokeWidth="1" /></svg>
+                    <span className="text-[11px] font-spartan font-medium text-white">Dashboard</span>
+                  </div>
+                  <div
+                    className="flex items-center gap-2 px-2 py-1.5 rounded-md mb-3"
+                  >
+                    <BarChartIcon className="w-3.5 h-3.5" style={{ color: "var(--color-text-tertiary)" }} />
+                    <span className="text-[11px] font-spartan" style={{ color: "var(--color-text-secondary)" }}>Analytics</span>
+                  </div>
+
+                  {/* TEAMS */}
+                  <p
+                    className="text-[9px] font-spartan font-semibold uppercase tracking-wider px-2 mb-1.5"
+                    style={{ color: "var(--color-text-tertiary)" }}
+                  >
+                    Teams
+                  </p>
+                  <div className="flex items-center gap-2 px-2 py-1.5">
+                    <svg className="w-3.5 h-3.5" style={{ color: "var(--color-text-tertiary)" }} viewBox="0 0 15 15" fill="none"><path d="M7.5 0.875C5.49 0.875 3.875 2.49 3.875 4.5S5.49 8.125 7.5 8.125 11.125 6.51 11.125 4.5 9.51 0.875 7.5 0.875zM2.5 14.125c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="currentColor" strokeWidth="1.2" /></svg>
+                    <span className="text-[11px] font-spartan" style={{ color: "var(--color-text-secondary)" }}>Groups</span>
+                    <span
+                      className="ml-auto text-[9px] px-1.5 py-0.5 rounded font-spartan"
+                      style={{ backgroundColor: "var(--color-surface-hover)", color: "var(--color-text-tertiary)" }}
+                    >
+                      2
+                    </span>
+                  </div>
+                  {["Team Alpha", "Wellness Club"].map((ws, i) => (
+                    <div key={i} className="flex items-center gap-2 pl-6 pr-2 py-1">
                       <div
-                        className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: stat.color }}
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{ backgroundColor: i === 0 ? "var(--color-success)" : "var(--color-brand-400)" }}
                       />
-                      <span
-                        className="text-xs font-spartan"
-                        style={{ color: "var(--color-text-tertiary)" }}
-                      >
-                        {stat.label}
-                      </span>
-                      <span
-                        className="text-xs font-spartan font-semibold"
-                        style={{ color: "var(--color-text-primary)" }}
-                      >
-                        {stat.value}
+                      <span className="text-[10px] font-spartan truncate" style={{ color: "var(--color-text-tertiary)" }}>
+                        {ws}
                       </span>
                     </div>
                   ))}
+
+                  <div className="mt-auto">
+                    <div className="flex items-center gap-2 px-2 py-1.5">
+                      <svg className="w-3.5 h-3.5" style={{ color: "var(--color-text-tertiary)" }} viewBox="0 0 15 15" fill="none"><path d="M7.07 0.65c0.2-0.63 1.1-0.63 1.3 0l0.71 2.24a0.68 0.68 0 0 0 0.5 0.5l2.24 0.71c0.63 0.2 0.63 1.1 0 1.3l-2.24 0.71a0.68 0.68 0 0 0-0.5 0.5l-0.71 2.24c-0.2 0.63-1.1 0.63-1.3 0L6.36 6.61a0.68 0.68 0 0 0-0.5-0.5l-2.24-0.71c-0.63-0.2-0.63-1.1 0-1.3l2.24-0.71a0.68 0.68 0 0 0 0.5-0.5L7.07 0.65z" stroke="currentColor" strokeWidth="1" /></svg>
+                      <span className="text-[11px] font-spartan" style={{ color: "var(--color-text-secondary)" }}>Settings</span>
+                    </div>
+                  </div>
                 </div>
-                {/* Habit rows */}
-                {["Morning meditation", "Read 20 pages", "Exercise"].map(
-                  (h, i) => (
+
+                {/* ── Main content area ── */}
+                <div className="flex-1 min-w-0 p-3 md:p-4 overflow-hidden">
+                  {/* Top bar */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-spartan" style={{ color: "var(--color-text-tertiary)" }}>Home</span>
+                      <span className="text-[10px]" style={{ color: "var(--color-text-tertiary)" }}>›</span>
+                      <span className="text-[10px] font-spartan font-medium" style={{ color: "var(--color-text-primary)" }}>Dashboard</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-white"
+                        style={{ backgroundColor: "var(--color-brand-500)" }}
+                      >
+                        D
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Greeting card */}
+                  <div
+                    className="rounded-lg border p-3 mb-3"
+                    style={{
+                      backgroundColor: "var(--color-surface-primary)",
+                      borderColor: "var(--color-border-primary)",
+                    }}
+                  >
+                    <div className="flex items-start justify-between flex-wrap gap-2">
+                      <div>
+                        <h3
+                          className="text-sm font-garamond font-bold"
+                          style={{ color: "var(--color-text-primary)" }}
+                        >
+                          Good evening, Divine!
+                        </h3>
+                        <p className="text-[10px] font-spartan flex items-center gap-1 mt-0.5" style={{ color: "var(--color-text-tertiary)" }}>
+                          📅 Saturday, February 14 • 9:40 PM
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right hidden sm:block">
+                          <span className="text-xs font-spartan font-bold" style={{ color: "var(--color-warning)" }}>🔥 13</span>
+                          <p className="text-[9px] font-spartan" style={{ color: "var(--color-text-tertiary)" }}>day streak</p>
+                        </div>
+                        <div className="text-right hidden sm:block">
+                          <span className="text-xs font-spartan font-bold" style={{ color: "var(--color-success)" }}>🎯 79%</span>
+                          <p className="text-[9px] font-spartan" style={{ color: "var(--color-text-tertiary)" }}>weekly goal</p>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Completion banner */}
+                    <div className="flex items-center gap-2 mt-2">
+                      <div
+                        className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: "var(--color-success)" }}
+                      >
+                        <CheckIcon className="w-3 h-3 text-white" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-spartan font-bold" style={{ color: "var(--color-text-primary)" }}>8 of 8</span>
+                        <span className="text-[10px] font-spartan ml-1.5" style={{ color: "var(--color-text-tertiary)" }}>All habits completed! 🎉</span>
+                      </div>
+                    </div>
+                    {/* Progress bar */}
+                    <div className="mt-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] font-spartan font-medium" style={{ color: "var(--color-text-secondary)" }}>Daily Progress</span>
+                        <span className="text-[10px] font-spartan font-bold" style={{ color: "var(--color-success)" }}>100%</span>
+                      </div>
+                      <div
+                        className="h-2 rounded-full overflow-hidden"
+                        style={{ backgroundColor: "var(--color-surface-hover)" }}
+                      >
+                        <div
+                          className="h-full rounded-full"
+                          style={{ width: "100%", backgroundColor: "var(--color-success)" }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Widget area */}
+                  <div className="grid md:grid-cols-3 gap-3">
+                    {/* Habits Overview widget — spans 2 cols */}
                     <div
-                      key={i}
-                      className="flex items-center gap-3 rounded-lg px-4 py-3 border"
+                      className="md:col-span-2 rounded-lg border p-3"
                       style={{
                         backgroundColor: "var(--color-surface-primary)",
                         borderColor: "var(--color-border-primary)",
                       }}
                     >
-                      <div
-                        className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0"
-                        style={{
-                          backgroundColor:
-                            i < 2
-                              ? "var(--color-success)"
-                              : "var(--color-surface-hover)",
-                        }}
-                      >
-                        {i < 2 && (
-                          <CheckIcon className="w-3 h-3 text-white" />
-                        )}
+                      <div className="flex items-center justify-between mb-1">
+                        <h4 className="text-xs font-spartan font-bold" style={{ color: "var(--color-text-primary)" }}>Habits Overview</h4>
+                        <svg className="w-3 h-3" style={{ color: "var(--color-text-tertiary)" }} viewBox="0 0 15 15" fill="none"><path d="M11.8 1.6a2.1 2.1 0 0 1 3 3L5.7 13.7l-4.2.8.8-4.2z" stroke="currentColor" strokeWidth="1.2" /></svg>
                       </div>
-                      <span
-                        className="text-sm font-spartan"
-                        style={{ color: "var(--color-text-primary)" }}
-                      >
-                        {h}
-                      </span>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-[10px] font-spartan font-medium" style={{ color: "var(--color-text-secondary)" }}>Daily Habits Completion</p>
+                        <div className="hidden sm:flex items-center gap-2">
+                          <span className="text-[8px] font-spartan px-1.5 py-0.5 rounded" style={{ backgroundColor: "var(--color-surface-hover)", color: "var(--color-text-tertiary)" }}>Monthly View</span>
+                          <span className="text-[8px] font-spartan px-1.5 py-0.5 rounded" style={{ backgroundColor: "var(--color-surface-hover)", color: "var(--color-text-tertiary)" }}>February</span>
+                        </div>
+                      </div>
+                      {/* SVG Line chart */}
+                      <svg viewBox="0 0 320 100" className="w-full" style={{ height: 100 }}>
+                        {/* Grid lines */}
+                        {[0, 25, 50, 75, 100].map((y) => (
+                          <line key={y} x1="25" y1={y} x2="310" y2={y} stroke="var(--color-border-primary)" strokeWidth="0.5" strokeDasharray="3 3" />
+                        ))}
+                        {/* Y-axis labels */}
+                        <text x="18" y="4" textAnchor="end" fill="var(--color-text-tertiary)" fontSize="6" fontFamily="League Spartan, sans-serif">8</text>
+                        <text x="18" y="29" textAnchor="end" fill="var(--color-text-tertiary)" fontSize="6" fontFamily="League Spartan, sans-serif">6</text>
+                        <text x="18" y="79" textAnchor="end" fill="var(--color-text-tertiary)" fontSize="6" fontFamily="League Spartan, sans-serif">2</text>
+                        <text x="18" y="100" textAnchor="end" fill="var(--color-text-tertiary)" fontSize="6" fontFamily="League Spartan, sans-serif">0</text>
+                        {/* Data line — Feb 1-14 */}
+                        <polyline
+                          fill="none"
+                          stroke="var(--color-brand-500)"
+                          strokeWidth="2"
+                          strokeLinejoin="round"
+                          strokeLinecap="round"
+                          points="30,95 50,30 70,25 90,30 110,25 130,0 150,0 170,30 190,0 210,0 230,12 250,12 270,0 290,0"
+                        />
+                        {/* Data dots */}
+                        {[
+                          [30,95],[50,30],[70,25],[90,30],[110,25],[130,0],[150,0],[170,30],[190,0],[210,0],[230,12],[250,12],[270,0],[290,0]
+                        ].map(([cx, cy], i) => (
+                          <circle key={i} cx={cx} cy={cy} r="2.5" fill="var(--color-brand-500)" />
+                        ))}
+                        {/* X-axis labels */}
+                        {["1","2","3","4","5","6","7","8","9","10","11","12","13","14"].map((d, i) => (
+                          <text key={i} x={30 + i * 20} y="100" textAnchor="middle" fill="var(--color-text-tertiary)" fontSize="5" fontFamily="League Spartan, sans-serif" dy="8">{d}</text>
+                        ))}
+                      </svg>
                     </div>
-                  )
-                )}
+
+                    {/* Quick Actions widget */}
+                    <div
+                      className="rounded-lg border p-3"
+                      style={{
+                        backgroundColor: "var(--color-surface-primary)",
+                        borderColor: "var(--color-border-primary)",
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-xs font-spartan font-bold" style={{ color: "var(--color-text-primary)" }}>Quick Actions</h4>
+                        <svg className="w-3 h-3" style={{ color: "var(--color-text-tertiary)" }} viewBox="0 0 15 15" fill="none"><path d="M11.8 1.6a2.1 2.1 0 0 1 3 3L5.7 13.7l-4.2.8.8-4.2z" stroke="currentColor" strokeWidth="1.2" /></svg>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {[
+                          { label: "Add Habit", icon: "+", bg: "var(--color-success)" },
+                          { label: "Complete All", icon: "✓", bg: "var(--color-success)" },
+                          { label: "Import Data", icon: "↑", bg: "var(--color-success)", sub: "Coming Soon" },
+                          { label: "Reset Day", icon: "↩", bg: "var(--color-warning)" },
+                        ].map((action, i) => (
+                          <div
+                            key={i}
+                            className="rounded-md flex flex-col items-center justify-center py-2.5 px-1"
+                            style={{ backgroundColor: action.bg }}
+                          >
+                            <span className="text-white text-sm font-bold leading-none mb-0.5">{action.icon}</span>
+                            <span className="text-[8px] font-spartan font-medium text-white/90 text-center leading-tight">{action.label}</span>
+                            {action.sub && (
+                              <span className="text-[6px] font-spartan text-white/60 mt-0.5">{action.sub}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
