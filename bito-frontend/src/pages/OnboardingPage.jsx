@@ -8,6 +8,7 @@ import {
   BarChartIcon,
 } from "@radix-ui/react-icons";
 import { useAuth } from "../contexts/AuthContext";
+import { useHabits } from "../contexts/HabitContext";
 import { userAPI, habitsAPI } from "../services/api";
 
 /* ─────────────────────────────────────────────
@@ -128,6 +129,7 @@ const TIME_OPTIONS = [
 const OnboardingPage = () => {
   const navigate = useNavigate();
   const { user, updateUser, isAuthenticated, isLoading } = useAuth();
+  const { fetchHabits } = useHabits();
   const [step, setStep] = useState(0); // 0=welcome, 1=goals, 2=capacity, 3=time, 4=preview, 5=done
   const [selectedGoals, setSelectedGoals] = useState([]);
   const [dailyCapacity, setDailyCapacity] = useState(null); // "light" | "balanced" | "full"
@@ -236,6 +238,8 @@ const OnboardingPage = () => {
           })
         );
         await Promise.all(createPromises);
+        // Refresh the HabitContext so the dashboard has fresh data
+        await fetchHabits();
       }
 
       // Mark onboarding as complete
