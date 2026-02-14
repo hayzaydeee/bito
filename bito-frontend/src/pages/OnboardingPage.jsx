@@ -135,6 +135,7 @@ const OnboardingPage = () => {
   const [dailyCapacity, setDailyCapacity] = useState(null); // "light" | "balanced" | "full"
   const [preferredTimes, setPreferredTimes] = useState([]);
   const [triedHabitIndex, setTriedHabitIndex] = useState(null);
+  const [skipHabitCreation, setSkipHabitCreation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [animatingOut, setAnimatingOut] = useState(false);
 
@@ -816,7 +817,10 @@ const OnboardingPage = () => {
         </div>
         <div className="text-center mt-4">
           <button
-            onClick={handleSkip}
+            onClick={() => {
+              setSkipHabitCreation(true);
+              goNext();
+            }}
             className="text-xs font-spartan transition-colors"
             style={{ color: "var(--color-text-tertiary)" }}
             onMouseEnter={(e) =>
@@ -848,7 +852,9 @@ const OnboardingPage = () => {
           className="text-base font-spartan leading-relaxed mb-3"
           style={{ color: "var(--color-text-secondary)" }}
         >
-          {suggestedHabits.length > 0
+          {skipHabitCreation
+            ? "Your blank canvas is ready — add habits that feel right for you."
+            : suggestedHabits.length > 0
             ? `We'll add ${suggestedHabits.length} habits to get you started. Check in daily to build your streaks.`
             : "Your dashboard is ready. Add your first habit whenever you're ready."}
         </p>
@@ -892,7 +898,7 @@ const OnboardingPage = () => {
         </div>
 
         <button
-          onClick={handleComplete}
+          onClick={skipHabitCreation ? handleSkip : handleComplete}
           disabled={isSubmitting}
           className="btn btn-primary btn-lg group mx-auto"
         >
