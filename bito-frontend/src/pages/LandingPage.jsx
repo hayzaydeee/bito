@@ -123,22 +123,22 @@ const LandingPage = () => {
 
   const testimonials = [
     {
-      name: "Sarah Chen",
-      role: "Product Manager",
+      name: "Stephanie Ndubuisi",
+      role: "Student",
       content:
         "Bito completely changed how I approach personal development. The visual progress tracking keeps me motivated every single day.",
       avatar: "SC",
     },
     {
-      name: "Michael Rodriguez",
+      name: "Henry Nwokolo",
       role: "Software Engineer",
       content:
         "The analytics are incredible. I can finally see exactly which habits are driving real results in my routines.",
       avatar: "MR",
     },
     {
-      name: "Emily Johnson",
-      role: "Designer",
+      name: "David Arochukwu",
+      role: "Writer",
       content:
         "Beautiful design and incredibly intuitive. Building habits has never felt this engaging and rewarding.",
       avatar: "EJ",
