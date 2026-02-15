@@ -361,6 +361,7 @@ h1, h2, h3, h4, h5, h6 {
   padding: 0.75rem 1rem;
   color: var(--color-text-primary);
   font-family: 'League Spartan', sans-serif;
+  font-size: 1rem; /* 16px — prevents iOS auto-zoom on focus */
   transition: all 0.2s ease;
 }
 

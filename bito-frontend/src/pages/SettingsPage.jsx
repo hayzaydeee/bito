@@ -339,7 +339,7 @@ const SettingsPage = ({ section }) => {
      ================================================================ */
   if (section === "habit-privacy") {
     return (
-      <div className="min-h-screen page-container px-6 py-10">
+      <div className="min-h-screen page-container px-4 sm:px-6 py-10">
         <div className="max-w-2xl mx-auto">
           {/* back */}
           <button
@@ -395,7 +395,7 @@ const SettingsPage = ({ section }) => {
 
               {/* share level */}
               <Section title="Share Progress Level">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[
                     {
                       value: "full",
@@ -519,7 +519,7 @@ const SettingsPage = ({ section }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen page-container px-6 py-10">
+      <div className="min-h-screen page-container px-4 sm:px-6 py-10">
         <div className="max-w-2xl mx-auto space-y-4">
           <div className="h-8 w-40 rounded-lg bg-[var(--color-surface-elevated)] animate-pulse" />
           <div className="h-5 w-64 rounded bg-[var(--color-surface-elevated)] animate-pulse" />
@@ -590,7 +590,7 @@ const SettingsPage = ({ section }) => {
   ];
 
   return (
-    <div className="min-h-screen page-container px-6 py-10">
+    <div className="min-h-screen page-container px-4 sm:px-6 py-10">
       <div className="max-w-2xl mx-auto">
         {/* ── header ──────────────────── */}
         <h1 className="text-2xl font-bold font-garamond text-[var(--color-text-primary)] mb-1">
@@ -874,12 +874,12 @@ const SettingsPage = ({ section }) => {
                 <p className="text-xs text-[var(--color-text-secondary)] font-spartan">
                   Type <strong>DELETE</strong> to confirm:
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                   <input
                     value={deleteText}
                     onChange={(e) => setDeleteText(e.target.value)}
                     placeholder="DELETE"
-                    className="flex-1 h-9 px-3 rounded-lg border border-red-500/30 bg-transparent text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-red-500/30"
+                    className="flex-1 h-9 px-3 rounded-lg border border-red-500/30 bg-transparent text-base sm:text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-red-500/30"
                   />
                   <button
                     onClick={handleDelete}
@@ -986,7 +986,7 @@ const SelectInput = ({ value, options, onChange, disabled }) => (
     value={value}
     onChange={(e) => onChange(e.target.value)}
     disabled={disabled}
-    className="h-9 px-3 pr-8 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 text-sm font-spartan text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)]/30 disabled:opacity-50 appearance-none cursor-pointer"
+    className="h-9 px-3 pr-8 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 text-base sm:text-sm font-spartan text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)]/30 disabled:opacity-50 appearance-none cursor-pointer"
     style={{
       backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
       backgroundPosition: "right 0.5rem center",

@@ -162,7 +162,7 @@ const WorkspaceSettings = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen page-container px-6 py-10">
+      <div className="min-h-screen page-container px-4 sm:px-6 py-10">
         <div className="max-w-2xl mx-auto space-y-4">
           <div className="h-8 w-48 rounded-lg bg-[var(--color-surface-elevated)] animate-pulse" />
           <div className="h-5 w-64 rounded bg-[var(--color-surface-elevated)] animate-pulse" />
@@ -181,7 +181,7 @@ const WorkspaceSettings = () => {
 
   if (error && !workspace) {
     return (
-      <div className="min-h-screen page-container px-6 py-10 flex items-center justify-center">
+      <div className="min-h-screen page-container px-4 sm:px-6 py-10 flex items-center justify-center">
         <div className="text-center">
           <p className="text-sm text-red-500 font-spartan mb-4">{error}</p>
           <button
@@ -198,7 +198,7 @@ const WorkspaceSettings = () => {
   /* ── render ─────────────────────────── */
 
   return (
-    <div className="min-h-screen page-container px-6 py-10">
+    <div className="min-h-screen page-container px-4 sm:px-6 py-10">
       <div className="max-w-2xl mx-auto">
         {/* header */}
         <div className="flex items-center justify-between mb-10">
@@ -472,7 +472,7 @@ function TextInput({ value, onChange, disabled, multiline = false }) {
         <Tag
           value={temp}
           onChange={(e) => setTemp(e.target.value)}
-          className="px-2.5 py-1.5 bg-[var(--color-surface-primary)] border border-[var(--color-border-primary)]/30 rounded-lg text-sm font-spartan w-44 resize-none"
+          className="px-2.5 py-1.5 bg-[var(--color-surface-primary)] border border-[var(--color-border-primary)]/30 rounded-lg text-base sm:text-sm font-spartan w-full sm:w-44 resize-none"
           rows={multiline ? 2 : undefined}
           autoFocus
         />
@@ -500,7 +500,7 @@ function TextInput({ value, onChange, disabled, multiline = false }) {
 
   return (
     <div
-      className={`text-sm font-spartan px-3 py-1.5 rounded-lg border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-primary)] min-w-[10rem] truncate ${
+      className={`text-sm font-spartan px-3 py-1.5 rounded-lg border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-primary)] min-w-0 sm:min-w-[10rem] truncate ${
         disabled ? "opacity-50" : "cursor-pointer hover:bg-[var(--color-surface-hover)]"
       }`}
       onClick={() => !disabled && setEditing(true)}
@@ -514,7 +514,7 @@ function SelectInput({ value, onChange, disabled, options }) {
   return (
     <Select.Root value={value} onValueChange={disabled ? undefined : onChange}>
       <Select.Trigger
-        className="w-44 h-9 px-3 bg-[var(--color-surface-primary)] border border-[var(--color-border-primary)]/20 rounded-lg font-spartan text-sm"
+        className="w-full sm:w-44 h-9 px-3 bg-[var(--color-surface-primary)] border border-[var(--color-border-primary)]/20 rounded-lg font-spartan text-base sm:text-sm"
         disabled={disabled}
       />
       <Select.Content className="font-spartan bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 rounded-lg shadow-xl z-50">

@@ -120,7 +120,7 @@ const GroupSelection = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen page-container px-6 py-10">
+      <div className="min-h-screen page-container px-4 sm:px-6 py-10">
         <div className="max-w-3xl mx-auto space-y-4">
           <div className="h-10 w-40 rounded-lg bg-[var(--color-surface-elevated)] animate-pulse" />
           <div className="h-5 w-64 rounded bg-[var(--color-surface-elevated)] animate-pulse" />
@@ -140,7 +140,7 @@ const GroupSelection = () => {
   /* ── render ──────────────────────────── */
 
   return (
-    <div className="min-h-screen page-container px-6 py-10">
+    <div className="min-h-screen page-container px-4 sm:px-6 py-10">
       <div className="max-w-3xl mx-auto">
         {/* header */}
         <div className="flex items-start justify-between mb-10">

@@ -317,7 +317,7 @@ const Signup = () => {
             >
               <form onSubmit={handleSignup} className="space-y-5">
                 {/* Name fields side-by-side */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label
                       htmlFor="firstName-input"
