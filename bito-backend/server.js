@@ -23,6 +23,7 @@ const workspaceRoutes = require('./routes/workspaces');
 const encouragementRoutes = require('./routes/encouragements');
 const journalRoutes = require('./routes/journal');
 const templateRoutes = require('./routes/templates');
+const insightsRoutes = require('./routes/insights');
 const testRoutes = require('./routes/test');
 
 // Import middleware
@@ -332,6 +333,7 @@ app.use('/api/workspaces', workspaceRoutes);
 app.use('/api/encouragements', encouragementRoutes);
 app.use('/api/journal', journalRoutes);
 app.use('/api/templates', templateRoutes);
+app.use('/api/insights', insightsRoutes);
 // API documentation endpoint
 app.get('/api', (req, res) => {
   res.json({

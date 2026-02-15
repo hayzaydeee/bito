@@ -786,6 +786,25 @@ export const notificationsAPI = {
   },
 };
 
+// Insights API (Phase 12 – AI Insights)
+export const insightsAPI = {
+  // Get AI-powered habit insights
+  getInsights: async (forceRefresh = false) => {
+    const endpoint = forceRefresh
+      ? '/api/insights?refresh=true'
+      : '/api/insights';
+    return apiRequest(endpoint);
+  },
+
+  // Dismiss a specific insight
+  dismissInsight: async (insightType, habitId) => {
+    return apiRequest('/api/insights/dismiss', {
+      method: 'POST',
+      body: JSON.stringify({ insightType, habitId }),
+    });
+  },
+};
+
 // Verify habit counts for debug purposes
 export const verifyHabitCounts = async () => {
   const groupsResponse = await apiRequest('/api/workspaces');
