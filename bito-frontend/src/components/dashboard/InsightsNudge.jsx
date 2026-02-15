@@ -101,14 +101,14 @@ const InsightsNudge = memo(({ habits, entries }) => {
           </button>
           {llmUsed && (
             <span
-              className="text-xs"
+              className="text-xs font-spartan hover:underline transition-colors"
               style={{ color: "var(--color-text-muted)" }}
             >
-              · AI-enhanced
+              · powered by OpenAI
             </span>
           )}
           <Link
-            to="/analytics"
+            to="/app/analytics"
             className="text-xs font-spartan ml-auto hover:underline transition-colors"
             style={{ color: "var(--color-brand-400)" }}
           >
