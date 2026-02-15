@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import VerticalMenu from "./VerticalMenu";
 import StatusBar from "./StatusBar";
 import BottomTabBar from "./BottomTabBar";
@@ -9,6 +9,7 @@ const Layout = () => {
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const { user } = useAuth();
+  const location = useLocation();
 
   // Detect mobile screen size
   useEffect(() => {
@@ -51,7 +52,9 @@ const Layout = () => {
             paddingBottom: isMobile ? "calc(64px + env(safe-area-inset-bottom, 0px))" : "0",
           }}
         >
-          <Outlet />
+          <div key={location.pathname} className="page-enter">
+            <Outlet />
+          </div>
         </div>
       </div>
 

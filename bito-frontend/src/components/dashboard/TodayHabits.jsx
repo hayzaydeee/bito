@@ -4,12 +4,18 @@ import { CheckIcon, Pencil1Icon } from "@radix-ui/react-icons";
 /* ─── Single habit row ─── */
 const HabitRow = memo(({ habit, isCompleted, onToggle, onEdit }) => {
   const [animating, setAnimating] = useState(false);
+  const [justCompleted, setJustCompleted] = useState(false);
 
   const handleToggle = useCallback(() => {
+    const wasCompleted = isCompleted;
     setAnimating(true);
+    if (!wasCompleted) setJustCompleted(true);
     onToggle(habit._id);
-    setTimeout(() => setAnimating(false), 400);
-  }, [habit._id, onToggle]);
+    setTimeout(() => {
+      setAnimating(false);
+      setJustCompleted(false);
+    }, 400);
+  }, [habit._id, onToggle, isCompleted]);
 
   return (
     <div
@@ -38,7 +44,11 @@ const HabitRow = memo(({ habit, isCompleted, onToggle, onEdit }) => {
         }}
         aria-label={isCompleted ? `Uncheck ${habit.name}` : `Check ${habit.name}`}
       >
-        {isCompleted && <CheckIcon className="w-3.5 h-3.5 text-white" />}
+        {isCompleted && (
+          <CheckIcon
+            className={`w-3.5 h-3.5 text-white ${justCompleted ? 'check-bounce' : ''}`}
+          />
+        )}
       </button>
 
       {/* Icon */}

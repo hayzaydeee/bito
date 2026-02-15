@@ -11,6 +11,7 @@ import StatPills from "../components/dashboard/StatPills";
 import TodayHabits from "../components/dashboard/TodayHabits";
 import WeekStrip from "../components/dashboard/WeekStrip";
 import InsightsNudge from "../components/dashboard/InsightsNudge";
+import StreakCelebration from "../components/dashboard/StreakCelebration";
 
 /* ─────────────────────────────────────────────
    Phase 6 — Dashboard Redesign
@@ -215,6 +216,22 @@ const Dashboard = () => {
       {/* 5. 7-day heatmap strip */}
       {habits.length > 0 && (
         <WeekStrip habits={habits} entries={entries} />
+      )}
+
+      {/* 6. Streak milestone celebration */}
+      {stats.streak > 0 && (
+        <StreakCelebration
+          streak={stats.streak}
+          habitName={habits.find(h => {
+            const he = entries[h._id];
+            if (!he) return false;
+            return habitLogic.calculateStreak(
+              h._id, h,
+              new Map(Object.entries(he).map(([d, e]) => [`${d}_${h._id}`, e])),
+              new Date()
+            ) === stats.streak;
+          })?.name}
+        />
       )}
 
       {/* Habit modal */}
