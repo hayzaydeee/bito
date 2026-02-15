@@ -1,26 +1,27 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Text, Switch, Select, Button } from "@radix-ui/themes";
+import { Switch, Select, Button } from "@radix-ui/themes";
 import {
   GearIcon,
   PersonIcon,
   LockClosedIcon,
-  GroupIcon,
   TrashIcon,
-  UpdateIcon,
-  InfoCircledIcon,
   ArrowLeftIcon,
   CheckIcon,
   Cross2Icon,
   PlusIcon,
   EyeOpenIcon,
+  InfoCircledIcon,
+  UpdateIcon,
 } from "@radix-ui/react-icons";
-import BaseGridContainer from "../components/shared/BaseGridContainer";
 import { useAuth } from "../contexts/AuthContext";
 import { workspacesAPI } from "../services/api";
 import { useAppNotifications } from "../hooks/useAppNotifications";
 import LeaveWorkspaceButton from "../components/settingsPage/LeaveWorkspaceButton";
 
+/* ================================================================
+   WorkspaceSettings — sectioned list layout (no widget grid)
+   ================================================================ */
 const WorkspaceSettings = () => {
   const { groupId } = useParams();
   const navigate = useNavigate();
@@ -41,69 +42,60 @@ const WorkspaceSettings = () => {
     allowInvites: true,
     requireApproval: false,
     privacyLevel: "invite-only",
+    allowMemberHabitCreation: true,
+    defaultHabitVisibility: "progress-only",
   });
 
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  /* ── fetch ──────────────────────────── */
 
-  // Fetch workspace data
   useEffect(() => {
-    const fetchWorkspace = async () => {
+    if (!groupId || !user) return;
+    (async () => {
       try {
         setLoading(true);
-        const response = await workspacesAPI.getWorkspace(groupId);
-
-        if (response.success) {
-          const workspaceData = response.workspace;
-          setWorkspace(workspaceData);
+        const res = await workspacesAPI.getWorkspace(groupId);
+        if (res.success) {
+          const ws = res.workspace;
+          setWorkspace(ws);
           setSettings({
-            name: workspaceData.name,
-            description: workspaceData.description || "",
-            type: workspaceData.type || "team",
-            isPublic: workspaceData.settings?.isPublic || false,
-            allowInvites: workspaceData.settings?.allowInvites || true,
-            requireApproval: workspaceData.settings?.requireApproval || false,
-            privacyLevel: workspaceData.settings?.privacyLevel || "invite-only",
+            name: ws.name,
+            description: ws.description || "",
+            type: ws.type || "team",
+            isPublic: ws.settings?.isPublic || false,
+            allowInvites: ws.settings?.allowInvites ?? true,
+            requireApproval: ws.settings?.requireApproval || false,
+            privacyLevel: ws.settings?.privacyLevel || "invite-only",
             allowMemberHabitCreation:
-              workspaceData.settings?.allowMemberHabitCreation !== false,
+              ws.settings?.allowMemberHabitCreation !== false,
             defaultHabitVisibility:
-              workspaceData.settings?.defaultHabitVisibility || "progress-only",
+              ws.settings?.defaultHabitVisibility || "progress-only",
           });
 
-          // Determine user role - handle ObjectId vs string comparison
-          const currentUserId = user?.id || user?._id;
-          const member = workspaceData.members.find((m) => {
-            const memberUserId = m.userId?._id || m.userId;
-            return (
-              memberUserId === currentUserId ||
-              String(memberUserId) === String(currentUserId)
-            );
+          const uid = user?.id || user?._id;
+          const member = ws.members.find((m) => {
+            const mid = (m.userId?._id || m.userId || "").toString();
+            return mid === uid?.toString();
           });
           setUserRole(member?.role || "member");
         }
-      } catch (error) {
-        console.error("Error fetching workspace:", error);
+      } catch (err) {
+        console.error("Error fetching workspace:", err);
         setError("Failed to load workspace settings");
       } finally {
         setLoading(false);
       }
-    };
-
-    if (groupId && user) {
-      fetchWorkspace();
-    }
+    })();
   }, [groupId, user]);
 
-  const handleSettingChange = (key, value) => {
-    setSettings((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
+  /* ── handlers ───────────────────────── */
 
-  const handleSaveSettings = async () => {
+  const set = (key, value) =>
+    setSettings((p) => ({ ...p, [key]: value }));
+
+  const handleSave = async () => {
     try {
       setSaving(true);
-      const response = await workspacesAPI.updateWorkspace(groupId, {
+      const res = await workspacesAPI.updateWorkspace(groupId, {
         name: settings.name,
         description: settings.description,
         type: settings.type,
@@ -116,66 +108,38 @@ const WorkspaceSettings = () => {
           defaultHabitVisibility: settings.defaultHabitVisibility,
         },
       });
-
-      if (response.success) {
-        // Update local state
-        setWorkspace((prev) => ({
-          ...prev,
-          ...response.workspace,
-        }));
-        
-        // Emit custom event to notify other components of workspace update
-        window.dispatchEvent(new CustomEvent('workspaceUpdated', {
-          detail: { workspace: response.workspace }
-        }));
-        
+      if (res.success) {
+        setWorkspace((p) => ({ ...p, ...res.workspace }));
+        window.dispatchEvent(
+          new CustomEvent("workspaceUpdated", {
+            detail: { workspace: res.workspace },
+          })
+        );
         notifications.updated("Workspace settings");
       }
-    } catch (error) {
-      console.error("Error saving settings:", error);
+    } catch (err) {
+      console.error("Error saving settings:", err);
       setError("Failed to save settings");
-      notifications.error(
-        "save settings",
-        error.message || "Please try again."
-      );
+      notifications.error("save settings", err.message || "Please try again.");
     } finally {
       setSaving(false);
     }
   };
 
-  // Leave workspace functionality is now handled by the LeaveWorkspaceButton component
-
-  const handleDeleteWorkspace = async () => {
+  const handleDelete = async () => {
     if (
       !confirm(
-        "Are you sure you want to delete this workspace? This action cannot be undone and all workspace data will be permanently lost."
+        "Are you sure you want to delete this workspace? This cannot be undone."
       )
-    ) {
+    )
+      return;
+    const check = prompt("Type DELETE to confirm:");
+    if (check !== "DELETE") {
+      app.error("Deletion cancelled — confirmation text did not match.");
       return;
     }
-
-    // Double confirmation for deletion
-    if (
-      !confirm(
-        "This is your final warning! Deleting this workspace will permanently remove all data, habits, and member progress. Type 'DELETE' in the next prompt to confirm."
-      )
-    ) {
-      return;
-    }
-
-    const userConfirmation = prompt(
-      "Type 'DELETE' to confirm workspace deletion:"
-    );
-    if (userConfirmation !== "DELETE") {
-      app.error(
-        "Workspace deletion cancelled - confirmation text did not match."
-      );
-      return;
-    }
-
     try {
       await workspacesAPI.deleteWorkspace(groupId);
-      // Navigate with success message in state
       navigate("/app/groups", {
         state: {
           notification: {
@@ -184,576 +148,388 @@ const WorkspaceSettings = () => {
           },
         },
       });
-    } catch (error) {
-      console.error("Error deleting workspace:", error);
-      notifications.error(
-        "delete workspace",
-        error.message || "Please try again."
-      );
+    } catch (err) {
+      notifications.error("delete workspace", err.message || "Please try again.");
     }
   };
 
-  // Category options
-  const categoryOptions = [
-    { value: "all", label: "All Settings", icon: GearIcon },
-    { value: "general", label: "General", icon: InfoCircledIcon },
-    { value: "members", label: "Members", icon: PersonIcon },
-    { value: "privacy", label: "Privacy", icon: LockClosedIcon },
-    { value: "danger", label: "Danger Zone", icon: TrashIcon },
-  ];
+  /* ── perms ──────────────────────────── */
 
-  // Check permissions
-  const canEditSettings = userRole === "owner" || userRole === "admin";
+  const canEdit = userRole === "owner" || userRole === "admin";
   const isOwner = userRole === "owner";
 
-  // Settings widget components
-  const settingsWidgets = useMemo(
-    () => ({
-      "general-settings-widget": {
-        title: "General Settings",
-        component: () => (
-          <div className="h-full glass-card-minimal p-6 rounded-2xl flex flex-col">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
-                <InfoCircledIcon className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold font-dmSerif text-[var(--color-text-primary)]">
-                  General Settings
-                </h3>
-                <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
-                  Basic workspace information
-                </p>
-              </div>
-            </div>
-
-            <div className="flex-1 space-y-6">
-              <SettingItem
-                label="Workspace Name"
-                description="The display name for your workspace"
-                value={settings.name}
-                type="text"
-                editable={canEditSettings}
-                onChange={(value) => handleSettingChange("name", value)}
-                icon={
-                  <GroupIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
-                }
-              />
-
-              <SettingItem
-                label="Description"
-                description="Brief description of your workspace purpose"
-                value={settings.description}
-                type="textarea"
-                editable={canEditSettings}
-                onChange={(value) => handleSettingChange("description", value)}
-                icon={
-                  <InfoCircledIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
-                }
-              />
-
-              <SettingItem
-                label="Workspace Type"
-                description="Category that best describes your workspace"
-                value={settings.type}
-                type="select"
-                editable={canEditSettings}
-                options={[
-                  { label: "👨‍👩‍👧‍👦 Family", value: "family" },
-                  { label: "💼 Team/Work", value: "team" },
-                  { label: "💪 Fitness Group", value: "fitness" },
-                  { label: "📚 Study Group", value: "study" },
-                  { label: "🌟 Community", value: "community" },
-                  { label: "👤 Personal", value: "personal" },
-                ]}
-                onChange={(value) => handleSettingChange("type", value)}
-                icon={
-                  <GroupIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
-                }
-              />
-            </div>
-
-          </div>
-        ),
-      },
-
-      "member-management-widget": {
-        title: "Member Management",
-        component: () => (
-          <div className="h-full glass-card-minimal p-6 rounded-2xl flex flex-col">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg">
-                <PersonIcon className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold font-dmSerif text-[var(--color-text-primary)]">
-                  Member Management
-                </h3>
-                <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
-                  Control who can join and invite others
-                </p>
-              </div>
-            </div>
-
-            <div className="flex-1 space-y-4">
-              <SettingItem
-                label="Allow Invitations"
-                description="Members can invite new people to the workspace"
-                value={settings.allowInvites}
-                type="toggle"
-                editable={canEditSettings}
-                onChange={(value) => handleSettingChange("allowInvites", value)}
-                icon={<PersonIcon className="w-4 h-4 text-emerald-500" />}
-              />
-
-              <SettingItem
-                label="Require Approval"
-                description="New members need admin approval to join"
-                value={settings.requireApproval}
-                type="toggle"
-                editable={canEditSettings}
-                onChange={(value) =>
-                  handleSettingChange("requireApproval", value)
-                }
-                icon={<CheckIcon className="w-4 h-4 text-blue-500" />}
-              />
-
-              <SettingItem
-                label="Allow Member Habit Creation"
-                description="Members can create their own habits in this workspace"
-                value={settings.allowMemberHabitCreation}
-                type="toggle"
-                editable={canEditSettings}
-                onChange={(value) =>
-                  handleSettingChange("allowMemberHabitCreation", value)
-                }
-                icon={<PlusIcon className="w-4 h-4 text-green-500" />}
-              />
-
-              <SettingItem
-                label="Default Habit Visibility"
-                description="Default visibility for new habits created in this workspace"
-                value={settings.defaultHabitVisibility}
-                type="select"
-                editable={canEditSettings}
-                options={[
-                  { label: "🌐 Public (all details)", value: "public" },
-                  { label: "📊 Progress Only", value: "progress-only" },
-                  { label: "🔥 Streaks Only", value: "streaks-only" },
-                  { label: "🔒 Private", value: "private" },
-                ]}
-                onChange={(value) =>
-                  handleSettingChange("defaultHabitVisibility", value)
-                }
-                icon={<EyeOpenIcon className="w-4 h-4 text-indigo-500" />}
-              />
-
-              <div className="pt-4 border-t border-[var(--color-border-primary)]/30">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-[var(--color-text-primary)] font-outfit">
-                      Current Members
-                    </p>
-                    <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
-                      {workspace?.members?.length || 0} active members
-                    </p>
-                  </div>
-                  <Button
-                    variant="soft"
-                    size="2"
-                    onClick={() => navigate(`/app/groups/${groupId}`)}
-                    className="font-outfit"
-                  >
-                    Manage Members
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        ),
-      },
-
-      "privacy-settings-widget": {
-        title: "Privacy & Visibility",
-        component: () => (
-          <div className="h-full glass-card-minimal p-6 rounded-2xl flex flex-col">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg">
-                <LockClosedIcon className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold font-dmSerif text-[var(--color-text-primary)]">
-                  Privacy & Visibility
-                </h3>
-                <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
-                  Control workspace visibility and access
-                </p>
-              </div>
-            </div>
-
-            <div className="flex-1 space-y-4">
-              <SettingItem
-                label="Public Workspace"
-                description="Make workspace visible in public directories"
-                value={settings.isPublic}
-                type="toggle"
-                editable={canEditSettings}
-                onChange={(value) => handleSettingChange("isPublic", value)}
-                icon={<LockClosedIcon className="w-4 h-4 text-purple-500" />}
-              />
-
-              <SettingItem
-                label="Privacy Level"
-                description="Who can discover and join this workspace"
-                value={settings.privacyLevel}
-                type="select"
-                editable={canEditSettings}
-                options={[
-                  { label: "🔒 Invite Only", value: "invite-only" },
-                  { label: "👥 Members Only", value: "members-only" },
-                  { label: "🌐 Open to All", value: "open" },
-                ]}
-                onChange={(value) => handleSettingChange("privacyLevel", value)}
-                icon={<LockClosedIcon className="w-4 h-4 text-purple-500" />}
-              />
-            </div>
-          </div>
-        ),
-      },
-
-      "danger-zone-widget": {
-        title: "Danger Zone",
-        component: () => (
-          <div className="h-full glass-card-minimal p-6 rounded-2xl flex flex-col border-2 border-red-500/20">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg">
-                <TrashIcon className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold font-dmSerif text-[var(--color-text-primary)]">
-                  Danger Zone
-                </h3>
-                <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
-                  Irreversible and destructive actions
-                </p>
-              </div>
-            </div>{" "}
-            <div className="flex-1 flex flex-col justify-between">
-              <div className="space-y-4">
-                {!isOwner && (
-                  <LeaveWorkspaceButton
-                    workspace={workspace}
-                    isOwner={isOwner}
-                  />
-                )}
-
-                {isOwner && (
-                  <div className="flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800/30">
-                    <div>
-                      <p className="font-medium text-red-800 dark:text-red-200 font-outfit">
-                        Delete Workspace
-                      </p>
-                      <p className="text-sm text-red-600 dark:text-red-300 font-outfit">
-                        Permanently delete this workspace and all data
-                      </p>
-                    </div>
-                    <Button
-                      variant="solid"
-                      color="red"
-                      onClick={handleDeleteWorkspace}
-                      className="font-outfit"
-                    >
-                      <TrashIcon className="w-4 h-4 mr-2" />
-                      Delete Workspace
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        ),
-      },
-    }),
-    [
-      settings,
-      workspace,
-      userRole,
-      canEditSettings,
-      isOwner,
-      handleSettingChange,
-      handleDeleteWorkspace,
-      navigate,
-      groupId,
-    ]
-  );
-
-  // Default layouts for workspace settings widgets
-  const defaultLayouts = {
-    lg: [
-      { i: "general-settings-widget", x: 0, y: 0, w: 6, h: 6 },
-      { i: "member-management-widget", x: 6, y: 0, w: 6, h: 6 },
-      { i: "privacy-settings-widget", x: 0, y: 4, w: 6, h: 6 },
-      { i: "danger-zone-widget", x: 6, y: 4, w: 6, h: 4 },
-    ],
-    md: [
-      { i: "general-settings-widget", x: 0, y: 0, w: 6, h: 6 },
-      { i: "member-management-widget", x: 6, y: 0, w: 6, h: 6 },
-      { i: "privacy-settings-widget", x: 0, y: 4, w: 6, h: 6 },
-      { i: "danger-zone-widget", x: 6, y: 4, w: 6, h: 4 },
-    ],
-    sm: [
-      { i: "general-settings-widget", x: 0, y: 0, w: 12, h: 6 },
-      { i: "member-management-widget", x: 0, y: 4, w: 12, h: 6 },
-      { i: "privacy-settings-widget", x: 0, y: 8, w: 12, h: 8 },
-      { i: "danger-zone-widget", x: 0, y: 12, w: 12, h: 4 },
-    ],
-    xs: [
-      { i: "general-settings-widget", x: 0, y: 0, w: 12, h: 6 },
-      { i: "member-management-widget", x: 0, y: 4, w: 12, h: 6 },
-      { i: "privacy-settings-widget", x: 0, y: 8, w: 12, h: 8 },
-      { i: "danger-zone-widget", x: 0, y: 12, w: 12, h: 4 },
-    ],
-  };
-
-  const defaultWidgets = [
-    "general-settings-widget",
-    "member-management-widget",
-    "privacy-settings-widget",
-    "danger-zone-widget",
-  ];
-
-  const storageKeys = {
-    widgets: `workspaceSettingsWidgets_${groupId}`,
-    layouts: `workspaceSettingsLayouts_${groupId}`,
-  };
+  /* ── loading / error ────────────────── */
 
   if (loading) {
     return (
-      <div className="min-h-screen page-container p-6 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-brand-600)] mx-auto mb-4"></div>
-          <p className="text-[var(--color-text-secondary)] font-outfit">
-            Loading workspace settings...
-          </p>
+      <div className="min-h-screen page-container px-6 py-10">
+        <div className="max-w-2xl mx-auto space-y-4">
+          <div className="h-8 w-48 rounded-lg bg-[var(--color-surface-elevated)] animate-pulse" />
+          <div className="h-5 w-64 rounded bg-[var(--color-surface-elevated)] animate-pulse" />
+          <div className="mt-8 space-y-6">
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className="h-24 rounded-2xl bg-[var(--color-surface-elevated)] animate-pulse"
+              />
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  if (error && !workspace) {
     return (
-      <div className="min-h-screen page-container p-6 flex items-center justify-center">
+      <div className="min-h-screen page-container px-6 py-10 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-500 font-outfit mb-4">{error}</p>
-          <Button onClick={() => navigate(`/app/groups/${groupId}`)}>
+          <p className="text-sm text-red-500 font-spartan mb-4">{error}</p>
+          <button
+            onClick={() => navigate(`/app/groups/${groupId}`)}
+            className="h-9 px-4 bg-[var(--color-brand-600)] text-white rounded-lg text-sm font-spartan"
+          >
             Go Back
-          </Button>
+          </button>
         </div>
       </div>
     );
   }
+
+  /* ── render ─────────────────────────── */
 
   return (
-    <div className="min-h-screen page-container p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
-          <div className="flex items-center gap-4 mb-6 lg:mb-0">
+    <div className="min-h-screen page-container px-6 py-10">
+      <div className="max-w-2xl mx-auto">
+        {/* header */}
+        <div className="flex items-center justify-between mb-10">
+          <div className="flex items-center gap-4">
             <button
               onClick={() => navigate(`/app/groups/${groupId}`)}
-              className="flex items-center justify-center w-12 h-12 rounded-2xl bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/20 transition-all duration-200 group"
+              className="w-10 h-10 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 flex items-center justify-center hover:bg-[var(--color-surface-hover)] transition-colors"
             >
-              <ArrowLeftIcon className="w-5 h-5 text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)]" />
+              <ArrowLeftIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
             </button>
             <div>
-              <h1 className="text-4xl font-bold font-dmSerif gradient-text mb-2">
-                Workspace Settings
+              <h1 className="text-2xl font-bold font-garamond text-[var(--color-text-primary)]">
+                Settings
               </h1>
-              <p className="text-lg text-[var(--color-text-secondary)] font-outfit">
-                Configure settings for "{workspace?.name}"
+              <p className="text-sm text-[var(--color-text-secondary)] font-spartan">
+                {workspace?.name}
               </p>
             </div>
           </div>
 
-          {/* Save button */}
-          {canEditSettings && (
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleSaveSettings}
-                className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg text-sm transition-all duration-200 font-outfit"
-                data-tour="save-settings-btn"
-              >
-                {saving ? (
-                  <>
-                    <UpdateIcon className="w-4 h-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <CheckIcon className="w-4 h-4 mr-2" />
-                    Save Settings
-                  </>
-                )}
-              </button>
-            </div>
+          {canEdit && (
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-2 h-9 px-4 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] disabled:opacity-60 text-white rounded-xl text-sm font-spartan font-medium transition-colors"
+            >
+              {saving ? (
+                <>
+                  <UpdateIcon className="w-3.5 h-3.5 animate-spin" />
+                  Saving…
+                </>
+              ) : (
+                <>
+                  <CheckIcon className="w-3.5 h-3.5" />
+                  Save
+                </>
+              )}
+            </button>
           )}
         </div>
 
-        {/* Settings Grid */}
-        <BaseGridContainer
-          widgets={settingsWidgets}
-          defaultLayouts={defaultLayouts}
-          defaultWidgets={defaultWidgets}
-          storageKeys={storageKeys}
-          minH={300}
-        />
+        {/* ── General ─────────────────── */}
+        <Section title="General" icon={<InfoCircledIcon className="w-4 h-4" />}>
+          <SettingRow
+            label="Workspace Name"
+            description="The display name for your workspace"
+          >
+            <TextInput
+              value={settings.name}
+              onChange={(v) => set("name", v)}
+              disabled={!canEdit}
+            />
+          </SettingRow>
+
+          <SettingRow
+            label="Description"
+            description="Brief description of your workspace purpose"
+          >
+            <TextInput
+              value={settings.description}
+              onChange={(v) => set("description", v)}
+              disabled={!canEdit}
+              multiline
+            />
+          </SettingRow>
+
+          <SettingRow
+            label="Workspace Type"
+            description="Category that best describes your workspace"
+          >
+            <SelectInput
+              value={settings.type}
+              onChange={(v) => set("type", v)}
+              disabled={!canEdit}
+              options={[
+                { label: "👨‍👩‍👧‍👦 Family", value: "family" },
+                { label: "💼 Team/Work", value: "team" },
+                { label: "💪 Fitness", value: "fitness" },
+                { label: "📚 Study", value: "study" },
+                { label: "🌍 Community", value: "community" },
+                { label: "👤 Personal", value: "personal" },
+              ]}
+            />
+          </SettingRow>
+        </Section>
+
+        {/* ── Members ─────────────────── */}
+        <Section title="Members" icon={<PersonIcon className="w-4 h-4" />}>
+          <SettingRow
+            label="Allow Invitations"
+            description="Members can invite new people"
+          >
+            <Switch
+              checked={settings.allowInvites}
+              onCheckedChange={canEdit ? (v) => set("allowInvites", v) : undefined}
+              disabled={!canEdit}
+            />
+          </SettingRow>
+
+          <SettingRow
+            label="Require Approval"
+            description="New members need admin approval"
+          >
+            <Switch
+              checked={settings.requireApproval}
+              onCheckedChange={canEdit ? (v) => set("requireApproval", v) : undefined}
+              disabled={!canEdit}
+            />
+          </SettingRow>
+
+          <SettingRow
+            label="Allow Member Habit Creation"
+            description="Members can create their own habits"
+          >
+            <Switch
+              checked={settings.allowMemberHabitCreation}
+              onCheckedChange={
+                canEdit ? (v) => set("allowMemberHabitCreation", v) : undefined
+              }
+              disabled={!canEdit}
+            />
+          </SettingRow>
+
+          <SettingRow
+            label="Default Habit Visibility"
+            description="Default visibility for new habits"
+          >
+            <SelectInput
+              value={settings.defaultHabitVisibility}
+              onChange={(v) => set("defaultHabitVisibility", v)}
+              disabled={!canEdit}
+              options={[
+                { label: "🌐 Public", value: "public" },
+                { label: "📊 Progress Only", value: "progress-only" },
+                { label: "🔥 Streaks Only", value: "streaks-only" },
+                { label: "🔒 Private", value: "private" },
+              ]}
+            />
+          </SettingRow>
+        </Section>
+
+        {/* ── Privacy ─────────────────── */}
+        <Section title="Privacy" icon={<LockClosedIcon className="w-4 h-4" />}>
+          <SettingRow
+            label="Public Workspace"
+            description="Make workspace visible in public directories"
+          >
+            <Switch
+              checked={settings.isPublic}
+              onCheckedChange={canEdit ? (v) => set("isPublic", v) : undefined}
+              disabled={!canEdit}
+            />
+          </SettingRow>
+
+          <SettingRow
+            label="Privacy Level"
+            description="Who can discover and join this workspace"
+          >
+            <SelectInput
+              value={settings.privacyLevel}
+              onChange={(v) => set("privacyLevel", v)}
+              disabled={!canEdit}
+              options={[
+                { label: "🔒 Invite Only", value: "invite-only" },
+                { label: "👥 Members Only", value: "members-only" },
+                { label: "🌐 Open to All", value: "open" },
+              ]}
+            />
+          </SettingRow>
+        </Section>
+
+        {/* ── Danger Zone ─────────────── */}
+        <Section
+          title="Danger Zone"
+          icon={<TrashIcon className="w-4 h-4" />}
+          danger
+        >
+          {!isOwner && (
+            <div className="py-2">
+              <LeaveWorkspaceButton workspace={workspace} isOwner={false} />
+            </div>
+          )}
+
+          {isOwner && (
+            <SettingRow
+              label="Delete Workspace"
+              description="Permanently delete this workspace and all data"
+            >
+              <button
+                onClick={handleDelete}
+                className="h-8 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-spartan font-medium transition-colors"
+              >
+                Delete
+              </button>
+            </SettingRow>
+          )}
+        </Section>
       </div>
     </div>
   );
 };
 
-// SettingItem component for workspace settings
-const SettingItem = ({
-  label,
-  description,
-  value,
-  type,
-  options,
-  onChange,
-  icon,
-  editable = true,
-}) => {
-  const [editMode, setEditMode] = useState(false);
-  const [tempValue, setTempValue] = useState(value);
+/* ================================================================
+   Sub-components
+   ================================================================ */
 
-  useEffect(() => {
-    setTempValue(value);
-  }, [value]);
+function Section({ title, icon, danger = false, children }) {
+  return (
+    <section className="mb-8">
+      <div className="flex items-center gap-2 mb-4">
+        <span
+          className={
+            danger
+              ? "text-red-500"
+              : "text-[var(--color-text-tertiary)]"
+          }
+        >
+          {icon}
+        </span>
+        <h2
+          className={`text-sm font-spartan font-semibold uppercase tracking-wider ${
+            danger
+              ? "text-red-500"
+              : "text-[var(--color-text-secondary)]"
+          }`}
+        >
+          {title}
+        </h2>
+      </div>
+      <div
+        className={`rounded-2xl border divide-y divide-[var(--color-border-primary)]/15 ${
+          danger
+            ? "border-red-500/20 bg-red-500/[0.03]"
+            : "border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]"
+        }`}
+      >
+        {children}
+      </div>
+    </section>
+  );
+}
 
-  const handleSave = () => {
-    onChange(tempValue);
-    setEditMode(false);
-  };
+function SettingRow({ label, description, children }) {
+  return (
+    <div className="flex items-center justify-between gap-4 px-5 py-4">
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-spartan font-medium text-[var(--color-text-primary)]">
+          {label}
+        </p>
+        {description && (
+          <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mt-0.5">
+            {description}
+          </p>
+        )}
+      </div>
+      <div className="flex-shrink-0">{children}</div>
+    </div>
+  );
+}
 
-  const handleCancel = () => {
-    setTempValue(value);
-    setEditMode(false);
-  };
+function TextInput({ value, onChange, disabled, multiline = false }) {
+  const [editing, setEditing] = useState(false);
+  const [temp, setTemp] = useState(value);
 
-  const renderInput = () => {
-    switch (type) {
-      case "toggle":
-        return (
-          <Switch
-            checked={value}
-            onCheckedChange={editable ? onChange : undefined}
-            disabled={!editable}
-            className="data-[state=checked]:bg-[var(--color-brand-600)] scale-110"
-          />
-        );
-      case "select":
-        return (
-          <Select.Root
-            value={value}
-            onValueChange={editable ? onChange : undefined}
-          >
-            <Select.Trigger
-              className="w-48 h-10 px-3 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/30 rounded-lg font-outfit transition-all duration-200 shadow-sm"
-              disabled={!editable}
-            />
-            <Select.Content className="font-outfit bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/30 rounded-lg shadow-xl z-50">
-              {options?.map((option) => (
-                <Select.Item
-                  key={option.value}
-                  value={option.value}
-                  className="px-3 py-2 hover:bg-[var(--color-surface-hover)] font-outfit cursor-pointer text-sm"
-                >
-                  {option.label}
-                </Select.Item>
-              ))}
-            </Select.Content>
-          </Select.Root>
-        );
-      case "text":
-        return editable && editMode ? (
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={tempValue}
-              onChange={(e) => setTempValue(e.target.value)}
-              className="px-3 py-2 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/30 rounded-lg font-outfit text-sm w-48"
-              autoFocus
-            />
-            <Button size="1" variant="soft" onClick={handleSave}>
-              <CheckIcon className="w-3 h-3" />
-            </Button>
-            <Button size="1" variant="ghost" onClick={handleCancel}>
-              <Cross2Icon className="w-3 h-3" />
-            </Button>
-          </div>
-        ) : (
-          <div
-            className={`text-sm font-outfit bg-[var(--color-surface-elevated)] px-3 py-2 rounded-lg border border-[var(--color-border-primary)]/30 min-w-32 ${
-              editable
-                ? "cursor-pointer hover:bg-[var(--color-surface-hover)]"
-                : "opacity-60"
-            }`}
-            onClick={editable ? () => setEditMode(true) : undefined}
-          >
-            {value || "Click to edit"}
-          </div>
-        );
-      case "textarea":
-        return editable && editMode ? (
-          <div className="flex flex-col gap-2 w-full">
-            <textarea
-              value={tempValue}
-              onChange={(e) => setTempValue(e.target.value)}
-              className="px-3 py-2 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/30 rounded-lg font-outfit text-sm w-full h-20 resize-none"
-              autoFocus
-            />
-            <div className="flex items-center gap-2">
-              <Button size="1" variant="soft" onClick={handleSave}>
-                <CheckIcon className="w-3 h-3" />
-              </Button>
-              <Button size="1" variant="ghost" onClick={handleCancel}>
-                <Cross2Icon className="w-3 h-3" />
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div
-            className={`text-sm font-outfit bg-[var(--color-surface-elevated)] px-3 py-2 rounded-lg border border-[var(--color-border-primary)]/30 min-w-32 min-h-[2.5rem] ${
-              editable
-                ? "cursor-pointer hover:bg-[var(--color-surface-hover)]"
-                : "opacity-60"
-            }`}
-            onClick={editable ? () => setEditMode(true) : undefined}
-          >
-            {value || "Click to edit description"}
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
+  useEffect(() => setTemp(value), [value]);
+
+  if (editing && !disabled) {
+    const Tag = multiline ? "textarea" : "input";
+    return (
+      <div className="flex items-center gap-1.5">
+        <Tag
+          value={temp}
+          onChange={(e) => setTemp(e.target.value)}
+          className="px-2.5 py-1.5 bg-[var(--color-surface-primary)] border border-[var(--color-border-primary)]/30 rounded-lg text-sm font-spartan w-44 resize-none"
+          rows={multiline ? 2 : undefined}
+          autoFocus
+        />
+        <button
+          onClick={() => {
+            onChange(temp);
+            setEditing(false);
+          }}
+          className="w-7 h-7 rounded-md bg-[var(--color-brand-600)] text-white flex items-center justify-center"
+        >
+          <CheckIcon className="w-3 h-3" />
+        </button>
+        <button
+          onClick={() => {
+            setTemp(value);
+            setEditing(false);
+          }}
+          className="w-7 h-7 rounded-md bg-[var(--color-surface-hover)] flex items-center justify-center"
+        >
+          <Cross2Icon className="w-3 h-3 text-[var(--color-text-secondary)]" />
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex justify-between items-start py-3 px-2 rounded-lg hover:bg-[var(--color-surface-hover)]/30 transition-all duration-200">
-      <div className="flex-1">
-        <div className="flex items-center gap-3 mb-1">
-          {icon && <div className="opacity-70">{icon}</div>}
-          <Text className="font-medium text-[var(--color-text-primary)] font-outfit">
-            {label}
-          </Text>
-        </div>
-        <Text className="text-xs text-[var(--color-text-secondary)] font-outfit leading-relaxed">
-          {description}
-        </Text>
-      </div>
-      <div className="ml-6 flex-shrink-0">{renderInput()}</div>
+    <div
+      className={`text-sm font-spartan px-3 py-1.5 rounded-lg border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-primary)] min-w-[10rem] truncate ${
+        disabled ? "opacity-50" : "cursor-pointer hover:bg-[var(--color-surface-hover)]"
+      }`}
+      onClick={() => !disabled && setEditing(true)}
+    >
+      {value || "Click to edit"}
     </div>
   );
-};
+}
+
+function SelectInput({ value, onChange, disabled, options }) {
+  return (
+    <Select.Root value={value} onValueChange={disabled ? undefined : onChange}>
+      <Select.Trigger
+        className="w-44 h-9 px-3 bg-[var(--color-surface-primary)] border border-[var(--color-border-primary)]/20 rounded-lg font-spartan text-sm"
+        disabled={disabled}
+      />
+      <Select.Content className="font-spartan bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 rounded-lg shadow-xl z-50">
+        {options.map((o) => (
+          <Select.Item
+            key={o.value}
+            value={o.value}
+            className="px-3 py-2 hover:bg-[var(--color-surface-hover)] font-spartan cursor-pointer text-sm"
+          >
+            {o.label}
+          </Select.Item>
+        ))}
+      </Select.Content>
+    </Select.Root>
+  );
+}
 
 export default WorkspaceSettings;
