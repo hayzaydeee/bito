@@ -10,7 +10,9 @@
  * and returns the original insights untouched.
  */
 
-const OpenAI = require('openai');
+const OpenAIModule = require('openai');
+// openai v5 may export the class as .default in CommonJS
+const OpenAI = OpenAIModule.default || OpenAIModule.OpenAI || OpenAIModule;
 
 /**
  * Check whether LLM enrichment is available.
@@ -23,10 +25,16 @@ function isLLMAvailable() {
 let _client = null;
 function getClient() {
   if (!_client && isLLMAvailable()) {
-    _client = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-      ...(process.env.OPENAI_BASE_URL && { baseURL: process.env.OPENAI_BASE_URL }),
-    });
+    try {
+      _client = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+        ...(process.env.OPENAI_BASE_URL && { baseURL: process.env.OPENAI_BASE_URL }),
+      });
+      console.log('[Insights] OpenAI client initialized successfully');
+    } catch (err) {
+      console.warn('[Insights] Failed to create OpenAI client:', err.message);
+      return null;
+    }
   }
   return _client;
 }
@@ -121,7 +129,7 @@ Keep it brief and actionable. No fluff.`;
     const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     return JSON.parse(cleaned);
   } catch (err) {
-    console.warn('LLM enrichment error:', err.message);
+    console.warn('[Insights] LLM call failed:', err.message, err.status || '', err.code || '');
     return null;
   }
 }
@@ -137,15 +145,21 @@ Keep it brief and actionable. No fluff.`;
  */
 async function enrichWithLLM(ruleInsights, habits, entries, journalEntries) {
   if (!isLLMAvailable()) {
+    console.log('[Insights] LLM not available (no OPENAI_API_KEY)');
     return { insights: ruleInsights, summary: null, llmUsed: false };
   }
 
+  console.log('[Insights] Attempting LLM enrichment...');
   const dataSummary = buildDataSummary(habits, entries, journalEntries);
   const result = await callLLM(ruleInsights, dataSummary);
 
   if (!result) {
+    console.log('[Insights] LLM returned no result, falling back to rule-based only');
     return { insights: ruleInsights, summary: null, llmUsed: false };
   }
+
+  console.log('[Insights] LLM enrichment succeeded, summary:', result.summary?.substring(0, 50));
+
 
   // Merge additional LLM insights (lower priority, tagged as ai-generated)
   const enrichedInsights = [...ruleInsights];
