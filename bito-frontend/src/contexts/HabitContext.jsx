@@ -255,7 +255,7 @@ export const HabitProvider = ({ children }) => {
   // Toggle habit completion function
   const toggleHabitCompletion = async (habitId, date, value = null) => {
     try {
-      const dateKey = typeof date === 'string' ? date : date.toISOString().split('T')[0];
+      const dateKey = typeof date === 'string' ? date : (date instanceof Date ? date.toISOString().split('T')[0] : new Date(date).toISOString().split('T')[0]);
       
       // Get current completion status
       const currentEntries = state.entries[habitId] || {};
@@ -292,8 +292,8 @@ export const HabitProvider = ({ children }) => {
   const fetchHabitEntries = useCallback(async (habitId, startDate, endDate) => {
     try {
       // Create cache key based on habit and date range
-      const startDateStr = startDate.toISOString().split('T')[0];
-      const endDateStr = endDate.toISOString().split('T')[0];
+      const startDateStr = typeof startDate === 'string' ? startDate.split('T')[0] : startDate.toISOString().split('T')[0];
+      const endDateStr = typeof endDate === 'string' ? endDate.split('T')[0] : endDate.toISOString().split('T')[0];
       const cacheKey = `${habitId}-${startDateStr}-${endDateStr}`;
       
       // Check if we recently fetched data for this specific date range (within last 30 seconds)

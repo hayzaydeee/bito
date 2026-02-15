@@ -146,8 +146,12 @@ export const journalService = {
       const indicators = {};
       if (response && response.entries && Array.isArray(response.entries)) {
         response.entries.forEach(entry => {
-          const date = new Date(entry.date).toISOString().split('T')[0];
-          indicators[date] = true;
+          try {
+            const d = new Date(entry.date);
+            if (!isNaN(d.getTime())) {
+              indicators[d.toISOString().split('T')[0]] = true;
+            }
+          } catch { /* skip invalid dates */ }
         });
       }
       
@@ -190,10 +194,12 @@ export const journalService = {
 
   // Format date for API calls (YYYY-MM-DD)
   formatDateForAPI(date) {
+    if (!date) return new Date().toISOString().split('T')[0];
     if (typeof date === 'string') {
       return date.split('T')[0]; // Handle ISO strings
     }
-    return date.toISOString().split('T')[0];
+    if (date instanceof Date) return date.toISOString().split('T')[0];
+    return new Date(date).toISOString().split('T')[0];
   },
 
   // Get word count from text
