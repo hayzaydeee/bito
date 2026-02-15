@@ -140,7 +140,7 @@ const AnalyticsInsights = memo(({ habits, entries, timeRange }) => {
                 color: 'var(--color-brand-400)',
               }}
             >
-              AI-enhanced
+              powered by OpenAI
             </span>
           )}
         </div>
