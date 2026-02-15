@@ -796,6 +796,13 @@ export const insightsAPI = {
     return apiRequest(endpoint);
   },
 
+  // Get comprehensive analytics report (sectioned)
+  getAnalyticsReport: async (range = '30d', forceRefresh = false) => {
+    const params = new URLSearchParams({ range });
+    if (forceRefresh) params.append('refresh', 'true');
+    return apiRequest(`/api/insights/analytics?${params.toString()}`);
+  },
+
   // Dismiss a specific insight
   dismissInsight: async (insightType, habitId) => {
     return apiRequest('/api/insights/dismiss', {

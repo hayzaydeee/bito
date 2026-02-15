@@ -639,6 +639,36 @@ h1, h2, h3, h4, h5, h6 {
   background-position: -100% 0;
 }
 
+/* ── Analytics AI Insights sections ── */
+.analytics-insights-panel {
+  animation: analyticsFadeIn 400ms ease-out;
+}
+
+.analytics-section {
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  transition: box-shadow 200ms ease;
+}
+
+.analytics-section:hover {
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.analytics-insight-card {
+  cursor: default;
+}
+
+.analytics-insight-card:hover {
+  box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+}
+
+@keyframes analyticsFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

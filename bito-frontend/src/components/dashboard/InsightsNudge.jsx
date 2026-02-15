@@ -1,4 +1,5 @@
 import React, { memo, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { useInsights } from "../../globalHooks/useInsights";
 
 /* ─── AI-powered insight card (Phase 12) ─── */
@@ -106,6 +107,13 @@ const InsightsNudge = memo(({ habits, entries }) => {
               · AI-enhanced
             </span>
           )}
+          <Link
+            to="/analytics"
+            className="text-xs font-spartan ml-auto hover:underline transition-colors"
+            style={{ color: "var(--color-brand-400)" }}
+          >
+            Full analysis →
+          </Link>
         </div>
       )}
     </div>

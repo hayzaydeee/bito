@@ -1,181 +1,254 @@
-import React, { useMemo } from 'react';
+﻿import React, { memo } from 'react';
+import { useAnalyticsInsights } from '../../globalHooks/useAnalyticsInsights';
 
-/* -----------------------------------------------------------------
-   AnalyticsInsights — bottom-of-page insight cards
-   Client-side heuristics analysing day-of-week, streaks, trends.
-   Clean card layout, no glass, font-spartan body.
------------------------------------------------------------------ */
+/* ---------------------------------------------------------------------
+   AnalyticsInsights - comprehensive AI-powered analytics section.
+   Renders structured sections: Summary, Patterns, Trends, Correlations,
+   Recommendations.  Falls back to rule-based insights when LLM is off.
+   --------------------------------------------------------------------- */
 
-const AnalyticsInsights = ({ habits, entries, timeRange }) => {
-  const insights = useMemo(() => {
-    if (!habits.length) return [];
+/* -- Section wrapper ------------------------------------------------- */
+const Section = ({ title, icon, children, accent }) => (
+  <div className="analytics-section">
+    <div className="flex items-center gap-2 mb-3">
+      <span className="text-base">{icon}</span>
+      <h4
+        className="text-sm font-spartan font-semibold uppercase tracking-wider"
+        style={{ color: accent || 'var(--color-text-secondary)' }}
+      >
+        {title}
+      </h4>
+    </div>
+    {children}
+  </div>
+);
 
-    const days = timeRange === 'all' ? 365 : parseInt(timeRange) || 30;
-    const endDate = new Date();
-    const startDate = new Date(endDate);
-    startDate.setDate(startDate.getDate() - days);
-
-    const results = [];
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-    // ----- Day-of-week analysis -----
-    const weekdayHits = Array(7).fill(0);
-    const weekdayTotal = Array(7).fill(0);
-
-    habits.forEach(habit => {
-      const hEntries = entries[habit._id] || {};
-      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        const dow = d.getDay();
-        if (habit.schedule?.days?.length && !habit.schedule.days.includes(dow)) continue;
-        weekdayTotal[dow]++;
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        const entry = hEntries[`${y}-${m}-${dd}`];
-        if (entry && entry.completed) weekdayHits[dow]++;
-      }
-    });
-
-    const weekdayRates = weekdayTotal.map((t, i) => ({ day: i, rate: t > 0 ? weekdayHits[i] / t : 0 }));
-    const best = weekdayRates.reduce((a, b) => (b.rate > a.rate ? b : a));
-    const worst = weekdayRates.reduce((a, b) => (b.rate < a.rate ? b : a));
-
-    if (best.rate > 0) {
-      results.push({
-        emoji: '💪',
-        title: `${dayNames[best.day]}s are your best`,
-        body: `${Math.round(best.rate * 100)}% completion rate — lean into that rhythm.`,
-        type: 'success',
-      });
-    }
-
-    if (worst.rate < best.rate - 0.15 && worst.rate > 0) {
-      results.push({
-        emoji: '📉',
-        title: `${dayNames[worst.day]}s could use love`,
-        body: `Only ${Math.round(worst.rate * 100)}% on ${dayNames[worst.day]}s. Try lighter goals that day.`,
-        type: 'warning',
-      });
-    }
-
-    // ----- Streak champion -----
-    let longestStreak = 0;
-    let streakHabitName = '';
-
-    habits.forEach(habit => {
-      const hEntries = entries[habit._id] || {};
-      let streak = 0;
-      const today = new Date();
-
-      for (let d = new Date(today); ; d.setDate(d.getDate() - 1)) {
-        if (habit.schedule?.days?.length && !habit.schedule.days.includes(d.getDay())) {
-          if (d < new Date(today.getFullYear(), today.getMonth(), today.getDate() - 90)) break;
-          continue;
-        }
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        const entry = hEntries[`${y}-${m}-${dd}`];
-        if (entry && entry.completed) { streak++; } else { break; }
-      }
-
-      if (streak > longestStreak) {
-        longestStreak = streak;
-        streakHabitName = habit.name;
-      }
-    });
-
-    if (longestStreak >= 3) {
-      results.push({
-        emoji: '🔥',
-        title: `${longestStreak}-day streak on "${streakHabitName}"`,
-        body: longestStreak >= 7
-          ? 'Incredible consistency — this habit is becoming second nature.'
-          : "Keep going — a few more days and it'll be automatic.",
-        type: 'success',
-      });
-    }
-
-    // ----- Week-over-week trend -----
-    const recentWeekRate = computeWeekRate(habits, entries, 0);
-    const prevWeekRate = computeWeekRate(habits, entries, 7);
-
-    if (recentWeekRate !== null && prevWeekRate !== null) {
-      const delta = recentWeekRate - prevWeekRate;
-      if (delta > 10) {
-        results.push({
-          emoji: '📈',
-          title: `Up ${Math.round(delta)}% from last week`,
-          body: 'Nice momentum — whatever changed is working.',
-          type: 'success',
-        });
-      } else if (delta < -10) {
-        results.push({
-          emoji: '⚠️',
-          title: `Down ${Math.round(Math.abs(delta))}% from last week`,
-          body: 'A dip is normal. Try simplifying one habit to rebuild momentum.',
-          type: 'warning',
-        });
-      }
-    }
-
-    return results.slice(0, 4);
-  }, [habits, entries, timeRange]);
-
-  if (!insights.length) return null;
-
-  const borderColors = { success: 'var(--color-success)', warning: 'var(--color-warning)' };
+/* -- Insight card ---------------------------------------------------- */
+const InsightCard = ({ item, accentVar }) => {
+  let borderColor = 'var(--color-brand-400)';
+  if (item.sentiment === 'positive' || item.direction === 'up') borderColor = 'var(--color-success)';
+  if (item.sentiment === 'negative' || item.direction === 'down') borderColor = 'var(--color-warning)';
+  if (item.priority === 'high') borderColor = 'var(--color-warning)';
+  if (accentVar) borderColor = accentVar;
 
   return (
-    <div className="card p-5">
-      <h3 className="text-base font-garamond font-semibold text-[var(--color-text-primary)] mb-4">
-        Insights
-      </h3>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        {insights.map((ins, i) => (
-          <div
-            key={i}
-            className="p-3 rounded-lg border-l-[3px] bg-[var(--color-surface-elevated)]"
-            style={{ borderLeftColor: borderColors[ins.type] || 'var(--color-brand-400)' }}
-          >
-            <p className="text-sm font-spartan font-medium text-[var(--color-text-primary)] mb-0.5">
-              {ins.emoji} {ins.title}
-            </p>
-            <p className="text-xs font-spartan text-[var(--color-text-secondary)] leading-relaxed">
-              {ins.body}
-            </p>
-          </div>
-        ))}
-      </div>
+    <div
+      className="analytics-insight-card p-3 rounded-lg border-l-[3px] bg-[var(--color-surface-elevated)] transition-all duration-200 hover:translate-x-0.5"
+      style={{ borderLeftColor: borderColor }}
+    >
+      <p className="text-sm font-spartan font-medium text-[var(--color-text-primary)] mb-0.5">
+        {item.icon && <span className="mr-1.5">{item.icon}</span>}
+        {item.title}
+      </p>
+      <p className="text-xs font-spartan text-[var(--color-text-secondary)] leading-relaxed">
+        {item.body}
+      </p>
     </div>
   );
 };
 
-/* helper: completion rate for the 7-day window starting `offsetDays` ago */
-function computeWeekRate(habits, entries, offsetDays) {
-  const end = new Date();
-  end.setDate(end.getDate() - offsetDays);
-  const start = new Date(end);
-  start.setDate(start.getDate() - 6);
+/* -- Direction badge for trends -------------------------------------- */
+const TrendBadge = ({ direction }) => {
+  const config = {
+    up:     { label: 'Rising',  bg: 'rgba(34,197,94,0.12)',  color: 'var(--color-success)' },
+    down:   { label: 'Falling', bg: 'rgba(239,68,68,0.12)',  color: 'var(--color-warning)' },
+    stable: { label: 'Stable',  bg: 'rgba(99,102,241,0.12)', color: 'var(--color-brand-400)' },
+  };
+  const c = config[direction] || config.stable;
+  return (
+    <span
+      className="inline-block text-[10px] font-spartan font-medium px-2 py-0.5 rounded-full ml-2"
+      style={{ background: c.bg, color: c.color }}
+    >
+      {c.label}
+    </span>
+  );
+};
 
-  let hits = 0;
-  let total = 0;
+/* -- Priority badge for recommendations ------------------------------ */
+const PriorityBadge = ({ priority }) => {
+  const config = {
+    high:   { label: 'High',   bg: 'rgba(239,68,68,0.12)',   color: 'var(--color-warning)' },
+    medium: { label: 'Medium', bg: 'rgba(234,179,8,0.12)',   color: '#ca8a04' },
+    low:    { label: 'Low',    bg: 'rgba(99,102,241,0.12)',  color: 'var(--color-brand-400)' },
+  };
+  const c = config[priority] || config.medium;
+  return (
+    <span
+      className="inline-block text-[10px] font-spartan font-medium px-2 py-0.5 rounded-full ml-2"
+      style={{ background: c.bg, color: c.color }}
+    >
+      {c.label}
+    </span>
+  );
+};
 
-  habits.forEach(h => {
-    const hE = entries[h._id] || {};
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      if (h.schedule?.days?.length && !h.schedule.days.includes(d.getDay())) continue;
-      total++;
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      const entry = hE[`${y}-${m}-${dd}`];
-      if (entry && entry.completed) hits++;
-    }
-  });
+/* -- Loading skeleton ------------------------------------------------ */
+const Skeleton = () => (
+  <div className="card p-5 space-y-5 animate-pulse">
+    <div className="h-5 bg-[var(--color-surface-elevated)] rounded w-48" />
+    <div className="space-y-2">
+      <div className="h-3 bg-[var(--color-surface-elevated)] rounded w-full" />
+      <div className="h-3 bg-[var(--color-surface-elevated)] rounded w-3/4" />
+    </div>
+    <div className="grid gap-3 sm:grid-cols-2">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="h-16 bg-[var(--color-surface-elevated)] rounded-lg" />
+      ))}
+    </div>
+  </div>
+);
 
-  return total > 0 ? Math.round((hits / total) * 100) : null;
-}
+/* -- Main component -------------------------------------------------- */
+const AnalyticsInsights = memo(({ habits, entries, timeRange }) => {
+  const apiRange = timeRange === 'all' ? 'all' : timeRange;
+  const { sections, llmUsed, isLoading, error, refresh, generatedAt } = useAnalyticsInsights(apiRange);
 
+  if (isLoading) return <Skeleton />;
+
+  if (error || !sections) {
+    return (
+      <div className="card p-5">
+        <p className="text-sm font-spartan text-[var(--color-text-muted)]">
+          Unable to load insights.{' '}
+          <button onClick={refresh} className="underline hover:text-[var(--color-brand-400)]">
+            Retry
+          </button>
+        </p>
+      </div>
+    );
+  }
+
+  const { summary, patterns, trends, correlations, recommendations } = sections;
+  const hasContent = summary || patterns?.length || trends?.length || correlations?.length || recommendations?.length;
+
+  if (!hasContent) return null;
+
+  return (
+    <div className="analytics-insights-panel space-y-5">
+      {/* -- Header --------------------------------------------------- */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-garamond font-bold text-[var(--color-text-primary)]">
+            AI Insights
+          </h3>
+          {llmUsed && (
+            <span
+              className="text-[10px] font-spartan font-medium px-2 py-0.5 rounded-full"
+              style={{
+                background: 'rgba(99,102,241,0.12)',
+                color: 'var(--color-brand-400)',
+              }}
+            >
+              AI-enhanced
+            </span>
+          )}
+        </div>
+        <button
+          onClick={refresh}
+          className="text-xs font-spartan text-[var(--color-text-muted)] hover:text-[var(--color-brand-400)] transition-colors"
+        >
+          Refresh
+        </button>
+      </div>
+
+      {/* -- Summary card (glassmorphic) ------------------------------ */}
+      {summary && (
+        <div
+          className="glass-insight relative overflow-hidden rounded-2xl border p-5 transition-all duration-300"
+          style={{
+            background: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.06) 50%, rgba(99,102,241,0.04) 100%)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            borderColor: 'rgba(99,102,241,0.18)',
+            boxShadow: '0 2px 12px rgba(99,102,241,0.08), inset 0 1px 0 rgba(255,255,255,0.06)',
+          }}
+        >
+          <div
+            className="glass-sheen pointer-events-none absolute inset-0 rounded-2xl"
+            style={{
+              background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.07) 45%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.07) 55%, transparent 60%)',
+              backgroundSize: '200% 100%',
+              backgroundPosition: '200% 0',
+              transition: 'background-position 600ms ease',
+            }}
+          />
+          <p className="text-sm font-spartan leading-relaxed relative z-10 text-[var(--color-text-secondary)]">
+            {summary}
+          </p>
+        </div>
+      )}
+
+      {/* -- Sectioned panels ----------------------------------------- */}
+      <div className="grid gap-5 lg:grid-cols-2">
+        {/* Patterns */}
+        {patterns?.length > 0 && (
+          <Section title="Patterns" icon="🔍" accent="var(--color-brand-400)">
+            <div className="space-y-2">
+              {patterns.map((item, i) => (
+                <InsightCard key={`p-${i}`} item={item} />
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* Trends */}
+        {trends?.length > 0 && (
+          <Section title="Trends" icon="📈" accent="var(--color-success)">
+            <div className="space-y-2">
+              {trends.map((item, i) => (
+                <div key={`t-${i}`}>
+                  <InsightCard item={item} />
+                  {item.direction && (
+                    <div className="mt-1 ml-3">
+                      <TrendBadge direction={item.direction} />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* Correlations */}
+        {correlations?.length > 0 && (
+          <Section title="Correlations" icon="🔗" accent="#a78bfa">
+            <div className="space-y-2">
+              {correlations.map((item, i) => (
+                <InsightCard key={`c-${i}`} item={item} accentVar="#a78bfa" />
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* Recommendations */}
+        {recommendations?.length > 0 && (
+          <Section title="Recommendations" icon="💡" accent="#ca8a04">
+            <div className="space-y-2">
+              {recommendations.map((item, i) => (
+                <div key={`r-${i}`}>
+                  <InsightCard item={item} />
+                  {item.priority && (
+                    <div className="mt-1 ml-3">
+                      <PriorityBadge priority={item.priority} />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
+      </div>
+
+      {/* -- Footer --------------------------------------------------- */}
+      {generatedAt && (
+        <p className="text-[10px] font-spartan text-[var(--color-text-muted)] text-right">
+          Generated {new Date(generatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </p>
+      )}
+    </div>
+  );
+});
+
+AnalyticsInsights.displayName = 'AnalyticsInsights';
 export default AnalyticsInsights;
