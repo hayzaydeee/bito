@@ -1,1362 +1,1026 @@
-import React, { useState, useMemo, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Text, Switch, Select } from "@radix-ui/themes";
-import { 
-  GearIcon, 
-  PersonIcon, 
-  BellIcon, 
-  ColorWheelIcon,
-  ArchiveIcon,
-  LockClosedIcon,
-  QuestionMarkCircledIcon,
-  DownloadIcon,
-  UploadIcon,
-  TrashIcon,
-  FileTextIcon,
-  ChatBubbleIcon,
-  ExclamationTriangleIcon,
-  MixerHorizontalIcon,
-  EyeNoneIcon,
+import {
+  PersonIcon,
+  GearIcon,
+  BellIcon,
   MoonIcon,
+  SunIcon,
+  DesktopIcon,
+  LockClosedIcon,
+  DownloadIcon,
+  TrashIcon,
   GlobeIcon,
-  BackpackIcon,
   InfoCircledIcon,
-  Cross2Icon,
-  CheckIcon,
   CheckCircledIcon,
-  CalendarIcon
+  ExclamationTriangleIcon,
+  ChevronRightIcon,
+  ArrowLeftIcon,
+  CheckIcon,
 } from "@radix-ui/react-icons";
-import BaseGridContainer from '../components/shared/BaseGridContainer';
-import { WIDGET_TYPES, DEFAULT_WIDGETS, DEFAULT_LAYOUTS, STORAGE_KEYS } from '../components/shared/widgetRegistry';
-import { userAPI } from '../services/api';
-import userPreferencesService from '../services/userPreferencesService';
-import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
-import ThemeSwitcher from '../components/ui/ThemeSwitcher';
+import { userAPI } from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
+import { useTheme } from "../contexts/ThemeContext";
+
+/* ================================================================
+   SettingsPage — sectioned list layout (no widget grid)
+
+   Sections:
+     1. Profile       — avatar, name, email, connected accounts
+     2. Appearance    — theme preview cards (light / dark / auto)
+     3. Preferences   — timezone, week start day
+     4. Notifications — email toggle, coming-soon push
+     5. Privacy       — dashboard sharing per workspace
+     6. Data          — export
+     7. About         — version, status
+     8. Danger Zone   — delete account (red border)
+
+   Sub-route: /settings/habit-privacy/:habitId
+   ================================================================ */
 
 const SettingsPage = ({ section }) => {
   const { user } = useAuth();
-  const { theme, changeTheme, themeOptions } = useTheme();
+  const { theme, changeTheme } = useTheme();
   const navigate = useNavigate();
+
+  /* ── core state ───────────────────────── */
   const [userProfile, setUserProfile] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [habitId, setHabitId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  const [settings, setSettings] = useState({
+    emailNotifications: true,
+    timezone: "UTC",
+    weekStartsOn: 1,
+    theme: "auto",
+  });
+
+  /* ── habit-privacy sub-route state ────── */
   const [habitData, setHabitData] = useState(null);
-  const [habitPrivacySettings, setHabitPrivacySettings] = useState({
+  const [habitPrivacy, setHabitPrivacy] = useState({
     shareProgress: "progress-only",
     allowInteraction: true,
-    shareInActivity: true
-  });
-  
-  // Notification state for SettingsPage
-  const [notification, setNotification] = useState(null);
-  
-  // Show notification helper
-  const showNotification = (message, type = 'success') => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification(null), 4000); // Auto-hide after 4 seconds
-  };
-  
-  // Extract habitId from URL if in habit-privacy section
-  useEffect(() => {
-    if (section === 'habit-privacy') {
-      const path = window.location.pathname;
-      const id = path.split('/').pop();
-      setHabitId(id);
-      
-      // Fetch habit data
-      const fetchHabitData = async () => {
-        try {
-          const token = localStorage.getItem('token');
-          const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-          
-          const response = await fetch(`${API_BASE_URL}/api/habits/${id}`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          
-          const data = await response.json();
-          
-          if (response.ok && data.success && data.data.habit) {
-            setHabitData(data.data.habit);
-            
-            // Set initial privacy settings from the habit data
-            if (data.data.habit.workspaceSettings) {
-              setHabitPrivacySettings({
-                shareProgress: data.data.habit.workspaceSettings.shareProgress || 'progress-only',
-                allowInteraction: data.data.habit.workspaceSettings.allowInteraction !== undefined 
-                  ? data.data.habit.workspaceSettings.allowInteraction 
-                  : true,
-                shareInActivity: data.data.habit.workspaceSettings.shareInActivity !== undefined 
-                  ? data.data.habit.workspaceSettings.shareInActivity 
-                  : true,
-              });
-            }
-          } else {
-            console.error('Failed to fetch habit data:', data);
-          }
-        } catch (error) {
-          console.error('Error fetching habit data:', error);
-        }
-      };
-      
-      fetchHabitData();
-    }
-  }, [section]);
-  
-  const [settings, setSettings] = useState({
-    notifications: true,
-    darkMode: true,
-    emailNotifications: true, // Default to true as per backend
-    weeklyReports: true,
-    autoBackup: true,
-    language: "en",
-    timezone: "UTC",
-    weekStartsOn: 1, // Monday (0=Sunday, 1=Monday, etc.)
-    theme: "auto", // Default to auto as per backend
-    workspaceNotifications: true,
-    shareProgress: "progress-only",
-    defaultWorkspacePrivacy: "invite-only"
+    shareInActivity: true,
   });
 
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  /* ── privacy / workspace state ────────── */
+  const [workspaces, setWorkspaces] = useState([]);
+  const [dashPerms, setDashPerms] = useState({});
+  const [privacyLoading, setPrivacyLoading] = useState(false);
 
-  // Load user profile data on mount
+  /* ── toast helper ─────────────────────── */
+  const showToast = useCallback((message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  }, []);
+
+  /* ── load profile ─────────────────────── */
   useEffect(() => {
-    const loadUserProfile = async () => {
+    if (!user) return;
+    (async () => {
       try {
-        setIsLoading(true);
-        const response = await userAPI.getProfile();
-        const userData = response.data.user;
-        setUserProfile(userData);
-        
-        // Update settings with real backend data
-        setSettings(prev => ({
-          ...prev,
-          emailNotifications: userData.preferences?.emailNotifications ?? true,
-          timezone: userData.preferences?.timezone ?? "UTC",
-          weekStartsOn: userData.preferences?.weekStartsOn ?? 1,
-          theme: userData.preferences?.theme ?? "auto"
+        setLoading(true);
+        const res = await userAPI.getProfile();
+        const u = res.data.user;
+        setUserProfile(u);
+        setSettings((p) => ({
+          ...p,
+          emailNotifications: u.preferences?.emailNotifications ?? true,
+          timezone: u.preferences?.timezone ?? "UTC",
+          weekStartsOn: u.preferences?.weekStartsOn ?? 1,
+          theme: u.preferences?.theme ?? "auto",
         }));
-        
-        // Sync preferences service with backend data
-        userPreferencesService.syncWithBackend(userData);
-      } catch (error) {
-        console.error('Failed to load user profile:', error);
+      } catch {
+        console.error("Failed to load profile");
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
-    };
-
-    if (user) {
-      loadUserProfile();
-    }
+    })();
   }, [user]);
 
-  const handleSettingChange = async (key, value) => {
-    // Update local state immediately for better UX
-    setSettings(prev => ({
-      ...prev,
-      [key]: value
-    }));
+  /* ── load workspaces for privacy section */
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      try {
+        setPrivacyLoading(true);
+        const token = localStorage.getItem("token");
+        const base = import.meta.env.VITE_API_URL || "http://localhost:5000";
+        const res = await fetch(`${base}/api/workspaces`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setWorkspaces(data.workspaces || []);
+          const perms = {};
+          for (const ws of data.workspaces || []) {
+            try {
+              const pr = await fetch(
+                `${base}/api/workspaces/${ws._id}/dashboard-permissions`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                  },
+                }
+              );
+              perms[ws._id] = pr.ok
+                ? (await pr.json()).permissions || {
+                    isPublicToWorkspace: true,
+                  }
+                : { isPublicToWorkspace: true };
+            } catch {
+              perms[ws._id] = { isPublicToWorkspace: true };
+            }
+          }
+          setDashPerms(perms);
+        }
+      } catch {
+        console.error("Failed to load workspaces");
+      } finally {
+        setPrivacyLoading(false);
+      }
+    })();
+  }, [user]);
 
-    // Handle theme changes specially through ThemeContext
-    if (key === 'theme') {
+  /* ── load habit data (sub-route) ──────── */
+  useEffect(() => {
+    if (section !== "habit-privacy") return;
+    const id = window.location.pathname.split("/").pop();
+    if (!id) return;
+    (async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const base = import.meta.env.VITE_API_URL || "http://localhost:5000";
+        const res = await fetch(`${base}/api/habits/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        const data = await res.json();
+        if (res.ok && data.success && data.data.habit) {
+          setHabitData(data.data.habit);
+          if (data.data.habit.workspaceSettings) {
+            setHabitPrivacy({
+              shareProgress:
+                data.data.habit.workspaceSettings.shareProgress ||
+                "progress-only",
+              allowInteraction:
+                data.data.habit.workspaceSettings.allowInteraction ?? true,
+              shareInActivity:
+                data.data.habit.workspaceSettings.shareInActivity ?? true,
+            });
+          }
+        }
+      } catch (e) {
+        console.error("Error fetching habit:", e);
+      }
+    })();
+  }, [section]);
+
+  /* ── save a backend-supported setting ── */
+  const saveSetting = async (key, value) => {
+    const prev = settings[key];
+    setSettings((p) => ({ ...p, [key]: value }));
+
+    if (key === "theme") {
       try {
         await changeTheme(value);
-        showNotification('Theme updated successfully!', 'success');
-      } catch (error) {
-        console.error('Failed to change theme:', error);
-        showNotification('Failed to update theme', 'error');
-        // Revert local state on error
-        setSettings(prev => ({
-          ...prev,
-          [key]: theme
-        }));
+        showToast("Theme updated");
+      } catch {
+        setSettings((p) => ({ ...p, [key]: prev }));
+        showToast("Failed to update theme", "error");
       }
       return;
     }
 
-    // Save supported settings to backend and preferences service
-    const supportedBackendSettings = ['emailNotifications', 'timezone', 'weekStartsOn'];
-    
-    if (supportedBackendSettings.includes(key)) {
-      try {
-        setIsSaving(true);
-        
-        // Update preferences service immediately for instant UI updates
-        userPreferencesService.set(key, value);
-        
-        await userAPI.updateProfile({
-          preferences: {
-            ...userProfile?.preferences,
-            [key]: value
-          }
-        });
-        
-        // Update local user profile
-        setUserProfile(prev => ({
-          ...prev,
-          preferences: {
-            ...prev?.preferences,
-            [key]: value
-          }
-        }));
+    const supported = ["emailNotifications", "timezone", "weekStartsOn"];
+    if (!supported.includes(key)) return;
 
-        // Show success notification
-        const settingNames = {
-          'emailNotifications': 'Email notifications',
-          'timezone': 'Timezone',
-          'weekStartsOn': 'Week start day'
-        };
-        showNotification(`${settingNames[key] || key} updated successfully!`, 'success');
-        
-      } catch (error) {
-        console.error('Failed to save setting:', error);
-        // Revert local state and preferences service on error
-        const originalValue = userProfile?.preferences?.[key] ?? settings[key];
-        setSettings(prev => ({
-          ...prev,
-          [key]: originalValue
-        }));
-        userPreferencesService.set(key, originalValue);
-        showNotification(`Failed to update ${settingNames[key] || key}. Please try again.`, 'error');
-      } finally {
-        setIsSaving(false);
-      }
+    try {
+      setSaving(true);
+      await userAPI.updateProfile({
+        preferences: { ...userProfile?.preferences, [key]: value },
+      });
+      setUserProfile((p) => ({
+        ...p,
+        preferences: { ...p?.preferences, [key]: value },
+      }));
+      const names = {
+        emailNotifications: "Email notifications",
+        timezone: "Timezone",
+        weekStartsOn: "Week start day",
+      };
+      showToast(`${names[key]} updated`);
+    } catch {
+      setSettings((p) => ({ ...p, [key]: prev }));
+      showToast("Failed to save setting", "error");
+    } finally {
+      setSaving(false);
     }
-    // For unsupported settings, just update local state (they're "coming soon")
   };
 
-  // Category options for filtering
-  const categoryOptions = [
-    { value: 'all', label: 'All Settings', icon: MixerHorizontalIcon },
-    { value: 'account', label: 'Account', icon: PersonIcon },
-    { value: 'notifications', label: 'Notifications', icon: BellIcon },
-    { value: 'privacy', label: 'Privacy', icon: LockClosedIcon },
-    { value: 'appearance', label: 'Appearance', icon: ColorWheelIcon },
-    { value: 'data', label: 'Data', icon: BackpackIcon },
-  ];
-
-  // Settings widget components
-  const settingsWidgets = useMemo(() => ({
-    ...(section === 'habit-privacy' && habitId && {
-      'habit-privacy-widget': {
-        title: "Habit Privacy Settings",
-        component: () => {
-          const navigate = useNavigate();
-          
-          const updatePrivacySettings = async () => {
-            try {
-              setIsSaving(true);
-              
-              // Use the proper API base URL and authentication
-              const token = localStorage.getItem('token');
-              const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-              
-              const response = await fetch(`${API_BASE_URL}/api/habits/${habitId}`, {
-                method: 'PUT',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                  workspaceSettings: habitPrivacySettings
-                })
-              });
-              
-              const result = await response.json();
-              
-              if (response.ok && result.success) {
-                // Show success notification using the existing notification system
-                if (typeof showNotification === 'function') {
-                  showNotification('Privacy settings updated successfully!', 'success');
-                } else {
-                  // Fallback to alert if notification system isn't available
-                  alert('Privacy settings updated successfully!');
-                }
-                
-                // Navigate back to groups page
-                navigate(`/app/groups/${habitData.workspaceId}`);
-              } else {
-                console.error('Failed to update privacy settings:', result);
-                const errorMessage = result.error || 'Failed to update privacy settings';
-                
-                if (typeof showNotification === 'function') {
-                  showNotification(errorMessage, 'error');
-                } else {
-                  alert(errorMessage);
-                }
-              }
-            } catch (error) {
-              console.error('Error updating privacy settings:', error);
-              const errorMessage = 'Network error. Please check your connection and try again.';
-              
-              if (typeof showNotification === 'function') {
-                showNotification(errorMessage, 'error');
-              } else {
-                alert(errorMessage);
-              }
-            } finally {
-              setIsSaving(false);
-            }
-          };
-          
-          return (
-            <div className="h-full glass-card-minimal rounded-2xl flex flex-col overflow-hidden">
-              <div className="flex items-center justify-between p-6 pb-4 flex-shrink-0 border-b border-[var(--color-border-primary)]">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center shadow-lg">
-                    <LockClosedIcon className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold font-dmSerif text-[var(--color-text-primary)]">
-                      Habit Privacy Settings
-                    </h3>
-                    <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
-                      {habitData?.name ? `Control privacy for "${habitData.name}"` : 'Control what you share with your group'}
-                    </p>
-                  </div>
-                </div>
-                
-                <button
-                  onClick={() => navigate(`/app/groups/${habitData?.workspaceId || 'all'}`)}
-                  className="p-2 rounded-lg hover:bg-[var(--color-surface-hover)] text-[var(--color-text-tertiary)]"
-                >
-                  <Cross2Icon className="w-5 h-5" />
-                </button>
-              </div>
-              
-              <div className="flex-1 overflow-y-auto p-6">
-                {!habitData ? (
-                  <div className="h-full flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="spinner mb-4"></div>
-                      <p className="text-[var(--color-text-secondary)] font-outfit">Loading habit data...</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-8">
-                    <div className="bg-[var(--color-surface-primary)] p-4 rounded-xl border border-[var(--color-border-primary)]">
-                      <div className="flex items-start gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: habitData.color || '#4f46e5' }}>
-                          <span className="text-lg">{habitData.icon || '🎯'}</span>
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-lg text-[var(--color-text-primary)] font-dmSerif">
-                            {habitData.name}
-                          </h4>
-                          <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
-                            {habitData.description || 'No description'}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-3 text-xs text-[var(--color-text-tertiary)] font-outfit">
-                        <span className="px-2 py-1 bg-[var(--color-surface-hover)] rounded-lg">
-                          {habitData.category || 'No category'}
-                        </span>
-                        <span>
-                          Adopted from workspace
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h4 className="text-base font-dmSerif font-semibold text-[var(--color-text-primary)] mb-2">
-                        Privacy Settings
-                      </h4>
-                      <p className="text-sm text-[var(--color-text-secondary)] font-outfit mb-6">
-                        Control what information about this habit is visible to your group members. 
-                        These settings only affect this specific habit in this workspace.
-                      </p>
-                      
-                      <div className="space-y-5">
-                        {/* Share Progress Setting */}
-                        <div>
-                          <h5 className="text-sm font-dmSerif font-semibold text-[var(--color-text-primary)] mb-3">
-                            Share Progress Level
-                          </h5>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div 
-                              className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                                habitPrivacySettings.shareProgress === 'full' 
-                                  ? 'bg-[var(--color-brand-500)]/10 border-[var(--color-brand-500)]' 
-                                  : 'border-[var(--color-border-primary)] hover:bg-[var(--color-surface-hover)]'
-                              }`}
-                              onClick={() => setHabitPrivacySettings({...habitPrivacySettings, shareProgress: 'full'})}
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <h5 className="text-sm font-dmSerif font-semibold text-[var(--color-text-primary)]">
-                                  Full Details
-                                </h5>
-                                {habitPrivacySettings.shareProgress === 'full' && (
-                                  <CheckCircledIcon className="w-4 h-4 text-[var(--color-brand-500)]" />
-                                )}
-                              </div>
-                              <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
-                                Share your complete habit data including completion dates, notes, and detailed statistics with group members
-                              </p>
-                            </div>
-                            <div 
-                              className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                                habitPrivacySettings.shareProgress === 'progress-only' 
-                                  ? 'bg-[var(--color-brand-500)]/10 border-[var(--color-brand-500)]' 
-                                  : 'border-[var(--color-border-primary)] hover:bg-[var(--color-surface-hover)]'
-                              }`}
-                              onClick={() => setHabitPrivacySettings({...habitPrivacySettings, shareProgress: 'progress-only'})}
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <h5 className="text-sm font-dmSerif font-semibold text-[var(--color-text-primary)]">
-                                  Progress Only
-                                </h5>
-                                {habitPrivacySettings.shareProgress === 'progress-only' && (
-                                  <CheckCircledIcon className="w-4 h-4 text-[var(--color-brand-500)]" />
-                                )}
-                              </div>
-                              <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
-                                Share basic completion rates and weekly progress summaries, but keep personal notes and detailed stats private
-                              </p>
-                            </div>
-                            <div 
-                              className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                                habitPrivacySettings.shareProgress === 'streaks-only' 
-                                  ? 'bg-[var(--color-brand-500)]/10 border-[var(--color-brand-500)]' 
-                                  : 'border-[var(--color-border-primary)] hover:bg-[var(--color-surface-hover)]'
-                              }`}
-                              onClick={() => setHabitPrivacySettings({...habitPrivacySettings, shareProgress: 'streaks-only'})}
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <h5 className="text-sm font-dmSerif font-semibold text-[var(--color-text-primary)]">
-                                  Streaks Only
-                                </h5>
-                                {habitPrivacySettings.shareProgress === 'streaks-only' && (
-                                  <CheckCircledIcon className="w-4 h-4 text-[var(--color-brand-500)]" />
-                                )}
-                              </div>
-                              <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
-                                Only show your current streak count and best streak achieved - all other progress remains private
-                              </p>
-                            </div>
-                            <div 
-                              className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                                habitPrivacySettings.shareProgress === 'private' 
-                                  ? 'bg-[var(--color-brand-500)]/10 border-[var(--color-brand-500)]' 
-                                  : 'border-[var(--color-border-primary)] hover:bg-[var(--color-surface-hover)]'
-                              }`}
-                              onClick={() => setHabitPrivacySettings({...habitPrivacySettings, shareProgress: 'private'})}
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <h5 className="text-sm font-dmSerif font-semibold text-[var(--color-text-primary)]">
-                                  Private
-                                </h5>
-                                {habitPrivacySettings.shareProgress === 'private' && (
-                                  <CheckCircledIcon className="w-4 h-4 text-[var(--color-brand-500)]" />
-                                )}
-                              </div>
-                              <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
-                                Keep all progress completely private - group members won't see any data about this habit
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Allow Interaction Toggle */}
-                        <div className="flex items-center justify-between p-4 border border-[var(--color-border-primary)] rounded-lg">
-                          <div>
-                            <h4 className="text-sm font-dmSerif font-semibold text-[var(--color-text-primary)]">
-                              Allow Encouragements
-                            </h4>
-                            <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
-                              Allow group members to send you motivational messages and celebrate your progress on this habit
-                            </p>
-                          </div>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={habitPrivacySettings.allowInteraction}
-                              onChange={(e) => setHabitPrivacySettings({...habitPrivacySettings, allowInteraction: e.target.checked})}
-                              className="sr-only"
-                            />
-                            <div className={`w-11 h-6 rounded-full transition-colors ${
-                              habitPrivacySettings.allowInteraction 
-                                ? 'bg-[var(--color-brand-500)]' 
-                                : 'bg-gray-300'
-                            }`}>
-                              <div className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${
-                                habitPrivacySettings.allowInteraction ? 'translate-x-5' : 'translate-x-0'
-                              } mt-0.5 ml-0.5`} />
-                            </div>
-                          </label>
-                        </div>
-                        
-                        {/* Activity Feed Toggle */}
-                        <div className="flex items-center justify-between p-4 border border-[var(--color-border-primary)] rounded-lg">
-                          <div>
-                            <h4 className="text-sm font-dmSerif font-semibold text-[var(--color-text-primary)]">
-                              Show in Activity Feed
-                            </h4>
-                            <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
-                              When you complete this habit, it will appear in the group's activity feed for everyone to see
-                            </p>
-                          </div>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={habitPrivacySettings.shareInActivity}
-                              onChange={(e) => setHabitPrivacySettings({...habitPrivacySettings, shareInActivity: e.target.checked})}
-                              className="sr-only"
-                            />
-                            <div className={`w-11 h-6 rounded-full transition-colors ${
-                              habitPrivacySettings.shareInActivity 
-                                ? 'bg-[var(--color-brand-500)]' 
-                                : 'bg-gray-300'
-                            }`}>
-                              <div className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${
-                                habitPrivacySettings.shareInActivity ? 'translate-x-5' : 'translate-x-0'
-                              } mt-0.5 ml-0.5`} />
-                            </div>
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-4 pt-4 border-t border-[var(--color-border-primary)]">
-                      <button
-                        onClick={() => navigate(`/app/groups/${habitData.workspaceId}`)}
-                        className="flex-1 h-10 bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] rounded-lg font-medium font-outfit"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={updatePrivacySettings}
-                        disabled={isSaving}
-                        className="flex-1 h-10 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] disabled:bg-gray-400 text-white rounded-lg font-semibold font-outfit flex items-center justify-center gap-2"
-                      >
-                        {isSaving ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            Saving...
-                          </>
-                        ) : (
-                          <>
-                            <CheckIcon className="w-4 h-4" />
-                            Save Settings
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
+  /* ── toggle workspace dashboard sharing ─ */
+  const toggleWsPublic = async (wsId, isPublic) => {
+    const prev = dashPerms[wsId];
+    setDashPerms((p) => ({
+      ...p,
+      [wsId]: { ...p[wsId], isPublicToWorkspace: isPublic },
+    }));
+    try {
+      const token = localStorage.getItem("token");
+      const base = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const res = await fetch(
+        `${base}/api/workspaces/${wsId}/dashboard-permissions`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...dashPerms[wsId],
+            isPublicToWorkspace: isPublic,
+          }),
         }
+      );
+      if (res.ok) {
+        const result = await res.json();
+        setDashPerms((p) => ({ ...p, [wsId]: result.permissions }));
+        showToast("Dashboard sharing updated");
+      } else {
+        throw new Error();
       }
-    }),
-    'profile-widget': {
-      title: "Profile & Account",
-      component: () => (
-        <div className="h-full glass-card-minimal rounded-2xl flex flex-col overflow-hidden">
-          <div className="flex items-center gap-4 p-6 pb-4 flex-shrink-0">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
-              <PersonIcon className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold font-dmSerif text-[var(--color-text-primary)]">Profile & Account</h3>
-              <p className="text-sm text-[var(--color-text-secondary)] font-outfit">Manage your account information</p>
-            </div>
-          </div>
-          
-          <div className="flex-1 overflow-y-auto px-6 pb-6">
-            {isLoading ? (
-              <div className="h-full flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-8 h-8 border-2 border-[var(--color-brand-500)] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                  <p className="text-sm text-[var(--color-text-secondary)] font-outfit">Loading profile...</p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-[var(--color-brand-500)]/5 to-[var(--color-brand-600)]/5 rounded-xl border border-[var(--color-brand-400)]/20">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                    {userProfile?.avatar ? (
-                      <img src={userProfile.avatar} alt="Avatar" className="w-full h-full rounded-full object-cover" />
-                    ) : (
-                      userProfile?.name?.charAt(0)?.toUpperCase() || 'U'
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h4 className="font-semibold text-[var(--color-text-primary)] font-outfit truncate">{userProfile?.name || 'Loading...'}</h4>
-                    <p className="text-sm text-[var(--color-text-secondary)] font-outfit truncate">{userProfile?.email || 'Loading...'}</p> 
-                    {(userProfile?.hasGoogleAuth || userProfile?.hasGithubAuth) && (
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs text-[var(--color-text-tertiary)] font-outfit truncate">
-                          Connected: {userProfile.hasGoogleAuth ? 'Google ' : ''}{userProfile.hasGithubAuth ? 'GitHub' : ''}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <SettingItem
-                    label="Timezone"
-                    description="Your local timezone for accurate tracking"
-                    value={settings.timezone}
-                    type="select"
-                    options={[
-                      { label: "UTC", value: "UTC" },
-                      { label: "EST (UTC-5)", value: "America/New_York" },
-                      { label: "CST (UTC-6)", value: "America/Chicago" },
-                      { label: "MST (UTC-7)", value: "America/Denver" },
-                      { label: "PST (UTC-8)", value: "America/Los_Angeles" },
-                      { label: "GMT (UTC+0)", value: "Europe/London" },
-                      { label: "CET (UTC+1)", value: "Europe/Paris" },
-                      { label: "JST (UTC+9)", value: "Asia/Tokyo" },
-                      { label: "AEST (UTC+10)", value: "Australia/Sydney" }
-                    ]}
-                    onChange={(value) => handleSettingChange('timezone', value)}
-                    icon={<GlobeIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />}
-                    isDisabled={isSaving}
-                  />
-                  
-                  <SettingItem
-                    label="Week Start Day"
-                    description="Choose which day your week starts on"
-                    value={settings.weekStartsOn}
-                    type="select"
-                    options={[
-                      { label: "Sunday", value: 0 },
-                      { label: "Monday", value: 1 },
-                      { label: "Tuesday", value: 2 },
-                      { label: "Wednesday", value: 3 },
-                      { label: "Thursday", value: 4 },
-                      { label: "Friday", value: 5 },
-                      { label: "Saturday", value: 6 }
-                    ]}
-                    onChange={(value) => handleSettingChange('weekStartsOn', value)}
-                    icon={<CalendarIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />}
-                    isDisabled={isSaving}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )
-    },
-    
-    'notifications-widget': {
-      title: "Notification Settings",
-      component: () => (
-        <div className="h-full glass-card-minimal p-6 rounded-2xl flex flex-col">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg">
-              <BellIcon className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold font-dmSerif text-[var(--color-text-primary)]">Notifications</h3>
-              <p className="text-sm text-[var(--color-text-secondary)] font-outfit">Stay updated with your habits</p>
-            </div>
-          </div>
-          
-          <div className="flex-1 space-y-4">
-            <SettingItem
-              label="Email Updates"
-              description="Weekly reports and summaries"
-              value={settings.emailNotifications}
-              type="toggle"
-              onChange={(value) => handleSettingChange('emailNotifications', value)}
-              icon={<InfoCircledIcon className="w-4 h-4 text-blue-500" />}
-              isDisabled={isSaving}
-            />
-            
-            {/* Coming Soon Items */}
-            <div className="space-y-3 pt-4 border-t border-[var(--color-border-primary)]/30">
-              <div className="flex items-center gap-2 mb-3">
-                <Text className="text-xs font-semibold text-[var(--color-text-tertiary)] font-outfit uppercase tracking-wide">
-                  Upcoming Features
-                </Text>
-                <div className="flex-1 h-px bg-[var(--color-border-primary)]/30"></div>
-                <Text className="text-xs text-[var(--color-text-quaternary)] font-outfit">
-                  In Development
-                </Text>
-              </div>
-              
-              <ComingSoonSettingItem
-                label="Push Notifications"
-                description="Get habit reminders and achievement notifications"
-                icon={<BellIcon className="w-4 h-4 text-emerald-500" />}
-                priority="high"
-                timeline="Q3 2025"
-              />
-              <ComingSoonSettingItem
-                label="Weekly Reports"
-                description="Receive detailed progress analytics via email"
-                icon={<FileTextIcon className="w-4 h-4 text-purple-500" />}
-                priority="medium"
-                timeline="Q4 2025"
-              />
-              <ComingSoonSettingItem
-                label="Team Activity"
-                description="Stay updated on workspace collaboration"
-                icon={<PersonIcon className="w-4 h-4 text-orange-500" />}
-                priority="medium"
-                timeline="Q4 2025"
-              />
-            </div>
-          </div>
-        </div>
-      )
-    },
+    } catch {
+      setDashPerms((p) => ({ ...p, [wsId]: prev }));
+      showToast("Failed to update sharing", "error");
+    }
+  };
 
-    'privacy-widget': {
-      title: "Privacy & Security",
-      component: () => {
-        const [dashboardPermissions, setDashboardPermissions] = useState({});
-        const [workspaces, setWorkspaces] = useState([]);
-        const [loading, setLoading] = useState(true);
-        const [saving, setSaving] = useState(false);
-        
-        useEffect(() => {
-          fetchUserWorkspaces();
-        }, []);
-        
-        const fetchUserWorkspaces = async () => {
-          try {
-            setLoading(true);
-            const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-            const token = localStorage.getItem('token');
-            
-            // Fetch user's workspaces
-            const workspacesResponse = await fetch(`${API_BASE_URL}/api/workspaces`, {
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              }
-            });
-            
-            if (workspacesResponse.ok) {
-              const workspacesData = await workspacesResponse.json();
-              setWorkspaces(workspacesData.workspaces || []);
-              
-              // Fetch permissions for each workspace
-              const permissions = {};
-              for (const workspace of workspacesData.workspaces || []) {
-                try {
-                  const permResponse = await fetch(`${API_BASE_URL}/api/workspaces/${workspace._id}/dashboard-permissions`, {
-                    headers: {
-                      'Authorization': `Bearer ${token}`,
-                      'Content-Type': 'application/json'
-                    }
-                  });
-                  
-                  if (permResponse.ok) {
-                    const permData = await permResponse.json();
-                    permissions[workspace._id] = permData.permissions || { isPublicToWorkspace: true };
-                  } else {
-                    // Set default permissions if endpoint doesn't exist yet
-                    permissions[workspace._id] = { isPublicToWorkspace: true };
-                  }
-                } catch (error) {
-                  console.error(`Error fetching permissions for workspace ${workspace._id}:`, error);
-                }
-              }
-              
-              setDashboardPermissions(permissions);
-            }            } catch (error) {
-              console.error('Error fetching workspaces:', error);
-              showNotification('Failed to load workspace data. Please refresh the page.', 'error');
-            } finally {
-              setLoading(false);
-            }
-        };
-        
-        const updateWorkspacePermissions = async (workspaceId, newPermissions) => {
-          try {
-            setSaving(true);
-            const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-            const token = localStorage.getItem('token');
-            
-            const response = await fetch(`${API_BASE_URL}/api/workspaces/${workspaceId}/dashboard-permissions`, {
-              method: 'PUT',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(newPermissions)
-            });
-            
-            if (response.ok) {
-              const result = await response.json();
-              setDashboardPermissions(prev => ({
-                ...prev,
-                [workspaceId]: result.permissions
-              }));
-              
-              showNotification('Dashboard sharing settings updated successfully!', 'success');
-            } else {
-              const error = await response.json();
-              console.error('Failed to update permissions:', error);
-              showNotification(error.error || 'Failed to update settings', 'error');
-            }
-          } catch (error) {
-            console.error('Error updating permissions:', error);
-            showNotification('Network error. Please try again.', 'error');
-          } finally {
-            setSaving(false);
-          }
-        };
-        
-        const togglePublicAccess = (workspaceId, isPublic) => {
-          const currentPermissions = dashboardPermissions[workspaceId] || {};
-          updateWorkspacePermissions(workspaceId, {
-            ...currentPermissions,
-            isPublicToWorkspace: isPublic
-          });
-        };
-        
-        return (
-          <div className="h-full glass-card-minimal p-6 rounded-2xl flex flex-col">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center shadow-lg">
-                <LockClosedIcon className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold font-dmSerif text-[var(--color-text-primary)]">Privacy & Security</h3>
-                <p className="text-sm text-[var(--color-text-secondary)] font-outfit">Control your dashboard sharing</p>
-              </div>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto">
-              {loading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="w-8 h-8 border-2 border-[var(--color-brand-500)] border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="bg-[var(--color-surface-primary)] p-4 rounded-xl border border-[var(--color-border-primary)]">
-                    <h4 className="text-sm font-dmSerif font-semibold text-[var(--color-text-primary)] mb-2">
-                      Dashboard Sharing
-                    </h4>
-                    <p className="text-xs text-[var(--color-text-secondary)] font-outfit mb-4">
-                      Control which group members can view your private dashboard and habit progress.
-                    </p>
-                    
-                    {workspaces.length === 0 ? (
-                      <p className="text-sm text-[var(--color-text-tertiary)] font-outfit text-center py-4">
-                        You're not a member of any workspaces yet.
-                      </p>
-                    ) : (
-                      <div className="space-y-3">
-                        {workspaces.map((workspace) => {
-                          const permissions = dashboardPermissions[workspace._id] || {};
-                          const isPublic = permissions.isPublicToWorkspace || true;
-                          
-                          return (
-                            <div 
-                              key={workspace._id}
-                              className="flex items-center justify-between p-3 bg-[var(--color-surface-elevated)] rounded-lg border border-[var(--color-border-primary)]"
-                            >
-                              <div className="flex-1">
-                                <h5 className="text-sm font-semibold text-[var(--color-text-primary)] font-outfit">
-                                  {workspace.name}
-                                </h5>
-                                <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
-                                  {isPublic 
-                                    ? 'All group members can view your dashboard' 
-                                    : 'Dashboard is private - only you can see it'
-                                  }
-                                </p>
-                              </div>
-                              
-                              <label className="relative inline-flex items-center cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={isPublic}
-                                  onChange={(e) => togglePublicAccess(workspace._id, e.target.checked)}
-                                  disabled={saving}
-                                  className="sr-only"
-                                />
-                                <div className={`w-11 h-6 rounded-full transition-colors ${
-                                  isPublic 
-                                    ? 'bg-[var(--color-brand-500)]' 
-                                    : 'bg-gray-300'
-                                }`}>
-                                  <div className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${
-                                    isPublic ? 'translate-x-5' : 'translate-x-0'
-                                  } mt-0.5 ml-0.5`} />
-                                </div>
-                              </label>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="bg-[var(--color-surface-secondary)]/40 border border-[var(--color-border-primary)]/30 rounded-xl p-4">
-                    <div className="flex items-start gap-3">
-                      <InfoCircledIcon className="w-5 h-5 text-[var(--color-accent-primary)] mt-0.5 flex-shrink-0" />
-                      <div>
-                        <h4 className="font-semibold text-[var(--color-text-primary)] font-outfit text-sm mb-1">
-                          How Dashboard Sharing Works
-                        </h4>
-                        <ul className="text-xs text-[var(--color-text-secondary)] font-outfit space-y-1 opacity-90">
-                          <li>• When enabled, group members can view a read-only version of your private dashboard</li>
-                          <li>• They can see your habit progress, streaks, and completion patterns</li>
-                          <li>• Your personal notes and private data remain hidden</li>
-                          <li>• You can change these settings anytime</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        );
+  /* ── export ───────────────────────────── */
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      const res = await userAPI.exportData();
+      const str = JSON.stringify(res.data, null, 2);
+      const uri =
+        "data:application/json;charset=utf-8," + encodeURIComponent(str);
+      const a = document.createElement("a");
+      a.setAttribute("href", uri);
+      a.setAttribute(
+        "download",
+        `bito-export-${new Date().toISOString().split("T")[0]}.json`
+      );
+      a.click();
+      showToast("Data exported — check your downloads");
+    } catch {
+      showToast("Export failed", "error");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  /* ── delete account ───────────────────── */
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleteText, setDeleteText] = useState("");
+
+  const handleDelete = async () => {
+    if (deleteText !== "DELETE") return;
+    try {
+      await userAPI.deleteAccount({
+        password: "confirmed",
+        confirmDeletion: "DELETE_MY_ACCOUNT",
+      });
+      showToast("Account deleted. Logging out…");
+      setTimeout(() => (window.location.href = "/"), 2000);
+    } catch (e) {
+      showToast(e.message || "Deletion failed", "error");
+    }
+  };
+
+  /* ── habit privacy save ───────────────── */
+  const saveHabitPrivacy = async () => {
+    if (!habitData) return;
+    try {
+      setSaving(true);
+      const token = localStorage.getItem("token");
+      const base = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const res = await fetch(`${base}/api/habits/${habitData._id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ workspaceSettings: habitPrivacy }),
+      });
+      const result = await res.json();
+      if (res.ok && result.success) {
+        showToast("Privacy settings saved");
+        navigate(`/app/groups/${habitData.workspaceId}`);
+      } else {
+        showToast(result.error || "Failed to save", "error");
       }
-    },
+    } catch {
+      showToast("Network error", "error");
+    } finally {
+      setSaving(false);
+    }
+  };
 
-    'appearance-widget': {
-      title: "Appearance & Theme",
-      component: () => (
-        <div className="h-full glass-card-minimal p-6 rounded-2xl flex flex-col">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center shadow-lg">
-              <ColorWheelIcon className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold font-dmSerif text-[var(--color-text-primary)]">Appearance</h3>
-              <p className="text-sm text-[var(--color-text-secondary)] font-outfit">Customize your experience</p>
-            </div>
-          </div>
-          
-          <div className="flex-1 space-y-4">
+  /* ================================================================
+     HABIT PRIVACY SUB-ROUTE
+     ================================================================ */
+  if (section === "habit-privacy") {
+    return (
+      <div className="min-h-screen page-container px-6 py-10">
+        <div className="max-w-2xl mx-auto">
+          {/* back */}
+          <button
+            onClick={() =>
+              navigate(`/app/groups/${habitData?.workspaceId || ""}`)
+            }
+            className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] font-spartan mb-6 hover:text-[var(--color-text-primary)] transition-colors"
+          >
+            <ArrowLeftIcon className="w-4 h-4" />
+            Back to group
+          </button>
+
+          <h1 className="text-2xl font-bold font-garamond text-[var(--color-text-primary)] mb-2">
+            Habit Privacy
+          </h1>
+          <p className="text-sm text-[var(--color-text-secondary)] font-spartan mb-8">
+            {habitData
+              ? `Control sharing for "${habitData.name}"`
+              : "Loading…"}
+          </p>
+
+          {!habitData ? (
             <div className="space-y-3">
-              <SettingItem
-                label="Theme"
-                description="Switch between light, dark, and auto themes"
-                icon={<MoonIcon className="w-4 h-4 text-indigo-500" />}
-                type="component"
-                component={<ThemeSwitcher />}
-              />
+              {[...Array(3)].map((_, i) => (
+                <div
+                  key={i}
+                  className="h-16 rounded-xl bg-[var(--color-surface-elevated)] animate-pulse"
+                />
+              ))}
             </div>
-            
-            {/* Coming Soon Items */}
-            <div className="space-y-3 pt-4 border-t border-[var(--color-border-primary)]/30">
-              <div className="flex items-center gap-2 mb-3">
-                <Text className="text-xs font-semibold text-[var(--color-text-tertiary)] font-outfit uppercase tracking-wide">
-                  Upcoming Features
-                </Text>
-                <div className="flex-1 h-px bg-[var(--color-border-primary)]/30"></div>
-                <Text className="text-xs text-[var(--color-text-quaternary)] font-outfit">
-                  In Development
-                </Text>
-              </div>
-              
-              <ComingSoonSettingItem
-                label="Accent Color"
-                description="Customize your app's primary accent color"
-                icon={<ColorWheelIcon className="w-4 h-4 text-pink-500" />}
-                currentValue="🔵 Indigo"
-                priority="medium"
-                timeline="Q3 2025"
-              />
-              <ComingSoonSettingItem
-                label="Language"
-                description="Choose your preferred interface language"
-                icon={<GlobeIcon className="w-4 h-4 text-blue-500" />}
-                currentValue="🇺🇸 English"
-                priority="low"
-                timeline="Q4 2025"
-              />
-            </div>
-          </div>
-        </div>
-      )
-    },
-
-    'data-management-widget': {
-      title: "Data Management",
-      component: () => {
-        const [isExporting, setIsExporting] = useState(false);
-        const [exportSuccess, setExportSuccess] = useState(false);
-        
-        const handleExportData = async () => {
-          try {
-            setIsExporting(true);
-            const response = await userAPI.exportData();
-            
-            // Create and download the file
-            const dataStr = JSON.stringify(response.data, null, 2);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            
-            const exportFileDefaultName = `bito-export-${new Date().toISOString().split('T')[0]}.json`;
-            
-            const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
-            linkElement.click();
-            
-            setExportSuccess(true);
-            showNotification('Data exported successfully! Check your downloads folder.', 'success');
-            setTimeout(() => setExportSuccess(false), 3000);
-          } catch (error) {
-            console.error('Export failed:', error);
-            showNotification('Export failed. Please try again.', 'error');
-          } finally {
-            setIsExporting(false);
-          }
-        };
-
-        const handleDeleteAccount = async () => {
-          const confirmed = window.confirm(
-            'Are you sure you want to delete your account? This action cannot be undone and will permanently delete all your data.'
-          );
-          
-          if (confirmed) {
-            const password = window.prompt('Please enter your password to confirm account deletion:');
-            if (password) {
-              try {
-                await userAPI.deleteAccount({
-                  password,
-                  confirmDeletion: 'DELETE_MY_ACCOUNT'
-                });
-                showNotification('Account deleted successfully. You will be logged out.', 'success');
-                // Wait a moment before redirect to show the notification
-                setTimeout(() => {
-                  window.location.href = '/';
-                }, 2000);
-              } catch (error) {
-                console.error('Account deletion failed:', error);
-                showNotification('Account deletion failed: ' + (error.message || 'Please try again.'), 'error');
-              }
-            }
-          }
-        };
-
-        return (
-          <div className="h-full glass-card-minimal p-6 rounded-2xl flex flex-col">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-lg">
-                <ArchiveIcon className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold font-dmSerif text-[var(--color-text-primary)]">Data Management</h3>
-                <p className="text-sm text-[var(--color-text-secondary)] font-outfit">Import, export & backup</p>
-              </div>
-            </div>
-            
-            <div className="flex-1 flex flex-col justify-between">
-              <div className="grid grid-cols-3 gap-3 mb-6">
-                <button 
-                  onClick={handleExportData}
-                  disabled={isExporting}
-                  className={`flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl transition-all duration-200 shadow-lg font-outfit font-medium ${
-                    exportSuccess 
-                      ? 'bg-gradient-to-r from-emerald-400 to-emerald-500 text-white'
-                      : 'bg-gradient-to-r from-green-400 to-green-500 hover:from-green-600 hover:to-green-700 text-white'
-                  } ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`}
+          ) : (
+            <>
+              {/* habit card */}
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 mb-6">
+                <span
+                  className="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
+                  style={{
+                    backgroundColor: `${habitData.color || "#4f46e5"}18`,
+                  }}
                 >
-                  {isExporting ? (
+                  {habitData.icon || "🎯"}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)] truncate">
+                    {habitData.name}
+                  </p>
+                  <p className="text-xs text-[var(--color-text-tertiary)] font-spartan">
+                    {habitData.category || "No category"} · Adopted from
+                    workspace
+                  </p>
+                </div>
+              </div>
+
+              {/* share level */}
+              <Section title="Share Progress Level">
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    {
+                      value: "full",
+                      label: "Full Details",
+                      desc: "Completion dates, notes, and stats",
+                    },
+                    {
+                      value: "progress-only",
+                      label: "Progress Only",
+                      desc: "Completion rates and weekly summaries",
+                    },
+                    {
+                      value: "streaks-only",
+                      label: "Streaks Only",
+                      desc: "Current and best streak count",
+                    },
+                    {
+                      value: "private",
+                      label: "Private",
+                      desc: "Nothing shared with the group",
+                    },
+                  ].map((opt) => {
+                    const active = habitPrivacy.shareProgress === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        onClick={() =>
+                          setHabitPrivacy((p) => ({
+                            ...p,
+                            shareProgress: opt.value,
+                          }))
+                        }
+                        className={`text-left p-3 rounded-xl border transition-colors ${
+                          active
+                            ? "border-[var(--color-brand-500)] bg-[var(--color-brand-500)]/8"
+                            : "border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)]"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium font-spartan text-[var(--color-text-primary)]">
+                            {opt.label}
+                          </span>
+                          {active && (
+                            <CheckCircledIcon className="w-4 h-4 text-[var(--color-brand-500)]" />
+                          )}
+                        </div>
+                        <p className="text-xs text-[var(--color-text-secondary)] font-spartan">
+                          {opt.desc}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </Section>
+
+              {/* toggles */}
+              <Section title="Interaction">
+                <SettingRow
+                  label="Allow Encouragements"
+                  description="Let group members send you motivational messages"
+                >
+                  <Toggle
+                    checked={habitPrivacy.allowInteraction}
+                    onChange={(v) =>
+                      setHabitPrivacy((p) => ({ ...p, allowInteraction: v }))
+                    }
+                  />
+                </SettingRow>
+                <SettingRow
+                  label="Show in Activity Feed"
+                  description="Completions appear in the group activity"
+                >
+                  <Toggle
+                    checked={habitPrivacy.shareInActivity}
+                    onChange={(v) =>
+                      setHabitPrivacy((p) => ({ ...p, shareInActivity: v }))
+                    }
+                  />
+                </SettingRow>
+              </Section>
+
+              {/* actions */}
+              <div className="flex items-center gap-3 mt-8">
+                <button
+                  onClick={() =>
+                    navigate(`/app/groups/${habitData.workspaceId}`)
+                  }
+                  className="flex-1 h-10 rounded-xl border border-[var(--color-border-primary)]/30 text-sm font-spartan font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={saveHabitPrivacy}
+                  disabled={saving}
+                  className="flex-1 h-10 rounded-xl bg-[var(--color-brand-600)] text-white text-sm font-spartan font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {saving ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Exporting...
-                    </>
-                  ) : exportSuccess ? (
-                    <>
-                      <DownloadIcon className="w-4 h-4" />
-                      Exported!
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Saving…
                     </>
                   ) : (
                     <>
-                      <DownloadIcon className="w-4 h-4" />
-                      Export Data
+                      <CheckIcon className="w-4 h-4" />
+                      Save
                     </>
                   )}
                 </button>
-                
-                <button 
-                  disabled
-                  className="flex items-center justify-center gap-2 px-3 py-1.5 bg-[var(--color-surface-secondary)]/40 cursor-not-allowed text-[var(--color-text-secondary)] border border-[var(--color-border-primary)]/20 rounded-xl transition-all duration-200 shadow-sm font-outfit font-medium relative opacity-60"
-                >
-                  <UploadIcon className="w-4 h-4" />
-                  <div className="text-center">
-                    <div>Import Data</div>
-                    <div className="text-xs opacity-75">Coming Soon</div>
-                  </div>
-                </button>
-                
-                <button 
-                  onClick={handleDeleteAccount}
-                  className="flex items-center justify-center gap-2 px-3 py-1.5 bg-gradient-to-r from-red-400 to-red-500 hover:from-red-600 hover:to-red-700 text-white rounded-xl transition-all duration-200 shadow-lg font-outfit font-medium"
-                >
-                  <TrashIcon className="w-4 h-4" />
-                  Delete Account
-                </button>
               </div>
-              
-              {exportSuccess && (
-                <div className="mb-4 p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg">
-                  <p className="text-sm text-green-700 dark:text-green-300 font-outfit">
-                    ✅ Data exported successfully! Your export file has been downloaded.
-                  </p>
-                </div>
+            </>
+          )}
+        </div>
+        <Toast toast={toast} />
+      </div>
+    );
+  }
+
+  /* ================================================================
+     MAIN SETTINGS PAGE
+     ================================================================ */
+
+  if (loading) {
+    return (
+      <div className="min-h-screen page-container px-6 py-10">
+        <div className="max-w-2xl mx-auto space-y-4">
+          <div className="h-8 w-40 rounded-lg bg-[var(--color-surface-elevated)] animate-pulse" />
+          <div className="h-5 w-64 rounded bg-[var(--color-surface-elevated)] animate-pulse" />
+          <div className="mt-8 space-y-3">
+            {[...Array(6)].map((_, i) => (
+              <div
+                key={i}
+                className="h-16 rounded-xl bg-[var(--color-surface-elevated)] animate-pulse"
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── theme cards config ───────────────── */
+  const themeCards = [
+    {
+      value: "light",
+      label: "Light",
+      icon: SunIcon,
+      bg: "#ffffff",
+      fg: "#1a1a1a",
+      accent: "#4f46e5",
+      surface: "#f5f5f5",
+    },
+    {
+      value: "dark",
+      label: "Dark",
+      icon: MoonIcon,
+      bg: "#0f0f0f",
+      fg: "#e5e5e5",
+      accent: "#818cf8",
+      surface: "#1a1a1a",
+    },
+    {
+      value: "auto",
+      label: "System",
+      icon: DesktopIcon,
+      bg: "linear-gradient(135deg, #ffffff 50%, #0f0f0f 50%)",
+      fg: "#888",
+      accent: "#4f46e5",
+      surface: "#ccc",
+    },
+  ];
+
+  const timezones = [
+    { label: "UTC", value: "UTC" },
+    { label: "EST (UTC-5)", value: "America/New_York" },
+    { label: "CST (UTC-6)", value: "America/Chicago" },
+    { label: "MST (UTC-7)", value: "America/Denver" },
+    { label: "PST (UTC-8)", value: "America/Los_Angeles" },
+    { label: "GMT (UTC+0)", value: "Europe/London" },
+    { label: "CET (UTC+1)", value: "Europe/Paris" },
+    { label: "JST (UTC+9)", value: "Asia/Tokyo" },
+    { label: "AEST (UTC+10)", value: "Australia/Sydney" },
+  ];
+
+  const weekDays = [
+    { label: "Sunday", value: 0 },
+    { label: "Monday", value: 1 },
+    { label: "Tuesday", value: 2 },
+    { label: "Wednesday", value: 3 },
+    { label: "Thursday", value: 4 },
+    { label: "Friday", value: 5 },
+    { label: "Saturday", value: 6 },
+  ];
+
+  return (
+    <div className="min-h-screen page-container px-6 py-10">
+      <div className="max-w-2xl mx-auto">
+        {/* ── header ──────────────────── */}
+        <h1 className="text-2xl font-bold font-garamond text-[var(--color-text-primary)] mb-1">
+          Settings
+        </h1>
+        <p className="text-sm text-[var(--color-text-secondary)] font-spartan mb-10">
+          Manage your account, preferences, and data.
+        </p>
+
+        {/* ═══════ 1. PROFILE ═══════ */}
+        <Section title="Profile" icon={PersonIcon}>
+          <div className="flex items-center gap-4 p-4 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20">
+            <div className="w-14 h-14 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center text-white font-bold text-lg flex-shrink-0 overflow-hidden">
+              {userProfile?.avatar ? (
+                <img
+                  src={userProfile.avatar}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                userProfile?.name?.charAt(0)?.toUpperCase() || "U"
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-base font-medium font-spartan text-[var(--color-text-primary)] truncate">
+                {userProfile?.name || "—"}
+              </p>
+              <p className="text-sm text-[var(--color-text-secondary)] font-spartan truncate">
+                {userProfile?.email || "—"}
+              </p>
+              {(userProfile?.hasGoogleAuth || userProfile?.hasGithubAuth) && (
+                <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mt-0.5">
+                  Connected:{" "}
+                  {[
+                    userProfile.hasGoogleAuth && "Google",
+                    userProfile.hasGithubAuth && "GitHub",
+                  ]
+                    .filter(Boolean)
+                    .join(", ")}
+                </p>
               )}
             </div>
           </div>
-        );
-      }
-    },
+        </Section>
 
-    'help-support-widget': {
-      title: "Help & Support",
-      component: () => (
-        <div className="h-full glass-card-minimal p-6 rounded-2xl flex flex-col">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center shadow-lg">
-              <QuestionMarkCircledIcon className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold font-dmSerif text-[var(--color-text-primary)]">Help & Support</h3>
-              <p className="text-sm text-[var(--color-text-secondary)] font-outfit">Get help and resources</p>
-            </div>
+        {/* ═══════ 2. APPEARANCE ═══════ */}
+        <Section title="Appearance" icon={MoonIcon}>
+          <div className="grid grid-cols-3 gap-3">
+            {themeCards.map((t) => {
+              const active = settings.theme === t.value;
+              const Icon = t.icon;
+              return (
+                <button
+                  key={t.value}
+                  onClick={() => saveSetting("theme", t.value)}
+                  className={`relative rounded-xl border-2 overflow-hidden transition-all ${
+                    active
+                      ? "border-[var(--color-brand-500)] ring-2 ring-[var(--color-brand-500)]/20"
+                      : "border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/50"
+                  }`}
+                >
+                  {/* mini preview */}
+                  <div
+                    className="h-20 p-3 flex flex-col justify-between"
+                    style={{ background: t.bg }}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <div
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: t.accent }}
+                      />
+                      <div
+                        className="h-1.5 w-12 rounded"
+                        style={{ backgroundColor: t.surface }}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <div
+                        className="h-1 w-16 rounded"
+                        style={{ backgroundColor: t.surface }}
+                      />
+                      <div
+                        className="h-1 w-10 rounded"
+                        style={{ backgroundColor: t.surface }}
+                      />
+                    </div>
+                  </div>
+                  {/* label */}
+                  <div
+                    className={`flex items-center justify-center gap-2 py-2.5 text-sm font-spartan font-medium ${
+                      active
+                        ? "text-[var(--color-brand-600)] bg-[var(--color-brand-500)]/8"
+                        : "text-[var(--color-text-secondary)]"
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    {t.label}
+                  </div>
+                  {active && (
+                    <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[var(--color-brand-500)] flex items-center justify-center">
+                      <CheckIcon className="w-3 h-3 text-white" />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
-          
-          <div className="flex-1 flex flex-col justify-between">
-            {/* Coming Soon Notice */}
-            <div className="bg-[var(--color-surface-secondary)]/40 border border-[var(--color-border-primary)]/30 rounded-xl p-4 mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 flex items-center justify-center">
-                  <InfoCircledIcon className="w-4 h-4 text-[var(--color-accent-primary)]" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-[var(--color-text-primary)] font-outfit text-sm">Support System Coming Soon</h4>
-                  <p className="text-xs text-[var(--color-text-secondary)] font-outfit opacity-80">Documentation and support features are in development</p>
-                </div>
+        </Section>
+
+        {/* ═══════ 3. PREFERENCES ═══════ */}
+        <Section title="Preferences" icon={GearIcon}>
+          <SettingRow
+            label="Timezone"
+            description="Your local timezone for accurate tracking"
+          >
+            <SelectInput
+              value={settings.timezone}
+              options={timezones}
+              onChange={(v) => saveSetting("timezone", v)}
+              disabled={saving}
+            />
+          </SettingRow>
+          <SettingRow
+            label="Week Starts On"
+            description="Which day your week begins"
+          >
+            <SelectInput
+              value={settings.weekStartsOn}
+              options={weekDays}
+              onChange={(v) => saveSetting("weekStartsOn", Number(v))}
+              disabled={saving}
+            />
+          </SettingRow>
+        </Section>
+
+        {/* ═══════ 4. NOTIFICATIONS ═══════ */}
+        <Section title="Notifications" icon={BellIcon}>
+          <SettingRow
+            label="Email Updates"
+            description="Weekly reports and summaries"
+          >
+            <Toggle
+              checked={settings.emailNotifications}
+              onChange={(v) => saveSetting("emailNotifications", v)}
+              disabled={saving}
+            />
+          </SettingRow>
+          <div className="mt-4 pt-4 border-t border-[var(--color-border-primary)]/10">
+            <p className="text-xs text-[var(--color-text-tertiary)] font-spartan uppercase tracking-wider mb-3">
+              Coming Soon
+            </p>
+            <SettingRow
+              label="Push Notifications"
+              description="Habit reminders and achievements"
+              disabled
+            >
+              <Toggle checked={false} onChange={() => {}} disabled />
+            </SettingRow>
+          </div>
+        </Section>
+
+        {/* ═══════ 5. PRIVACY ═══════ */}
+        <Section title="Privacy" icon={LockClosedIcon}>
+          <p className="text-xs text-[var(--color-text-secondary)] font-spartan mb-4">
+            Control which group members can view your dashboard and habit
+            progress.
+          </p>
+
+          {privacyLoading ? (
+            <div className="flex items-center justify-center py-6">
+              <span className="w-5 h-5 border-2 border-[var(--color-brand-500)] border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : workspaces.length === 0 ? (
+            <p className="text-sm text-[var(--color-text-tertiary)] font-spartan text-center py-4">
+              You're not a member of any workspaces yet.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {workspaces.map((ws) => {
+                const pub = dashPerms[ws._id]?.isPublicToWorkspace ?? true;
+                return (
+                  <div
+                    key={ws._id}
+                    className="flex items-center justify-between p-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)] truncate">
+                        {ws.name}
+                      </p>
+                      <p className="text-xs text-[var(--color-text-tertiary)] font-spartan">
+                        {pub
+                          ? "Members can view your dashboard"
+                          : "Dashboard is private"}
+                      </p>
+                    </div>
+                    <Toggle
+                      checked={pub}
+                      onChange={(v) => toggleWsPublic(ws._id, v)}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="mt-4 flex items-start gap-2.5 p-3 rounded-xl bg-[var(--color-surface-elevated)]/60 border border-[var(--color-border-primary)]/10">
+            <InfoCircledIcon className="w-4 h-4 text-[var(--color-text-tertiary)] mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-[var(--color-text-tertiary)] font-spartan leading-relaxed">
+              When dashboard sharing is on, members see a read-only view of your
+              habits and progress. Personal notes stay hidden.
+            </p>
+          </div>
+        </Section>
+
+        {/* ═══════ 6. DATA ═══════ */}
+        <Section title="Data" icon={DownloadIcon}>
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="w-full flex items-center justify-between p-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] transition-colors disabled:opacity-50"
+          >
+            <div className="flex items-center gap-3">
+              <DownloadIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
+              <div className="text-left">
+                <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)]">
+                  Export All Data
+                </p>
+                <p className="text-xs text-[var(--color-text-tertiary)] font-spartan">
+                  Download your habits, entries, and journal as JSON
+                </p>
               </div>
             </div>
-            
-            <div className="grid grid-cols-3 gap-2 mb-6">
-              <button 
-                disabled
-                className="flex items-center justify-center gap-2 h-12 px-3 bg-[var(--color-surface-secondary)]/30 cursor-not-allowed border border-[var(--color-border-primary)]/20 rounded-lg transition-all duration-200 opacity-60"
-              >
-                <FileTextIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
-                <span className="font-outfit font-medium text-sm text-[var(--color-text-secondary)]">Documentation</span>
-              </button>
-              <button 
-                disabled
-                className="flex items-center justify-center gap-2 h-12 px-3 bg-[var(--color-surface-secondary)]/30 cursor-not-allowed border border-[var(--color-border-primary)]/20 rounded-lg transition-all duration-200 opacity-60"
-              >
-                <ChatBubbleIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
-                <span className="font-outfit font-medium text-sm text-[var(--color-text-secondary)]">Contact Support</span>
-              </button>
-              <button 
-                disabled
-                className="flex items-center justify-center gap-2 h-12 px-3 bg-[var(--color-surface-secondary)]/30 cursor-not-allowed border border-[var(--color-border-primary)]/20 rounded-lg transition-all duration-200 opacity-60"
-              >
-                <ExclamationTriangleIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
-                <span className="font-outfit font-medium text-sm text-[var(--color-text-secondary)]">Report Bug</span>
-              </button>
-            </div>
-            
-            <div className="pt-4 border-t border-[var(--color-border-primary)]/30">
-              <div className="flex items-center justify-between text-xs">
-                <Text className="text-[var(--color-text-tertiary)] font-outfit">
-                  v1.0.0 • July 2, 2025
-                </Text>
-                <div className="flex items-center gap-2 text-[var(--color-text-tertiary)]">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <Text className="font-outfit">All systems operational</Text>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )
-    }
-  }), [settings, handleSettingChange]);
+            {exporting ? (
+              <span className="w-4 h-4 border-2 border-[var(--color-brand-500)] border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <ChevronRightIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
+            )}
+          </button>
+        </Section>
 
-  // Default layouts for settings widgets
-  const defaultLayouts = DEFAULT_LAYOUTS.settings;
-  const defaultWidgets = DEFAULT_WIDGETS.settings;
-  const storageKeys = STORAGE_KEYS.settings;
-
-  return (
-    <div className="min-h-screen page-container p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
-          <div className="flex items-center gap-4 mb-6 lg:mb-0">
+        {/* ═══════ 7. ABOUT ═══════ */}
+        <Section title="About" icon={InfoCircledIcon}>
+          <div className="flex items-center justify-between p-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20">
             <div>
-              <h1 className="text-3xl font-bold font-dmSerif gradient-text mb-2">
-                Settings
-              </h1>
-              <p className="text-md text-[var(--color-text-secondary)] font-outfit">
-                Customize your app preferences and manage your account.
+              <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)]">
+                bito
+              </p>
+              <p className="text-xs text-[var(--color-text-tertiary)] font-spartan">
+                v1.0.0
               </p>
             </div>
-          </div>
-        </div>
-
-        {/* Settings Grid Container */}
-        <BaseGridContainer
-          mode="settings"
-          widgets={settingsWidgets}
-          availableWidgets={WIDGET_TYPES}
-          defaultWidgets={defaultWidgets}
-          defaultLayouts={defaultLayouts}
-          storageKeys={storageKeys}
-          className="settings-grid"
-        />
-
-        {/* Help Text */}
-        <div className="mt-8 text-center">
-          <p className="text-sm text-[var(--color-text-tertiary)] font-outfit">
-            💡 <strong>Pro tip:</strong> Use "Edit All" to customize your settings layout, or use the category filter to focus on specific areas.
-          </p>
-          {isSaving && (
-            <div className="mt-4 flex items-center justify-center gap-2 text-sm text-[var(--color-text-secondary)] font-outfit">
-              <div className="w-4 h-4 border-2 border-[var(--color-brand-500)] border-t-transparent rounded-full animate-spin"></div>
-              Saving settings...
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-xs text-[var(--color-text-tertiary)] font-spartan">
+                All systems operational
+              </span>
             </div>
-          )}
-        </div>
-      </div>
-      
-      {/* Notification */}
-      {notification && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 animate-fade-in">
-          <div className={`px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 ${
-            notification.type === 'error' 
-              ? 'bg-red-500 text-white' 
-              : 'bg-[var(--color-success)] text-white'
-          }`}>
-            {notification.type === 'error' ? (
-              <ExclamationTriangleIcon className="w-5 h-5" />
+          </div>
+        </Section>
+
+        {/* ═══════ 8. DANGER ZONE ═══════ */}
+        <div className="mt-10 mb-20">
+          <div className="rounded-xl border border-red-500/30 p-5">
+            <h3 className="text-sm font-medium font-spartan text-red-500 mb-1">
+              Danger Zone
+            </h3>
+            <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mb-4">
+              Permanently delete your account and all associated data. This
+              cannot be undone.
+            </p>
+
+            {!deleteConfirm ? (
+              <button
+                onClick={() => setDeleteConfirm(true)}
+                className="h-9 px-5 rounded-xl border border-red-500/40 text-sm font-spartan font-medium text-red-500 hover:bg-red-500/10 transition-colors"
+              >
+                Delete Account
+              </button>
             ) : (
-              <CheckCircledIcon className="w-5 h-5" />
+              <div className="space-y-3">
+                <p className="text-xs text-[var(--color-text-secondary)] font-spartan">
+                  Type <strong>DELETE</strong> to confirm:
+                </p>
+                <div className="flex items-center gap-2">
+                  <input
+                    value={deleteText}
+                    onChange={(e) => setDeleteText(e.target.value)}
+                    placeholder="DELETE"
+                    className="flex-1 h-9 px-3 rounded-lg border border-red-500/30 bg-transparent text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-red-500/30"
+                  />
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleteText !== "DELETE"}
+                    className="h-9 px-5 rounded-lg bg-red-500 text-white text-sm font-spartan font-medium disabled:opacity-40 flex items-center gap-2"
+                  >
+                    <TrashIcon className="w-3.5 h-3.5" />
+                    Confirm
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDeleteConfirm(false);
+                      setDeleteText("");
+                    }}
+                    className="h-9 px-3 rounded-lg text-sm font-spartan text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
             )}
-            <span className="font-medium font-outfit">{notification.message}</span>
           </div>
         </div>
+      </div>
+
+      {/* saving indicator */}
+      {saving && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 shadow-lg text-xs font-spartan text-[var(--color-text-secondary)]">
+          <span className="w-3.5 h-3.5 border-2 border-[var(--color-brand-500)] border-t-transparent rounded-full animate-spin" />
+          Saving…
+        </div>
       )}
+
+      <Toast toast={toast} />
     </div>
   );
 };
 
-// SettingItem component for rendering individual settings
-const SettingItem = ({ label, description, value, type, options, onChange, icon, isDisabled = false, component }) => {
-  const renderInput = () => {
-    switch (type) {
-      case "toggle":
-        return (
-          <Switch
-            checked={value}
-            onCheckedChange={onChange}
-            disabled={isDisabled}
-            className="data-[state=checked]:bg-[var(--color-brand-600)] scale-110"
-          />
-        );
-      case "select":
-        return (
-          <Select.Root value={value} onValueChange={onChange} disabled={isDisabled}>
-            <Select.Trigger className={`w-48 h-10 px-3 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/30 rounded-lg font-outfit transition-all duration-200 shadow-sm ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} />
-            <Select.Content className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/30 rounded-lg shadow-xl z-50">
-              {options?.map((option) => (
-                <Select.Item 
-                  key={option.value} 
-                  value={option.value}
-                  className="px-3 py-2 hover:bg-[var(--color-surface-hover)] font-outfit cursor-pointer text-sm"
-                >
-                  {option.label}
-                </Select.Item>
-              ))}
-            </Select.Content>
-          </Select.Root>
-        );
-      case "text":
-        return (
-          <div className="text-sm text-[var(--color-text-secondary)] font-outfit bg-[var(--color-surface-elevated)] px-3 py-2 rounded-lg border border-[var(--color-border-primary)]/30 min-w-32">
-            {value}
-          </div>
-        );
-      case "component":
-        return component;
-      default:
-        return null;
-    }
-  };
+/* ================================================================
+   Sub-components
+   ================================================================ */
 
-  return (
-    <div className={`flex justify-between items-center py-3 px-2 rounded-lg hover:bg-[var(--color-surface-hover)]/30 transition-all duration-200 ${isDisabled ? 'opacity-50' : ''}`}>
-      <div className="flex-1">
-        <div className="flex items-center gap-3 mb-1">
-          {icon && <div className="opacity-70">{icon}</div>}
-          <Text className="font-medium text-[var(--color-text-primary)] font-outfit">
-            {label}
-          </Text>
-          {isDisabled && (
-            <span className="text-xs px-2 py-1 bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 rounded-full font-outfit">
-              Saving...
-            </span>
-          )}
-        </div>
-        <Text className="text-xs text-[var(--color-text-secondary)] font-outfit leading-relaxed">
-          {description}
-        </Text>
-      </div>
-      <div className="ml-6 flex-shrink-0">
-        {renderInput()}
-      </div>
-    </div>
-  );
-};
-
-// ComingSoonSettingItem component for features not yet implemented
-const ComingSoonSettingItem = ({ label, description, icon, currentValue, priority = "medium", timeline = "Soon" }) => {
-  const getPriorityColor = () => {
-    switch (priority) {
-      case "high":
-        return "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300";
-      case "medium":
-        return "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300";
-      case "low":
-        return "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400";
-      default:
-        return "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400";
-    }
-  };
-
-  return (
-    <div className="flex justify-between items-center py-3 px-2 rounded-lg bg-[var(--color-surface-secondary)]/30 border border-[var(--color-border-primary)]/20 opacity-75 hover:opacity-90 transition-all duration-200">
-      <div className="flex-1">
-        <div className="flex items-center gap-3 mb-1">
-          {icon && <div className="opacity-60">{icon}</div>}
-          <Text className="font-medium text-[var(--color-text-primary)] font-outfit">
-            {label}
-          </Text>
-          <div className="flex items-center gap-1">
-          </div>
-        </div>
-        <Text className="text-xs text-[var(--color-text-secondary)] font-outfit leading-relaxed opacity-80">
-          {description}
-        </Text>
-      </div>
-      {currentValue && (
-        <div className="ml-6 flex-shrink-0">
-          <div className="text-sm text-[var(--color-text-secondary)] font-outfit bg-[var(--color-surface-elevated)] px-3 py-2 rounded-lg border border-[var(--color-border-primary)]/30 min-w-32 opacity-60">
-            {currentValue}
-          </div>
-        </div>
+/** Section wrapper with optional icon */
+const Section = ({ title, icon: Icon, children }) => (
+  <div className="mb-8">
+    <div className="flex items-center gap-2 mb-3">
+      {Icon && (
+        <Icon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
       )}
+      <h2 className="text-xs font-medium font-spartan text-[var(--color-text-tertiary)] uppercase tracking-wider">
+        {title}
+      </h2>
+    </div>
+    {children}
+  </div>
+);
+
+/** A single setting row — label + description on left, control on right */
+const SettingRow = ({ label, description, disabled, children }) => (
+  <div
+    className={`flex items-center justify-between py-3 ${
+      disabled ? "opacity-50" : ""
+    }`}
+  >
+    <div className="min-w-0 flex-1 pr-4">
+      <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)]">
+        {label}
+      </p>
+      {description && (
+        <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mt-0.5">
+          {description}
+        </p>
+      )}
+    </div>
+    <div className="flex-shrink-0">{children}</div>
+  </div>
+);
+
+/** Simple toggle switch */
+const Toggle = ({ checked, onChange, disabled }) => (
+  <button
+    type="button"
+    role="switch"
+    aria-checked={checked}
+    disabled={disabled}
+    onClick={() => !disabled && onChange(!checked)}
+    className={`relative w-11 h-6 rounded-full transition-colors ${
+      checked
+        ? "bg-[var(--color-brand-500)]"
+        : "bg-[var(--color-border-primary)]/40"
+    } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+  >
+    <span
+      className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+        checked ? "translate-x-5" : "translate-x-0"
+      }`}
+    />
+  </button>
+);
+
+/** Native select styled to match design system */
+const SelectInput = ({ value, options, onChange, disabled }) => (
+  <select
+    value={value}
+    onChange={(e) => onChange(e.target.value)}
+    disabled={disabled}
+    className="h-9 px-3 pr-8 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 text-sm font-spartan text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)]/30 disabled:opacity-50 appearance-none cursor-pointer"
+    style={{
+      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+      backgroundPosition: "right 0.5rem center",
+      backgroundRepeat: "no-repeat",
+      backgroundSize: "1.25em 1.25em",
+    }}
+  >
+    {options.map((o) => (
+      <option key={o.value} value={o.value}>
+        {o.label}
+      </option>
+    ))}
+  </select>
+);
+
+/** Toast notification */
+const Toast = ({ toast }) => {
+  if (!toast) return null;
+  return (
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
+      <div
+        className={`flex items-center gap-2.5 px-5 py-3 rounded-xl shadow-lg text-sm font-spartan font-medium ${
+          toast.type === "error"
+            ? "bg-red-500 text-white"
+            : "bg-[var(--color-brand-600)] text-white"
+        }`}
+      >
+        {toast.type === "error" ? (
+          <ExclamationTriangleIcon className="w-4 h-4" />
+        ) : (
+          <CheckCircledIcon className="w-4 h-4" />
+        )}
+        {toast.message}
+      </div>
     </div>
   );
 };
