@@ -103,6 +103,23 @@ const MemberDashboardView = () => {
     return days;
   }, []);
 
+  /* ── derived data (must stay above early returns to keep hook order stable) */
+
+  const habits = memberData?.habits || [];
+  const entries = memberData?.entries || {};
+  const member = memberData?.member || null;
+
+  const habitStats = useMemo(() => {
+    return habits.map((h) => {
+      const he = entries[h._id] || {};
+      const todayDone = !!he[todayStr]?.completed;
+      const weekDone = last7.filter((d) => he[d]?.completed).length;
+      return { ...h, todayDone, weekDone };
+    });
+  }, [habits, entries, todayStr, last7]);
+
+  const todayTotal = habitStats.filter((h) => h.todayDone).length;
+
   /* ── loading ────────────────────────── */
 
   if (loading) {
@@ -155,21 +172,6 @@ const MemberDashboardView = () => {
       </div>
     );
   }
-
-  const { member, habits, entries } = memberData;
-
-  /* ── per-habit completion stats ─────── */
-
-  const habitStats = useMemo(() => {
-    return habits.map((h) => {
-      const he = entries[h._id] || {};
-      const todayDone = !!he[todayStr]?.completed;
-      const weekDone = last7.filter((d) => he[d]?.completed).length;
-      return { ...h, todayDone, weekDone };
-    });
-  }, [habits, entries, todayStr, last7]);
-
-  const todayTotal = habitStats.filter((h) => h.todayDone).length;
 
   /* ── render ─────────────────────────── */
 
