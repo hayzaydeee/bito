@@ -812,6 +812,34 @@ export const insightsAPI = {
   },
 };
 
+// ── Push Notifications API (Phase 16) ──────────────────────
+export const pushAPI = {
+  getVapidPublicKey: () => apiRequest('/api/notifications/vapid-public-key'),
+
+  subscribe: (subscription, deviceLabel) =>
+    apiRequest('/api/notifications/subscribe', {
+      method: 'POST',
+      body: JSON.stringify({ subscription, deviceLabel }),
+    }),
+
+  unsubscribe: (endpoint) =>
+    apiRequest('/api/notifications/unsubscribe', {
+      method: 'DELETE',
+      body: JSON.stringify({ endpoint }),
+    }),
+
+  sendTest: () =>
+    apiRequest('/api/notifications/test', { method: 'POST' }),
+
+  getStatus: () => apiRequest('/api/notifications/status'),
+
+  updatePreferences: (prefs) =>
+    apiRequest('/api/notifications/preferences', {
+      method: 'PATCH',
+      body: JSON.stringify(prefs),
+    }),
+};
+
 // Verify habit counts for debug purposes
 export const verifyHabitCounts = async () => {
   const groupsResponse = await apiRequest('/api/workspaces');

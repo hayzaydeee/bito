@@ -21,6 +21,7 @@ import {
 import { userAPI } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
+import usePushNotifications from "../hooks/usePushNotifications";
 
 /* ================================================================
    SettingsPage — sectioned list layout (no widget grid)
@@ -727,30 +728,7 @@ const SettingsPage = ({ section }) => {
         </Section>
 
         {/* ═══════ 4. NOTIFICATIONS ═══════ */}
-        <Section title="Notifications" icon={BellIcon}>
-          <SettingRow
-            label="Email Updates"
-            description="Weekly reports and summaries"
-          >
-            <Toggle
-              checked={settings.emailNotifications}
-              onChange={(v) => saveSetting("emailNotifications", v)}
-              disabled={saving}
-            />
-          </SettingRow>
-          <div className="mt-4 pt-4 border-t border-[var(--color-border-primary)]/10">
-            <p className="text-xs text-[var(--color-text-tertiary)] font-spartan uppercase tracking-wider mb-3">
-              Coming Soon
-            </p>
-            <SettingRow
-              label="Push Notifications"
-              description="Habit reminders and achievements"
-              disabled
-            >
-              <Toggle checked={false} onChange={() => {}} disabled />
-            </SettingRow>
-          </div>
-        </Section>
+        <NotificationSection saving={saving} settings={settings} saveSetting={saveSetting} />
 
         {/* ═══════ 5. PRIVACY ═══════ */}
         <Section title="Privacy" icon={LockClosedIcon}>
@@ -940,6 +918,99 @@ const SettingsPage = ({ section }) => {
    ================================================================ */
 
 /** Section wrapper with optional icon */
+/** ═══════ Notification Section (Phase 16) ═══════ */
+const NotificationSection = ({ saving, settings, saveSetting }) => {
+  const { permission, isSubscribed, isLoading, supported, subscribe, unsubscribe, sendTest } = usePushNotifications();
+  const [testSending, setTestSending] = useState(false);
+  const [testResult, setTestResult] = useState(null);
+
+  const handlePushToggle = async (enable) => {
+    try {
+      if (enable) {
+        await subscribe();
+      } else {
+        await unsubscribe();
+      }
+    } catch (err) {
+      console.error('Push toggle failed:', err);
+    }
+  };
+
+  const handleTest = async () => {
+    setTestSending(true);
+    setTestResult(null);
+    try {
+      await sendTest();
+      setTestResult('sent');
+    } catch {
+      setTestResult('error');
+    } finally {
+      setTestSending(false);
+      setTimeout(() => setTestResult(null), 3000);
+    }
+  };
+
+  return (
+    <Section title="Notifications" icon={BellIcon}>
+      {/* Push notifications */}
+      <SettingRow
+        label="Push Notifications"
+        description={
+          !supported
+            ? 'Not supported in this browser'
+            : permission === 'denied'
+              ? 'Blocked — enable in browser settings'
+              : 'Habit reminders & achievement alerts'
+        }
+        disabled={!supported || permission === 'denied'}
+      >
+        <Toggle
+          checked={isSubscribed}
+          onChange={handlePushToggle}
+          disabled={!supported || permission === 'denied' || isLoading}
+        />
+      </SettingRow>
+
+      {/* Test notification button */}
+      {isSubscribed && (
+        <div className="ml-1 mb-3">
+          <button
+            onClick={handleTest}
+            disabled={testSending}
+            className="text-xs font-spartan font-medium text-[var(--color-brand-500)] hover:text-[var(--color-brand-600)] transition-colors disabled:opacity-50"
+          >
+            {testSending ? 'Sending…' : testResult === 'sent' ? '✓ Test sent!' : testResult === 'error' ? '✗ Failed' : 'Send test notification'}
+          </button>
+        </div>
+      )}
+
+      <div className="border-t border-[var(--color-border-primary)]/10 pt-3 mt-1">
+        {/* Email notifications */}
+        <SettingRow
+          label="Email Updates"
+          description="Weekly reports and summaries"
+        >
+          <Toggle
+            checked={settings.emailNotifications}
+            onChange={(v) => saveSetting("emailNotifications", v)}
+            disabled={saving}
+          />
+        </SettingRow>
+      </div>
+
+      {/* Permission info */}
+      {supported && permission === 'denied' && (
+        <div className="flex items-start gap-2 mt-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+          <ExclamationTriangleIcon className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+          <p className="text-xs font-spartan text-[var(--color-text-secondary)]">
+            Notifications are blocked by your browser. To enable them, click the lock icon in your address bar and allow notifications for this site.
+          </p>
+        </div>
+      )}
+    </Section>
+  );
+};
+
 const Section = ({ title, icon: Icon, children }) => (
   <div className="mb-8">
     <div className="flex items-center gap-2 mb-3">

@@ -24,7 +24,11 @@ const encouragementRoutes = require('./routes/encouragements');
 const journalRoutes = require('./routes/journal');
 const templateRoutes = require('./routes/templates');
 const insightsRoutes = require('./routes/insights');
+const notificationRoutes = require('./routes/notifications');
 const testRoutes = require('./routes/test');
+
+// Import services
+const reminderService = require('./services/reminderService');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -334,6 +338,7 @@ app.use('/api/encouragements', encouragementRoutes);
 app.use('/api/journal', journalRoutes);
 app.use('/api/templates', templateRoutes);
 app.use('/api/insights', insightsRoutes);
+app.use('/api/notifications', notificationRoutes);
 // API documentation endpoint
 app.get('/api', (req, res) => {
   res.json({
@@ -416,6 +421,9 @@ if (require.main === module) {
     } else {
       console.log('\n✅ Database connected successfully!');
       console.log('   You can now use all API features.');
+
+      // Start reminder cron after DB is connected
+      reminderService.start();
     }
   });
 

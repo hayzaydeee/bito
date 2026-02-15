@@ -68,6 +68,14 @@ const userSchema = new mongoose.Schema({  // Basic user information
       type: Boolean,
       default: true
     },
+    pushNotifications: {
+      type: Boolean,
+      default: false
+    },
+    dailyDigestEmail: {
+      type: Boolean,
+      default: false
+    },
     weekStartsOn: {
       type: Number,
       min: 0,
