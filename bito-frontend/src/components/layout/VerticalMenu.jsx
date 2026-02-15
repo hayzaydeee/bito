@@ -116,6 +116,14 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
       color: "from-orange-500 to-orange-600",
       path: "/app/analytics",
     },
+    {
+      id: "journal",
+      label: "Journal",
+      icon: CalendarIcon,
+      description: "Daily reflections",
+      color: "from-purple-500 to-purple-600",
+      path: "/app/journal",
+    },
   ];
 
   const bottomItems = [

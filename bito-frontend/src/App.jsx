@@ -8,6 +8,7 @@ import OAuthCallback from "./pages/OAuthCallback";
 import Dashboard from "./pages/Dashboard";
 // import HabitsPage from "./pages/HabitsPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
+import JournalPage from "./pages/JournalPage";
 import SettingsPage from "./pages/SettingsPage";
 import WorkspaceOverview from "./pages/WorkspaceOverview";
 
@@ -67,6 +68,7 @@ const ThemedApp = () => {
               <Route path="dashboard" element={<Dashboard />} />
               {/* <Route path="habits" element={<HabitsPage />} /> */}
               <Route path="analytics" element={<AnalyticsPage />} />
+              <Route path="journal" element={<JournalPage />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="settings/habit-privacy/:habitId" element={<SettingsPage section="habit-privacy" />} />
               <Route path="groups" element={<GroupSelection />} />

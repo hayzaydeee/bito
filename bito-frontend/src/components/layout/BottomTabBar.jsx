@@ -120,8 +120,7 @@ const BottomTabBar = () => {
               <button
                 onClick={() => {
                   setShowMore(false);
-                  // Journal action — dispatch event for journal modal
-                  window.dispatchEvent(new CustomEvent("openJournal"));
+                  navigate("/app/journal");
                 }}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors"
                 style={{ color: "var(--color-text-primary)" }}
@@ -209,7 +208,7 @@ const BottomTabBar = () => {
                 <button
                   onClick={() => {
                     setShowAddMenu(false);
-                    window.dispatchEvent(new CustomEvent("openJournal"));
+                    navigate("/app/journal");
                   }}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors"
                   style={{ color: "var(--color-text-primary)" }}
