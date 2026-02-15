@@ -5,15 +5,30 @@
  * env var, this module enriches the rule-based insights with natural
  * language summaries and open-ended pattern discovery.
  *
+ * Uses the official `openai` npm package (already installed).
  * If the key is absent or the call fails, it falls back gracefully
  * and returns the original insights untouched.
  */
+
+const OpenAI = require('openai');
 
 /**
  * Check whether LLM enrichment is available.
  */
 function isLLMAvailable() {
   return !!process.env.OPENAI_API_KEY;
+}
+
+/** Lazily-created client singleton */
+let _client = null;
+function getClient() {
+  if (!_client && isLLMAvailable()) {
+    _client = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+      ...(process.env.OPENAI_BASE_URL && { baseURL: process.env.OPENAI_BASE_URL }),
+    });
+  }
+  return _client;
 }
 
 /**
@@ -56,7 +71,7 @@ function buildDataSummary(habits, entries, journalEntries) {
 }
 
 /**
- * Call an OpenAI-compatible chat completions endpoint to generate
+ * Call OpenAI chat completions to generate
  * an enriched summary and additional insights.
  *
  * @param {Object[]} ruleInsights  - the Layer 1 insights
@@ -64,8 +79,9 @@ function buildDataSummary(habits, entries, journalEntries) {
  * @returns {Promise<Object|null>} { summary, additionalInsights[] } or null on failure
  */
 async function callLLM(ruleInsights, dataSummary) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  const baseUrl = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
+  const client = getClient();
+  if (!client) return null;
+
   const model = process.env.INSIGHTS_LLM_MODEL || 'gpt-4o-mini';
 
   const systemPrompt = `You are a friendly, concise habit coach. You receive a user's habit data and rule-based insights. Your job:
@@ -88,30 +104,17 @@ Keep it brief and actionable. No fluff.`;
   });
 
   try {
-    const response = await fetch(`${baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userMessage },
-        ],
-        temperature: 0.7,
-        max_tokens: 300,
-      }),
+    const completion = await client.chat.completions.create({
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage },
+      ],
+      temperature: 0.7,
+      max_tokens: 300,
     });
 
-    if (!response.ok) {
-      console.warn(`LLM enrichment failed: HTTP ${response.status}`);
-      return null;
-    }
-
-    const data = await response.json();
-    const text = data.choices?.[0]?.message?.content;
+    const text = completion.choices?.[0]?.message?.content;
     if (!text) return null;
 
     // Parse JSON from response (strip markdown fences if present)
