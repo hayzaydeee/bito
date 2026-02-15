@@ -77,10 +77,10 @@ const AnalyticsPage = () => {
       </div>
 
       {/* ── Heatmap + Top habits: 2-col ────────── */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      {/* <div className="grid gap-4 lg:grid-cols-2">
         <ActivityHeatmap habits={habits} entries={entries} timeRange={timeRange} />
         <TopHabitsList habits={habits} entries={entries} timeRange={timeRange} />
-      </div>
+      </div> */}
 
       {/* ── AI Insights ────────────────────────── */}
       <AnalyticsInsights habits={habits} entries={entries} timeRange={timeRange} />
