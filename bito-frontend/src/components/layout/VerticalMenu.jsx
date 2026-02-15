@@ -163,6 +163,7 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
             onClick={() => handleNavigation(item.path)}
             title={item.label}
             style={isActive ? { borderLeft: "3px solid var(--color-brand-500)" } : {}}
+            data-tour={item.id === 'analytics' ? 'nav-analytics' : undefined}
           >
             <Icon
               className="w-5 h-5 transition-colors"
@@ -192,6 +193,7 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
           }`}
           onClick={() => handleNavigation(item.path)}
           style={isActive ? { borderLeft: "3px solid var(--color-brand-500)" } : {}}
+          data-tour={item.id === 'analytics' ? 'nav-analytics' : undefined}
         >
           <Icon
             className="w-[18px] h-[18px] flex-shrink-0 transition-colors"
@@ -223,6 +225,7 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
             onClick={() => handleNavigation('/app/groups')}
             title="Groups"
             style={isGroupsActive ? { borderLeft: "3px solid var(--color-brand-500)" } : {}}
+            data-tour="nav-groups"
           >
             <BackpackIcon
               className="w-5 h-5 transition-colors"
@@ -253,6 +256,7 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
           }`}
           onClick={() => handleNavigation('/app/groups')}
           style={isGroupsActive && location.pathname === '/app/groups' ? { borderLeft: "3px solid var(--color-brand-500)" } : {}}
+          data-tour="nav-groups"
         >
           <BackpackIcon
             className="w-[18px] h-[18px] flex-shrink-0 transition-colors"

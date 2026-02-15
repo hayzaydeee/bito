@@ -849,6 +849,23 @@ const SettingsPage = ({ section }) => {
               </span>
             </div>
           </div>
+
+          {/* Replay tour */}
+          <button
+            onClick={() => {
+              try { localStorage.removeItem('bito_tour_completed'); } catch {}
+              navigate('/app/dashboard');
+            }}
+            className="w-full mt-2 flex items-center justify-between p-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="text-base">🗺️</span>
+              <span className="text-sm font-medium font-spartan text-[var(--color-text-primary)]">
+                Replay dashboard tour
+              </span>
+            </div>
+            <ChevronRightIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
+          </button>
         </Section>
 
         {/* ═══════ 8. DANGER ZONE ═══════ */}

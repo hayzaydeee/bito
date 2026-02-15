@@ -259,6 +259,7 @@ const BottomTabBar = () => {
                     boxShadow: "0 4px 16px var(--color-glow)",
                   }}
                   aria-label="Add"
+                  data-tour="nav-add"
                 >
                   <PlusIcon className="w-6 h-6 text-white" />
                 </button>
@@ -306,6 +307,7 @@ const BottomTabBar = () => {
                 onClick={() => navigate(tab.path)}
                 className="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[44px] transition-colors"
                 aria-label={tab.label}
+                data-tour={tab.id === 'analytics' ? 'nav-analytics' : tab.id === 'groups' ? 'nav-groups' : undefined}
               >
                 <Icon
                   className="w-5 h-5"

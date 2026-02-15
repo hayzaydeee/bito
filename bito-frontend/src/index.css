@@ -694,6 +694,118 @@ h1, h2, h3, h4, h5, h6 {
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ═══════════════════════════════════════════
+   Dashboard Tour — Phase 14
+   ═══════════════════════════════════════════ */
+
+.tour-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: tourFadeIn 0.25s ease-out;
+}
+
+.tour-spotlight {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  transition: clip-path 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.tour-spotlight-full {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+
+.tour-ring {
+  position: fixed;
+  box-shadow: 0 0 0 3px var(--color-brand-500), 0 0 20px 4px var(--color-glow);
+  pointer-events: none;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: tourPulse 2s ease-in-out infinite;
+}
+
+.tour-prompt {
+  position: relative;
+  z-index: 10;
+  max-width: 340px;
+  padding: 28px 24px;
+  border-radius: 16px;
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border-primary);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  animation: tourSlideUp 0.35s ease-out;
+}
+
+.tour-tooltip {
+  z-index: 10;
+  max-width: 320px;
+  width: calc(100vw - 32px);
+  padding: 20px;
+  border-radius: 14px;
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border-primary);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+  animation: tourSlideUp 0.3s ease-out;
+}
+
+.tour-btn-primary {
+  padding: 8px 20px;
+  border-radius: 10px;
+  background: var(--color-brand-500);
+  color: #fff;
+  font-family: var(--font-spartan);
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.tour-btn-primary:hover {
+  background: var(--color-brand-600);
+}
+.tour-btn-primary:active {
+  transform: scale(0.97);
+}
+
+.tour-btn-skip {
+  padding: 8px 16px;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  font-family: var(--font-spartan);
+  font-weight: 500;
+  font-size: 0.875rem;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.tour-btn-skip:hover {
+  color: var(--color-text-secondary);
+}
+
+@keyframes tourFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes tourSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes tourPulse {
+  0%, 100% { box-shadow: 0 0 0 3px var(--color-brand-500), 0 0 20px 4px var(--color-glow); }
+  50%      { box-shadow: 0 0 0 5px var(--color-brand-500), 0 0 28px 6px var(--color-glow); }
+}
+
+/* ═══════ End Tour ═══════ */
+
 @keyframes fadeIn {
   from {
     opacity: 0;

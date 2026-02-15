@@ -12,6 +12,7 @@ import TodayHabits from "../components/dashboard/TodayHabits";
 import WeekStrip from "../components/dashboard/WeekStrip";
 import InsightsNudge from "../components/dashboard/InsightsNudge";
 import StreakCelebration from "../components/dashboard/StreakCelebration";
+import DashboardTour from "../components/dashboard/DashboardTour";
 
 /* ─────────────────────────────────────────────
    Phase 6 — Dashboard Redesign
@@ -204,6 +205,7 @@ const Dashboard = () => {
       <InsightsNudge habits={habits} entries={entries} />
 
       {/* 4. Today's habit checklist */}
+      <div data-tour="today-habits">
       <TodayHabits
         habits={todaysHabits}
         entries={entries}
@@ -211,6 +213,7 @@ const Dashboard = () => {
         onEdit={handleEditHabit}
         onAdd={handleAddHabit}
       />
+      </div>
 
       {/* 5. 7-day heatmap strip */}
       {habits.length > 0 && (
@@ -242,6 +245,9 @@ const Dashboard = () => {
         onDelete={handleDeleteHabit}
         onArchive={handleArchiveHabit}
       />
+
+      {/* 7. Dashboard tour (Phase 14) */}
+      <DashboardTour />
     </div>
   );
 };
