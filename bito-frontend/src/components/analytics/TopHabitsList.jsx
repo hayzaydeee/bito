@@ -42,7 +42,7 @@ const TopHabitsList = ({ habits, entries, timeRange }) => {
         return {
           id: habit._id,
           name: habit.name,
-          icon: habit.icon || '\uD83C\uDFAF',
+          icon: habit.icon || '🎯',
           color: habit.color || '#818cf8',
           rate,
           completions,
@@ -58,7 +58,7 @@ const TopHabitsList = ({ habits, entries, timeRange }) => {
   if (!ranked.length) {
     return (
       <div className="analytics-chart-card flex flex-col items-center justify-center h-[240px] gap-2">
-        <span className="text-3xl opacity-40">{'\uD83C\uDFC6'}</span>
+        <span className="text-3xl opacity-40">🏆</span>
         <p className="text-sm font-spartan text-[var(--color-text-tertiary)]">
           Your top habits will appear here
         </p>

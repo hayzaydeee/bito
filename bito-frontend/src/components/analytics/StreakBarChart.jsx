@@ -42,11 +42,11 @@ const StreakBarChart = ({ habits, entries }) => {
         }
 
         return {
-          name: habit.name.length > 14 ? habit.name.slice(0, 13) + '\u2026' : habit.name,
+          name: habit.name.length > 14 ? habit.name.slice(0, 13) + '…' : habit.name,
           fullName: habit.name,
           streak,
           color: habit.color || '#818cf8',
-          icon: habit.icon || '\uD83C\uDFAF',
+          icon: habit.icon || '🎯',
         };
       })
       .sort((a, b) => b.streak - a.streak)
@@ -59,7 +59,7 @@ const StreakBarChart = ({ habits, entries }) => {
   if (!streakData.length) {
     return (
       <div className="analytics-chart-card flex flex-col items-center justify-center h-[280px] gap-2">
-        <span className="text-3xl opacity-40">\uD83D\uDD25</span>
+        <span className="text-3xl opacity-40">🔥</span>
         <p className="text-sm font-spartan text-[var(--color-text-tertiary)]">
           Complete habits on consecutive days to build streaks
         </p>
@@ -70,7 +70,7 @@ const StreakBarChart = ({ habits, entries }) => {
   if (!hasStreaks) {
     return (
       <div className="analytics-chart-card flex flex-col items-center justify-center h-[280px] gap-2">
-        <span className="text-3xl opacity-40">\uD83D\uDD25</span>
+        <span className="text-3xl opacity-40">🔥</span>
         <p className="text-sm font-spartan text-[var(--color-text-tertiary)] text-center leading-relaxed">
           Complete habits on consecutive days to build streaks
         </p>
@@ -143,7 +143,7 @@ const StreakTooltip = ({ active, payload }) => {
     <div className="analytics-tooltip">
       <p className="font-medium text-[var(--color-text-primary)]">{d.icon} {d.fullName}</p>
       <p style={{ color: d.color }}>
-        \uD83D\uDD25 <span className="font-semibold">{d.streak}</span> day streak
+        🔥 <span className="font-semibold">{d.streak}</span> day streak
       </p>
     </div>
   );

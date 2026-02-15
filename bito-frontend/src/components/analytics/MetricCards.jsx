@@ -60,17 +60,17 @@ const MetricCards = ({ habits, entries, timeRange }) => {
   const rateDelta = data.rate - data.prevRate;
 
   const cards = [
-    { label: 'Active Habits', value: data.total, icon: '\uD83D\uDCCB',
+    { label: 'Active Habits', value: data.total, icon: '📋',
       gradient: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(99,102,241,0.03) 100%)',
       accent: 'var(--color-brand-400)', glow: 'rgba(99,102,241,0.12)' },
-    { label: 'Completions', value: data.completions, icon: '\u2705',
+    { label: 'Completions', value: data.completions, icon: '✅',
       gradient: 'linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(16,185,129,0.03) 100%)',
       accent: 'var(--color-success)', glow: 'rgba(16,185,129,0.12)' },
-    { label: 'Success Rate', value: `${data.rate}%`, icon: '\uD83D\uDCC8',
+    { label: 'Success Rate', value: `${data.rate}%`, icon: '📈',
       gradient: 'linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(59,130,246,0.03) 100%)',
       accent: 'var(--color-info)', glow: 'rgba(59,130,246,0.12)',
       trend: rateDelta !== 0 ? rateDelta : null },
-    { label: 'Best Streak', value: `${data.bestStreak}d`, icon: '\uD83D\uDD25',
+    { label: 'Best Streak', value: `${data.bestStreak}d`, icon: '🔥',
       gradient: 'linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(245,158,11,0.03) 100%)',
       accent: 'var(--color-warning)', glow: 'rgba(245,158,11,0.12)' },
   ];
@@ -105,7 +105,7 @@ const MetricCards = ({ habits, entries, timeRange }) => {
             </span>
             {c.trend != null && (
               <span className={`text-[10px] font-spartan font-semibold ${c.trend > 0 ? 'text-[var(--color-success)]' : 'text-[var(--color-warning)]'}`}>
-                {c.trend > 0 ? '\u2191' : '\u2193'}{Math.abs(c.trend)}%
+                {c.trend > 0 ? '↑' : '↓'}{Math.abs(c.trend)}%
               </span>
             )}
           </div>
