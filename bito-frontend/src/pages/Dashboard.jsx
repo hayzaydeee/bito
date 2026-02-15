@@ -197,7 +197,6 @@ const Dashboard = () => {
           completed={stats.completed}
           total={stats.total}
           streak={stats.streak}
-          weeklyPct={stats.weeklyPct}
         />
       )}
 

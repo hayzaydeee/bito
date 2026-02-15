@@ -89,26 +89,29 @@ const InsightsNudge = memo(({ habits, entries }) => {
   if (!current && !summary) return null;
 
   return (
-    <div className="space-y-2">
-      {/* LLM summary banner */}
+    <div
+      className="rounded-2xl border p-4 space-y-3"
+      style={{
+        background: "rgba(99,102,241,0.03)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        borderColor: "rgba(99,102,241,0.12)",
+        boxShadow: "0 1px 8px rgba(0,0,0,0.06)",
+      }}
+    >
+      {/* LLM summary */}
       {summary && (
         <p
-          className="text-sm font-spartan leading-relaxed px-1"
+          className="text-sm font-spartan leading-relaxed"
           style={{ color: "var(--color-text-secondary)" }}
         >
           {summary}
         </p>
       )}
 
-      {/* Insight card */}
+      {/* Insight carousel */}
       {current && (
-        <div
-          className="flex items-start gap-3 rounded-xl border px-4 py-3 group"
-          style={{
-            backgroundColor: "rgba(99,102,241,0.04)",
-            borderColor: "rgba(99,102,241,0.15)",
-          }}
-        >
+        <div className="flex items-start gap-3 group">
           <span className="text-lg flex-shrink-0 mt-0.5">{current.emoji}</span>
           <p
             className="text-sm font-spartan leading-relaxed flex-1"
@@ -174,7 +177,7 @@ const InsightsNudge = memo(({ habits, entries }) => {
 
       {/* Refresh link */}
       {hasBackendInsights && (
-        <div className="flex items-center gap-2 px-1">
+        <div className="flex items-center gap-2">
           <button
             onClick={refresh}
             className="text-xs font-spartan hover:underline transition-colors"
