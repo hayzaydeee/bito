@@ -1,16 +1,17 @@
-import React, { useMemo } from 'react';
+﻿import React, { useMemo, useState } from 'react';
 
 /* -----------------------------------------------------------------
-   ActivityHeatmap — GitHub-style heatmap with rounded cells
-   Uses brand colour at varying opacities.
-   Respects timeRange (7d / 30d / 90d / all).
+   ActivityHeatmap -- GitHub-style contribution heatmap
+   Rounded cells with hover popover, brand gradient, responsive sizing
 ----------------------------------------------------------------- */
 
-const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
 
 const ActivityHeatmap = ({ habits, entries, timeRange }) => {
-  const { weeks, maxActivity } = useMemo(() => {
-    if (!habits.length) return { weeks: [], maxActivity: 0 };
+  const [hoveredCell, setHoveredCell] = useState(null);
+
+  const { weeks, maxActivity, totalCompletions } = useMemo(() => {
+    if (!habits.length) return { weeks: [], maxActivity: 0, totalCompletions: 0 };
 
     const days = timeRange === 'all' ? 365 : parseInt(timeRange) || 30;
     const endDate = new Date();
@@ -23,17 +24,15 @@ const ActivityHeatmap = ({ habits, entries, timeRange }) => {
 
     const weeksArr = [];
     let maxAct = 0;
+    let totalComp = 0;
 
     for (let d = new Date(gridStart); d <= endDate; ) {
       const week = [];
       for (let i = 0; i < 7 && d <= endDate; i++, d.setDate(d.getDate() + 1)) {
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        const dateStr = `${y}-${m}-${dd}`;
-
+        const dateStr = fmtDate(d);
         let completions = 0;
         let possible = 0;
+
         habits.forEach(h => {
           if (h.schedule?.days?.length && !h.schedule.days.includes(d.getDay())) return;
           possible++;
@@ -42,52 +41,62 @@ const ActivityHeatmap = ({ habits, entries, timeRange }) => {
         });
 
         if (completions > maxAct) maxAct = completions;
+        totalComp += completions;
         const inRange = d >= startDate;
-        const isToday = dateStr === new Date().toISOString().split('T')[0];
+        const isToday = dateStr === fmtDate(new Date());
+        const label = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
-        week.push({ dateStr, completions, possible, inRange, isToday, day: d.getDay() });
+        week.push({ dateStr, completions, possible, inRange, isToday, day: d.getDay(), label });
       }
       weeksArr.push(week);
     }
 
-    return { weeks: weeksArr, maxActivity: maxAct };
+    return { weeks: weeksArr, maxActivity: maxAct, totalCompletions: totalComp };
   }, [habits, entries, timeRange]);
 
   if (!habits.length) {
     return (
-      <div className="card p-6 flex items-center justify-center h-[200px]">
+      <div className="analytics-chart-card flex flex-col items-center justify-center h-[240px] gap-2">
+        <span className="text-3xl opacity-40">{'\uD83D\uDCC5'}</span>
         <p className="text-sm font-spartan text-[var(--color-text-tertiary)]">
-          Activity data will appear here as you track habits
+          Activity data will appear as you track habits
         </p>
       </div>
     );
   }
 
   const cellColor = (count) => {
-    if (count === 0) return 'var(--color-surface-elevated)';
+    if (count === 0) return 'rgba(99,102,241,0.06)';
     const ratio = maxActivity > 0 ? count / maxActivity : 0;
-    if (ratio <= 0.25) return 'rgba(99, 102, 241, 0.25)';
-    if (ratio <= 0.5)  return 'rgba(99, 102, 241, 0.45)';
-    if (ratio <= 0.75) return 'rgba(99, 102, 241, 0.65)';
-    return 'rgba(99, 102, 241, 0.9)';
+    if (ratio <= 0.25) return 'rgba(99,102,241,0.2)';
+    if (ratio <= 0.5)  return 'rgba(99,102,241,0.4)';
+    if (ratio <= 0.75) return 'rgba(99,102,241,0.6)';
+    return 'rgba(99,102,241,0.85)';
   };
 
   return (
-    <div className="card p-5">
-      <h3 className="text-base font-garamond font-semibold text-[var(--color-text-primary)] mb-4">
-        Activity
-      </h3>
+    <div className="analytics-chart-card">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base font-garamond font-semibold text-[var(--color-text-primary)]">
+          Activity
+        </h3>
+        {totalCompletions > 0 && (
+          <span className="text-xs font-spartan text-[var(--color-text-tertiary)]">
+            {totalCompletions} completions
+          </span>
+        )}
+      </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto relative">
         <div className="inline-flex gap-[3px]">
           {/* Day labels column */}
-          <div className="flex flex-col gap-[3px] pr-1">
+          <div className="flex flex-col gap-[3px] pr-1.5">
             {DAY_LABELS.map((l, i) => (
               <div
-                key={l}
-                className="h-[14px] flex items-center text-[10px] font-spartan text-[var(--color-text-tertiary)]"
+                key={i}
+                className="h-[13px] flex items-center text-[10px] font-spartan text-[var(--color-text-tertiary)]"
               >
-                {i % 2 === 1 ? l : ''}
+                {l}
               </div>
             ))}
           </div>
@@ -98,14 +107,17 @@ const ActivityHeatmap = ({ habits, entries, timeRange }) => {
               {week.map((cell, ci) => (
                 <div
                   key={ci}
-                  title={cell.inRange ? `${cell.dateStr}: ${cell.completions}/${cell.possible}` : ''}
-                  className={`w-[14px] h-[14px] rounded-[3px] transition-colors ${
-                    cell.isToday ? 'ring-1 ring-[var(--color-brand-400)]' : ''
+                  className={`w-[13px] h-[13px] rounded-[3px] transition-all duration-150 cursor-default ${
+                    cell.isToday ? 'ring-1.5 ring-[var(--color-brand-400)] ring-offset-1 ring-offset-[var(--color-surface-primary)]' : ''
                   }`}
                   style={{
                     backgroundColor: cell.inRange ? cellColor(cell.completions) : 'transparent',
-                    opacity: cell.inRange ? 1 : 0.15,
+                    opacity: cell.inRange ? 1 : 0.08,
+                    transform: hoveredCell === `${wi}-${ci}` ? 'scale(1.3)' : 'scale(1)',
                   }}
+                  onMouseEnter={() => cell.inRange && setHoveredCell(`${wi}-${ci}`)}
+                  onMouseLeave={() => setHoveredCell(null)}
+                  title={cell.inRange ? `${cell.label}: ${cell.completions}/${cell.possible} completed` : ''}
                 />
               ))}
             </div>
@@ -114,19 +126,26 @@ const ActivityHeatmap = ({ habits, entries, timeRange }) => {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-2 mt-3 text-[10px] font-spartan text-[var(--color-text-tertiary)]">
-        <span>Less</span>
-        {[0, 0.25, 0.5, 0.75, 1].map((v, i) => (
+      <div className="flex items-center gap-2 mt-3">
+        <span className="text-[10px] font-spartan text-[var(--color-text-tertiary)]">Less</span>
+        {[0, 0.2, 0.4, 0.6, 0.85].map((v, i) => (
           <div
             key={i}
-            className="w-[12px] h-[12px] rounded-[2px]"
-            style={{ backgroundColor: v === 0 ? 'var(--color-surface-elevated)' : `rgba(99,102,241,${0.25 + v * 0.65})` }}
+            className="w-[11px] h-[11px] rounded-[2px]"
+            style={{ backgroundColor: v === 0 ? 'rgba(99,102,241,0.06)' : `rgba(99,102,241,${v})` }}
           />
         ))}
-        <span>More</span>
+        <span className="text-[10px] font-spartan text-[var(--color-text-tertiary)]">More</span>
       </div>
     </div>
   );
 };
+
+function fmtDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
+}
 
 export default ActivityHeatmap;

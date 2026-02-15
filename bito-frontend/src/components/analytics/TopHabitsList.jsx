@@ -1,9 +1,9 @@
-import React, { useMemo } from 'react';
+﻿import React, { useMemo } from 'react';
 
 /* -----------------------------------------------------------------
-   TopHabitsList — ranked list with inline sparklines
-   Shows top habits sorted by completion rate, each row has:
-   rank • color dot • name • sparkline (last 14 days) • rate %
+   TopHabitsList -- ranked habits with progress bars + sparklines
+   Shows top habits sorted by completion rate. Each row:
+   rank | color dot | icon+name | progress bar | rate %
 ----------------------------------------------------------------- */
 
 const TopHabitsList = ({ habits, entries, timeRange }) => {
@@ -21,28 +21,20 @@ const TopHabitsList = ({ habits, entries, timeRange }) => {
         let completions = 0;
         let possible = 0;
 
-        // Daily series for sparkline (last 14 days or timeRange, whichever is less)
+        // Sparkline: last 14 days (binary dots)
         const sparkDays = Math.min(14, days);
         const sparkStart = new Date(endDate);
         sparkStart.setDate(sparkStart.getDate() - sparkDays + 1);
         const spark = [];
 
         for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-          const y = d.getFullYear();
-          const m = String(d.getMonth() + 1).padStart(2, '0');
-          const dd = String(d.getDate()).padStart(2, '0');
-          const dateStr = `${y}-${m}-${dd}`;
-
+          const dateStr = fmtDate(d);
           if (habit.schedule?.days?.length && !habit.schedule.days.includes(d.getDay())) continue;
-
           possible++;
           const entry = hEntries[dateStr];
           const done = !!(entry && entry.completed);
           if (done) completions++;
-
-          if (d >= sparkStart) {
-            spark.push(done ? 1 : 0);
-          }
+          if (d >= sparkStart) spark.push(done ? 1 : 0);
         }
 
         const rate = possible > 0 ? Math.round((completions / possible) * 100) : 0;
@@ -50,8 +42,8 @@ const TopHabitsList = ({ habits, entries, timeRange }) => {
         return {
           id: habit._id,
           name: habit.name,
-          icon: habit.icon || '🎯',
-          color: habit.color || '#6366f1',
+          icon: habit.icon || '\uD83C\uDFAF',
+          color: habit.color || '#818cf8',
           rate,
           completions,
           possible,
@@ -65,7 +57,8 @@ const TopHabitsList = ({ habits, entries, timeRange }) => {
 
   if (!ranked.length) {
     return (
-      <div className="card p-6 flex items-center justify-center h-[200px]">
+      <div className="analytics-chart-card flex flex-col items-center justify-center h-[240px] gap-2">
+        <span className="text-3xl opacity-40">{'\uD83C\uDFC6'}</span>
         <p className="text-sm font-spartan text-[var(--color-text-tertiary)]">
           Your top habits will appear here
         </p>
@@ -74,35 +67,53 @@ const TopHabitsList = ({ habits, entries, timeRange }) => {
   }
 
   return (
-    <div className="card p-5">
+    <div className="analytics-chart-card">
       <h3 className="text-base font-garamond font-semibold text-[var(--color-text-primary)] mb-4">
         Top Habits
       </h3>
 
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {ranked.map((h, i) => (
           <div
             key={h.id}
-            className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
+            className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors group"
           >
             {/* Rank */}
-            <span className="w-5 text-xs font-spartan font-bold text-[var(--color-text-tertiary)]">
+            <span className={`w-5 text-xs font-spartan font-bold ${
+              i === 0 ? 'text-[var(--color-warning)]' : 'text-[var(--color-text-tertiary)]'
+            }`}>
               {i + 1}
             </span>
 
             {/* Color dot */}
-            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: h.color }} />
+            <div
+              className="w-2.5 h-2.5 rounded-full flex-shrink-0 ring-2 ring-offset-1 ring-offset-[var(--color-surface-primary)]"
+              style={{ backgroundColor: h.color, ringColor: `${h.color}33` }}
+            />
 
-            {/* Name */}
-            <span className="flex-1 text-sm font-spartan text-[var(--color-text-primary)] truncate">
+            {/* Icon + Name */}
+            <span className="flex-1 text-sm font-spartan text-[var(--color-text-primary)] truncate min-w-0">
               {h.icon} {h.name}
             </span>
 
-            {/* Sparkline */}
-            <Sparkline data={h.spark} color={h.color} />
+            {/* Progress bar */}
+            <div className="w-16 sm:w-20 h-1.5 rounded-full bg-[var(--color-surface-elevated)] overflow-hidden flex-shrink-0">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${Math.max(h.rate, 2)}%`,
+                  background: h.rate > 0
+                    ? `linear-gradient(90deg, ${h.color}99, ${h.color})`
+                    : 'transparent',
+                }}
+              />
+            </div>
 
             {/* Rate */}
-            <span className="w-12 text-right text-sm font-spartan font-semibold" style={{ color: h.color }}>
+            <span
+              className="w-10 text-right text-sm font-spartan font-semibold tabular-nums"
+              style={{ color: h.rate > 0 ? h.color : 'var(--color-text-tertiary)' }}
+            >
               {h.rate}%
             </span>
           </div>
@@ -112,28 +123,11 @@ const TopHabitsList = ({ habits, entries, timeRange }) => {
   );
 };
 
-/* ---------- tiny SVG sparkline ---------- */
-const Sparkline = ({ data, color, width = 60, height = 20 }) => {
-  if (!data.length) return <div style={{ width, height }} />;
-
-  // Build polyline points — each point is spaced evenly
-  const step = width / Math.max(data.length - 1, 1);
-  const points = data
-    .map((v, i) => `${i * step},${v ? 2 : height - 2}`)
-    .join(' ');
-
-  return (
-    <svg width={width} height={height} className="flex-shrink-0 opacity-60">
-      <polyline
-        points={points}
-        fill="none"
-        stroke={color}
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-};
+function fmtDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
+}
 
 export default TopHabitsList;

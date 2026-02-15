@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+﻿import React, { useMemo } from 'react';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -6,16 +6,18 @@ import {
   XAxis,
   YAxis,
   Tooltip,
+  CartesianGrid,
+  ReferenceLine,
 } from 'recharts';
 
 /* -----------------------------------------------------------------
-   CompletionAreaChart — daily completion % as a gradient area
-   Purple → blue gradient fill, no grid lines, rounded tooltip
+   CompletionAreaChart -- daily completion % as a gradient area
+   Smooth curve, subtle grid, average reference line, rich tooltip
 ----------------------------------------------------------------- */
 
 const CompletionAreaChart = ({ habits, entries, timeRange }) => {
-  const chartData = useMemo(() => {
-    if (!habits.length) return [];
+  const { chartData, average } = useMemo(() => {
+    if (!habits.length) return { chartData: [], average: 0 };
 
     const days = timeRange === 'all' ? 365 : parseInt(timeRange) || 30;
     const endDate = new Date();
@@ -23,20 +25,16 @@ const CompletionAreaChart = ({ habits, entries, timeRange }) => {
     startDate.setDate(startDate.getDate() - days);
 
     const data = [];
-    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      const dateStr = `${y}-${m}-${dd}`;
+    let sum = 0;
 
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      const dateStr = fmtDate(d);
       let completed = 0;
       let possible = 0;
 
       habits.forEach(habit => {
-        // Check schedule
         if (habit.schedule?.days?.length) {
-          const dow = new Date(d).getDay();
-          if (!habit.schedule.days.includes(dow)) return;
+          if (!habit.schedule.days.includes(new Date(d).getDay())) return;
         }
         possible++;
         const entry = (entries[habit._id] || {})[dateStr];
@@ -47,14 +45,15 @@ const CompletionAreaChart = ({ habits, entries, timeRange }) => {
       const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
       data.push({ date: dateStr, label, rate, completed, possible });
+      sum += rate;
     }
 
-    return data;
+    return { chartData: data, average: data.length > 0 ? Math.round(sum / data.length) : 0 };
   }, [habits, entries, timeRange]);
 
   if (!habits.length) {
     return (
-      <div className="card p-6 flex items-center justify-center h-[260px]">
+      <div className="analytics-chart-card flex items-center justify-center h-[280px]">
         <p className="text-sm font-spartan text-[var(--color-text-tertiary)]">
           Track habits to see completion trends
         </p>
@@ -63,47 +62,75 @@ const CompletionAreaChart = ({ habits, entries, timeRange }) => {
   }
 
   return (
-    <div className="card p-5">
-      <h3 className="text-base font-garamond font-semibold text-[var(--color-text-primary)] mb-4">
-        Completion Rate
-      </h3>
+    <div className="analytics-chart-card">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base font-garamond font-semibold text-[var(--color-text-primary)]">
+          Completion Rate
+        </h3>
+        {average > 0 && (
+          <span className="text-xs font-spartan px-2 py-0.5 rounded-full"
+            style={{ background: 'rgba(99,102,241,0.12)', color: 'var(--color-brand-400)' }}>
+            avg {average}%
+          </span>
+        )}
+      </div>
 
       <div style={{ width: '100%', height: 220 }}>
         <ResponsiveContainer>
-          <AreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+          <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: -20 }}>
             <defs>
-              <linearGradient id="gradPurpleBlue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--color-brand-500)" stopOpacity={0.5} />
-                <stop offset="100%" stopColor="#60a5fa" stopOpacity={0.05} />
+              <linearGradient id="completionGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#818cf8" stopOpacity={0.4} />
+                <stop offset="50%" stopColor="#6366f1" stopOpacity={0.15} />
+                <stop offset="100%" stopColor="#4f46e5" stopOpacity={0.02} />
               </linearGradient>
             </defs>
 
+            <CartesianGrid
+              strokeDasharray="3 6"
+              stroke="var(--color-border-primary)"
+              strokeOpacity={0.4}
+              vertical={false}
+            />
+
             <XAxis
               dataKey="label"
-              tick={{ fontSize: 11, fill: 'var(--color-text-tertiary)' }}
+              tick={{ fontSize: 11, fill: 'var(--color-text-tertiary)', fontFamily: 'League Spartan' }}
               tickLine={false}
               axisLine={false}
               interval="preserveStartEnd"
             />
             <YAxis
               domain={[0, 100]}
-              tick={{ fontSize: 11, fill: 'var(--color-text-tertiary)' }}
+              tick={{ fontSize: 11, fill: 'var(--color-text-tertiary)', fontFamily: 'League Spartan' }}
               tickLine={false}
               axisLine={false}
               tickFormatter={v => `${v}%`}
             />
+
+            {average > 0 && (
+              <ReferenceLine
+                y={average}
+                stroke="var(--color-brand-300)"
+                strokeDasharray="4 4"
+                strokeOpacity={0.5}
+              />
+            )}
+
             <Tooltip
-              content={<CustomTooltip />}
+              content={<CompletionTooltip />}
               cursor={{ stroke: 'var(--color-brand-400)', strokeWidth: 1, strokeDasharray: '4 4' }}
             />
             <Area
-              type="monotone"
+              type="monotoneX"
               dataKey="rate"
-              stroke="var(--color-brand-500)"
-              strokeWidth={2}
-              fill="url(#gradPurpleBlue)"
+              stroke="#818cf8"
+              strokeWidth={2.5}
+              fill="url(#completionGrad)"
               dot={false}
-              activeDot={{ r: 4, fill: 'var(--color-brand-500)', stroke: '#fff', strokeWidth: 2 }}
+              activeDot={{ r: 5, fill: '#818cf8', stroke: 'var(--color-surface-primary)', strokeWidth: 2 }}
+              animationDuration={800}
+              animationEasing="ease-out"
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -113,17 +140,25 @@ const CompletionAreaChart = ({ habits, entries, timeRange }) => {
 };
 
 /* ---------- tooltip ---------- */
-const CustomTooltip = ({ active, payload, label }) => {
+const CompletionTooltip = ({ active, payload }) => {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
-    <div className="card p-2 text-xs font-spartan shadow-lg border border-[var(--color-border-primary)]">
+    <div className="analytics-tooltip">
       <p className="font-medium text-[var(--color-text-primary)]">{d.label}</p>
       <p className="text-[var(--color-text-secondary)]">
-        {d.completed}/{d.possible} — <span className="font-semibold text-[var(--color-brand-400)]">{d.rate}%</span>
+        {d.completed}/{d.possible} completed
       </p>
+      <p className="font-semibold" style={{ color: '#818cf8' }}>{d.rate}%</p>
     </div>
   );
 };
+
+function fmtDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
+}
 
 export default CompletionAreaChart;
