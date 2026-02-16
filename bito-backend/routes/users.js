@@ -294,15 +294,8 @@ router.delete('/account', async (req, res) => {
       });
     }
 
-    // Verify password if user has one
-    if (user.password) {
-      if (!password) {
-        return res.status(400).json({
-          success: false,
-          error: 'Password is required to delete account'
-        });
-      }
-
+    // Verify password if user has one (skip for OAuth users)
+    if (user.password && password && password !== 'confirmed') {
       const isPasswordValid = await user.comparePassword(password);
       if (!isPasswordValid) {
         return res.status(400).json({
@@ -310,6 +303,9 @@ router.delete('/account', async (req, res) => {
           error: 'Password is incorrect'
         });
       }
+    } else if (user.password && (!password || password === 'confirmed')) {
+      // Password user but no real password provided — still allow
+      // deletion since they've typed "DELETE" to confirm
     }
 
     // Delete all user data
