@@ -230,7 +230,8 @@ router.get('/analytics', async (req, res) => {
 
     // Layer 2: LLM-powered sectioned analysis
     const personality = req.user.aiPersonality || DEFAULT_PERSONALITY;
-    const sections = await generateAnalyticsReport(ruleInsights, analyticsData, rangeDays, personality);
+    const analyticsFeature = tierInfo.tier === 'sprouting' ? 'early-analytics' : 'analytics-report';
+    const sections = await generateAnalyticsReport(ruleInsights, analyticsData, rangeDays, personality, analyticsFeature);
 
     const responseData = {
       sections,
@@ -306,19 +307,38 @@ function buildAnalyticsData(habits, entries, journalEntries, rangeDays) {
 
   const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-  // Per-habit stats
+  // How many unique days the user actually tracked anything
+  const uniqueDates = new Set(entries.map(e => toDateKey(e.date)));
+  const daysTracked = uniqueDates.size;
+
+  // Per-habit stats — computed from actual entries, NOT from h.stats cache
   const habitStats = habits.map(h => {
     const hEntries = entries.filter(e => String(e.habitId) === String(h._id));
     const completed = hEntries.filter(e => e.completed).length;
     const total = hEntries.length;
+
+    // Compute streak from entries directly
+    let currentStreak = 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const sortedCompleted = hEntries
+      .filter(e => e.completed)
+      .map(e => { const d = new Date(e.date); d.setHours(0, 0, 0, 0); return d; })
+      .sort((a, b) => b - a); // newest first
+    for (const d of sortedCompleted) {
+      const diff = Math.round((today - d) / 86400000);
+      if (diff === currentStreak) currentStreak++;
+      else break;
+    }
+
     return {
       name: h.name,
       category: h.category || 'uncategorized',
-      currentStreak: h.stats?.currentStreak || 0,
-      longestStreak: h.stats?.longestStreak || 0,
-      completionRate: total > 0 ? Math.round((completed / total) * 100) : 0,
+      currentStreak,
+      completionRate: total > 0 ? Math.round((completed / total) * 100) : null,
       totalInRange: total,
       completedInRange: completed,
+      noData: total === 0,
     };
   });
 
@@ -376,24 +396,49 @@ function buildAnalyticsData(habits, entries, journalEntries, rangeDays) {
   // Category breakdown
   const categories = {};
   for (const h of habitStats) {
-    if (!categories[h.category]) categories[h.category] = { count: 0, avgRate: 0, habits: [] };
+    if (!categories[h.category]) categories[h.category] = { count: 0, trackedCount: 0, avgRate: 0, habits: [] };
     categories[h.category].count++;
-    categories[h.category].avgRate += h.completionRate;
     categories[h.category].habits.push(h.name);
+    if (!h.noData) {
+      categories[h.category].trackedCount++;
+      categories[h.category].avgRate += h.completionRate;
+    }
   }
   for (const cat of Object.values(categories)) {
-    cat.avgRate = Math.round(cat.avgRate / cat.count);
+    cat.avgRate = cat.trackedCount > 0 ? Math.round(cat.avgRate / cat.trackedCount) : null;
   }
 
   // Overall stats
   const totalCompleted = entries.filter(e => e.completed).length;
   const totalEntries = entries.length;
   const overallRate = totalEntries > 0 ? Math.round((totalCompleted / totalEntries) * 100) : 0;
+  const habitsWithData = habitStats.filter(h => !h.noData).length;
+  const habitsWithoutData = habitStats.filter(h => h.noData).length;
+
+  // Per-day breakdown (which habits done on which dates)
+  const dayMap = {};
+  for (const entry of entries) {
+    const dateKey = toDateKey(entry.date);
+    if (!dayMap[dateKey]) dayMap[dateKey] = { completed: [], missed: [] };
+    const habit = habits.find(h => String(h._id) === String(entry.habitId));
+    const name = habit?.name || 'Unknown';
+    if (entry.completed) {
+      dayMap[dateKey].completed.push(name);
+    } else {
+      dayMap[dateKey].missed.push(name);
+    }
+  }
+  const dailyBreakdown = Object.entries(dayMap)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, data]) => ({ date, ...data }));
 
   return {
     rangeDays,
+    daysTracked,
     overallCompletionRate: overallRate,
     totalHabits: habits.length,
+    habitsWithData,
+    habitsWithoutData,
     totalCompletions: totalCompleted,
     totalEntries,
     journalEntries: journalEntries.length,
@@ -403,6 +448,7 @@ function buildAnalyticsData(habits, entries, journalEntries, rangeDays) {
     moodData: moodData.slice(-14), // last 14 mood points
     timeOfDay,
     categories,
+    dailyBreakdown,
   };
 }
 
@@ -410,7 +456,7 @@ function buildAnalyticsData(habits, entries, journalEntries, rangeDays) {
  * Generate the sectioned analytics report via LLM.
  * Falls back to rule-based-only sections if LLM unavailable.
  */
-async function generateAnalyticsReport(ruleInsights, analyticsData, rangeDays, personality = DEFAULT_PERSONALITY) {
+async function generateAnalyticsReport(ruleInsights, analyticsData, rangeDays, personality = DEFAULT_PERSONALITY, feature = 'analytics-report') {
   const llmAvailable = isLLMAvailable();
 
   if (!llmAvailable) {
@@ -434,7 +480,7 @@ async function generateAnalyticsReport(ruleInsights, analyticsData, rangeDays, p
 
   const model = process.env.INSIGHTS_LLM_MODEL || 'gpt-4o-mini';
 
-  const systemPrompt = buildSystemPrompt(personality, 'analytics-report');
+  const systemPrompt = buildSystemPrompt(personality, feature);
   const temperature = getTemperature(personality);
 
   const userMessage = JSON.stringify({

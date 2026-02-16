@@ -51,14 +51,20 @@ function getClient() {
  * (keeps token usage low).
  */
 function buildDataSummary(habits, entries, journalEntries) {
-  const habitSummaries = habits.map(h => ({
-    name: h.name,
-    category: h.category,
-    streak: h.stats?.currentStreak || 0,
-    longestStreak: h.stats?.longestStreak || 0,
-    completionRate: h.stats?.completionRate || 0,
-    totalChecks: h.stats?.totalChecks || 0,
-  }));
+  // Compute per-habit stats directly from the entries array (ground truth)
+  const habitSummaries = habits.map(h => {
+    const hEntries = entries.filter(e => String(e.habitId) === String(h._id));
+    const completed = hEntries.filter(e => e.completed).length;
+    const total = hEntries.length;
+    return {
+      name: h.name,
+      category: h.category,
+      entriesInPeriod: total,
+      completedInPeriod: completed,
+      completionRate: total > 0 ? Math.round((completed / total) * 100) : null,
+      noData: total === 0,
+    };
+  });
 
   const last7 = new Date();
   last7.setDate(last7.getDate() - 7);
@@ -98,6 +104,8 @@ function buildDataSummary(habits, entries, journalEntries) {
 
   return {
     habits: habitSummaries,
+    totalHabits: habits.length,
+    habitsTracked: habitSummaries.filter(h => !h.noData).length,
     thisWeek: {
       daysTracked,
       completionRate: completionThisWeek,

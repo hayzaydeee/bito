@@ -7,6 +7,7 @@ const weeklyReport = require('./weeklyReport');
 const analyticsReport = require('./analyticsReport');
 const kickstart = require('./kickstart');
 const earlyInsight = require('./earlyInsight');
+const earlyAnalytics = require('./earlyAnalytics');
 
 const basePrompts = {
   'insight-enrichment': insightEnrichment,
@@ -14,6 +15,7 @@ const basePrompts = {
   'analytics-report': analyticsReport,
   'kickstart': kickstart,
   'early-insight': earlyInsight,
+  'early-analytics': earlyAnalytics,
 };
 
 module.exports = { basePrompts };

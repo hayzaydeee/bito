@@ -308,6 +308,13 @@ router.post('/:id/check', [validateObjectId('id'), validateHabitEntry], async (r
       }
     );
 
+    // Update cached stats (findOneAndUpdate bypasses Mongoose save middleware)
+    try {
+      await habit.updateStats();
+    } catch (statsErr) {
+      console.error('Error updating habit stats:', statsErr);
+    }
+
     // Process challenge progress if this is a completion
     let challengeResult = null;
     if (completed && habit.workspaceId) {
