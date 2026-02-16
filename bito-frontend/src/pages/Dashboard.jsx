@@ -257,7 +257,7 @@ const Dashboard = () => {
       />
 
       {/* 7. Dashboard tour (Phase 14) */}
-      <DashboardTour />
+      <DashboardTour userId={user?._id || user?.id} />
     </div>
   );
 };

@@ -831,7 +831,9 @@ const SettingsPage = ({ section }) => {
           {/* Replay tour */}
           <button
             onClick={() => {
-              try { localStorage.removeItem('bito_tour_completed'); } catch {}
+              const uid = user?._id || user?.id || '';
+              const key = uid ? `bito_tour_completed_${uid}` : 'bito_tour_completed';
+              try { localStorage.removeItem(key); } catch {}
               navigate('/app/dashboard');
             }}
             className="w-full mt-2 flex items-center justify-between p-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] transition-colors cursor-pointer"

@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
-const LS_KEY = 'bito_tour_completed';
+const LS_KEY_PREFIX = 'bito_tour_completed';
+
+// Build user-specific localStorage key
+const getTourKey = (userId) => userId ? `${LS_KEY_PREFIX}_${userId}` : LS_KEY_PREFIX;
 
 // Detect mobile vs desktop for device-specific steps
 const isMobile = () => window.innerWidth < 768;
@@ -95,7 +98,8 @@ const getSteps = () => {
  *   forceShow  — if true, bypass localStorage and show tour (for replay)
  *   onComplete — callback after tour finishes or is skipped
  */
-const DashboardTour = ({ forceShow = false, onComplete }) => {
+const DashboardTour = ({ forceShow = false, onComplete, userId }) => {
+  const lsKey = getTourKey(userId);
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(-1); // -1 = prompt, 0..N = steps
   const [spotlightRect, setSpotlightRect] = useState(null);
@@ -113,13 +117,13 @@ const DashboardTour = ({ forceShow = false, onComplete }) => {
       return;
     }
     try {
-      if (localStorage.getItem(LS_KEY) !== 'true') {
+      if (localStorage.getItem(lsKey) !== 'true') {
         setVisible(true);
       }
     } catch {
       /* ignore */
     }
-  }, [forceShow]);
+  }, [forceShow, lsKey]);
 
   // Measure target element whenever step changes
   const measureTarget = useCallback(() => {
@@ -179,12 +183,12 @@ const DashboardTour = ({ forceShow = false, onComplete }) => {
     setVisible(false);
     setStep(-1);
     try {
-      localStorage.setItem(LS_KEY, 'true');
+      localStorage.setItem(lsKey, 'true');
     } catch {
       /* ignore */
     }
     onComplete?.();
-  }, [onComplete]);
+  }, [onComplete, lsKey]);
 
   const startTour = () => setStep(0);
 
@@ -379,3 +383,4 @@ const DashboardTour = ({ forceShow = false, onComplete }) => {
 };
 
 export default DashboardTour;
+export { getTourKey };
