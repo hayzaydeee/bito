@@ -78,10 +78,10 @@ const HabitRow = memo(({ habit, isCompleted, onToggle, onEdit }) => {
       </div>
 
       {/* Color dot */}
-      <div
+      {/* <div
         className="w-2 h-2 rounded-full flex-shrink-0"
         style={{ backgroundColor: habit.color || "var(--color-brand-500)" }}
-      />
+      /> */}
 
       {/* Edit icon — always visible, brighter on hover */}
       <button
