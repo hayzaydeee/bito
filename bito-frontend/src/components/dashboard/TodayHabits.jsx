@@ -86,7 +86,7 @@ const HabitRow = memo(({ habit, isCompleted, onToggle, onEdit }) => {
       {/* Edit icon — always visible, brighter on hover */}
       <button
         onClick={() => onEdit(habit)}
-        className="opacity-40 hover:opacity-100 transition-opacity p-1 rounded-md"
+        className="opacity-80 transition-opacity p-1 rounded-md"
         style={{ color: "var(--color-text-tertiary)" }}
         aria-label={`Edit ${habit.name}`}
       >

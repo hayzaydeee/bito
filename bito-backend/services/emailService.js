@@ -1,4 +1,5 @@
 const { Resend } = require('resend');
+const { baseLayout, button, infoCard, BRAND } = require('./emailTemplates');
 
 class EmailService {
   constructor() {
@@ -97,114 +98,69 @@ class EmailService {
   }
 
   generateInvitationHTML(invitation, workspace, invitedBy, inviteUrl) {
-    return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>You're invited to join ${workspace.name}</title>
-        <style>
-            body { 
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-                line-height: 1.6; 
-                color: #333; 
-                max-width: 600px; 
-                margin: 0 auto; 
-                padding: 20px; 
-                background-color: #f8fafc;
-            }
-            .container { 
-                background: white; 
-                border-radius: 12px; 
-                padding: 40px; 
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            }
-            .header { 
-                text-align: center; 
-                margin-bottom: 30px; 
-            }
-            .logo { 
-                font-size: 28px; 
-                font-weight: bold; 
-                color: #3b82f6; 
-                margin-bottom: 10px; 
-            }
-            .workspace-name { 
-                color: #3b82f6; 
-                font-weight: 600; 
-            }
-            .invite-button { 
-                display: inline-block; 
-                background: linear-gradient(135deg, #3b82f6, #1d4ed8); 
-                color: white; 
-                padding: 16px 32px; 
-                text-decoration: none; 
-                border-radius: 8px; 
-                font-weight: 600; 
-                margin: 20px 0; 
-                text-align: center;
-            }
-            .invite-button:hover { 
-                background: linear-gradient(135deg, #1d4ed8, #1e40af); 
-            }
-            .message { 
-                background: #f1f5f9; 
-                padding: 20px; 
-                border-radius: 8px; 
-                margin: 20px 0; 
-                border-left: 4px solid #3b82f6; 
-            }
-            .footer { 
-                text-align: center; 
-                margin-top: 30px; 
-                padding-top: 20px; 
-                border-top: 1px solid #e2e8f0; 
-                color: #64748b; 
-                font-size: 14px; 
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <div class="logo">🎯 Bito</div>
-                <h1>You're invited to join <span class="workspace-name">${workspace.name}</span></h1>
-            </div>
-            
-            <p>Hi there!</p>
-            
-            <p><strong>${invitedBy.name}</strong> has invited you to join the <strong>${workspace.name}</strong> workspace on Bito, where teams track habits together and support each other's growth.</p>
-            
-            ${invitation.message ? `
-            <div class="message">
-                <strong>Personal message from ${invitedBy.name}:</strong><br>
-                "${invitation.message}"
-            </div>
-            ` : ''}
-            
-            <p>As a <strong>${invitation.role}</strong>, you'll be able to:</p>
-            <ul>
-                <li>📊 Track your personal habits within the team workspace</li>
-                <li>👥 See team progress and celebrate achievements together</li>
-                <li>🎯 Adopt workspace habit templates or create your own</li>
-                <li>🏆 Participate in team challenges and leaderboards</li>
-            </ul>
-            
-            <div style="text-align: center; margin: 30px 0;">
-                <a href="${inviteUrl}" class="invite-button">Accept Invitation & Join Team</a>
-            </div>
-            
-            <p>This invitation will expire in 7 days. If you have any questions, feel free to reach out to ${invitedBy.name} or our support team.</p>
-            
-            <div class="footer">
-                <p>If you didn't expect this invitation, you can safely ignore this email.</p>
-                <p>This email was sent by <a href="https://bito.app" style="color: #3b82f6;">Bito</a> - Habit tracking for teams</p>
-            </div>
-        </div>
-    </body>
-    </html>
+    const features = [
+      { icon: '📊', text: 'Track your personal habits within the team workspace' },
+      { icon: '👥', text: 'See team progress and celebrate achievements together' },
+      { icon: '🎯', text: 'Adopt workspace habit templates or create your own' },
+      { icon: '🏆', text: 'Participate in team challenges and leaderboards' },
+    ];
+
+    const featuresHtml = features.map(f => `
+      <tr>
+        <td style="padding:6px 0;font-family:${BRAND.fonts};">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td style="vertical-align:top;padding-right:10px;font-size:16px;line-height:1;">${f.icon}</td>
+              <td style="font-size:14px;color:${BRAND.colors.textSecondary};line-height:1.5;">${f.text}</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    `).join('');
+
+    const messageCard = invitation.message
+      ? infoCard(
+          `<strong style="display:block;margin-bottom:4px;">Personal message from ${invitedBy.name}:</strong>"${invitation.message}"`,
+          { borderColor: BRAND.colors.accent, bgColor: '#f5f3ff' }
+        )
+      : '';
+
+    const body = `
+      <p style="font-size:15px;color:${BRAND.colors.textSecondary};margin:0 0 20px 0;line-height:1.7;">
+        <strong style="color:${BRAND.colors.text};">${invitedBy.name}</strong> has invited you to join
+        <strong style="color:${BRAND.colors.primary};">${workspace.name}</strong> on Bito, where teams track habits together and support each other's growth.
+      </p>
+
+      ${messageCard}
+
+      <p style="font-size:14px;color:${BRAND.colors.textSecondary};margin:20px 0 12px 0;line-height:1.6;">
+        As a <strong style="color:${BRAND.colors.text};">${invitation.role}</strong>, you'll be able to:
+      </p>
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
+        ${featuresHtml}
+      </table>
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td align="center" style="padding:8px 0;">
+            ${button('Accept Invitation & Join Team', inviteUrl)}
+          </td>
+        </tr>
+      </table>
+
+      <p style="font-size:13px;color:${BRAND.colors.textMuted};margin:24px 0 0 0;line-height:1.6;">
+        This invitation will expire in 7 days. If you have any questions, feel free to reach out to ${invitedBy.name}.
+      </p>
     `;
+
+    return baseLayout({
+      preheader: `${invitedBy.name} invited you to join "${workspace.name}" — accept to start tracking habits together!`,
+      heading: `You're invited to join ${workspace.name}`,
+      headingEmoji: '🤝',
+      body,
+      footerNote: 'If you didn\'t expect this invitation, you can safely ignore this email.',
+    });
   }
 }
 

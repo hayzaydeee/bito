@@ -19,6 +19,7 @@ const Habit = require('../models/Habit');
 const HabitEntry = require('../models/HabitEntry');
 const User = require('../models/User');
 const emailService = require('./emailService');
+const { baseLayout, button, statPill, infoCard, sectionTitle, BRAND } = require('./emailTemplates');
 
 // ── OpenAI client (shared lazy singleton) ──────────────────
 let _openaiClient = null;
@@ -279,37 +280,10 @@ class WeeklyReportService {
   async _sendReport(user, data) {
     const { startDate, endDate, periodStats, habitBreakdown, aiInsights } = data;
     const firstName = (user.name || 'there').split(' ')[0];
-    const baseUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173';
 
     const overallRate = periodStats.totalEntries > 0
       ? Math.round((periodStats.completedEntries / periodStats.totalEntries) * 100)
       : 0;
-
-    // Build habit rows HTML
-    const habitRows = habitBreakdown
-      .sort((a, b) => b.rate - a.rate)
-      .map((h) => {
-        const barColor = h.rate >= 80 ? '#22c55e' : h.rate >= 50 ? '#f59e0b' : '#ef4444';
-        const streakText = h.currentStreak > 0 ? `🔥 ${h.currentStreak}d streak` : '';
-        return `
-          <tr>
-            <td style="padding: 10px 12px; border-bottom: 1px solid #f1f5f9;">
-              <span style="font-size: 18px; margin-right: 6px;">${h.icon}</span>
-              <span style="font-weight: 600; color: #1e1b4b;">${h.name}</span>
-            </td>
-            <td style="padding: 10px 12px; border-bottom: 1px solid #f1f5f9; text-align: center;">
-              <div style="background: #f1f5f9; border-radius: 99px; height: 8px; width: 80px; display: inline-block; vertical-align: middle;">
-                <div style="background: ${barColor}; border-radius: 99px; height: 8px; width: ${Math.min(h.rate, 100)}%;"></div>
-              </div>
-              <span style="margin-left: 8px; font-size: 13px; color: #64748b;">${h.rate}%</span>
-            </td>
-            <td style="padding: 10px 12px; border-bottom: 1px solid #f1f5f9; text-align: right; font-size: 13px; color: #94a3b8;">
-              ${streakText}
-            </td>
-          </tr>
-        `;
-      })
-      .join('');
 
     // Format date range
     const fmtDate = (d) => {
@@ -318,92 +292,89 @@ class WeeklyReportService {
     };
     const dateRange = `${fmtDate(startDate)} – ${fmtDate(endDate)}`;
 
-    const html = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-          body { font-family: 'Segoe UI', sans-serif; color: #333; max-width: 560px; margin: 0 auto; padding: 20px; background: #f8fafc; }
-          .card { background: white; border-radius: 16px; padding: 36px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-          .header { text-align: center; margin-bottom: 24px; }
-          .logo { font-size: 28px; }
-          .brand { font-size: 22px; font-weight: 700; color: #1e1b4b; margin: 4px 0 0; }
-          .date-range { color: #94a3b8; font-size: 14px; margin-top: 4px; }
-          .stats-row { display: flex; justify-content: center; gap: 24px; margin: 20px 0 24px; text-align: center; }
-          .stat { flex: 1; }
-          .stat-value { font-size: 28px; font-weight: 700; color: #1e1b4b; }
-          .stat-label { font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
-          .insights { background: linear-gradient(135deg, #ede9fe, #e0e7ff); border-radius: 12px; padding: 20px; margin: 20px 0; }
-          .insights-title { font-size: 14px; font-weight: 600; color: #4338ca; margin: 0 0 8px; }
-          .insights-text { font-size: 14px; color: #334155; line-height: 1.6; margin: 0; }
-          .section-title { font-size: 15px; font-weight: 700; color: #1e1b4b; margin: 24px 0 12px; }
-          table { width: 100%; border-collapse: collapse; }
-          .btn { display: inline-block; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 14px 32px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; }
-          .footer { text-align: center; margin-top: 28px; color: #94a3b8; font-size: 13px; }
-        </style>
-      </head>
-      <body>
-        <div class="card">
-          <div class="header">
-            <div class="logo">📊</div>
-            <h1 class="brand">Your Weekly Report</h1>
-            <p class="date-range">${dateRange}</p>
-          </div>
+    // Build habit rows HTML (table-based)
+    const habitRows = habitBreakdown
+      .sort((a, b) => b.rate - a.rate)
+      .map((h) => {
+        const barColor = h.rate >= 80 ? BRAND.colors.success : h.rate >= 50 ? BRAND.colors.warning : BRAND.colors.danger;
+        const streakText = h.currentStreak > 0 ? `🔥 ${h.currentStreak}d` : '';
+        return `
+          <tr>
+            <td style="padding:12px 14px;border-bottom:1px solid ${BRAND.colors.border};font-family:${BRAND.fonts};">
+              <span style="font-size:18px;margin-right:8px;vertical-align:middle;">${h.icon}</span>
+              <span style="font-weight:600;color:${BRAND.colors.text};font-size:14px;vertical-align:middle;">${h.name}</span>
+            </td>
+            <td style="padding:12px 14px;border-bottom:1px solid ${BRAND.colors.border};text-align:center;font-family:${BRAND.fonts};">
+              <!--[if mso]>
+              <span style="font-size:13px;color:${BRAND.colors.textMuted};">${h.rate}%</span>
+              <![endif]-->
+              <!--[if !mso]><!-->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-table;vertical-align:middle;">
+                <tr>
+                  <td style="width:70px;height:8px;background:${BRAND.colors.border};border-radius:99px;overflow:hidden;">
+                    <div style="width:${Math.min(h.rate, 100)}%;height:8px;background:${barColor};border-radius:99px;"></div>
+                  </td>
+                  <td style="padding-left:8px;font-size:13px;color:${BRAND.colors.textMuted};font-family:${BRAND.fonts};white-space:nowrap;">${h.rate}%</td>
+                </tr>
+              </table>
+              <!--<![endif]-->
+            </td>
+            <td style="padding:12px 14px;border-bottom:1px solid ${BRAND.colors.border};text-align:right;font-size:13px;color:${BRAND.colors.textMuted};font-family:${BRAND.fonts};white-space:nowrap;">
+              ${streakText}
+            </td>
+          </tr>
+        `;
+      })
+      .join('');
 
-          <p style="color: #475569; font-size: 15px; margin: 0 0 20px;">
-            Hey ${firstName}, here's how your week went:
-          </p>
-
-          <!-- Stats overview -->
-          <!--[if mso]><table><tr><td><![endif]-->
-          <div style="text-align: center;">
-            <table style="margin: 0 auto; width: auto;">
-              <tr>
-                <td style="padding: 0 16px; text-align: center;">
-                  <div class="stat-value">${overallRate}%</div>
-                  <div class="stat-label">Completion</div>
-                </td>
-                <td style="padding: 0 16px; text-align: center;">
-                  <div class="stat-value">${periodStats.completedEntries}</div>
-                  <div class="stat-label">Check-ins</div>
-                </td>
-                ${periodStats.averageMood ? `
-                <td style="padding: 0 16px; text-align: center;">
-                  <div class="stat-value">${periodStats.averageMood.toFixed(1)}</div>
-                  <div class="stat-label">Avg Mood</div>
-                </td>
-                ` : ''}
-              </tr>
-            </table>
-          </div>
-          <!--[if mso]></td></tr></table><![endif]-->
-
-          <!-- AI Insights -->
-          <div class="insights">
-            <p class="insights-title">✨ AI Insights</p>
-            <p class="insights-text">${aiInsights}</p>
-          </div>
-
-          <!-- Habit breakdown -->
-          <p class="section-title">Habit Breakdown</p>
-          <table>
-            ${habitRows}
-          </table>
-
-          <div style="text-align: center; margin-top: 28px;">
-            <a href="${baseUrl}/app/analytics" class="btn">View Full Analytics →</a>
-          </div>
-        </div>
-
-        <p class="footer">
-          You're receiving this because you have email notifications enabled on <a href="${baseUrl}" style="color: #6366f1;">Bito</a>.<br>
-          <a href="${baseUrl}/app/settings" style="color: #6366f1;">Manage email preferences</a>
-        </p>
-      </body>
-      </html>
+    // Stats row
+    const statsHtml = `
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 28px;width:auto;">
+        <tr>
+          ${statPill(`${overallRate}%`, 'Completion')}
+          ${statPill(periodStats.completedEntries, 'Check-ins')}
+          ${periodStats.averageMood ? statPill(periodStats.averageMood.toFixed(1), 'Avg Mood') : ''}
+        </tr>
+      </table>
     `;
+
+    // AI insights card
+    const insightsHtml = infoCard(
+      `<strong style="color:${BRAND.colors.primaryDark};font-size:13px;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px;">✨ AI Insights</strong>` +
+      `<span style="color:${BRAND.colors.textSecondary};font-size:14px;line-height:1.7;">${aiInsights}</span>`,
+      { bgColor: BRAND.colors.primaryLight, borderColor: BRAND.colors.primary }
+    );
+
+    const body = `
+      <p style="font-size:15px;color:${BRAND.colors.textSecondary};margin:0 0 24px 0;line-height:1.6;">
+        Hey ${firstName}, here's how your week went:
+      </p>
+
+      ${statsHtml}
+
+      ${insightsHtml}
+
+      ${sectionTitle('Habit Breakdown')}
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
+        ${habitRows}
+      </table>
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td align="center" style="padding:8px 0 0 0;">
+            ${button('View Full Analytics →', `${BRAND.url}/app/analytics`)}
+          </td>
+        </tr>
+      </table>
+    `;
+
+    const html = baseLayout({
+      preheader: `${overallRate}% completion this week — ${periodStats.completedEntries} check-ins from ${dateRange}`,
+      heading: 'Your Weekly Report',
+      headingEmoji: '📊',
+      body,
+      footerNote: `Report for ${dateRange} &middot; You're receiving this because email notifications are on.`,
+    });
 
     await emailService.sendMail({
       to: user.email,
