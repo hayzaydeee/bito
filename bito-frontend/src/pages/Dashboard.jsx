@@ -157,6 +157,14 @@ const Dashboard = () => {
     [toggleHabitCompletion]
   );
 
+  /* Toggle for any date (used by WeekStrip) */
+  const handleToggleDate = useCallback(
+    (habitId, dateStr) => {
+      toggleHabitCompletion(habitId, dateStr);
+    },
+    [toggleHabitCompletion]
+  );
+
   /* ── Loading skeleton ── */
   if (isLoading) {
     return (
@@ -217,7 +225,7 @@ const Dashboard = () => {
 
       {/* 5. 7-day heatmap strip */}
       {habits.length > 0 && (
-        <WeekStrip habits={habits} entries={entries} />
+        <WeekStrip habits={habits} entries={entries} onToggle={handleToggleDate} />
       )}
 
       {/* 6. Streak milestone celebration */}

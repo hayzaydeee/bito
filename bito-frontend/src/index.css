@@ -805,6 +805,16 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ═══════ End Tour ═══════ */
 
+/* ═══════ WeekStrip expand animation ═══════ */
+.week-expand-enter {
+  animation: weekExpandIn 0.25s ease-out;
+}
+@keyframes weekExpandIn {
+  from { opacity: 0; max-height: 0; transform: translateY(-8px); }
+  to   { opacity: 1; max-height: 500px; transform: translateY(0); }
+}
+/* ═══════ End WeekStrip ═══════ */
+
 @keyframes fadeIn {
   from {
     opacity: 0;
