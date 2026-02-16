@@ -3,6 +3,7 @@ const webPush = require('web-push');
 const PushSubscription = require('../models/PushSubscription');
 const User = require('../models/User');
 const { authenticateJWT } = require('../middleware/auth');
+const weeklyReportService = require('../services/weeklyReportService');
 
 const router = express.Router();
 
@@ -215,6 +216,22 @@ router.patch('/preferences', async (req, res) => {
   } catch (error) {
     console.error('Preferences update error:', error);
     res.status(500).json({ success: false, message: 'Failed to update preferences' });
+  }
+});
+
+// ── POST /api/notifications/test-weekly-report ──────────
+// Send a weekly report to the current user immediately (for testing)
+router.post('/test-weekly-report', async (req, res) => {
+  try {
+    const result = await weeklyReportService.sendNow(req.user._id);
+    res.json({
+      success: true,
+      message: 'Weekly report sent — check your email!',
+      data: result,
+    });
+  } catch (error) {
+    console.error('Test weekly report error:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 

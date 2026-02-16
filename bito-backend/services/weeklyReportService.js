@@ -146,6 +146,50 @@ class WeeklyReportService {
     console.log(`📊 Weekly report sent to ${user.email}`);
   }
 
+  /**
+   * Send a report immediately for a specific user (bypasses day/time/dedup checks).
+   * Used for testing via the API.
+   */
+  async sendNow(userId) {
+    const user = await User.findById(userId).lean();
+    if (!user) throw new Error('User not found');
+
+    const tz = user.preferences?.timezone || 'UTC';
+    const localNow = this._getLocalTime(tz);
+
+    const endDate = new Date(localNow);
+    endDate.setDate(endDate.getDate() - 1);
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - 6);
+
+    const startStr = this._formatDate(startDate);
+    const endStr = this._formatDate(endDate);
+
+    const [periodStats, habits, entries] = await Promise.all([
+      HabitEntry.getUserStatsForPeriod(user._id, startStr, endStr),
+      Habit.find({ userId: user._id, isActive: true, isArchived: { $ne: true } }).lean(),
+      HabitEntry.find({
+        userId: user._id,
+        date: { $gte: new Date(startStr), $lte: new Date(endStr) },
+      }).lean(),
+    ]);
+
+    if (!habits.length) throw new Error('No active habits found — nothing to report');
+
+    const habitBreakdown = this._buildHabitBreakdown(habits, entries);
+    const aiInsights = await this._generateInsights(user, periodStats, habitBreakdown);
+
+    await this._sendReport(user, {
+      startDate: startStr,
+      endDate: endStr,
+      periodStats,
+      habitBreakdown,
+      aiInsights,
+    });
+
+    return { startDate: startStr, endDate: endStr, habitsIncluded: habits.length };
+  }
+
   _buildHabitBreakdown(habits, entries) {
     return habits.map((habit) => {
       const habitEntries = entries.filter(
