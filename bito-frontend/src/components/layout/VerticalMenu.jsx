@@ -163,7 +163,7 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
             onClick={() => handleNavigation(item.path)}
             title={item.label}
             style={isActive ? { borderLeft: "3px solid var(--color-brand-500)" } : {}}
-            data-tour={item.id === 'analytics' ? 'nav-analytics' : undefined}
+            data-tour={item.id === 'analytics' ? 'nav-analytics' : item.id === 'journal' ? 'nav-journal' : undefined}
           >
             <Icon
               className="w-5 h-5 transition-colors"
@@ -193,7 +193,7 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
           }`}
           onClick={() => handleNavigation(item.path)}
           style={isActive ? { borderLeft: "3px solid var(--color-brand-500)" } : {}}
-          data-tour={item.id === 'analytics' ? 'nav-analytics' : undefined}
+          data-tour={item.id === 'analytics' ? 'nav-analytics' : item.id === 'journal' ? 'nav-journal' : undefined}
         >
           <Icon
             className="w-[18px] h-[18px] flex-shrink-0 transition-colors"

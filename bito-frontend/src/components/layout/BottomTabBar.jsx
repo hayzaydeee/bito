@@ -277,6 +277,7 @@ const BottomTabBar = () => {
                   }}
                   className="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[44px] transition-colors"
                   aria-label="More"
+                  data-tour="nav-more"
                 >
                   <Icon
                     className="w-5 h-5"

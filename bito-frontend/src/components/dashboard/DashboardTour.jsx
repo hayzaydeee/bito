@@ -3,38 +3,65 @@ import { createPortal } from 'react-dom';
 
 const LS_KEY = 'bito_tour_completed';
 
-const STEPS = [
-  {
-    target: '[data-tour="today-habits"]',
-    title: 'Your daily habits',
-    body: 'This is your command centre. Check off habits as you complete them — every tick builds your streak.',
-    position: 'bottom',
-  },
-  {
-    target: '[data-tour="nav-analytics"]',
-    title: 'Analytics',
-    body: 'Dive into charts, streaks, heatmaps and AI-powered insights to see your progress over time.',
-    position: 'top',
-  },
-  {
-    target: '[data-tour="nav-groups"]',
-    title: 'Groups',
-    body: 'Create or join a group to build habits together — family, team, or friends.',
-    position: 'top',
-  },
-  {
-    target: '[data-tour="nav-add"]',
-    title: 'Quick add',
-    body: 'Tap here to create a new habit or jot down a journal entry, anytime.',
-    position: 'top',
-  },
-  {
-    target: null, // No spotlight — full-screen closing card
+// Detect mobile vs desktop for device-specific steps
+const isMobile = () => window.innerWidth < 768;
+
+// Build steps dynamically based on device
+const getSteps = () => {
+  const steps = [
+    {
+      target: '[data-tour="today-habits"]',
+      title: 'Your daily habits',
+      body: 'This is your command centre. Check off habits as you complete them — every tick builds your streak.',
+      position: 'bottom',
+    },
+    {
+      target: '[data-tour="nav-analytics"]',
+      title: 'Analytics',
+      body: 'Dive into charts, streaks, heatmaps and AI-powered insights to see your progress over time.',
+      position: 'top',
+    },
+    {
+      target: '[data-tour="nav-groups"]',
+      title: 'Groups',
+      body: 'Create or join a group to build habits together — family, team, or friends.',
+      position: 'top',
+    },
+  ];
+
+  if (isMobile()) {
+    // Mobile: show quick-add FAB and More menu
+    steps.push({
+      target: '[data-tour="nav-add"]',
+      title: 'Quick add',
+      body: 'Tap here to create a new habit or jot down a journal entry, anytime.',
+      position: 'top',
+    });
+    steps.push({
+      target: '[data-tour="nav-more"]',
+      title: 'More',
+      body: 'Settings, Journal, theme switching, and sign out all live here.',
+      position: 'top',
+    });
+  } else {
+    // Desktop: show Journal in sidebar (Settings is self-explanatory)
+    steps.push({
+      target: '[data-tour="nav-journal"]',
+      title: 'Journal',
+      body: 'Write daily reflections, track your mood, and spot patterns alongside your habits.',
+      position: 'right',
+    });
+  }
+
+  steps.push({
+    target: null,
     title: "You're all set!",
     body: "That's the tour. Start by adding a habit and checking it off today. You can replay this tour from Settings → About any time.",
     position: 'center',
-  },
-];
+  });
+
+  return steps;
+};
 
 /**
  * DashboardTour — optional spotlight walkthrough
@@ -49,6 +76,10 @@ const DashboardTour = ({ forceShow = false, onComplete }) => {
   const [step, setStep] = useState(-1); // -1 = prompt, 0..N = steps
   const [spotlightRect, setSpotlightRect] = useState(null);
   const tooltipRef = useRef(null);
+  const stepsRef = useRef(getSteps());
+
+  // Recalculate steps when tour starts (device may have changed)
+  const STEPS = stepsRef.current;
 
   // Check if we should show the prompt
   useEffect(() => {
@@ -205,6 +236,18 @@ const DashboardTour = ({ forceShow = false, onComplete }) => {
     const tooltipW = Math.min(320, window.innerWidth - 32);
     const tooltipEstH = 180; // estimated tooltip height
     const margin = 16; // min distance from screen edge
+
+    // Handle 'right' position (sidebar items on desktop)
+    if (currentStep.position === 'right') {
+      const top = Math.max(margin, Math.min(y + h / 2 - tooltipEstH / 2, window.innerHeight - tooltipEstH - margin));
+      return {
+        position: 'fixed',
+        top: `${top}px`,
+        left: `${x + w + gap}px`,
+        width: `${tooltipW}px`,
+        transform: 'none',
+      };
+    }
 
     // Decide vertical placement — prefer the step's declared position,
     // but auto-flip if there isn't enough room.
