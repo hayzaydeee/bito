@@ -230,7 +230,7 @@ const DashboardTour = ({ forceShow = false, onComplete, userId }) => {
             Want a quick tour?
           </h2>
           <p className="text-sm font-spartan text-[var(--color-text-secondary)] mb-5">
-            30 seconds to learn your way around. You can always replay it later.
+            30 seconds to learn your way around. You can always replay it later from Settings → About.
           </p>
           <div className="flex gap-3">
             <button onClick={startTour} className="tour-btn-primary">
