@@ -1,0 +1,44 @@
+{
+  "id": "seedling-user",
+  "label": "Seedling User — 3 days in, <7 entries, zero trends",
+  "userName": "Riley",
+  "periodLabel": "Jan 6 – Jan 8",
+  "habits": [
+    {
+      "name": "Morning walk",
+      "icon": "🚶",
+      "category": "health",
+      "completions": [true, false, true],
+      "currentStreak": 1,
+      "completionRate": 0.67,
+      "target": { "value": 1, "unit": "times" }
+    },
+    {
+      "name": "Read for 20 min",
+      "icon": "📖",
+      "category": "learning",
+      "completions": [true, true, false],
+      "currentStreak": 0,
+      "completionRate": 0.67,
+      "target": { "value": 1, "unit": "times" }
+    }
+  ],
+  "overallCompletionRate": 0.67,
+  "previousWeekCompletionRate": null,
+  "isFirstWeek": true,
+  "entryCount": 4,
+  "tier": "seedling",
+  "ruleBasedInsights": [],
+  "expectedBehavior": {
+    "dashboard": "Returns cached kickstart insights from onboarding. No LLM call.",
+    "analytics": "Returns null sections with tier info. Frontend shows progress bar.",
+    "weeklyReport": "Skipped entirely — seedling users do not receive weekly emails.",
+    "prohibitedPhrases": [
+      "trending",
+      "this week's pattern",
+      "compared to last week",
+      "your streak of",
+      "over the past"
+    ]
+  }
+}

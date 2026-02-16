@@ -9,6 +9,7 @@ const { authenticateJWT } = require('../middleware/auth');
 const { validateUserUpdate } = require('../middleware/validation');
 const { derivePersonality } = require('../utils/derivePersonality');
 const { clearUserCache } = require('./insights');
+const { generateKickstartInsights } = require('../services/kickstartService');
 
 const router = express.Router();
 
@@ -93,11 +94,28 @@ router.put('/profile', validateUserUpdate, async (req, res) => {
       clearUserCache(req.user._id);
     }
 
+    // Generate kickstart insights when onboarding completes (fire-and-forget on save)
+    const isOnboardingCompletion = updates.onboardingComplete === true && !req.user.onboardingComplete;
+
     const user = await User.findByIdAndUpdate(
       req.user._id,
       updates,
       { new: true, runValidators: true }
     );
+
+    // Trigger kickstart generation after save (non-blocking)
+    if (isOnboardingCompletion) {
+      generateKickstartInsights({
+        user: { ...user.toObject(), onboardingData: req.body.onboardingData || user.onboardingData },
+        habits: await Habit.find({ userId: req.user._id, isActive: true }).lean(),
+      }).then(kickstart => {
+        return User.findByIdAndUpdate(req.user._id, { kickstartInsights: kickstart });
+      }).then(() => {
+        console.log(`[Kickstart] Insights generated for user ${req.user._id}`);
+      }).catch(err => {
+        console.warn('[Kickstart] Failed to generate:', err.message);
+      });
+    }
 
     res.json({
       success: true,

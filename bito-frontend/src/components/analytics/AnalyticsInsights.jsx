@@ -102,9 +102,48 @@ const Skeleton = () => (
 /* -- Main component -------------------------------------------------- */
 const AnalyticsInsights = memo(({ habits, entries, timeRange }) => {
   const apiRange = timeRange === 'all' ? 'all' : timeRange;
-  const { sections, llmUsed, isLoading, error, refresh, generatedAt } = useAnalyticsInsights(apiRange);
+  const { sections, llmUsed, isLoading, error, refresh, generatedAt, tier, entryCount, thresholds } = useAnalyticsInsights(apiRange);
 
   if (isLoading) return <Skeleton />;
+
+  /* -- Seedling empty-state ---------------------------------------- */
+  if (tier === 'seedling') {
+    const target = thresholds?.sprouting ?? 7;
+    const pct = Math.min(100, Math.round(((entryCount ?? 0) / target) * 100));
+    const remaining = Math.max(0, target - (entryCount ?? 0));
+
+    return (
+      <div className="card p-5 text-center space-y-4">
+        <span className="text-3xl">🌱</span>
+        <h3 className="text-lg font-garamond font-bold text-[var(--color-text-primary)]">
+          Building Your Data
+        </h3>
+        <p className="text-sm font-spartan text-[var(--color-text-secondary)] max-w-md mx-auto">
+          Track {remaining} more {remaining === 1 ? 'entry' : 'entries'} to unlock AI-powered analytics.
+          Keep logging your habits — insights get smarter with more data!
+        </p>
+        <div className="max-w-xs mx-auto">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] font-spartan font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
+              Progress
+            </span>
+            <span className="text-[10px] font-spartan text-[var(--color-text-muted)]">
+              {entryCount ?? 0}/{target}
+            </span>
+          </div>
+          <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(99,102,241,0.1)' }}>
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${pct}%`,
+                background: 'linear-gradient(90deg, var(--color-brand-400), var(--color-brand-500, #7c3aed))',
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (error || !sections) {
     return (
@@ -141,6 +180,17 @@ const AnalyticsInsights = memo(({ habits, entries, timeRange }) => {
               }}
             >
               powered by OpenAI
+            </span>
+          )}
+          {tier === 'sprouting' && (
+            <span
+              className="text-[10px] font-spartan font-medium px-2 py-0.5 rounded-full"
+              style={{
+                background: 'rgba(34,197,94,0.12)',
+                color: 'var(--color-success)',
+              }}
+            >
+              Early data
             </span>
           )}
         </div>

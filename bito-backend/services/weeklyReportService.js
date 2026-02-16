@@ -21,6 +21,7 @@ const User = require('../models/User');
 const emailService = require('./emailService');
 const { baseLayout, button, buttonSecondary, statPill, infoCard, sectionTitle, BRAND } = require('./emailTemplates');
 const { buildSystemPrompt, getTemperature, DEFAULT_PERSONALITY } = require('../prompts/buildSystemPrompt');
+const { getUserInsightTier } = require('../utils/insightTier');
 
 // ── OpenAI client (shared lazy singleton) ──────────────────
 let _openaiClient = null;
@@ -128,6 +129,13 @@ class WeeklyReportService {
 
     // Skip if user has no habits (new user, nothing to report)
     if (!habits.length) return;
+
+    // Skip if user doesn't have enough data yet (seedling tier)
+    const tierInfo = await getUserInsightTier(user._id);
+    if (tierInfo.tier === 'seedling') {
+      console.log(`[WeeklyReport] Skipping ${user.email} — seedling tier (${tierInfo.entryCount} entries)`);
+      return;
+    }
 
     // Build per-habit breakdown
     const habitBreakdown = this._buildHabitBreakdown(habits, entries);

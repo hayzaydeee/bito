@@ -2,9 +2,70 @@ import React, { memo, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useInsights } from "../../globalHooks/useInsights";
 
+/* ─── Progress bar for seedling / sprouting tiers ─── */
+const TierProgress = ({ entryCount, thresholds, tier }) => {
+  if (!thresholds || tier === "growing") return null;
+
+  const target =
+    tier === "seedling" ? thresholds.sprouting : thresholds.growing;
+  const pct = Math.min(100, Math.round((entryCount / target) * 100));
+  const remaining = Math.max(0, target - entryCount);
+  const label =
+    tier === "seedling"
+      ? `Track ${remaining} more ${remaining === 1 ? "entry" : "entries"} to unlock deeper insights`
+      : `${remaining} more ${remaining === 1 ? "entry" : "entries"} until full analytics`;
+
+  return (
+    <div className="mt-3 relative z-10">
+      <div className="flex items-center justify-between mb-1">
+        <span
+          className="text-[10px] font-spartan font-medium uppercase tracking-wider"
+          style={{ color: "var(--color-text-muted)" }}
+        >
+          {tier === "seedling" ? "🌱 Getting started" : "🌿 Building momentum"}
+        </span>
+        <span
+          className="text-[10px] font-spartan"
+          style={{ color: "var(--color-text-muted)" }}
+        >
+          {entryCount}/{target}
+        </span>
+      </div>
+      <div
+        className="h-1.5 rounded-full overflow-hidden"
+        style={{ background: "rgba(99,102,241,0.1)" }}
+      >
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{
+            width: `${pct}%`,
+            background:
+              "linear-gradient(90deg, var(--color-brand-400), var(--color-brand-500, #7c3aed))",
+          }}
+        />
+      </div>
+      <p
+        className="text-[10px] font-spartan mt-1"
+        style={{ color: "var(--color-text-muted)" }}
+      >
+        {label}
+      </p>
+    </div>
+  );
+};
+
 /* ─── AI-powered insight card (Phase 12) ─── */
 const InsightsNudge = memo(({ habits, entries }) => {
-  const { insights, summary, isLoading, llmUsed, refresh } = useInsights();
+  const {
+    insights,
+    summary,
+    isLoading,
+    llmUsed,
+    refresh,
+    tier,
+    entryCount,
+    thresholds,
+  } = useInsights();
 
   /* ── Client-side fallback while backend loads ── */
   const fallbackText = useMemo(() => {
@@ -89,6 +150,9 @@ const InsightsNudge = memo(({ habits, entries }) => {
         {displayText}
       </p>
 
+      {/* Tier progress */}
+      <TierProgress entryCount={entryCount} thresholds={thresholds} tier={tier} />
+
       {/* Footer */}
       {!isLoading && insights.length > 0 && (
         <div className="flex items-center gap-2 mt-2 relative z-10">
@@ -105,6 +169,17 @@ const InsightsNudge = memo(({ habits, entries }) => {
               style={{ color: "var(--color-text-muted)" }}
             >
               · powered by OpenAI
+            </span>
+          )}
+          {tier === "sprouting" && (
+            <span
+              className="text-[10px] font-spartan font-medium px-2 py-0.5 rounded-full"
+              style={{
+                background: "rgba(34,197,94,0.12)",
+                color: "var(--color-success)",
+              }}
+            >
+              Early insights
             </span>
           )}
           <Link

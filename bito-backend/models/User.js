@@ -102,6 +102,18 @@ const userSchema = new mongoose.Schema({  // Basic user information
     type: Boolean,
     default: false
   },
+
+  // Kickstart insights (generated once at onboarding, served until data matures)
+  kickstartInsights: {
+    summary: { type: String },
+    insights: [{
+      title: { type: String },
+      body: { type: String },
+      icon: { type: String },
+      category: { type: String },
+    }],
+    generatedAt: { type: Date },
+  },
   
   // User preferences
   preferences: {

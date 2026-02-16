@@ -1,0 +1,64 @@
+{
+  "id": "sprouting-user",
+  "label": "Sprouting User — 12 entries, early data, constrained LLM",
+  "userName": "Jordan",
+  "periodLabel": "Jan 6 – Jan 12",
+  "habits": [
+    {
+      "name": "Meditate 10 min",
+      "icon": "🧘",
+      "category": "mindfulness",
+      "completions": [true, true, false, true, true, true, false],
+      "currentStreak": 0,
+      "completionRate": 0.71,
+      "target": { "value": 1, "unit": "times" }
+    },
+    {
+      "name": "No screens after 9 PM",
+      "icon": "📵",
+      "category": "health",
+      "completions": [false, true, true, false, true, false, true],
+      "currentStreak": 1,
+      "completionRate": 0.57,
+      "target": { "value": 1, "unit": "times" }
+    },
+    {
+      "name": "Write 500 words",
+      "icon": "✍️",
+      "category": "creativity",
+      "completions": [true, false, true, true, false, false, false],
+      "currentStreak": 0,
+      "completionRate": 0.43,
+      "target": { "value": 500, "unit": "words" }
+    }
+  ],
+  "overallCompletionRate": 0.57,
+  "previousWeekCompletionRate": null,
+  "isFirstWeek": false,
+  "entryCount": 12,
+  "tier": "sprouting",
+  "ruleBasedInsights": [
+    {
+      "title": "Building consistency",
+      "body": "Meditate 10 min is your most consistent habit so far.",
+      "icon": "🧘",
+      "category": "pattern"
+    }
+  ],
+  "expectedBehavior": {
+    "dashboard": "Runs early-insight prompt. Max 2 additionalInsights. No trend claims without evidence.",
+    "analytics": "Full pipeline but with early-insight feature. UI shows 'Early data' badge.",
+    "weeklyReport": "Skipped — sprouting users are still below growing threshold.",
+    "prohibitedPhrases": [
+      "consistent trend",
+      "over the past month",
+      "week-over-week improvement",
+      "long-term pattern"
+    ],
+    "requiredBehavior": [
+      "Say less if data is sparse",
+      "Max 2 additional insights",
+      "Acknowledge limited data explicitly"
+    ]
+  }
+}

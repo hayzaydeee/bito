@@ -3,6 +3,7 @@ const { authenticateJWT } = require('../middleware/auth');
 const { generateInsights } = require('../services/insightsEngine');
 const { enrichWithLLM, isLLMAvailable } = require('../services/llmEnrichment');
 const { buildSystemPrompt, getTemperature, DEFAULT_PERSONALITY } = require('../prompts/buildSystemPrompt');
+const { getUserInsightTier } = require('../utils/insightTier');
 const mongoose = require('mongoose');
 
 const router = express.Router();
@@ -44,13 +45,48 @@ router.get('/', async (req, res) => {
     const userId = req.user._id.toString();
     const forceRefresh = req.query.refresh === 'true';
 
-    // Check cache
+    // Determine data-maturity tier
+    const tierInfo = await getUserInsightTier(req.user._id);
+
+    // ── Seedling: serve kickstart insights, no LLM ──
+    if (tierInfo.tier === 'seedling') {
+      const User = mongoose.model('User');
+      const user = await User.findById(req.user._id).select('kickstartInsights').lean();
+      const kickstart = user?.kickstartInsights;
+
+      const insights = (kickstart?.insights || []).map(k => ({
+        type: 'kickstart',
+        title: k.title,
+        body: k.body,
+        icon: k.icon || '✨',
+        category: 'kickstart',
+        source: 'kickstart',
+        priority: 1,
+      }));
+
+      return res.json({
+        success: true,
+        data: {
+          insights,
+          summary: kickstart?.summary || 'Start tracking your habits to unlock AI-powered insights.',
+          llmUsed: false,
+          llmAvailable: isLLMAvailable(),
+          generatedAt: kickstart?.generatedAt || new Date().toISOString(),
+          tier: tierInfo.tier,
+          entryCount: tierInfo.entryCount,
+          thresholds: tierInfo.thresholds,
+          cached: false,
+        },
+      });
+    }
+
+    // Check cache (sprouting + growing)
     if (!forceRefresh) {
       const cached = getCached(userId);
       if (cached) {
         return res.json({
           success: true,
-          data: { ...cached, cached: true },
+          data: { ...cached, cached: true, tier: tierInfo.tier, entryCount: tierInfo.entryCount, thresholds: tierInfo.thresholds },
         });
       }
     }
@@ -58,7 +94,7 @@ router.get('/', async (req, res) => {
     // Layer 1: Rule-based insights
     const ruleInsights = await generateInsights(req.user._id);
 
-    // Layer 2: Optional LLM enrichment
+    // Layer 2: LLM enrichment
     const Habit = mongoose.model('Habit');
     const HabitEntry = mongoose.model('HabitEntry');
     const JournalEntry = mongoose.model('JournalEntry');
@@ -72,12 +108,16 @@ router.get('/', async (req, res) => {
       JournalEntry.find({ userId: req.user._id, date: { $gte: thirtyDaysAgo } }).lean(),
     ]);
 
+    // Sprouting tier uses constrained early-insight prompt
+    const llmFeature = tierInfo.tier === 'sprouting' ? 'early-insight' : 'insight-enrichment';
+
     const { insights, summary, llmUsed } = await enrichWithLLM(
       ruleInsights,
       habits,
       entries,
       journalEntries,
-      req.user.aiPersonality
+      req.user.aiPersonality,
+      llmFeature
     );
 
     const responseData = {
@@ -86,6 +126,9 @@ router.get('/', async (req, res) => {
       llmUsed,
       llmAvailable: isLLMAvailable(),
       generatedAt: new Date().toISOString(),
+      tier: tierInfo.tier,
+      entryCount: tierInfo.entryCount,
+      thresholds: tierInfo.thresholds,
     };
 
     // Cache the result
@@ -114,11 +157,33 @@ router.get('/analytics', async (req, res) => {
     const forceRefresh = req.query.refresh === 'true';
     const cacheKey = `${userId}_analytics_${range}`;
 
-    // Check cache
+    // Determine data-maturity tier
+    const tierInfo = await getUserInsightTier(req.user._id);
+
+    // Seedling: no analytics — not enough data
+    if (tierInfo.tier === 'seedling') {
+      return res.json({
+        success: true,
+        data: {
+          sections: null,
+          ruleInsights: [],
+          range,
+          rangeDays: 0,
+          llmUsed: false,
+          generatedAt: new Date().toISOString(),
+          tier: tierInfo.tier,
+          entryCount: tierInfo.entryCount,
+          thresholds: tierInfo.thresholds,
+          cached: false,
+        },
+      });
+    }
+
+    // Check cache (sprouting + growing)
     if (!forceRefresh) {
       const cached = getCached(cacheKey);
       if (cached) {
-        return res.json({ success: true, data: { ...cached, cached: true } });
+        return res.json({ success: true, data: { ...cached, cached: true, tier: tierInfo.tier, entryCount: tierInfo.entryCount, thresholds: tierInfo.thresholds } });
       }
     }
 
@@ -154,6 +219,9 @@ router.get('/analytics', async (req, res) => {
       rangeDays,
       llmUsed: sections._llmUsed || false,
       generatedAt: new Date().toISOString(),
+      tier: tierInfo.tier,
+      entryCount: tierInfo.entryCount,
+      thresholds: tierInfo.thresholds,
     };
     delete sections._llmUsed;
 

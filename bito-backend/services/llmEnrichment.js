@@ -86,15 +86,16 @@ function buildDataSummary(habits, entries, journalEntries) {
  * @param {Object[]} ruleInsights  - the Layer 1 insights
  * @param {Object}   dataSummary   - compact user data snapshot
  * @param {Object}   [personality] - user's AI personality config
+ * @param {string}   [feature]     - base prompt key to use
  * @returns {Promise<Object|null>} { summary, additionalInsights[] } or null on failure
  */
-async function callLLM(ruleInsights, dataSummary, personality = DEFAULT_PERSONALITY) {
+async function callLLM(ruleInsights, dataSummary, personality = DEFAULT_PERSONALITY, feature = 'insight-enrichment') {
   const client = getClient();
   if (!client) return null;
 
   const model = process.env.INSIGHTS_LLM_MODEL || 'gpt-4o-mini';
 
-  const systemPrompt = buildSystemPrompt(personality, 'insight-enrichment');
+  const systemPrompt = buildSystemPrompt(personality, feature);
   const temperature = getTemperature(personality);
 
   const userMessage = JSON.stringify({
@@ -133,9 +134,10 @@ async function callLLM(ruleInsights, dataSummary, personality = DEFAULT_PERSONAL
  * @param {Object[]} entries        - recent habit entries (lean)
  * @param {Object[]} journalEntries - recent journal entries (lean)
  * @param {Object}   [personality]  - user's AI personality config
+ * @param {string}   [feature]      - base prompt key (default: 'insight-enrichment')
  * @returns {Promise<Object>} { insights[], summary? }
  */
-async function enrichWithLLM(ruleInsights, habits, entries, journalEntries, personality) {
+async function enrichWithLLM(ruleInsights, habits, entries, journalEntries, personality, feature = 'insight-enrichment') {
   if (!isLLMAvailable()) {
     console.log('[Insights] LLM not available (no OPENAI_API_KEY)');
     return { insights: ruleInsights, summary: null, llmUsed: false };
@@ -143,7 +145,7 @@ async function enrichWithLLM(ruleInsights, habits, entries, journalEntries, pers
 
   console.log('[Insights] Attempting LLM enrichment...');
   const dataSummary = buildDataSummary(habits, entries, journalEntries);
-  const result = await callLLM(ruleInsights, dataSummary, personality || DEFAULT_PERSONALITY);
+  const result = await callLLM(ruleInsights, dataSummary, personality || DEFAULT_PERSONALITY, feature);
 
   if (!result) {
     console.log('[Insights] LLM returned no result, falling back to rule-based only');
