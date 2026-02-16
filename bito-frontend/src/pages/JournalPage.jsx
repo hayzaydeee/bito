@@ -94,7 +94,7 @@ const JournalPage = () => {
   /* ── editor ready ────────────────────────── */
   const handleEditorReady = useCallback((inst) => {
     setEditor(inst);
-    setTimeout(() => setEditorReady(true), 120);
+    setEditorReady(true);
   }, []);
 
   /* ── debounced save ──────────────────────── */

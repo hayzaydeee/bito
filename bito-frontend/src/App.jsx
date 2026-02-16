@@ -5,6 +5,8 @@ import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import OAuthCallback from "./pages/OAuthCallback";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 // import HabitsPage from "./pages/HabitsPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
@@ -55,6 +57,8 @@ const ThemedApp = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/auth/callback" element={<OAuthCallback />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             
             {/* Invitation route without layout */}
             <Route path="/invite/:token" element={<InvitationPage />} />

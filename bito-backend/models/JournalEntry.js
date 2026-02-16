@@ -76,7 +76,7 @@ const journalEntrySchema = new mongoose.Schema({
   // Usage tracking
   createdVia: {
     type: String,
-    enum: ['modal', 'dedicated', 'mobile', 'api'],
+    enum: ['modal', 'dedicated', 'page', 'mobile', 'api'],
     default: 'modal'
   },
   editSessions: {
@@ -165,8 +165,12 @@ journalEntrySchema.methods.updateContent = function(richContent, plainText, meta
   return this.save();
 };
 
-// Instance method to extract plain text from BlockNote content
-journalEntrySchema.methods.extractPlainText = function(blockNoteContent) {
+/**
+ * Extract plain text from BlockNote JSON content.
+ * IMPORTANT: An identical copy exists in the frontend at
+ * src/services/journalService.js — keep both in sync.
+ */
+journalEntrySchema.statics.extractPlainText = function(blockNoteContent) {
   if (!blockNoteContent || !Array.isArray(blockNoteContent)) {
     return '';
   }
@@ -186,7 +190,6 @@ journalEntrySchema.methods.extractPlainText = function(blockNoteContent) {
       }
     }
     
-    // Add newline for block separation
     return text + '\n';
   };
   
@@ -194,6 +197,11 @@ journalEntrySchema.methods.extractPlainText = function(blockNoteContent) {
     .map(extractTextFromBlock)
     .join('')
     .trim();
+};
+
+// Instance wrapper for backward compatibility
+journalEntrySchema.methods.extractPlainText = function(blockNoteContent) {
+  return this.constructor.extractPlainText(blockNoteContent);
 };
 
 module.exports = mongoose.model('JournalEntry', journalEntrySchema);

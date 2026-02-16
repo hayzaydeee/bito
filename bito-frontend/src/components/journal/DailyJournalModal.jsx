@@ -45,10 +45,7 @@ const DailyJournalModal = ({
   // Handle editor being ready
   const handleEditorReady = useCallback((editorInstance) => {
     setEditor(editorInstance);
-    // Wait a moment for content to be fully loaded before allowing saves
-    setTimeout(() => {
-      setEditorInitialized(true);
-    }, 100);
+    setEditorInitialized(true);
   }, []);
 
   // Format date for display
@@ -279,15 +276,12 @@ const DailyJournalModal = ({
         const newWordCount = journalService.getWordCount(plainText);
         setWordCount(newWordCount);
         
-        // If editor is ready, update its content
+        // If editor is ready, update its content directly
         if (editor && editorInitialized) {
           try {
-            // Wait a moment to ensure editor is ready
-            setTimeout(() => {
-              if (editor.replaceBlocks) {
-                editor.replaceBlocks(editor.document, template.content);
-              }
-            }, 100);
+            if (editor.replaceBlocks) {
+              editor.replaceBlocks(editor.document, template.content);
+            }
           } catch (error) {
             console.warn('Could not update editor with template content:', error);
           }

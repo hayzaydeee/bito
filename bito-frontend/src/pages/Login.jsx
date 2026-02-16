@@ -374,6 +374,7 @@ const Login = () => {
                     className="text-xs font-spartan font-medium transition-colors"
                     style={{ color: "var(--color-brand-500)" }}
                     disabled={isLoading}
+                    onClick={() => navigate("/forgot-password")}
                   >
                     Forgot password?
                   </button>

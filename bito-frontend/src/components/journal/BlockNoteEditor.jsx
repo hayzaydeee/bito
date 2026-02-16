@@ -3,8 +3,7 @@ import { useCreateBlockNote } from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/mantine';
 import { useTheme } from '../../contexts/ThemeContext';
 
-// Import BlockNote styles
-import '@blocknote/core/fonts/inter.css';
+// Import BlockNote styles (Inter font intentionally omitted — app uses EB Garamond + League Spartan)
 import '@blocknote/mantine/style.css';
 
 const BlockNoteEditor = ({ 
@@ -120,10 +119,6 @@ const BlockNoteEditor = ({
     return validatedContent;
   }, [initialContent, createValidBlock]);
   
-  // Add debug logging
-  console.log('BlockNote initialContent received:', initialContent);
-  console.log('BlockNote processedInitialContent:', processedInitialContent);
-  
   // Create editor with default configuration - BlockNote includes all block types by default
   const editor = useCreateBlockNote({
     initialContent: processedInitialContent,
@@ -144,10 +139,10 @@ const BlockNoteEditor = ({
     };
 
     // Listen for document changes
-    editor.onChange(handleUpdate);
+    const unsubscribe = editor.onChange(handleUpdate);
 
     return () => {
-      // Cleanup if needed
+      if (typeof unsubscribe === 'function') unsubscribe();
     };
   }, [editor, onChange]);
 
@@ -157,61 +152,6 @@ const BlockNoteEditor = ({
       onReady(editor);
     }
   }, [editor, onReady]);
-
-  // Update content when initialContent changes
-  useEffect(() => {
-    if (editor && initialContent && Array.isArray(initialContent) && initialContent.length > 0) {
-      // Validate the content structure before updating
-      const isValidContent = initialContent.every(block => 
-        block && 
-        typeof block === 'object' && 
-        block.type && 
-        Array.isArray(block.content)
-      );
-      
-      if (!isValidContent) {
-        console.warn('Invalid BlockNote content structure:', initialContent);
-        return;
-      }
-      
-      // Only update if content is different to avoid cursor issues
-      try {
-        const currentContent = JSON.stringify(editor.document);
-        const newContent = JSON.stringify(initialContent);
-        
-        if (currentContent !== newContent) {
-          // Sanitize the content before passing to replaceBlocks
-          const sanitizedContent = initialContent.map(block => {
-            if (!block || typeof block !== 'object') {
-              return createValidBlock(null);
-            }
-            
-            // Ensure props is a valid object without null/undefined values
-            const sanitizedProps = {};
-            if (block.props && typeof block.props === 'object' && !Array.isArray(block.props)) {
-              for (const [key, value] of Object.entries(block.props)) {
-                if (value !== null && value !== undefined) {
-                  sanitizedProps[key] = value;
-                }
-              }
-            }
-            
-            return {
-              ...block,
-              id: block.id || crypto.randomUUID?.() || Math.random().toString(36),
-              type: block.type || "paragraph",
-              props: sanitizedProps,
-              content: Array.isArray(block.content) ? block.content : []
-            };
-          });
-          
-          editor.replaceBlocks(editor.document, sanitizedContent);
-        }
-      } catch (error) {
-        console.error('Error updating editor content:', error);
-      }
-    }
-  }, [editor, initialContent]);
 
   if (editorError) {
     return (

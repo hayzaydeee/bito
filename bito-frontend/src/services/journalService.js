@@ -8,13 +8,10 @@ export const journalService = {
       const data = await api.get(`/api/journal/${date}`);
       return data;
     } catch (error) {
-      console.log('Journal fetch error:', error.message); // Debug log
-      
       // Check if it's a 404 error (journal entry doesn't exist yet)
       if (error.message?.includes('Journal entry not found') || 
           error.message?.includes('404') || 
           error.message?.includes('Not Found')) {
-        console.log('Returning null for 404 error'); // Debug log
         return null; // No journal entry for this date
       }
       
@@ -35,21 +32,15 @@ export const journalService = {
   // Create or update daily journal entry
   async saveDailyJournal(date, data) {
     try {
-      console.log('Saving journal entry:', { date, data }); // Debug log
       const result = await api.post(`/api/journal/${date}`, data);
-      console.log('Journal save success:', result); // Debug log
       return result;
     } catch (error) {
-      console.error('Journal save error details:', error); // Enhanced error logging
-      console.error('Error response:', error.response?.data); // Log response data
       
       if (error.message?.includes('401') || error.message?.includes('Access denied')) {
         throw new Error('Please log in to save journal entries');
       }
       if (error.message?.includes('400')) {
-        // Try to extract more specific error from the response
         const errorDetails = error.response?.data?.errors || error.response?.data?.message || 'Invalid data provided';
-        console.error('Validation errors:', errorDetails);
         throw new Error(`Validation error: ${JSON.stringify(errorDetails)}. Please check your journal entry.`);
       }
       throw error;
@@ -162,7 +153,11 @@ export const journalService = {
     }
   },
 
-  // Extract plain text from BlockNote content
+  /**
+   * Extract plain text from BlockNote JSON content.
+   * IMPORTANT: An identical copy exists on the backend at
+   * models/JournalEntry.js (static method) — keep both in sync.
+   */
   extractPlainText(blockNoteContent) {
     if (!blockNoteContent || !Array.isArray(blockNoteContent)) {
       return '';
