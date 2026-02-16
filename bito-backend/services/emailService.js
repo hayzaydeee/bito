@@ -1,86 +1,67 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
 class EmailService {
   constructor() {
+    // Expose a transporter-like interface so existing code
+    // (reminderService, workspace invites) keeps working.
     this.transporter = null;
+    this.resend = null;
     this.init();
   }
 
-  async init() {
-    // Check if real email credentials are provided
-    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-      // Use real email service (Gmail, Outlook, etc.)
-      console.log('📧 Initializing real email service...');
-      
-      const emailService = process.env.EMAIL_SERVICE || 'gmail';
-      
-      if (emailService === 'gmail') {
-        // Gmail-specific configuration with proper SSL handling
-        this.transporter = nodemailer.createTransport({
-          service: 'gmail',
-          host: 'smtp.gmail.com',
-          port: 587,
-          secure: false, // true for 465, false for other ports
-          auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS
-          },
-          tls: {
-            rejectUnauthorized: false // Accept self-signed certificates
-          }
-        });
-      } else {
-        // Other email services
-        this.transporter = nodemailer.createTransport({
-          service: emailService,
-          auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS
-          },
-          tls: {
-            rejectUnauthorized: false
-          }
-        });
-      }
-      
-      console.log('📧 Real email service initialized with:', process.env.EMAIL_USER);
-      
-      // Test the connection
-      try {
-        await this.transporter.verify();
-        console.log('✅ Email service connection verified successfully!');
-      } catch (verifyError) {
-        console.warn('⚠️ Email service verification failed, but will continue:', verifyError.message);
-      }
+  init() {
+    const apiKey = process.env.RESEND_API_KEY;
+
+    if (apiKey) {
+      this.resend = new Resend(apiKey);
+
+      // Provide a nodemailer-compatible .transporter so callers that do
+      // `emailService.transporter.sendMail(opts)` still work.
+      this.transporter = {
+        sendMail: (opts) => this.sendMail(opts),
+      };
+
+      console.log('📧 Resend email service initialized');
     } else {
-      // Fallback to Ethereal Email for testing
-      console.log('📧 No real email credentials found, using test email service...');
-      try {
-        const testAccount = await nodemailer.createTestAccount();
-        this.transporter = nodemailer.createTransport({
-          host: 'smtp.ethereal.email',
-          port: 587,
-          secure: false,
-          auth: {
-            user: testAccount.user,
-            pass: testAccount.pass
-          }
-        });
-        console.log('📧 Test email service initialized with:', testAccount.user);
-      } catch (error) {
-        console.error('❌ Failed to initialize email service:', error);
-        // Fallback to console logging
-        this.transporter = {
-          sendMail: async (mailOptions) => {
-            console.log('📧 EMAIL WOULD BE SENT:');
-            console.log('To:', mailOptions.to);
-            console.log('Subject:', mailOptions.subject);
-            console.log('HTML:', mailOptions.html);
-            return { messageId: 'console-' + Date.now() };
-          }
-        };
-      }
+      console.warn('⚠️  RESEND_API_KEY not set — emails will be logged to console');
+      this.transporter = {
+        sendMail: async (mailOptions) => {
+          console.log('📧 EMAIL WOULD BE SENT:');
+          console.log('To:', mailOptions.to);
+          console.log('Subject:', mailOptions.subject);
+          return { messageId: 'console-' + Date.now() };
+        },
+      };
     }
+  }
+
+  /**
+   * Send an email via Resend HTTP API.
+   * Accepts nodemailer-style { from, to, subject, html } options.
+   */
+  async sendMail(mailOptions) {
+    if (!this.resend) {
+      return this.transporter.sendMail(mailOptions);
+    }
+
+    // Parse "from" — Resend needs a verified domain sender.
+    // Default to onboarding@resend.dev (works on free tier for testing).
+    const from = process.env.EMAIL_FROM || 'Bito <onboarding@resend.dev>';
+
+    const { data, error } = await this.resend.emails.send({
+      from,
+      to: Array.isArray(mailOptions.to) ? mailOptions.to : [mailOptions.to],
+      subject: mailOptions.subject,
+      html: mailOptions.html,
+    });
+
+    if (error) {
+      console.error('❌ Resend email error:', error);
+      throw new Error(error.message || 'Resend email failed');
+    }
+
+    console.log('📧 Email sent via Resend:', data.id, '→', mailOptions.to);
+    return { messageId: data.id };
   }
 
   async sendInvitationEmail(invitation, workspace, invitedBy) {
@@ -102,24 +83,12 @@ class EmailService {
     };
 
     try {
-      const info = await this.transporter.sendMail(mailOptions);
-      
-      // Log result based on email type
-      if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-        console.log('📧 Real email sent successfully to:', mailOptions.to);
-        console.log('📧 Message ID:', info.messageId);
-      } else {
-        // For test emails, log the preview URL
-        const previewUrl = nodemailer.getTestMessageUrl(info);
-        if (previewUrl) {
-          console.log('📧 Test email sent! Preview URL:', previewUrl);
-        }
-      }
+      const info = await this.sendMail(mailOptions);
+      console.log('📧 Invitation email sent to:', mailOptions.to);
       
       return {
         success: true,
         messageId: info.messageId,
-        previewUrl: (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) ? nodemailer.getTestMessageUrl(info) : null
       };
     } catch (error) {
       console.error('❌ Failed to send invitation email:', error);
