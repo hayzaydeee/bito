@@ -555,15 +555,6 @@ const CustomHabitEditModal = ({
                 
                 <button
                   type="button"
-                  className="w-full flex items-center justify-center gap-2 py-2 px-4 border border-amber-300 rounded-lg text-amber-700 hover:bg-amber-50 transition-colors"
-                  onClick={handleArchive}
-                >
-                  <ArchiveIcon />
-                  {formData.isActive ? "Archive Habit" : "Restore Habit"}
-                </button>
-                
-                <button
-                  type="button"
                   className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                   onClick={handleDelete}
                 >
