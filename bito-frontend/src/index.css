@@ -747,13 +747,12 @@ h1, h2, h3, h4, h5, h6 {
 .tour-tooltip {
   z-index: 10;
   max-width: 320px;
-  width: calc(100vw - 32px);
   padding: 20px;
   border-radius: 14px;
   background: var(--color-surface-elevated);
   border: 1px solid var(--color-border-primary);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
-  animation: tourSlideUp 0.3s ease-out;
+  animation: tourSlideUp 0.3s ease-out forwards;
 }
 
 .tour-btn-primary {

@@ -95,9 +95,12 @@ const DashboardTour = ({ forceShow = false, onComplete }) => {
 
   useEffect(() => {
     measureTarget();
+    // Re-measure after a short delay to catch async-rendered elements
+    const timer = setTimeout(measureTarget, 100);
     window.addEventListener('resize', measureTarget);
     window.addEventListener('scroll', measureTarget, true);
     return () => {
+      clearTimeout(timer);
       window.removeEventListener('resize', measureTarget);
       window.removeEventListener('scroll', measureTarget, true);
     };
@@ -186,7 +189,7 @@ const DashboardTour = ({ forceShow = false, onComplete }) => {
       )`
     : undefined;
 
-  // Tooltip position calculation
+  // Tooltip position calculation — edge-aware with auto-flip
   const getTooltipStyle = () => {
     if (isCenter || !spotlightRect) {
       return {
@@ -196,24 +199,45 @@ const DashboardTour = ({ forceShow = false, onComplete }) => {
         transform: 'translate(-50%, -50%)',
       };
     }
+
     const { x, y, w, h } = spotlightRect;
     const gap = 16;
+    const tooltipW = Math.min(320, window.innerWidth - 32);
+    const tooltipEstH = 180; // estimated tooltip height
+    const margin = 16; // min distance from screen edge
 
-    if (currentStep.position === 'bottom') {
-      return {
-        position: 'fixed',
-        top: `${y + h + gap}px`,
-        left: `${Math.max(16, Math.min(x + w / 2, window.innerWidth - 16))}px`,
-        transform: 'translateX(-50%)',
-      };
+    // Decide vertical placement — prefer the step's declared position,
+    // but auto-flip if there isn't enough room.
+    let vertical = currentStep.position; // 'top' or 'bottom'
+    const spaceBelow = window.innerHeight - (y + h + gap);
+    const spaceAbove = y - gap;
+
+    if (vertical === 'bottom' && spaceBelow < tooltipEstH && spaceAbove > spaceBelow) {
+      vertical = 'top';
+    } else if (vertical === 'top' && spaceAbove < tooltipEstH && spaceBelow > spaceAbove) {
+      vertical = 'bottom';
     }
-    // top
-    return {
+
+    // Horizontal: center on target, then clamp so tooltip stays on screen
+    const centerX = x + w / 2;
+    let left = centerX - tooltipW / 2;
+    left = Math.max(margin, Math.min(left, window.innerWidth - tooltipW - margin));
+
+    const style = {
       position: 'fixed',
-      bottom: `${window.innerHeight - y + gap}px`,
-      left: `${Math.max(16, Math.min(x + w / 2, window.innerWidth - 16))}px`,
-      transform: 'translateX(-50%)',
+      left: `${left}px`,
+      width: `${tooltipW}px`,
+      // Reset transform — we position explicitly, no translateX needed
+      transform: 'none',
     };
+
+    if (vertical === 'bottom') {
+      style.top = `${y + h + gap}px`;
+    } else {
+      style.bottom = `${window.innerHeight - y + gap}px`;
+    }
+
+    return style;
   };
 
   return createPortal(
