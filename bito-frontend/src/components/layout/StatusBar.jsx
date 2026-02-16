@@ -160,19 +160,6 @@ const StatusBar = ({
           />
         </div>
 
-        {/* Settings — desktop only */}
-        {!isMobile && (
-          <button 
-            onClick={() => navigate('/app/settings')}
-            className="p-1.5 rounded-lg transition-colors"
-            style={{ color: "var(--color-text-secondary)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--color-surface-hover)")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-          >
-            <GearIcon className="w-4 h-4" />
-          </button>
-        )}
-
         {/* User Avatar with Dropdown — desktop only */}
         {!isMobile && (
           <div className="relative flex items-center pl-2 ml-1 border-l z-50" style={{ borderColor: "var(--color-border-primary)" }}>
