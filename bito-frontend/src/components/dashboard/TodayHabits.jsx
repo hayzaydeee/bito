@@ -152,7 +152,13 @@ const TodayHabits = memo(
           </span>
         </div>
 
-        <div className="space-y-2">
+        <div
+          className={
+            sortedHabits.length > 6
+              ? "grid grid-cols-1 sm:grid-cols-2 gap-2"
+              : "space-y-2"
+          }
+        >
           {sortedHabits.map((habit) => {
             const todayStr = new Date().toISOString().split("T")[0];
             const entry = entries[habit._id]?.[todayStr];
