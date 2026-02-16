@@ -15,6 +15,12 @@ const OpenAIModule = require('openai');
 const OpenAI = OpenAIModule.default || OpenAIModule.OpenAI || OpenAIModule;
 const { buildSystemPrompt, getTemperature, DEFAULT_PERSONALITY } = require('../prompts/buildSystemPrompt');
 
+/** Midnight-normalised date string YYYY-MM-DD */
+const toDateKey = (d) => {
+  const dt = new Date(d);
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+};
+
 /**
  * Check whether LLM enrichment is available.
  */
@@ -60,8 +66,30 @@ function buildDataSummary(habits, entries, journalEntries) {
   const recentEntries = entries.filter(e => new Date(e.date) >= last7);
   const recentJournals = journalEntries.filter(j => new Date(j.date) >= last7);
 
-  const completionThisWeek = recentEntries.length > 0
-    ? Math.round((recentEntries.filter(e => e.completed).length / recentEntries.length) * 100)
+  // ── Per-day breakdown so the LLM knows exactly what happened ──
+  const dayMap = {};
+  for (const entry of recentEntries) {
+    const dateKey = toDateKey(entry.date);
+    if (!dayMap[dateKey]) dayMap[dateKey] = { completed: [], missed: [] };
+    const habit = habits.find(h => String(h._id) === String(entry.habitId));
+    const name = habit?.name || 'Unknown';
+    if (entry.completed) {
+      dayMap[dateKey].completed.push(name);
+    } else {
+      dayMap[dateKey].missed.push(name);
+    }
+  }
+
+  const dailyBreakdown = Object.entries(dayMap)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, data]) => ({ date, ...data }));
+
+  const daysTracked = Object.keys(dayMap).length;
+  const totalCompleted = recentEntries.filter(e => e.completed).length;
+  const totalEntries = recentEntries.length;
+
+  const completionThisWeek = totalEntries > 0
+    ? Math.round((totalCompleted / totalEntries) * 100)
     : null;
 
   const avgMood = recentJournals.length > 0
@@ -71,11 +99,14 @@ function buildDataSummary(habits, entries, journalEntries) {
   return {
     habits: habitSummaries,
     thisWeek: {
+      daysTracked,
       completionRate: completionThisWeek,
-      entriesLogged: recentEntries.length,
+      entriesLogged: totalEntries,
+      completedCount: totalCompleted,
       journalDays: recentJournals.length,
       avgMood: avgMood ? parseFloat(avgMood.toFixed(1)) : null,
     },
+    dailyBreakdown,
   };
 }
 
