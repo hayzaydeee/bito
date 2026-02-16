@@ -130,8 +130,6 @@ DayLabels.displayName = "DayLabels";
    Shared helpers
    ════════════════════════════════════════════ */
 
-const LS_MODE_KEY = "bito_weekstrip_mode"; // "inline" | "compact"
-
 const cellColor = (pct) => {
   if (pct === 0) return "var(--color-surface-hover)";
   if (pct < 0.5) return "rgba(99,102,241,0.25)";
@@ -160,23 +158,9 @@ const buildDayStats = (dates, habits, entries) =>
    ════════════════════════════════════════════ */
 
 const WeekStrip = memo(({ habits, entries, onToggle, fetchHabitEntries }) => {
-  // Persisted mode
-  const [mode, setMode] = useState(() => {
-    try { return localStorage.getItem(LS_MODE_KEY) || "inline"; } catch { return "inline"; }
-  });
   const [view, setView] = useState("week"); // week | month | year
   const [anchor, setAnchor] = useState(() => new Date());
   const [expandedDate, setExpandedDate] = useState(null);
-  const [compactExpanded, setCompactExpanded] = useState(false);
-
-  // Persist mode
-  const handleModeToggle = useCallback(() => {
-    setMode((prev) => {
-      const next = prev === "inline" ? "compact" : "inline";
-      try { localStorage.setItem(LS_MODE_KEY, next); } catch {}
-      return next;
-    });
-  }, []);
 
   // View change resets expanded
   const handleViewChange = useCallback((v) => {
@@ -222,11 +206,11 @@ const WeekStrip = memo(({ habits, entries, onToggle, fetchHabitEntries }) => {
 
   // ── WEEK data ──
   const weekData = useMemo(() => {
-    if (view !== "week" && !(mode === "compact" && !compactExpanded)) return [];
+    if (view !== "week") return [];
     const ws = habitUtils.getWeekStart(anchor);
     const dates = habitUtils.getWeekDates(ws);
     return buildDayStats(dates, habits, entries);
-  }, [view, mode, compactExpanded, anchor, habits, entries]);
+  }, [view, anchor, habits, entries]);
 
   // ── MONTH data ──
   const monthGrid = useMemo(() => {
@@ -278,50 +262,33 @@ const WeekStrip = memo(({ habits, entries, onToggle, fetchHabitEntries }) => {
 
   /* ═══ Render helpers ═══ */
 
-  // Header with pills + arrows
+  // Header: view pills on top, centered nav arrows below
   const renderHeader = () => (
-    <div className="flex items-center justify-between mb-3 gap-2">
-      <div className="flex items-center gap-2 min-w-0">
-        <h2 className="text-base font-garamond font-bold whitespace-nowrap" style={{ color: "var(--color-text-primary)" }}>
-          {view === "week" ? "This week" : view === "month" ? "Month" : "Year"}
+    <div className="mb-3 space-y-2">
+      {/* Row 1: ViewPills right-aligned */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-base font-garamond font-bold" style={{ color: "var(--color-text-primary)" }}>
+          {rangeLabel}
         </h2>
-        {/* Nav arrows + label */}
-        <div className="flex items-center gap-1">
-          <button onClick={handlePrev} className="p-1 rounded-md hover:bg-[var(--color-surface-hover)] transition-colors" aria-label="Previous">
-            <ChevronLeftIcon className="w-4 h-4" style={{ color: "var(--color-text-secondary)" }} />
-          </button>
-          <span className="text-xs font-spartan font-medium tabular-nums whitespace-nowrap" style={{ color: "var(--color-text-secondary)" }}>
-            {rangeLabel}
-          </span>
-          <button onClick={handleNext} className="p-1 rounded-md hover:bg-[var(--color-surface-hover)] transition-colors" aria-label="Next">
-            <ChevronRightIcon className="w-4 h-4" style={{ color: "var(--color-text-secondary)" }} />
-          </button>
-          {!isCurrentPeriod && (
-            <button
-              onClick={handleToday}
-              className="px-2 py-0.5 rounded-full text-[10px] font-spartan font-semibold transition-colors"
-              style={{ backgroundColor: "var(--color-brand-500)", color: "white" }}
-            >
-              Today
-            </button>
-          )}
-        </div>
-      </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
         <ViewPills value={view} onChange={handleViewChange} />
-        {/* Mode toggle */}
-        <button
-          onClick={handleModeToggle}
-          className="p-1.5 rounded-md hover:bg-[var(--color-surface-hover)] transition-colors hidden sm:block"
-          aria-label={mode === "inline" ? "Switch to compact mode" : "Switch to inline mode"}
-          title={mode === "inline" ? "Compact mode" : "Inline mode"}
-        >
-          {mode === "inline" ? (
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5" style={{ color: "var(--color-text-tertiary)" }} /><rect x="8" y="1" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5" style={{ color: "var(--color-text-tertiary)" }} /><rect x="1" y="8" width="12" height="5" rx="1" stroke="currentColor" strokeWidth="1.5" style={{ color: "var(--color-text-tertiary)" }} /></svg>
-          ) : (
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="12" height="3" rx="1" stroke="currentColor" strokeWidth="1.5" style={{ color: "var(--color-text-tertiary)" }} /><rect x="1" y="6" width="12" height="3" rx="1" stroke="currentColor" strokeWidth="1.5" style={{ color: "var(--color-text-tertiary)" }} /><rect x="1" y="11" width="12" height="2" rx="1" stroke="currentColor" strokeWidth="1.5" style={{ color: "var(--color-text-tertiary)" }} /></svg>
-          )}
+      </div>
+      {/* Row 2: Centered nav arrows + Today button */}
+      <div className="flex items-center justify-center gap-2">
+        <button onClick={handlePrev} className="p-1.5 rounded-md hover:bg-[var(--color-surface-hover)] transition-colors" aria-label="Previous">
+          <ChevronLeftIcon className="w-4 h-4" style={{ color: "var(--color-text-secondary)" }} />
         </button>
+        <button onClick={handleNext} className="p-1.5 rounded-md hover:bg-[var(--color-surface-hover)] transition-colors" aria-label="Next">
+          <ChevronRightIcon className="w-4 h-4" style={{ color: "var(--color-text-secondary)" }} />
+        </button>
+        {!isCurrentPeriod && (
+          <button
+            onClick={handleToday}
+            className="px-3 py-1 rounded-full text-xs font-spartan font-semibold transition-colors shadow-sm"
+            style={{ backgroundColor: "var(--color-brand-500)", color: "white" }}
+          >
+            Today
+          </button>
+        )}
       </div>
     </div>
   );
@@ -487,50 +454,6 @@ const WeekStrip = memo(({ habits, entries, onToggle, fetchHabitEntries }) => {
     );
   };
 
-  /* ═══ COMPACT MODE ═══ */
-  if (mode === "compact") {
-    return (
-      <div data-tour="week-strip">
-        {renderHeader()}
-        {/* Always show current-week strip as preview */}
-        {renderWeekCells(weekData)}
-
-        {/* "View more" toggle */}
-        <div className="flex justify-center mt-2">
-          <button
-            onClick={() => { setCompactExpanded((p) => !p); setExpandedDate(null); }}
-            className="text-xs font-spartan font-medium px-3 py-1 rounded-full transition-colors"
-            style={{ color: "var(--color-brand-500)" }}
-          >
-            {compactExpanded ? "Show less" : "View more"}
-          </button>
-        </div>
-
-        {/* Expanded calendar panel */}
-        {compactExpanded && (
-          <div className="mt-3 week-expand-enter">
-            {/* Month navigable calendar */}
-            <div className="flex items-center justify-between mb-2">
-              <button onClick={() => setAnchor((a) => habitUtils.navigateRange("month", a, -1))} className="p-1 rounded-md hover:bg-[var(--color-surface-hover)]">
-                <ChevronLeftIcon className="w-4 h-4" style={{ color: "var(--color-text-secondary)" }} />
-              </button>
-              <span className="text-xs font-spartan font-semibold" style={{ color: "var(--color-text-primary)" }}>
-                {habitUtils.getRangeLabel("month", anchor)}
-              </span>
-              <button onClick={() => setAnchor((a) => habitUtils.navigateRange("month", a, 1))} className="p-1 rounded-md hover:bg-[var(--color-surface-hover)]">
-                <ChevronRightIcon className="w-4 h-4" style={{ color: "var(--color-text-secondary)" }} />
-              </button>
-            </div>
-            {renderMonthGrid()}
-          </div>
-        )}
-
-        {renderExpandedDay()}
-      </div>
-    );
-  }
-
-  /* ═══ INLINE MODE ═══ */
   return (
     <div data-tour="week-strip">
       {renderHeader()}
