@@ -1,5 +1,5 @@
 import React, { memo, useState, useCallback } from "react";
-import { CheckIcon, Pencil1Icon } from "@radix-ui/react-icons";
+import { CheckIcon, Pencil1Icon, PlusIcon } from "@radix-ui/react-icons";
 
 /* ─── Single habit row ─── */
 const HabitRow = memo(({ habit, isCompleted, onToggle, onEdit }) => {
@@ -144,12 +144,32 @@ const TodayHabits = memo(
           >
             Today
           </h2>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onAdd}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-spartan font-medium transition-colors"
+              style={{
+                color: "var(--color-brand-500)",
+                backgroundColor: "transparent",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.backgroundColor = "var(--color-surface-hover)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.backgroundColor = "transparent")
+              }
+              aria-label="Add habit"
+            >
+              <PlusIcon className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Add</span>
+            </button>
           <span
             className="text-xs font-spartan tabular-nums"
             style={{ color: "var(--color-text-tertiary)" }}
           >
             {done.length} of {habits.length} done
           </span>
+          </div>
         </div>
 
         <div

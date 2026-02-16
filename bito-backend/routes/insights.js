@@ -4,6 +4,8 @@ const { generateInsights } = require('../services/insightsEngine');
 const { enrichWithLLM, isLLMAvailable } = require('../services/llmEnrichment');
 const { buildSystemPrompt, getTemperature, DEFAULT_PERSONALITY } = require('../prompts/buildSystemPrompt');
 const { getUserInsightTier } = require('../utils/insightTier');
+const { generateKickstartInsights } = require('../services/kickstartService');
+const Habit = require('../models/Habit');
 const mongoose = require('mongoose');
 
 const router = express.Router();
@@ -51,8 +53,26 @@ router.get('/', async (req, res) => {
     // ── Seedling: serve kickstart insights, no LLM ──
     if (tierInfo.tier === 'seedling') {
       const User = mongoose.model('User');
-      const user = await User.findById(req.user._id).select('kickstartInsights').lean();
-      const kickstart = user?.kickstartInsights;
+      const user = await User.findById(req.user._id).select('kickstartInsights onboardingData aiPersonality').lean();
+      let kickstart = user?.kickstartInsights;
+
+      // Lazy backfill: existing users who onboarded before this feature
+      if (!kickstart) {
+        try {
+          const habits = await Habit.find({ userId: req.user._id, isActive: true })
+            .select('name icon category')
+            .lean();
+          kickstart = await generateKickstartInsights({ user, habits });
+          // Persist so we only generate once
+          await User.updateOne(
+            { _id: req.user._id },
+            { $set: { kickstartInsights: kickstart } }
+          );
+        } catch (err) {
+          console.error('[Insights] Kickstart backfill failed:', err.message);
+          // Continue with null — will use generic fallback below
+        }
+      }
 
       const insights = (kickstart?.insights || []).map(k => ({
         type: 'kickstart',

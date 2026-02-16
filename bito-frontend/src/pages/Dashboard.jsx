@@ -112,6 +112,16 @@ const Dashboard = () => {
     setEditModalOpen(true);
   }, []);
 
+  /* ── Listen for addHabit event from BottomTabBar ── */
+  useEffect(() => {
+    const onAddHabitEvent = () => {
+      setCurrentHabit(null);
+      setEditModalOpen(true);
+    };
+    window.addEventListener("addHabit", onAddHabitEvent);
+    return () => window.removeEventListener("addHabit", onAddHabitEvent);
+  }, []);
+
   const handleEditHabit = useCallback((habit) => {
     setCurrentHabit(habit);
     setEditModalOpen(true);
