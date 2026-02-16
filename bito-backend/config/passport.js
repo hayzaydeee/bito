@@ -6,6 +6,7 @@ const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
 
 const User = require('../models/User');
+const { sendWelcomeEmail } = require('../services/welcomeEmailService');
 
 // Serialize user for session
 passport.serializeUser((user, done) => {
@@ -114,6 +115,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       
       // Create new user
       user = await User.createOAuthUser('google', profile);
+      sendWelcomeEmail(user); // fire-and-forget
       return done(null, user);
       
     } catch (error) {
@@ -165,6 +167,7 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
       // Create new user (only if email is available)
       if (email) {
         user = await User.createOAuthUser('github', profile);
+        sendWelcomeEmail(user); // fire-and-forget
         return done(null, user);
       } else {
         return done(null, false, { message: 'GitHub account must have a public email address' });

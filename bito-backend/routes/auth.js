@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { authenticateJWT } = require('../middleware/auth');
 const { validateUserRegistration, validateUserLogin } = require('../middleware/validation');
+const { sendWelcomeEmail } = require('../services/welcomeEmailService');
 
 const router = express.Router();
 
@@ -40,6 +41,9 @@ router.post('/register', validateUserRegistration, async (req, res) => {
     });
 
     await user.save();
+
+    // Fire-and-forget welcome email
+    sendWelcomeEmail(user);
 
     // Generate token
     const token = generateToken(user);

@@ -29,6 +29,7 @@ const testRoutes = require('./routes/test');
 
 // Import services
 const reminderService = require('./services/reminderService');
+const weeklyReportService = require('./services/weeklyReportService');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -422,8 +423,9 @@ if (require.main === module) {
       console.log('\n✅ Database connected successfully!');
       console.log('   You can now use all API features.');
 
-      // Start reminder cron after DB is connected
+      // Start cron jobs after DB is connected
       reminderService.start();
+      weeklyReportService.start();
     }
   });
 
