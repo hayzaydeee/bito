@@ -107,7 +107,7 @@ const WeekStrip = memo(({ habits, entries, onToggle }) => {
     : null;
 
   return (
-    <div>
+    <div data-tour="week-strip">
       <h2
         className="text-base font-garamond font-bold mb-3"
         style={{ color: "var(--color-text-primary)" }}
@@ -152,10 +152,12 @@ const WeekStrip = memo(({ habits, entries, onToggle }) => {
                 />
               )}
 
-              {/* Hover overlay — "View Habits" / icon */}
+              {/* Hover overlay — "View" / icon */}
               {day.total > 0 && (
-                <div className="week-cell-overlay absolute inset-0 rounded-lg flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  {/* Icon for small screens, text for larger */}
+                <div
+                  className="absolute inset-0 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                  style={{ backgroundColor: "rgba(99,102,241,0.65)" }}
+                >
                   <EyeOpenIcon className="w-3.5 h-3.5 text-white sm:hidden" />
                   <span className="hidden sm:block text-[9px] font-spartan font-semibold text-white leading-tight text-center px-0.5">
                     View

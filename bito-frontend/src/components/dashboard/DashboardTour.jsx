@@ -16,6 +16,12 @@ const getSteps = () => {
       position: 'bottom',
     },
     {
+      target: '[data-tour="week-strip"]',
+      title: 'This week at a glance',
+      body: 'Each square shows your daily progress. Tap any day to view and edit that day\'s habits — handy for fixing missed check-ins.',
+      position: 'top',
+    },
+    {
       target: '[data-tour="nav-analytics"]',
       title: 'Analytics',
       body: 'Dive into charts, streaks, heatmaps and AI-powered insights to see your progress over time.',
