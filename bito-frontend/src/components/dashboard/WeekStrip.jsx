@@ -270,10 +270,12 @@ const WeekStrip = memo(({ habits, entries, onToggle, fetchHabitEntries }) => {
         <h2 className="text-base font-garamond font-bold" style={{ color: "var(--color-text-primary)" }}>
           {rangeLabel}
         </h2>
-        <ViewPills value={view} onChange={handleViewChange} />
+        <div data-tour="ws-view-pills">
+          <ViewPills value={view} onChange={handleViewChange} />
+        </div>
       </div>
       {/* Row 2: Centered nav arrows + Today button */}
-      <div className="flex items-center justify-center gap-2">
+      <div data-tour="ws-nav" className="flex items-center justify-center gap-2">
         <button onClick={handlePrev} className="p-1.5 rounded-md hover:bg-[var(--color-surface-hover)] transition-colors" aria-label="Previous">
           <ChevronLeftIcon className="w-4 h-4" style={{ color: "var(--color-text-secondary)" }} />
         </button>
@@ -459,7 +461,7 @@ const WeekStrip = memo(({ habits, entries, onToggle, fetchHabitEntries }) => {
       {renderHeader()}
 
       {/* View-specific grid */}
-      <div className="ws-view-fade">
+      <div data-tour="ws-grid" className="ws-view-fade">
         {view === "week" && renderWeekCells(weekData)}
         {view === "month" && renderMonthGrid()}
         {view === "year" && renderYearGrid()}

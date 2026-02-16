@@ -18,7 +18,25 @@ const getSteps = () => {
     {
       target: '[data-tour="week-strip"]',
       title: 'Your habit timeline',
-      body: 'Switch between week, month, and year views using the W/M/Y pills. Tap any day to view and edit habits — great for fixing missed check-ins.',
+      body: 'This is your visual progress map — see how consistent you\'ve been at a glance. Colour intensity shows your completion rate for each day.',
+      position: 'top',
+    },
+    {
+      target: '[data-tour="ws-view-pills"]',
+      title: 'Week, Month & Year',
+      body: 'Use these pills to zoom out. W shows this week, M shows the full month calendar, and Y gives you a bird\'s-eye view of the entire year.',
+      position: 'bottom',
+    },
+    {
+      target: '[data-tour="ws-nav"]',
+      title: 'Navigate time',
+      body: 'Use the arrows to move forward or backward in time. A "Today" button appears whenever you\'ve navigated away so you can jump back instantly.',
+      position: 'bottom',
+    },
+    {
+      target: '[data-tour="ws-grid"]',
+      title: 'Tap to explore',
+      body: 'Tap any coloured day to expand it and see which habits were due. You can check off or undo habits for any past date right from here.',
       position: 'top',
     },
     {
