@@ -219,7 +219,7 @@ const DashboardTour = ({ forceShow = false, onComplete, userId }) => {
   // ── Prompt screen (step === -1) ──
   if (step === -1) {
     return createPortal(
-      <div className="tour-overlay" onClick={finish}>
+      <div className="tour-overlay" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }} onClick={finish}>
         <div
           className="tour-prompt"
           onClick={(e) => e.stopPropagation()}
