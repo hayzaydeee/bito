@@ -286,9 +286,16 @@ router.post('/dismiss', async (req, res) => {
   }
 });
 
-// Clear cached insights for a specific user (e.g. after personality change)
+// Clear all cached insights for a specific user (dashboard + analytics)
 function clearUserCache(userId) {
-  cache.delete(String(userId));
+  const uid = String(userId);
+  cache.delete(uid);
+  // Also clear analytics cache keys (format: userId_analytics_range)
+  for (const key of cache.keys()) {
+    if (key.startsWith(uid + '_analytics_')) {
+      cache.delete(key);
+    }
+  }
 }
 
 module.exports = router;

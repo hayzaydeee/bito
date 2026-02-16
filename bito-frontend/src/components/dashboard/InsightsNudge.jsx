@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from "react";
+import React, { memo, useMemo, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useInsights } from "../../globalHooks/useInsights";
 
@@ -66,6 +66,37 @@ const InsightsNudge = memo(({ habits, entries }) => {
     entryCount,
     thresholds,
   } = useInsights();
+
+  /* ── Auto-refresh when entries change (debounced) ── */
+  const entriesSnapshotRef = useRef(null);
+  const debounceRef = useRef(null);
+
+  useEffect(() => {
+    // Build a lightweight snapshot of completion states
+    const snapshot = JSON.stringify(
+      Object.entries(entries || {}).reduce((acc, [hId, dates]) => {
+        const todayKey = new Date().toISOString().split("T")[0];
+        const entry = dates?.[todayKey];
+        if (entry) acc[hId] = entry.completed;
+        return acc;
+      }, {})
+    );
+
+    // Skip initial mount (useInsights already fetches once)
+    if (entriesSnapshotRef.current === null) {
+      entriesSnapshotRef.current = snapshot;
+      return;
+    }
+
+    // Only refresh if something actually changed
+    if (snapshot !== entriesSnapshotRef.current) {
+      entriesSnapshotRef.current = snapshot;
+      clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => refresh(), 2000);
+    }
+
+    return () => clearTimeout(debounceRef.current);
+  }, [entries, refresh]);
 
   /* ── Client-side fallback while backend loads ── */
   const fallbackText = useMemo(() => {

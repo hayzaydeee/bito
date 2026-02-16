@@ -1,6 +1,7 @@
 const express = require('express');
 const Habit = require('../models/Habit');
 const HabitEntry = require('../models/HabitEntry');
+const { clearUserCache: clearInsightsCache } = require('./insights');
 const { authenticateJWT } = require('../middleware/auth');
 const { processChallengeProgress } = require('../controllers/challengeController');
 const {
@@ -314,6 +315,9 @@ router.post('/:id/check', [validateObjectId('id'), validateHabitEntry], async (r
     } catch (statsErr) {
       console.error('Error updating habit stats:', statsErr);
     }
+
+    // Invalidate insights cache so next fetch gets fresh data
+    clearInsightsCache(req.user._id);
 
     // Process challenge progress if this is a completion
     let challengeResult = null;
