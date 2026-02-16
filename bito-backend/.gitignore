@@ -59,3 +59,7 @@ Thumbs.db
 # Build
 dist/
 build/
+
+# Prompt regression test results
+prompts/testing/results/*
+!prompts/testing/results/.gitkeep

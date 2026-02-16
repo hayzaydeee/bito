@@ -19,7 +19,8 @@ const Habit = require('../models/Habit');
 const HabitEntry = require('../models/HabitEntry');
 const User = require('../models/User');
 const emailService = require('./emailService');
-const { baseLayout, button, statPill, infoCard, sectionTitle, BRAND } = require('./emailTemplates');
+const { baseLayout, button, buttonSecondary, statPill, infoCard, sectionTitle, BRAND } = require('./emailTemplates');
+const { buildSystemPrompt, getTemperature, DEFAULT_PERSONALITY } = require('../prompts/buildSystemPrompt');
 
 // ── OpenAI client (shared lazy singleton) ──────────────────
 let _openaiClient = null;
@@ -223,6 +224,10 @@ class WeeklyReportService {
       const firstName = (user.name || 'there').split(' ')[0];
       const model = process.env.INSIGHTS_LLM_MODEL || 'gpt-4o-mini';
 
+      const personality = user.aiPersonality || DEFAULT_PERSONALITY;
+      const systemPrompt = buildSystemPrompt(personality, 'weekly-report');
+      const temperature = getTemperature(personality);
+
       const habitSummary = habitBreakdown
         .map((h) => `- ${h.icon} ${h.name}: ${h.completed}/7 days (${h.rate}%), streak: ${h.currentStreak}`)
         .join('\n');
@@ -232,14 +237,7 @@ class WeeklyReportService {
         messages: [
           {
             role: 'system',
-            content:
-              'You write concise, insightful weekly habit report summaries for Bito. ' +
-              'Analyze the data and provide:\n' +
-              '1. A 1-sentence highlight (the best thing from the week)\n' +
-              '2. A 1-sentence area for improvement\n' +
-              '3. One specific, actionable tip for next week\n\n' +
-              'Be warm, data-driven, and specific. Reference actual habit names and numbers. ' +
-              'Keep the total under 100 words. Do NOT use markdown headers or bullet points — use plain paragraph text.',
+            content: systemPrompt,
           },
           {
             role: 'user',
@@ -250,7 +248,7 @@ class WeeklyReportService {
               `\n\nHabits:\n${habitSummary}`,
           },
         ],
-        temperature: 0.7,
+        temperature,
         max_tokens: 200,
       });
 
@@ -358,6 +356,25 @@ class WeeklyReportService {
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
         ${habitRows}
       </table>
+
+      ${(!user.personalityPromptDismissed && !user.personalityCustomized) ? `
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
+        <tr>
+          <td style="padding:16px 20px;border-top:1px solid ${BRAND.colors.border};font-family:${BRAND.fonts};">
+            <p style="font-size:13px;color:${BRAND.colors.textSecondary};margin:0 0 12px 0;line-height:1.5;">
+              We set Bito's voice based on your goals. Was the tone right for you?
+            </p>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="padding-right:8px;">
+                  ${buttonSecondary('Customise my Bito voice', `${BRAND.url}/app/settings/personality`)}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+      ` : ''}
 
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>

@@ -71,6 +71,7 @@ const ThemedApp = () => {
               <Route path="journal" element={<JournalPage />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="settings/habit-privacy/:habitId" element={<SettingsPage section="habit-privacy" />} />
+              <Route path="settings/personality" element={<SettingsPage section="personality" />} />
               <Route path="groups" element={<GroupSelection />} />
               <Route path="groups/:groupId" element={<WorkspaceOverview />} />
               <Route path="groups/:groupId/members/:memberId/dashboard" element={<MemberDashboardView />} />

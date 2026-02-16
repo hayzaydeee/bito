@@ -5,6 +5,7 @@ const HabitEntry = require('../models/HabitEntry');
 const User = require('../models/User');
 const PushSubscription = require('../models/PushSubscription');
 const emailService = require('./emailService');
+const { getReminderMessage } = require('../prompts/reminderMessages');
 
 /**
  * ReminderService — runs a cron job every minute to check for
@@ -117,7 +118,7 @@ class ReminderService {
   async _sendReminder(user, habit) {
     const payload = {
       title: `${habit.icon || '🎯'} ${habit.name}`,
-      body: this._getReminderMessage(habit),
+      body: getReminderMessage(habit, user.aiPersonality),
       icon: '/android-chrome-192x192.png',
       badge: '/favicon-32x32.png',
       tag: `reminder-${habit._id}`,
@@ -205,14 +206,9 @@ class ReminderService {
     await emailService.transporter.sendMail(mailOptions);
   }
 
+  // Legacy fallback — kept for backwards compatibility but no longer primary
   _getReminderMessage(habit) {
-    const messages = [
-      `Time to check off "${habit.name}" — keep the streak going!`,
-      `Don't forget: ${habit.name}. You've got this!`,
-      `Hey! "${habit.name}" is waiting for you today.`,
-      `Quick reminder to complete ${habit.name} 💪`,
-    ];
-    return messages[Math.floor(Math.random() * messages.length)];
+    return getReminderMessage(habit, {});
   }
 
   _getLocalTime(timezone) {

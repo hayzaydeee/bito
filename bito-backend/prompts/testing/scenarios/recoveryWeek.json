@@ -1,0 +1,61 @@
+{
+  "id": "recovery-week",
+  "label": "Recovery Week — bouncing back from a bad stretch",
+  "userName": "Casey",
+  "periodLabel": "Jan 6 – Jan 12",
+  "habits": [
+    {
+      "name": "Morning meditation",
+      "icon": "🧘",
+      "category": "mindfulness",
+      "completions": [false, true, true, true, true, true, true],
+      "currentStreak": 6,
+      "completionRate": 0.86,
+      "target": { "value": 10, "unit": "minutes" }
+    },
+    {
+      "name": "Exercise for 30 min",
+      "icon": "🏃",
+      "category": "health",
+      "completions": [false, false, true, true, true, true, true],
+      "currentStreak": 5,
+      "completionRate": 0.71,
+      "target": { "value": 30, "unit": "minutes" }
+    },
+    {
+      "name": "Read for 20 minutes",
+      "icon": "📖",
+      "category": "learning",
+      "completions": [true, true, true, true, true, true, true],
+      "currentStreak": 7,
+      "completionRate": 1.0,
+      "target": { "value": 20, "unit": "minutes" }
+    },
+    {
+      "name": "Gratitude journal",
+      "icon": "🙏",
+      "category": "mindfulness",
+      "completions": [false, false, true, true, true, true, true],
+      "currentStreak": 5,
+      "completionRate": 0.71,
+      "target": { "value": 1, "unit": "times" }
+    }
+  ],
+  "overallCompletionRate": 0.82,
+  "previousWeekCompletionRate": 0.18,
+  "weeksBefore": [0.18, 0.25, 0.71, 0.89],
+  "ruleBasedInsights": [
+    {
+      "title": "Major bounce-back",
+      "body": "Completion jumped from 18% last week to 82% this week.",
+      "icon": "📈",
+      "category": "trend"
+    },
+    {
+      "title": "Momentum building",
+      "body": "Completions improved each day through the week — started slow Monday, finished strong.",
+      "icon": "🔥",
+      "category": "pattern"
+    }
+  ]
+}

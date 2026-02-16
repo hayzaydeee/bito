@@ -238,8 +238,15 @@ const OnboardingPage = () => {
         await Promise.all(createPromises);
       }
 
-      // Mark onboarding as complete
-      await userAPI.updateProfile({ onboardingComplete: true });
+      // Mark onboarding as complete and persist onboarding data for personality derivation
+      await userAPI.updateProfile({
+        onboardingComplete: true,
+        onboardingData: {
+          goals: selectedGoals,
+          capacity: dailyCapacity || 'balanced',
+          preferredTimes,
+        },
+      });
       updateUser({ onboardingComplete: true });
       navigate("/app/dashboard");
     } catch (err) {

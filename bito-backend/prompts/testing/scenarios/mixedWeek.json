@@ -1,0 +1,60 @@
+{
+  "id": "mixed-week",
+  "label": "Mixed Week — some strong, some dropped",
+  "userName": "Jordan",
+  "periodLabel": "Jan 6 – Jan 12",
+  "habits": [
+    {
+      "name": "Morning meditation",
+      "icon": "🧘",
+      "category": "mindfulness",
+      "completions": [true, true, true, true, true, true, false],
+      "currentStreak": 0,
+      "completionRate": 0.86,
+      "target": { "value": 10, "unit": "minutes" }
+    },
+    {
+      "name": "Exercise for 30 min",
+      "icon": "🏃",
+      "category": "health",
+      "completions": [true, false, true, false, true, false, true],
+      "currentStreak": 1,
+      "completionRate": 0.57,
+      "target": { "value": 30, "unit": "minutes" }
+    },
+    {
+      "name": "Read for 20 minutes",
+      "icon": "📖",
+      "category": "learning",
+      "completions": [true, true, true, true, true, true, true],
+      "currentStreak": 42,
+      "completionRate": 1.0,
+      "target": { "value": 20, "unit": "minutes" }
+    },
+    {
+      "name": "No phone first hour",
+      "icon": "📵",
+      "category": "productivity",
+      "completions": [false, false, true, false, false, true, false],
+      "currentStreak": 0,
+      "completionRate": 0.29,
+      "target": { "value": 1, "unit": "times" }
+    }
+  ],
+  "overallCompletionRate": 0.68,
+  "previousWeekCompletionRate": 0.75,
+  "ruleBasedInsights": [
+    {
+      "title": "Reading streak strong",
+      "body": "42 consecutive days of reading — your longest active streak.",
+      "icon": "📖",
+      "category": "streak"
+    },
+    {
+      "title": "Phone habit struggling",
+      "body": "No-phone-first-hour completed only 2 of 7 days this week.",
+      "icon": "📵",
+      "category": "warning"
+    }
+  ]
+}

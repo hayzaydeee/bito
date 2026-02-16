@@ -2,6 +2,7 @@ const express = require('express');
 const { authenticateJWT } = require('../middleware/auth');
 const { generateInsights } = require('../services/insightsEngine');
 const { enrichWithLLM, isLLMAvailable } = require('../services/llmEnrichment');
+const { buildSystemPrompt, getTemperature, DEFAULT_PERSONALITY } = require('../prompts/buildSystemPrompt');
 const mongoose = require('mongoose');
 
 const router = express.Router();
@@ -75,7 +76,8 @@ router.get('/', async (req, res) => {
       ruleInsights,
       habits,
       entries,
-      journalEntries
+      journalEntries,
+      req.user.aiPersonality
     );
 
     const responseData = {
@@ -142,7 +144,8 @@ router.get('/analytics', async (req, res) => {
     const analyticsData = buildAnalyticsData(habits, entries, journalEntries, rangeDays);
 
     // Layer 2: LLM-powered sectioned analysis
-    const sections = await generateAnalyticsReport(ruleInsights, analyticsData, rangeDays);
+    const personality = req.user.aiPersonality || DEFAULT_PERSONALITY;
+    const sections = await generateAnalyticsReport(ruleInsights, analyticsData, rangeDays, personality);
 
     const responseData = {
       sections,
@@ -194,7 +197,13 @@ router.post('/dismiss', async (req, res) => {
   }
 });
 
+// Clear cached insights for a specific user (e.g. after personality change)
+function clearUserCache(userId) {
+  cache.delete(String(userId));
+}
+
 module.exports = router;
+module.exports.clearUserCache = clearUserCache;
 
 // ─── Analytics helpers ─────────────────────────────────────────────────
 
@@ -313,7 +322,7 @@ function buildAnalyticsData(habits, entries, journalEntries, rangeDays) {
  * Generate the sectioned analytics report via LLM.
  * Falls back to rule-based-only sections if LLM unavailable.
  */
-async function generateAnalyticsReport(ruleInsights, analyticsData, rangeDays) {
+async function generateAnalyticsReport(ruleInsights, analyticsData, rangeDays, personality = DEFAULT_PERSONALITY) {
   const llmAvailable = isLLMAvailable();
 
   if (!llmAvailable) {
@@ -337,33 +346,8 @@ async function generateAnalyticsReport(ruleInsights, analyticsData, rangeDays) {
 
   const model = process.env.INSIGHTS_LLM_MODEL || 'gpt-4o-mini';
 
-  const systemPrompt = `You are a perceptive habit analytics coach. Analyze the user's habit data and return a structured report as valid JSON.
-
-Return EXACTLY this structure:
-{
-  "summary": "2-3 sentence overview of their current trajectory — warm, specific, data-backed.",
-  "patterns": [
-    { "title": "short title", "body": "1-2 sentence insight", "icon": "emoji", "sentiment": "positive|neutral|negative" }
-  ],
-  "trends": [
-    { "title": "short title", "body": "1-2 sentence insight about trajectory", "icon": "emoji", "direction": "up|down|stable" }
-  ],
-  "correlations": [
-    { "title": "short title", "body": "1-2 sentence connection found", "icon": "emoji" }
-  ],
-  "recommendations": [
-    { "title": "short actionable title", "body": "1-2 sentence specific suggestion", "icon": "emoji", "priority": "high|medium|low" }
-  ]
-}
-
-Guidelines:
-- patterns: 2-4 items about recurring behaviors, scheduling strengths, category performance
-- trends: 1-3 items about momentum direction, weekly trajectory, streak trajectories
-- correlations: 1-2 items about mood↔habits, journal↔completion, category↔consistency connections
-- recommendations: 2-3 actionable, specific suggestions based on the data
-- Be concise, warm but not cheesy. Mention specific habit names and numbers.
-- If data is too sparse for a section, return an empty array for that section.
-- Respond ONLY with the JSON object, no markdown fences.`;
+  const systemPrompt = buildSystemPrompt(personality, 'analytics-report');
+  const temperature = getTemperature(personality);
 
   const userMessage = JSON.stringify({
     ruleInsights: ruleInsights.slice(0, 6).map(i => ({ title: i.title, type: i.type, category: i.category })),
@@ -378,7 +362,7 @@ Guidelines:
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
       ],
-      temperature: 0.7,
+      temperature,
       max_tokens: 800,
     });
 

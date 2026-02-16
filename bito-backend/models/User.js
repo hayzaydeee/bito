@@ -52,6 +52,56 @@ const userSchema = new mongoose.Schema({  // Basic user information
     type: Boolean,
     default: false
   },
+
+  // Onboarding data (persisted for personality derivation)
+  onboardingData: {
+    goals: [{
+      type: String,
+      enum: ['health', 'productivity', 'mindfulness', 'learning', 'social', 'creative']
+    }],
+    capacity: {
+      type: String,
+      enum: ['light', 'balanced', 'full']
+    },
+    preferredTimes: [{
+      type: String,
+      enum: ['morning', 'afternoon', 'evening']
+    }]
+  },
+
+  // AI Personality — how Bito communicates with this user
+  aiPersonality: {
+    tone: {
+      type: String,
+      enum: ['warm', 'direct', 'playful', 'neutral'],
+      default: 'warm'
+    },
+    focus: {
+      type: String,
+      enum: ['wins', 'patterns', 'actionable', 'balanced'],
+      default: 'balanced'
+    },
+    verbosity: {
+      type: String,
+      enum: ['concise', 'detailed'],
+      default: 'concise'
+    },
+    accountability: {
+      type: String,
+      enum: ['gentle', 'honest', 'tough'],
+      default: 'gentle'
+    }
+  },
+
+  // Personality system flags
+  personalityCustomized: {
+    type: Boolean,
+    default: false
+  },
+  personalityPromptDismissed: {
+    type: Boolean,
+    default: false
+  },
   
   // User preferences
   preferences: {

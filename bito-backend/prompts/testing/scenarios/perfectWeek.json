@@ -1,0 +1,60 @@
+{
+  "id": "perfect-week",
+  "label": "Perfect Week — everything completed, streaks intact",
+  "userName": "Alex",
+  "periodLabel": "Jan 6 – Jan 12",
+  "habits": [
+    {
+      "name": "Morning meditation",
+      "icon": "🧘",
+      "category": "mindfulness",
+      "completions": [true, true, true, true, true, true, true],
+      "currentStreak": 34,
+      "completionRate": 1.0,
+      "target": { "value": 10, "unit": "minutes" }
+    },
+    {
+      "name": "Exercise for 30 min",
+      "icon": "🏃",
+      "category": "health",
+      "completions": [true, true, true, true, true, true, true],
+      "currentStreak": 21,
+      "completionRate": 1.0,
+      "target": { "value": 30, "unit": "minutes" }
+    },
+    {
+      "name": "Read for 20 minutes",
+      "icon": "📖",
+      "category": "learning",
+      "completions": [true, true, true, true, true, true, true],
+      "currentStreak": 14,
+      "completionRate": 1.0,
+      "target": { "value": 20, "unit": "minutes" }
+    },
+    {
+      "name": "Drink 8 glasses of water",
+      "icon": "💧",
+      "category": "health",
+      "completions": [true, true, true, true, true, true, true],
+      "currentStreak": 14,
+      "completionRate": 1.0,
+      "target": { "value": 8, "unit": "glasses" }
+    }
+  ],
+  "overallCompletionRate": 1.0,
+  "previousWeekCompletionRate": 0.89,
+  "ruleBasedInsights": [
+    {
+      "title": "All habits completed",
+      "body": "You completed every habit every day this week.",
+      "icon": "🏆",
+      "category": "achievement"
+    },
+    {
+      "title": "Meditation milestone",
+      "body": "Your meditation streak just passed 30 days.",
+      "icon": "🧘",
+      "category": "milestone"
+    }
+  ]
+}

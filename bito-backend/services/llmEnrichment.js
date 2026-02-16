@@ -13,6 +13,7 @@
 const OpenAIModule = require('openai');
 // openai v5 may export the class as .default in CommonJS
 const OpenAI = OpenAIModule.default || OpenAIModule.OpenAI || OpenAIModule;
+const { buildSystemPrompt, getTemperature, DEFAULT_PERSONALITY } = require('../prompts/buildSystemPrompt');
 
 /**
  * Check whether LLM enrichment is available.
@@ -84,27 +85,17 @@ function buildDataSummary(habits, entries, journalEntries) {
  *
  * @param {Object[]} ruleInsights  - the Layer 1 insights
  * @param {Object}   dataSummary   - compact user data snapshot
+ * @param {Object}   [personality] - user's AI personality config
  * @returns {Promise<Object|null>} { summary, additionalInsights[] } or null on failure
  */
-async function callLLM(ruleInsights, dataSummary) {
+async function callLLM(ruleInsights, dataSummary, personality = DEFAULT_PERSONALITY) {
   const client = getClient();
   if (!client) return null;
 
   const model = process.env.INSIGHTS_LLM_MODEL || 'gpt-4o-mini';
 
-  const systemPrompt = `You are a friendly, concise habit coach. You receive a user's habit data and rule-based insights. Your job:
-1. Write a short (2-3 sentence) natural-language summary of their current state — warm, encouraging, specific.
-2. If you spot any additional patterns not already covered by the rule-based insights, return up to 2 extra insights.
-
-Respond ONLY with valid JSON:
-{
-  "summary": "...",
-  "additionalInsights": [
-    { "title": "...", "body": "...", "icon": "emoji", "category": "insight" }
-  ]
-}
-
-Keep it brief and actionable. No fluff.`;
+  const systemPrompt = buildSystemPrompt(personality, 'insight-enrichment');
+  const temperature = getTemperature(personality);
 
   const userMessage = JSON.stringify({
     ruleInsights: ruleInsights.map(i => ({ title: i.title, body: i.body })),
@@ -118,7 +109,7 @@ Keep it brief and actionable. No fluff.`;
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
       ],
-      temperature: 0.7,
+      temperature,
       max_tokens: 300,
     });
 
@@ -141,9 +132,10 @@ Keep it brief and actionable. No fluff.`;
  * @param {Object[]} habits         - user's habits (lean)
  * @param {Object[]} entries        - recent habit entries (lean)
  * @param {Object[]} journalEntries - recent journal entries (lean)
+ * @param {Object}   [personality]  - user's AI personality config
  * @returns {Promise<Object>} { insights[], summary? }
  */
-async function enrichWithLLM(ruleInsights, habits, entries, journalEntries) {
+async function enrichWithLLM(ruleInsights, habits, entries, journalEntries, personality) {
   if (!isLLMAvailable()) {
     console.log('[Insights] LLM not available (no OPENAI_API_KEY)');
     return { insights: ruleInsights, summary: null, llmUsed: false };
@@ -151,7 +143,7 @@ async function enrichWithLLM(ruleInsights, habits, entries, journalEntries) {
 
   console.log('[Insights] Attempting LLM enrichment...');
   const dataSummary = buildDataSummary(habits, entries, journalEntries);
-  const result = await callLLM(ruleInsights, dataSummary);
+  const result = await callLLM(ruleInsights, dataSummary, personality || DEFAULT_PERSONALITY);
 
   if (!result) {
     console.log('[Insights] LLM returned no result, falling back to rule-based only');

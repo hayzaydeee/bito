@@ -1,0 +1,46 @@
+{
+  "id": "new-user",
+  "label": "New User — first week, few habits, no history",
+  "userName": "Taylor",
+  "periodLabel": "Jan 6 – Jan 12",
+  "habits": [
+    {
+      "name": "Drink 8 glasses of water",
+      "icon": "💧",
+      "category": "health",
+      "completions": [true, true, false, true, true, false, true],
+      "currentStreak": 1,
+      "completionRate": 0.71,
+      "target": { "value": 8, "unit": "glasses" }
+    },
+    {
+      "name": "Sleep by 11 PM",
+      "icon": "😴",
+      "category": "health",
+      "completions": [true, false, false, true, false, true, true],
+      "currentStreak": 2,
+      "completionRate": 0.57,
+      "target": { "value": 1, "unit": "times" }
+    },
+    {
+      "name": "Gratitude journal",
+      "icon": "🙏",
+      "category": "mindfulness",
+      "completions": [true, true, true, false, true, true, false],
+      "currentStreak": 0,
+      "completionRate": 0.71,
+      "target": { "value": 1, "unit": "times" }
+    }
+  ],
+  "overallCompletionRate": 0.67,
+  "previousWeekCompletionRate": null,
+  "isFirstWeek": true,
+  "ruleBasedInsights": [
+    {
+      "title": "First week complete",
+      "body": "You've finished your first full week of tracking.",
+      "icon": "🎉",
+      "category": "milestone"
+    }
+  ]
+}

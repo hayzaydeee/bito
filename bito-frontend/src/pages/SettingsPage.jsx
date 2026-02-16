@@ -22,6 +22,7 @@ import { userAPI } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 import usePushNotifications from "../hooks/usePushNotifications";
+import PersonalityQuiz from "../components/settingsPage/PersonalityQuiz";
 
 /* ================================================================
    SettingsPage — sectioned list layout (no widget grid)
@@ -334,6 +335,81 @@ const SettingsPage = ({ section }) => {
       setSaving(false);
     }
   };
+
+  /* ================================================================
+     PERSONALITY SUB-ROUTE
+     ================================================================ */
+  if (section === "personality") {
+    const personality = userProfile?.aiPersonality || {};
+    
+    const handlePersonalitySave = async (selections) => {
+      setSaving(true);
+      try {
+        await userAPI.updateProfile({
+          aiPersonality: selections,
+          personalityCustomized: true,
+        });
+        setUserProfile((prev) => ({
+          ...prev,
+          aiPersonality: selections,
+          personalityCustomized: true,
+        }));
+        showToast("AI voice updated");
+      } catch {
+        showToast("Failed to save", "error");
+      } finally {
+        setSaving(false);
+      }
+    };
+
+    const handlePersonalityReset = async () => {
+      setSaving(true);
+      try {
+        // Re-derive from onboarding data by clearing customized flag
+        await userAPI.updateProfile({
+          personalityCustomized: false,
+          // Send onboardingData to trigger server-side re-derivation
+          onboardingData: userProfile?.onboardingData || {},
+        });
+        const res = await userAPI.getProfile();
+        setUserProfile(res.data.user);
+        showToast("Reset to defaults");
+      } catch {
+        showToast("Failed to reset", "error");
+      } finally {
+        setSaving(false);
+      }
+    };
+
+    return (
+      <div className="min-h-screen page-container px-4 sm:px-6 py-10">
+        <div className="max-w-2xl mx-auto">
+          <button
+            onClick={() => navigate("/app/settings")}
+            className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] font-spartan mb-6 hover:text-[var(--color-text-primary)] transition-colors"
+          >
+            <ArrowLeftIcon className="w-4 h-4" />
+            Back to settings
+          </button>
+
+          <h1 className="text-2xl font-bold font-garamond text-[var(--color-text-primary)] mb-2">
+            AI Voice
+          </h1>
+          <p className="text-sm text-[var(--color-text-secondary)] font-spartan mb-8">
+            Choose how Bito talks to you across insights, reports, and nudges.
+            Pick the voice that sounds right — not the label that sounds right.
+          </p>
+
+          <PersonalityQuiz
+            currentPersonality={personality}
+            onSave={handlePersonalitySave}
+            onReset={handlePersonalityReset}
+            saving={saving}
+          />
+        </div>
+      </div>
+    );
+  }
 
   /* ================================================================
      HABIT PRIVACY SUB-ROUTE
@@ -843,6 +919,41 @@ const SettingsPage = ({ section }) => {
               <span className="text-sm font-medium font-spartan text-[var(--color-text-primary)]">
                 Replay dashboard tour
               </span>
+            </div>
+            <ChevronRightIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
+          </button>
+        </Section>
+
+        {/* ═══════ 7.5 AI VOICE ═══════ */}
+        <Section title="AI Voice" icon={GearIcon}>
+          <button
+            onClick={() => navigate("/app/settings/personality")}
+            className="w-full flex items-center justify-between p-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-base">🗣️</span>
+              <div className="text-left">
+                <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)]">
+                  Customise how Bito talks to you
+                </p>
+                <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mt-0.5">
+                  {(() => {
+                    const p = userProfile?.aiPersonality || {};
+                    const labels = {
+                      tone: { warm: "Warm", direct: "Direct", playful: "Playful", neutral: "Neutral" },
+                      focus: { wins: "Wins", patterns: "Patterns", actionable: "Actions", balanced: "Balanced" },
+                      verbosity: { concise: "Concise", detailed: "Detailed" },
+                      accountability: { gentle: "Gentle", honest: "Honest", tough: "Tough" },
+                    };
+                    return [
+                      labels.tone[p.tone] || "Warm",
+                      labels.focus[p.focus] || "Balanced",
+                      labels.verbosity[p.verbosity] || "Concise",
+                      labels.accountability[p.accountability] || "Gentle",
+                    ].join(" · ");
+                  })()}
+                </p>
+              </div>
             </div>
             <ChevronRightIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
           </button>

@@ -1,0 +1,52 @@
+{
+  "id": "plateau",
+  "label": "Plateau — consistent but flat, no growth or decline",
+  "userName": "Riley",
+  "periodLabel": "Jan 6 – Jan 12",
+  "habits": [
+    {
+      "name": "Exercise for 30 min",
+      "icon": "🏃",
+      "category": "health",
+      "completions": [true, true, true, true, true, false, false],
+      "currentStreak": 0,
+      "completionRate": 0.71,
+      "target": { "value": 30, "unit": "minutes" }
+    },
+    {
+      "name": "Read for 20 minutes",
+      "icon": "📖",
+      "category": "learning",
+      "completions": [true, true, true, true, true, false, false],
+      "currentStreak": 0,
+      "completionRate": 0.71,
+      "target": { "value": 20, "unit": "minutes" }
+    },
+    {
+      "name": "Morning meditation",
+      "icon": "🧘",
+      "category": "mindfulness",
+      "completions": [true, true, true, true, true, false, false],
+      "currentStreak": 0,
+      "completionRate": 0.71,
+      "target": { "value": 10, "unit": "minutes" }
+    }
+  ],
+  "overallCompletionRate": 0.71,
+  "previousWeekCompletionRate": 0.71,
+  "weeksBefore": [0.71, 0.71, 0.71, 0.67],
+  "ruleBasedInsights": [
+    {
+      "title": "Steady state",
+      "body": "Your completion rate has held at ~71% for 4 consecutive weeks.",
+      "icon": "📊",
+      "category": "pattern"
+    },
+    {
+      "title": "Weekend pattern",
+      "body": "You consistently skip all habits on Saturday and Sunday.",
+      "icon": "📅",
+      "category": "pattern"
+    }
+  ]
+}

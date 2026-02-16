@@ -1,0 +1,27 @@
+{
+  "id": "power-user",
+  "label": "Power User — 10+ habits across categories",
+  "userName": "Morgan",
+  "periodLabel": "Jan 6 – Jan 12",
+  "habits": [
+    { "name": "Morning meditation", "icon": "🧘", "category": "mindfulness", "completions": [true,true,true,true,true,true,true], "currentStreak": 60, "completionRate": 1.0, "target": { "value": 15, "unit": "minutes" } },
+    { "name": "Cold shower", "icon": "🚿", "category": "health", "completions": [true,true,true,true,true,false,true], "currentStreak": 1, "completionRate": 0.86, "target": { "value": 1, "unit": "times" } },
+    { "name": "Exercise", "icon": "🏃", "category": "health", "completions": [true,true,false,true,true,true,false], "currentStreak": 0, "completionRate": 0.71, "target": { "value": 45, "unit": "minutes" } },
+    { "name": "Read", "icon": "📖", "category": "learning", "completions": [true,true,true,true,true,true,true], "currentStreak": 90, "completionRate": 1.0, "target": { "value": 30, "unit": "minutes" } },
+    { "name": "Journal", "icon": "📝", "category": "mindfulness", "completions": [true,true,true,true,true,true,true], "currentStreak": 45, "completionRate": 1.0, "target": { "value": 1, "unit": "times" } },
+    { "name": "Deep work", "icon": "🧠", "category": "productivity", "completions": [true,true,true,false,true,false,false], "currentStreak": 0, "completionRate": 0.57, "target": { "value": 2, "unit": "hours" } },
+    { "name": "No sugar", "icon": "🍬", "category": "health", "completions": [true,true,true,true,false,false,true], "currentStreak": 1, "completionRate": 0.71, "target": { "value": 1, "unit": "times" } },
+    { "name": "Stretch", "icon": "🤸", "category": "health", "completions": [true,true,true,true,true,true,true], "currentStreak": 30, "completionRate": 1.0, "target": { "value": 10, "unit": "minutes" } },
+    { "name": "Practice guitar", "icon": "🎸", "category": "creative", "completions": [false,true,false,true,false,true,false], "currentStreak": 0, "completionRate": 0.43, "target": { "value": 20, "unit": "minutes" } },
+    { "name": "Reach out to friend", "icon": "📱", "category": "social", "completions": [true,false,false,true,false,false,true], "currentStreak": 1, "completionRate": 0.43, "target": { "value": 1, "unit": "times" } },
+    { "name": "Plan tomorrow", "icon": "📋", "category": "productivity", "completions": [true,true,true,true,true,true,false], "currentStreak": 0, "completionRate": 0.86, "target": { "value": 1, "unit": "times" } },
+    { "name": "Water intake", "icon": "💧", "category": "health", "completions": [true,true,true,true,true,true,true], "currentStreak": 120, "completionRate": 1.0, "target": { "value": 3, "unit": "litres" } }
+  ],
+  "overallCompletionRate": 0.78,
+  "previousWeekCompletionRate": 0.82,
+  "ruleBasedInsights": [
+    { "title": "Reading streak at 90 days", "body": "Your longest active streak across all habits.", "icon": "📖", "category": "milestone" },
+    { "title": "Weekend dip", "body": "Completion rate drops on Saturdays and Sundays across most habits.", "icon": "📉", "category": "pattern" },
+    { "title": "Guitar pattern", "body": "Guitar practice follows an every-other-day pattern — 3 of 7 days.", "icon": "🎸", "category": "observation" }
+  ]
+}

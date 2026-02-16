@@ -7,6 +7,8 @@ const Workspace = require('../models/Workspace');
 const Activity = require('../models/Activity');
 const { authenticateJWT } = require('../middleware/auth');
 const { validateUserUpdate } = require('../middleware/validation');
+const { derivePersonality } = require('../utils/derivePersonality');
+const { clearUserCache } = require('./insights');
 
 const router = express.Router();
 
@@ -26,6 +28,10 @@ router.get('/profile', (req, res) => {
         name: req.user.name,
         avatar: req.user.avatar,
         preferences: req.user.preferences,
+        aiPersonality: req.user.aiPersonality,
+        personalityCustomized: req.user.personalityCustomized,
+        personalityPromptDismissed: req.user.personalityPromptDismissed,
+        onboardingData: req.user.onboardingData,
         isVerified: req.user.isVerified,
         hasGoogleAuth: !!req.user.googleId,
         hasGithubAuth: !!req.user.githubId,
@@ -43,7 +49,10 @@ router.get('/profile', (req, res) => {
 // @access  Private
 router.put('/profile', validateUserUpdate, async (req, res) => {
   try {
-    const allowedUpdates = ['name', 'avatar', 'preferences', 'onboardingComplete'];
+    const allowedUpdates = [
+      'name', 'avatar', 'preferences', 'onboardingComplete',
+      'aiPersonality', 'onboardingData', 'personalityPromptDismissed', 'personalityCustomized'
+    ];
     const updates = {};
 
     // Filter allowed updates
@@ -59,6 +68,29 @@ router.put('/profile', validateUserUpdate, async (req, res) => {
         ...req.user.preferences,
         ...req.body.preferences
       };
+    }
+
+    // Handle nested aiPersonality updates (merge, don't replace)
+    if (req.body.aiPersonality) {
+      const currentPersonality = req.user.aiPersonality || {};
+      updates.aiPersonality = {
+        tone: currentPersonality.tone || 'warm',
+        focus: currentPersonality.focus || 'balanced',
+        verbosity: currentPersonality.verbosity || 'concise',
+        accountability: currentPersonality.accountability || 'gentle',
+        ...req.body.aiPersonality
+      };
+    }
+
+    // Auto-derive personality from onboarding data (unless user has manually customized)
+    if (req.body.onboardingData && !req.user.personalityCustomized && !req.body.personalityCustomized) {
+      const derived = derivePersonality(req.body.onboardingData);
+      updates.aiPersonality = derived;
+    }
+
+    // Clear insights cache if personality changed (so next fetch uses new voice)
+    if (updates.aiPersonality) {
+      clearUserCache(req.user._id);
     }
 
     const user = await User.findByIdAndUpdate(
@@ -77,6 +109,10 @@ router.put('/profile', validateUserUpdate, async (req, res) => {
           name: user.name,
           avatar: user.avatar,
           preferences: user.preferences,
+          aiPersonality: user.aiPersonality,
+          personalityCustomized: user.personalityCustomized,
+          personalityPromptDismissed: user.personalityPromptDismissed,
+          onboardingData: user.onboardingData,
           onboardingComplete: user.onboardingComplete,
           updatedAt: user.updatedAt
         }
