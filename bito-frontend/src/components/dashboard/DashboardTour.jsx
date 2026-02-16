@@ -17,8 +17,8 @@ const getSteps = () => {
     },
     {
       target: '[data-tour="week-strip"]',
-      title: 'This week at a glance',
-      body: 'Each square shows your daily progress. Tap any day to view and edit that day\'s habits — handy for fixing missed check-ins.',
+      title: 'Your habit timeline',
+      body: 'Switch between week, month, and year views using the W/M/Y pills. Tap any day to view and edit habits — great for fixing missed check-ins.',
       position: 'top',
     },
     {

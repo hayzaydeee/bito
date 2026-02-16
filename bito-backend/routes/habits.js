@@ -193,7 +193,7 @@ router.delete('/:id', validateObjectId('id'), async (req, res) => {
 // @access  Private
 router.get('/:id/entries', [validateObjectId('id'), validateDateRange, validatePagination], async (req, res) => {
   try {
-    const { startDate, endDate, page = 1, limit = 100 } = req.query;
+    const { startDate, endDate, page = 1, limit = 400 } = req.query;
     const skip = (page - 1) * limit;
 
     // Verify habit ownership

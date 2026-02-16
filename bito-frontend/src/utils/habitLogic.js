@@ -166,6 +166,119 @@ export const habitUtils = {
     
     return totalScheduled > 0 ? Math.round((totalCompleted / totalScheduled) * 100) : 100;
   },
+  // ── Month / Year navigation helpers ──
+
+  /** First day of the month as Date */
+  getMonthStart: (date) => {
+    const d = new Date(date);
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  },
+
+  /** 6×7 calendar grid padded with prev/next month days.
+   *  Returns array of 42 cell objects. */
+  getMonthCalendarGrid: (date, weekStartDay = null) => {
+    let startDay = weekStartDay;
+    if (startDay === null) {
+      try {
+        const userPreferencesService = require('../services/userPreferencesService').default;
+        startDay = userPreferencesService.getWeekStartDay();
+      } catch { startDay = 1; }
+    }
+
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = d.getMonth();
+    const firstOfMonth = new Date(year, month, 1);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    // How many padding days from previous month?
+    const firstDow = firstOfMonth.getDay(); // 0=Sun
+    const padBefore = (firstDow - startDay + 7) % 7;
+
+    const cells = [];
+    const cursor = new Date(firstOfMonth);
+    cursor.setDate(cursor.getDate() - padBefore);
+
+    const totalCells = Math.max(35, padBefore + daysInMonth <= 35 ? 35 : 42);
+
+    for (let i = 0; i < totalCells; i++) {
+      cells.push({
+        date: habitUtils.normalizeDate(cursor),
+        dateObj: new Date(cursor),
+        isCurrentMonth: cursor.getMonth() === month,
+        isToday: habitUtils.isToday(cursor),
+        day: cursor.getDate(),
+      });
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return cells;
+  },
+
+  /** Returns 12 month summary objects for a given year */
+  getYearMonths: (year) => {
+    const months = [];
+    for (let m = 0; m < 12; m++) {
+      const start = new Date(year, m, 1);
+      const end = new Date(year, m + 1, 0);
+      months.push({
+        month: m,
+        label: start.toLocaleDateString('en-US', { month: 'short' }),
+        fullLabel: start.toLocaleDateString('en-US', { month: 'long' }),
+        startDate: start,
+        endDate: end,
+        daysInMonth: end.getDate(),
+      });
+    }
+    return months;
+  },
+
+  /** Get {start, end} Date pair for a given view + anchor date */
+  getDateRangeForView: (view, anchorDate) => {
+    const d = new Date(anchorDate);
+    if (view === 'week') {
+      const start = habitUtils.getWeekStart(d);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 6);
+      return { start, end };
+    }
+    if (view === 'month') {
+      const start = new Date(d.getFullYear(), d.getMonth(), 1);
+      const end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+      return { start, end };
+    }
+    // year
+    const start = new Date(d.getFullYear(), 0, 1);
+    const end = new Date(d.getFullYear(), 11, 31);
+    return { start, end };
+  },
+
+  /** Shift anchor date by ±1 unit for the given view */
+  navigateRange: (view, anchorDate, direction) => {
+    const d = new Date(anchorDate);
+    if (view === 'week') {
+      d.setDate(d.getDate() + direction * 7);
+    } else if (view === 'month') {
+      d.setMonth(d.getMonth() + direction);
+    } else {
+      d.setFullYear(d.getFullYear() + direction);
+    }
+    return d;
+  },
+
+  /** Human-readable label for the current range */
+  getRangeLabel: (view, anchorDate) => {
+    const d = new Date(anchorDate);
+    if (view === 'week') {
+      const { start, end } = habitUtils.getDateRangeForView('week', d);
+      const opts = { month: 'short', day: 'numeric' };
+      return `${start.toLocaleDateString('en-US', opts)} – ${end.toLocaleDateString('en-US', opts)}`;
+    }
+    if (view === 'month') {
+      return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    }
+    return String(d.getFullYear());
+  },
+
   
   getHabitStats: (habitId, habit, completions) => {
     const habitCompletions = Array.from(completions.values())

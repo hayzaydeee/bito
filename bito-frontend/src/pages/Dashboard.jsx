@@ -225,7 +225,7 @@ const Dashboard = () => {
 
       {/* 5. 7-day heatmap strip */}
       {habits.length > 0 && (
-        <WeekStrip habits={habits} entries={entries} onToggle={handleToggleDate} />
+        <WeekStrip habits={habits} entries={entries} onToggle={handleToggleDate} fetchHabitEntries={fetchHabitEntries} />
       )}
 
       {/* 6. Streak milestone celebration */}

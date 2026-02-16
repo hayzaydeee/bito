@@ -815,6 +815,16 @@ h1, h2, h3, h4, h5, h6 {
 }
 /* ═══════ End WeekStrip ═══════ */
 
+/* ═══════ WeekStrip view transition ═══════ */
+.ws-view-fade {
+  animation: wsViewFade 0.2s ease-out;
+}
+@keyframes wsViewFade {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+/* ═══════ End WeekStrip view ═══════ */
+
 @keyframes fadeIn {
   from {
     opacity: 0;
