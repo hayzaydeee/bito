@@ -56,6 +56,14 @@ const getSteps = () => {
     },
   ];
 
+  // Status bar steps
+  steps.push({
+    target: '[data-tour="status-page"]',
+    title: 'Current page',
+    body: 'This shows you which page you\'re on. On desktop it doubles as a breadcrumb trail.',
+    position: 'bottom',
+  });
+
   if (isMobile()) {
     // Mobile: show quick-add FAB and More menu
     steps.push({
@@ -71,7 +79,13 @@ const getSteps = () => {
       position: 'top',
     });
   } else {
-    // Desktop: show Journal in sidebar (Settings is self-explanatory)
+    // Desktop: status bar actions
+    steps.push({
+      target: '[data-tour="status-actions"]',
+      title: 'Quick actions',
+      body: 'Switch themes, check notifications, and click your avatar to access Settings or sign out.',
+      position: 'bottom',
+    });
     steps.push({
       target: '[data-tour="nav-journal"]',
       title: 'Journal',

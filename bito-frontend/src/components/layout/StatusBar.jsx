@@ -97,13 +97,14 @@ const StatusBar = ({
         {/* Page title on mobile, breadcrumbs on desktop */}
         {isMobile ? (
           <span
+            data-tour="status-page"
             className="font-semibold text-sm font-spartan"
             style={{ color: "var(--color-text-primary)" }}
           >
             {getBreadcrumbTitle()}
           </span>
         ) : (
-          <div className="flex items-center text-sm">
+          <div data-tour="status-page" className="flex items-center text-sm">
             <span style={{ color: "var(--color-text-tertiary)" }}>Home</span>
             <ChevronRightIcon
               className="mx-1.5 w-3 h-3"
@@ -120,7 +121,7 @@ const StatusBar = ({
       </div>
 
       {/* Right Section */}
-      <div className="flex items-center gap-1.5">
+      <div data-tour="status-actions" className="flex items-center gap-1.5">
         {/* Theme Switcher — desktop only */}
         {!isMobile && (
           <div>
