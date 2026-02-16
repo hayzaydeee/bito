@@ -31,9 +31,15 @@ export default function usePushNotifications() {
 
   const checkExistingSubscription = async () => {
     try {
-      const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.getSubscription();
-      setIsSubscribed(!!sub);
+      // Use getRegistration() instead of .ready — .ready hangs forever
+      // if no service worker has been registered yet
+      const reg = await navigator.serviceWorker.getRegistration('/sw.js');
+      if (reg) {
+        const sub = await reg.pushManager.getSubscription();
+        setIsSubscribed(!!sub);
+      } else {
+        setIsSubscribed(false);
+      }
     } catch {
       setIsSubscribed(false);
     } finally {
