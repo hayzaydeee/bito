@@ -7,6 +7,7 @@ import StreakBarChart from '../components/analytics/StreakBarChart';
 import ActivityHeatmap from '../components/analytics/ActivityHeatmap';
 import TopHabitsList from '../components/analytics/TopHabitsList';
 import AnalyticsInsights from '../components/analytics/AnalyticsInsights';
+import HabitStreakChart from '../components/analytics/HabitStreakChart';
 
 const LS_KEY = 'bito_analytics_timeRange';
 
@@ -81,6 +82,28 @@ const AnalyticsPage = () => {
         <ActivityHeatmap habits={habits} entries={entries} timeRange={timeRange} />
         <TopHabitsList habits={habits} entries={entries} timeRange={timeRange} />
       </div> */}
+
+      {/* ── Streak timeline: full-width row ──── */}
+      {habits.length > 0 && (
+        <div
+          className="rounded-2xl border p-5"
+          style={{
+            background: 'var(--color-surface-elevated)',
+            borderColor: 'var(--color-border-primary)',
+          }}
+        >
+          <HabitStreakChart
+            habits={habits}
+            entries={entries}
+            timeRange={timeRange}
+            widgetMode={false}
+            maxHabitsDisplayed={5}
+            chartHeight={300}
+            showLegend={true}
+            showTopStreaks={true}
+          />
+        </div>
+      )}
 
       {/* ── AI Insights ────────────────────────── */}
       <AnalyticsInsights habits={habits} entries={entries} timeRange={timeRange} />
