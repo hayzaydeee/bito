@@ -26,10 +26,12 @@ import ToastContainer from "./components/ui/ToastContainer";
 // Import authentication and theme contexts
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
+import { ScaleProvider, useScale } from "./contexts/ScaleContext";
 
 // ThemedApp component to use theme context
 const ThemedApp = () => {
   const { effectiveTheme, isLoading } = useTheme();
+  const { radixScaling } = useScale();
 
   if (isLoading) {
     return (
@@ -45,7 +47,7 @@ const ThemedApp = () => {
       accentColor="indigo"
       grayColor="slate"
       radius="large"
-      scaling="100%"
+      scaling={radixScaling}
     >
       <Router>
         <div className="min-h-screen bg-gradient-to-br from-[var(--color-bg-primary)] via-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)]">
@@ -94,11 +96,13 @@ function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
-        <NotificationProvider>
-          <HabitProvider>
-            <ThemedApp />
-          </HabitProvider>
-        </NotificationProvider>
+        <ScaleProvider>
+          <NotificationProvider>
+            <HabitProvider>
+              <ThemedApp />
+            </HabitProvider>
+          </NotificationProvider>
+        </ScaleProvider>
       </ThemeProvider>
     </AuthProvider>
   );

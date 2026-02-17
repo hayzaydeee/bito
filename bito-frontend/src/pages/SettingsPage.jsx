@@ -21,6 +21,7 @@ import {
 import { userAPI } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
+import { useScale } from "../contexts/ScaleContext";
 import usePushNotifications from "../hooks/usePushNotifications";
 import PersonalityQuiz from "../components/settingsPage/PersonalityQuiz";
 
@@ -43,6 +44,7 @@ import PersonalityQuiz from "../components/settingsPage/PersonalityQuiz";
 const SettingsPage = ({ section }) => {
   const { user } = useAuth();
   const { theme, changeTheme } = useTheme();
+  const { scale: currentScale, changeScale } = useScale();
   const navigate = useNavigate();
 
   /* ── core state ───────────────────────── */
@@ -56,6 +58,7 @@ const SettingsPage = ({ section }) => {
     timezone: "UTC",
     weekStartsOn: 1,
     theme: "auto",
+    scale: "small",
   });
 
   /* ── habit-privacy sub-route state ────── */
@@ -92,6 +95,7 @@ const SettingsPage = ({ section }) => {
           timezone: u.preferences?.timezone ?? "UTC",
           weekStartsOn: u.preferences?.weekStartsOn ?? 1,
           theme: u.preferences?.theme ?? "auto",
+          scale: u.preferences?.scale ?? "small",
         }));
       } catch {
         console.error("Failed to load profile");
@@ -197,6 +201,17 @@ const SettingsPage = ({ section }) => {
       } catch {
         setSettings((p) => ({ ...p, [key]: prev }));
         showToast("Failed to update theme", "error");
+      }
+      return;
+    }
+
+    if (key === "scale") {
+      try {
+        await changeScale(value);
+        showToast("Text size updated");
+      } catch {
+        setSettings((p) => ({ ...p, [key]: prev }));
+        showToast("Failed to update text size", "error");
       }
       return;
     }
@@ -765,6 +780,96 @@ const SettingsPage = ({ section }) => {
                   >
                     <Icon className="w-3.5 h-3.5" />
                     {t.label}
+                  </div>
+                  {active && (
+                    <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[var(--color-brand-500)] flex items-center justify-center">
+                      <CheckIcon className="w-3 h-3 text-white" />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </Section>
+
+        {/* ═══════ 2b. TEXT SIZE ═══════ */}
+        <Section title="Text Size" icon={GearIcon}>
+          <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mb-3">
+            Scale text and UI elements for better readability
+          </p>
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              {
+                value: "small",
+                label: "Small",
+                description: "Default",
+                textBarWidths: ["w-14", "w-10"],
+                textBarHeights: ["h-1", "h-[3px]"],
+                dotSize: "w-1.5 h-1.5",
+                headingHeight: "h-1.5",
+                headingWidth: "w-10",
+              },
+              {
+                value: "medium",
+                label: "Medium",
+                description: "Comfortable",
+                textBarWidths: ["w-14", "w-10"],
+                textBarHeights: ["h-1.5", "h-1"],
+                dotSize: "w-2 h-2",
+                headingHeight: "h-2",
+                headingWidth: "w-11",
+              },
+              {
+                value: "large",
+                label: "Large",
+                description: "Spacious",
+                textBarWidths: ["w-14", "w-10"],
+                textBarHeights: ["h-2", "h-1.5"],
+                dotSize: "w-2.5 h-2.5",
+                headingHeight: "h-2.5",
+                headingWidth: "w-12",
+              },
+            ].map((s) => {
+              const active = settings.scale === s.value;
+              return (
+                <button
+                  key={s.value}
+                  onClick={() => saveSetting("scale", s.value)}
+                  className={`relative rounded-xl border-2 overflow-hidden transition-all ${
+                    active
+                      ? "border-[var(--color-brand-500)] ring-2 ring-[var(--color-brand-500)]/20"
+                      : "border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/50"
+                  }`}
+                >
+                  {/* mini preview showing relative text sizes */}
+                  <div className="h-20 p-3 flex flex-col justify-between bg-[var(--color-surface-primary)]">
+                    {/* mock heading */}
+                    <div className="flex items-center gap-1.5">
+                      <div className={`${s.dotSize} rounded-full bg-[var(--color-brand-400)]`} />
+                      <div
+                        className={`${s.headingHeight} ${s.headingWidth} rounded bg-[var(--color-text-primary)]/25`}
+                      />
+                    </div>
+                    {/* mock body lines */}
+                    <div className="space-y-1">
+                      <div
+                        className={`${s.textBarHeights[0]} ${s.textBarWidths[0]} rounded bg-[var(--color-text-secondary)]/30`}
+                      />
+                      <div
+                        className={`${s.textBarHeights[1]} ${s.textBarWidths[1]} rounded bg-[var(--color-text-secondary)]/20`}
+                      />
+                    </div>
+                  </div>
+                  {/* label */}
+                  <div
+                    className={`flex flex-col items-center justify-center py-2.5 text-sm font-spartan font-medium ${
+                      active
+                        ? "text-[var(--color-brand-600)] bg-[var(--color-brand-500)]/8"
+                        : "text-[var(--color-text-secondary)]"
+                    }`}
+                  >
+                    <span>{s.label}</span>
+                    <span className="text-[10px] font-normal opacity-60">{s.description}</span>
                   </div>
                   {active && (
                     <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[var(--color-brand-500)] flex items-center justify-center">

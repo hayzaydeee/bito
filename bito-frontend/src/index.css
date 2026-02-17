@@ -121,6 +121,26 @@ html {
   }
 }
 
+/* ── Scale: Medium ─────────────────────── */
+html[data-scale="medium"] {
+  font-size: 19px;
+}
+@media (min-width: 640px) {
+  html[data-scale="medium"] {
+    font-size: 18px;
+  }
+}
+
+/* ── Scale: Large ──────────────────────── */
+html[data-scale="large"] {
+  font-size: 21px;
+}
+@media (min-width: 640px) {
+  html[data-scale="large"] {
+    font-size: 20px;
+  }
+}
+
 body {
   font-family: 'League Spartan', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   background: var(--color-bg-primary);
@@ -1412,6 +1432,12 @@ body.onboarding-active [data-tour]:hover {
   /* Very small screens */
   html {
     font-size: 13px;
+  }
+  html[data-scale="medium"] {
+    font-size: 15px;
+  }
+  html[data-scale="large"] {
+    font-size: 17px;
   }
 
   .heading-display {

@@ -143,6 +143,11 @@ const userSchema = new mongoose.Schema({  // Basic user information
       min: 0,
       max: 6,
       default: 1 // Monday
+    },
+    scale: {
+      type: String,
+      enum: ['small', 'medium', 'large'],
+      default: 'small'
     }
   },
 

@@ -110,7 +110,7 @@ const StreakBarChart = ({ habits, entries }) => {
             <XAxis
               type="number"
               domain={[0, Math.ceil(maxStreak * 1.15)]}
-              tick={{ fontSize: 11, fill: 'var(--color-text-tertiary)', fontFamily: 'League Spartan' }}
+              tick={{ fontSize: '0.6875rem', fill: 'var(--color-text-tertiary)', fontFamily: 'League Spartan' }}
               tickLine={false}
               axisLine={false}
               tickFormatter={v => `${v}d`}
@@ -118,7 +118,7 @@ const StreakBarChart = ({ habits, entries }) => {
             <YAxis
               type="category"
               dataKey="name"
-              tick={{ fontSize: 12, fill: 'var(--color-text-primary)', fontFamily: 'League Spartan' }}
+              tick={{ fontSize: '0.75rem', fill: 'var(--color-text-primary)', fontFamily: 'League Spartan' }}
               tickLine={false}
               axisLine={false}
               width={110}

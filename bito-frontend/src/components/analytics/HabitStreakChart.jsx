@@ -128,13 +128,13 @@ const HabitStreakChart = ({
       />
       <XAxis
         dataKey="label"
-        tick={{ fontSize: 11, fill: 'var(--color-text-tertiary)', fontFamily: 'League Spartan' }}
+        tick={{ fontSize: '0.6875rem', fill: 'var(--color-text-tertiary)', fontFamily: 'League Spartan' }}
         tickLine={false}
         axisLine={false}
         interval="preserveStartEnd"
       />
       <YAxis
-        tick={{ fontSize: 11, fill: 'var(--color-text-tertiary)', fontFamily: 'League Spartan' }}
+        tick={{ fontSize: '0.6875rem', fill: 'var(--color-text-tertiary)', fontFamily: 'League Spartan' }}
         tickLine={false}
         axisLine={false}
         tickFormatter={(v) => `${Math.round(v)}d`}

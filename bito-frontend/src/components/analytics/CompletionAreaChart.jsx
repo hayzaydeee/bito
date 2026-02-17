@@ -95,14 +95,14 @@ const CompletionAreaChart = ({ habits, entries, timeRange, accountAgeDays = 365 
 
             <XAxis
               dataKey="label"
-              tick={{ fontSize: 11, fill: 'var(--color-text-tertiary)', fontFamily: 'League Spartan' }}
+              tick={{ fontSize: '0.6875rem', fill: 'var(--color-text-tertiary)', fontFamily: 'League Spartan' }}
               tickLine={false}
               axisLine={false}
               interval="preserveStartEnd"
             />
             <YAxis
               domain={[0, 100]}
-              tick={{ fontSize: 11, fill: 'var(--color-text-tertiary)', fontFamily: 'League Spartan' }}
+              tick={{ fontSize: '0.6875rem', fill: 'var(--color-text-tertiary)', fontFamily: 'League Spartan' }}
               tickLine={false}
               axisLine={false}
               tickFormatter={v => `${v}%`}
