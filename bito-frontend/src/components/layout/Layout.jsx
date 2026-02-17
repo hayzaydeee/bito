@@ -1,15 +1,37 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import VerticalMenu from "./VerticalMenu";
 import StatusBar from "./StatusBar";
 import BottomTabBar from "./BottomTabBar";
+import CustomHabitEditModal from "../ui/CustomHabitEditModal";
 import { useAuth, withAuth } from "../../contexts/AuthContext";
+import { useHabits } from "../../contexts/HabitContext";
 
 const Layout = () => {
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [addHabitModalOpen, setAddHabitModalOpen] = useState(false);
   const { user } = useAuth();
+  const { createHabit } = useHabits();
   const location = useLocation();
+
+  const handleOpenAddHabit = useCallback(() => {
+    setAddHabitModalOpen(true);
+  }, []);
+
+  const handleSaveNewHabit = useCallback(async (habitData) => {
+    const result = await createHabit(habitData);
+    if (result.success) {
+      setAddHabitModalOpen(false);
+    }
+  }, [createHabit]);
+
+  // Also listen for the addHabit custom event (fallback)
+  useEffect(() => {
+    const handler = () => setAddHabitModalOpen(true);
+    window.addEventListener("addHabit", handler);
+    return () => window.removeEventListener("addHabit", handler);
+  }, []);
 
   // Detect mobile screen size
   useEffect(() => {
@@ -59,7 +81,17 @@ const Layout = () => {
       </div>
 
       {/* Mobile Bottom Tab Bar — hidden on desktop */}
-      {isMobile && <BottomTabBar />}
+      {isMobile && <BottomTabBar onAddHabit={handleOpenAddHabit} />}
+
+      {/* Global Add Habit Modal (accessible from BottomTabBar on any page) */}
+      <CustomHabitEditModal
+        isOpen={addHabitModalOpen}
+        onClose={() => setAddHabitModalOpen(false)}
+        habit={null}
+        onSave={handleSaveNewHabit}
+        onDelete={() => {}}
+        onArchive={() => {}}
+      />
     </div>
   );
 };

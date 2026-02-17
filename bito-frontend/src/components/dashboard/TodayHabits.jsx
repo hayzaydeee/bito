@@ -144,32 +144,27 @@ const TodayHabits = memo(
           >
             Today
           </h2>
-          <div className="flex items-center gap-2">
-            <button
+          <button
               onClick={onAdd}
-              className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-spartan font-medium transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-spartan font-semibold transition-all duration-200 active:scale-95"
               style={{
-                color: "var(--color-brand-500)",
-                backgroundColor: "transparent",
+                color: "white",
+                backgroundColor: "var(--color-brand-500)",
+                boxShadow: "0 1px 4px var(--color-glow)",
               }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.backgroundColor = "var(--color-surface-hover)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.backgroundColor = "transparent")
-              }
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "var(--color-brand-600)";
+                e.currentTarget.style.boxShadow = "0 2px 8px var(--color-glow)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "var(--color-brand-500)";
+                e.currentTarget.style.boxShadow = "0 1px 4px var(--color-glow)";
+              }}
               aria-label="Add habit"
             >
               <PlusIcon className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Add</span>
+              Add Habit
             </button>
-          <span
-            className="text-xs font-spartan tabular-nums"
-            style={{ color: "var(--color-text-tertiary)" }}
-          >
-            {done.length} of {habits.length} done
-          </span>
-          </div>
         </div>
 
         <div

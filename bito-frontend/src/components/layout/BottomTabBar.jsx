@@ -13,7 +13,7 @@ import {
 import { useAuth } from "../../contexts/AuthContext";
 import ThemeSwitcher from "../ui/ThemeSwitcher";
 
-const BottomTabBar = () => {
+const BottomTabBar = ({ onAddHabit }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout } = useAuth();
@@ -184,8 +184,7 @@ const BottomTabBar = () => {
                 <button
                   onClick={() => {
                     setShowAddMenu(false);
-                    // Dispatch add habit event
-                    window.dispatchEvent(new CustomEvent("addHabit"));
+                    if (onAddHabit) onAddHabit();
                   }}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors"
                   style={{ color: "var(--color-text-primary)" }}
