@@ -44,23 +44,19 @@ const apiRequest = async (endpoint, options = {}) => {
 
 // Authentication API
 export const authAPI = {
-  // Register new user
-  register: async (userData) => {
-    return apiRequest('/api/auth/register', {
+  // Request a magic link
+  requestMagicLink: async (email) => {
+    return apiRequest('/api/auth/magic-link', {
       method: 'POST',
-      body: JSON.stringify({
-        name: `${userData.firstName} ${userData.lastName}`.trim(),
-        email: userData.email,
-        password: userData.password,
-      }),
+      body: JSON.stringify({ email }),
     });
   },
 
-  // Login user
-  login: async (credentials) => {
-    return apiRequest('/api/auth/login', {
+  // Verify a magic link token
+  verifyMagicLink: async (token) => {
+    return apiRequest('/api/auth/magic-link/verify', {
       method: 'POST',
-      body: JSON.stringify(credentials),
+      body: JSON.stringify({ token }),
     });
   },
 
@@ -96,14 +92,6 @@ export const userAPI = {
     return apiRequest('/api/users/profile', {
       method: 'PUT',
       body: JSON.stringify(profileData),
-    });
-  },
-
-  // Change password
-  changePassword: async (passwordData) => {
-    return apiRequest('/api/users/change-password', {
-      method: 'PUT',
-      body: JSON.stringify(passwordData),
     });
   },
 

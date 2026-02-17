@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({  // Basic user information
   email: {
@@ -9,14 +8,6 @@ const userSchema = new mongoose.Schema({  // Basic user information
     trim: true,
     match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Please provide a valid email']
   },
-  password: {
-    type: String,
-    required: function() {
-      return !this.googleId && !this.githubId; // Password required only if not OAuth user
-    },
-    minlength: [6, 'Password must be at least 6 characters long']
-  },
-  
   // User profile
   name: {
     type: String,
@@ -177,8 +168,9 @@ const userSchema = new mongoose.Schema({  // Basic user information
     type: Date,
     default: null
   },
-  passwordResetToken: String,
-  passwordResetExpires: Date,
+  // Magic link authentication
+  magicLinkToken: String,
+  magicLinkExpires: Date,
   
   // Metadata
   createdAt: {
@@ -193,9 +185,8 @@ const userSchema = new mongoose.Schema({  // Basic user information
   timestamps: true,
   toJSON: {
     transform: function(doc, ret) {
-      delete ret.password;
-      delete ret.passwordResetToken;
-      delete ret.passwordResetExpires;
+      delete ret.magicLinkToken;
+      delete ret.magicLinkExpires;
       delete ret.__v;
       return ret;
     }
@@ -207,22 +198,6 @@ userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ googleId: 1 }, { sparse: true });
 userSchema.index({ githubId: 1 }, { sparse: true });
 userSchema.index({ createdAt: -1 });
-
-// Pre-save middleware to hash password
-userSchema.pre('save', async function(next) {
-  // Only hash password if it's been modified (or is new)
-  if (!this.isModified('password')) return next();
-  
-  // Hash password with cost of 12
-  this.password = await bcrypt.hash(this.password, 12);
-  next();
-});
-
-// Instance method to check password
-userSchema.methods.comparePassword = async function(candidatePassword) {
-  if (!this.password) return false;
-  return bcrypt.compare(candidatePassword, this.password);
-};
 
 // Instance method to generate JWT payload
 userSchema.methods.getJWTPayload = function() {

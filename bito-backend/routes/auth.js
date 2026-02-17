@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
 const { authenticateJWT } = require('../middleware/auth');
-const { validateUserRegistration, validateUserLogin } = require('../middleware/validation');
+const { validateMagicLinkRequest, validateMagicLinkVerify } = require('../middleware/validation');
 const { sendWelcomeEmail } = require('../services/welcomeEmailService');
 const emailService = require('../services/emailService');
 
@@ -19,42 +19,156 @@ const generateToken = (user) => {
   );
 };
 
-// @route   POST /api/auth/register
-// @desc    Register a new user
-// @access  Public
-router.post('/register', validateUserRegistration, async (req, res) => {
-  try {
-    const { email, password, name } = req.body;
+// Simple in-memory rate limiter for magic link requests
+const magicLinkAttempts = new Map();
+const MAGIC_LINK_RATE_LIMIT = 5;       // max requests
+const MAGIC_LINK_RATE_WINDOW = 15 * 60 * 1000; // per 15 minutes
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
-    if (existingUser) {
-      return res.status(400).json({
+function checkMagicLinkRateLimit(email) {
+  const key = email.toLowerCase();
+  const now = Date.now();
+  const record = magicLinkAttempts.get(key);
+
+  if (!record || now - record.windowStart > MAGIC_LINK_RATE_WINDOW) {
+    magicLinkAttempts.set(key, { windowStart: now, count: 1 });
+    return true;
+  }
+
+  if (record.count >= MAGIC_LINK_RATE_LIMIT) {
+    return false;
+  }
+
+  record.count++;
+  return true;
+}
+
+// @route   POST /api/auth/magic-link
+// @desc    Send a magic link to the user's email (login or signup)
+// @access  Public
+router.post('/magic-link', validateMagicLinkRequest, async (req, res) => {
+  try {
+    const { email } = req.body;
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Rate limit per email
+    if (!checkMagicLinkRateLimit(normalizedEmail)) {
+      return res.status(429).json({
         success: false,
-        error: 'User already exists with this email'
+        error: 'Too many sign-in requests. Please wait a few minutes before trying again.'
       });
     }
 
-    // Create new user
-    const user = new User({
-      email: email.toLowerCase(),
-      password,
-      name: name.trim()
+    // Always respond with the same message to prevent email enumeration
+    const successResponse = {
+      success: true,
+      message: 'If this email is associated with an account, a sign-in link has been sent.'
+    };
+
+    let user = await User.findOne({ email: normalizedEmail });
+
+    if (!user) {
+      // Auto-create account for new users
+      user = new User({
+        email: normalizedEmail,
+        name: normalizedEmail.split('@')[0], // default name from email prefix
+      });
+      await user.save();
+
+      // Fire-and-forget welcome email
+      sendWelcomeEmail(user);
+    }
+
+    if (!user.isActive) {
+      // Don't reveal that the account is deactivated
+      return res.json(successResponse);
+    }
+
+    // Generate magic link token
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+    user.magicLinkToken = hashedToken;
+    user.magicLinkExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
+    await user.save({ validateBeforeSave: false });
+
+    // Build magic link URL
+    const frontendUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173';
+    const magicLinkUrl = `${frontendUrl.replace('://www.', '://')}/auth/verify?token=${rawToken}`;
+
+    // Send email
+    try {
+      await emailService.sendMagicLinkEmail(user, magicLinkUrl);
+    } catch (emailError) {
+      console.error('Failed to send magic link email:', emailError);
+      // Clear the token if email fails
+      user.magicLinkToken = undefined;
+      user.magicLinkExpires = undefined;
+      await user.save({ validateBeforeSave: false });
+
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to send sign-in email. Please try again later.'
+      });
+    }
+
+    res.json(successResponse);
+  } catch (error) {
+    console.error('Magic link error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Something went wrong. Please try again later.'
+    });
+  }
+});
+
+// @route   POST /api/auth/magic-link/verify
+// @desc    Verify a magic link token and authenticate the user
+// @access  Public
+router.post('/magic-link/verify', validateMagicLinkVerify, async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    // Hash the token from the URL to compare with stored hash
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    const user = await User.findOne({
+      magicLinkToken: hashedToken,
+      magicLinkExpires: { $gt: Date.now() }
     });
 
-    await user.save();
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        error: 'Sign-in link is invalid or has expired'
+      });
+    }
 
-    // Fire-and-forget welcome email
-    sendWelcomeEmail(user);
+    if (!user.isActive) {
+      return res.status(403).json({
+        success: false,
+        error: 'Account is deactivated'
+      });
+    }
 
-    // Generate token
-    const token = generateToken(user);
+    // Determine if this is a brand-new user (never logged in before)
+    const isNewUser = !user.lastLogin;
 
-    res.status(201).json({
+    // Clear magic link token (one-time use)
+    user.magicLinkToken = undefined;
+    user.magicLinkExpires = undefined;
+    user.isVerified = true;
+    user.lastLogin = new Date();
+    await user.save({ validateBeforeSave: false });
+
+    // Generate JWT
+    const jwtToken = generateToken(user);
+
+    res.json({
       success: true,
-      message: 'User registered successfully',
+      message: 'Signed in successfully',
       data: {
-        token,
+        token: jwtToken,
+        isNewUser,
         user: {
           id: user._id,
           email: user.email,
@@ -65,61 +179,18 @@ router.post('/register', validateUserRegistration, async (req, res) => {
           personalityCustomized: user.personalityCustomized,
           personalityPromptDismissed: user.personalityPromptDismissed,
           onboardingComplete: user.onboardingComplete,
+          lastLogin: user.lastLogin,
           createdAt: user.createdAt
         }
       }
     });
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('Magic link verify error:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to register user'
+      error: 'Something went wrong. Please try again later.'
     });
   }
-});
-
-// @route   POST /api/auth/login
-// @desc    Login user
-// @access  Public
-router.post('/login', validateUserLogin, (req, res, next) => {
-  passport.authenticate('local', { session: false }, (err, user, info) => {
-    if (err) {
-      return res.status(500).json({
-        success: false,
-        error: 'Authentication error'
-      });
-    }
-
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        error: info.message || 'Invalid credentials'
-      });
-    }
-
-    // Generate token
-    const token = generateToken(user);
-
-    res.json({
-      success: true,
-      message: 'Login successful',
-      data: {
-        token,
-        user: {
-          id: user._id,
-          email: user.email,
-          name: user.name,
-          avatar: user.avatar,
-          preferences: user.preferences,
-          aiPersonality: user.aiPersonality,
-          personalityCustomized: user.personalityCustomized,
-          personalityPromptDismissed: user.personalityPromptDismissed,
-          onboardingComplete: user.onboardingComplete,
-          lastLogin: user.lastLogin
-        }
-      }
-    });
-  })(req, res, next);
 });
 
 // @route   POST /api/auth/logout
@@ -198,7 +269,7 @@ router.get('/google/callback',
       const token = generateToken(req.user);
       
       // Redirect to frontend with token
-      res.redirect(`${process.env.FRONTEND_URL}/login/success?token=${token}`);
+      res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
     } catch (error) {
       console.error('Google OAuth callback error:', error);
       res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_callback_failed`);
@@ -225,160 +296,13 @@ router.get('/github/callback',
       const token = generateToken(req.user);
       
       // Redirect to frontend with token
-      res.redirect(`${process.env.FRONTEND_URL}/login/success?token=${token}`);
+      res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
     } catch (error) {
       console.error('GitHub OAuth callback error:', error);
       res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_callback_failed`);
     }
   }
 );
-
-// @route   POST /api/auth/forgot-password
-// @desc    Send password reset email
-// @access  Public
-router.post('/forgot-password', async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        error: 'Email is required'
-      });
-    }
-
-    const user = await User.findOne({ email: email.toLowerCase() });
-
-    // Always return success to prevent email enumeration
-    if (!user) {
-      return res.json({
-        success: true,
-        message: 'If an account exists with that email, a reset link has been sent.'
-      });
-    }
-
-    // Check if user only uses OAuth (no password set)
-    if (!user.password && (user.googleId || user.githubId)) {
-      return res.json({
-        success: true,
-        message: 'If an account exists with that email, a reset link has been sent.'
-      });
-    }
-
-    // Generate reset token
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-
-    // Save hashed token and expiry (1 hour)
-    user.passwordResetToken = hashedToken;
-    user.passwordResetExpires = Date.now() + 60 * 60 * 1000;
-    await user.save({ validateBeforeSave: false });
-
-    // Build reset URL (use unhashed token in the link)
-    const frontendUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173';
-    const resetUrl = `${frontendUrl.replace('://www.', '://')}/reset-password?token=${resetToken}`;
-
-    // Send email
-    try {
-      await emailService.sendPasswordResetEmail(user, resetUrl);
-    } catch (emailError) {
-      console.error('Failed to send password reset email:', emailError);
-      // Clear the token if email fails
-      user.passwordResetToken = undefined;
-      user.passwordResetExpires = undefined;
-      await user.save({ validateBeforeSave: false });
-
-      return res.status(500).json({
-        success: false,
-        error: 'Failed to send reset email. Please try again later.'
-      });
-    }
-
-    res.json({
-      success: true,
-      message: 'If an account exists with that email, a reset link has been sent.'
-    });
-  } catch (error) {
-    console.error('Forgot password error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Something went wrong. Please try again later.'
-    });
-  }
-});
-
-// @route   POST /api/auth/reset-password
-// @desc    Reset password with token
-// @access  Public
-router.post('/reset-password', async (req, res) => {
-  try {
-    const { token, password } = req.body;
-
-    if (!token || !password) {
-      return res.status(400).json({
-        success: false,
-        error: 'Token and new password are required'
-      });
-    }
-
-    if (password.length < 6) {
-      return res.status(400).json({
-        success: false,
-        error: 'Password must be at least 6 characters long'
-      });
-    }
-
-    // Hash the token from the URL to compare with stored hash
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-
-    const user = await User.findOne({
-      passwordResetToken: hashedToken,
-      passwordResetExpires: { $gt: Date.now() }
-    });
-
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        error: 'Reset token is invalid or has expired'
-      });
-    }
-
-    // Set new password (will be hashed by pre-save middleware)
-    user.password = password;
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
-    await user.save();
-
-    // Generate a new JWT so the user is logged in
-    const jwtToken = generateToken(user);
-
-    res.json({
-      success: true,
-      message: 'Password has been reset successfully',
-      data: {
-        token: jwtToken,
-        user: {
-          id: user._id,
-          email: user.email,
-          name: user.name,
-          avatar: user.avatar,
-          preferences: user.preferences,
-          aiPersonality: user.aiPersonality,
-          personalityCustomized: user.personalityCustomized,
-          personalityPromptDismissed: user.personalityPromptDismissed,
-          onboardingComplete: user.onboardingComplete,
-          createdAt: user.createdAt
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Reset password error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Something went wrong. Please try again later.'
-    });
-  }
-});
 
 // @route   DELETE /api/auth/oauth/:provider
 // @desc    Unlink OAuth provider
@@ -395,16 +319,12 @@ router.delete('/oauth/:provider', authenticateJWT, async (req, res) => {
       });
     }
 
-    // Check if user has password or another OAuth method
-    const hasPassword = !!user.password;
+    // Check if user has another OAuth method — can always use magic link as fallback
     const hasOtherOAuth = (provider === 'google' && user.githubId) || 
                          (provider === 'github' && user.googleId);
 
-    if (!hasPassword && !hasOtherOAuth) {
-      return res.status(400).json({
-        success: false,
-        error: 'Cannot unlink the only authentication method. Please set a password first.'
-      });
+    if (!hasOtherOAuth) {
+      // Still allow unlinking — user can always sign in via magic link
     }
 
     // Remove OAuth ID

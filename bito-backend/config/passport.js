@@ -1,5 +1,4 @@
 const passport = require('passport');
-const LocalStrategy = require('passport-local').Strategy;
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const GitHubStrategy = require('passport-github2').Strategy;
 const JwtStrategy = require('passport-jwt').Strategy;
@@ -22,41 +21,6 @@ passport.deserializeUser(async (id, done) => {
     done(error, null);
   }
 });
-
-// Local Strategy for email/password authentication
-passport.use(new LocalStrategy({
-  usernameField: 'email',
-  passwordField: 'password'
-}, async (email, password, done) => {
-  try {
-    // Find user by email
-    const user = await User.findOne({ email: email.toLowerCase() });
-    
-    if (!user) {
-      return done(null, false, { message: 'Invalid email or password' });
-    }
-    
-    // Check if user is active
-    if (!user.isActive) {
-      return done(null, false, { message: 'Account is deactivated' });
-    }
-    
-    // Check password
-    const isMatch = await user.comparePassword(password);
-    
-    if (!isMatch) {
-      return done(null, false, { message: 'Invalid email or password' });
-    }
-    
-    // Update last login
-    user.lastLogin = new Date();
-    await user.save();
-    
-    return done(null, user);
-  } catch (error) {
-    return done(error);
-  }
-}));
 
 // JWT Strategy for API authentication
 passport.use(new JwtStrategy({

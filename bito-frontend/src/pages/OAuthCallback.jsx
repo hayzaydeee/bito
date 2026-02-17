@@ -1,17 +1,15 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { authAPI } from '../services/api';
 
 const OAuthCallback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { login } = useAuth();
 
   useEffect(() => {
     const handleCallback = async () => {
       try {
         const token = searchParams.get('token');
-        const user = searchParams.get('user');
         const error = searchParams.get('error');
 
         if (error) {
@@ -20,20 +18,22 @@ const OAuthCallback = () => {
           return;
         }
 
-        if (token && user) {
-          // Parse user data
-          const userData = JSON.parse(decodeURIComponent(user));
-          
-          // Save to localStorage
+        if (token) {
+          // Save token to localStorage
           localStorage.setItem('token', token);
-          localStorage.setItem('user', JSON.stringify(userData));
 
-          // Update auth context
-          // We dispatch directly to avoid making another API call
-          // since we already have valid token and user data
+          // Fetch user data using the token
+          try {
+            const response = await authAPI.getMe();
+            localStorage.setItem('user', JSON.stringify(response.data.user));
+          } catch (fetchError) {
+            console.error('Failed to fetch user after OAuth:', fetchError);
+          }
+
+          // Redirect to app
           window.location.href = '/app';
         } else {
-          console.error('Missing token or user data');
+          console.error('Missing token');
           navigate('/login?error=oauth_invalid');
         }
       } catch (error) {
@@ -43,7 +43,7 @@ const OAuthCallback = () => {
     };
 
     handleCallback();
-  }, [searchParams, navigate, login]);
+  }, [searchParams, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--color-bg-primary)] via-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)]">

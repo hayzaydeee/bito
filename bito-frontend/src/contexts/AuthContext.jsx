@@ -12,13 +12,14 @@ const initialState = {
 
 // Action types
 const actionTypes = {
-  LOGIN_START: 'LOGIN_START',
+  MAGIC_LINK_REQUEST_START: 'MAGIC_LINK_REQUEST_START',
+  MAGIC_LINK_REQUEST_SUCCESS: 'MAGIC_LINK_REQUEST_SUCCESS',
+  MAGIC_LINK_REQUEST_FAILURE: 'MAGIC_LINK_REQUEST_FAILURE',
+  MAGIC_LINK_VERIFY_START: 'MAGIC_LINK_VERIFY_START',
+  MAGIC_LINK_VERIFY_SUCCESS: 'MAGIC_LINK_VERIFY_SUCCESS',
+  MAGIC_LINK_VERIFY_FAILURE: 'MAGIC_LINK_VERIFY_FAILURE',
   LOGIN_SUCCESS: 'LOGIN_SUCCESS',
-  LOGIN_FAILURE: 'LOGIN_FAILURE',
   LOGOUT: 'LOGOUT',
-  REGISTER_START: 'REGISTER_START',
-  REGISTER_SUCCESS: 'REGISTER_SUCCESS',
-  REGISTER_FAILURE: 'REGISTER_FAILURE',
   SET_LOADING: 'SET_LOADING',
   CLEAR_ERROR: 'CLEAR_ERROR',
   UPDATE_USER: 'UPDATE_USER',
@@ -27,16 +28,23 @@ const actionTypes = {
 // Reducer
 const authReducer = (state, action) => {
   switch (action.type) {
-    case actionTypes.LOGIN_START:
-    case actionTypes.REGISTER_START:
+    case actionTypes.MAGIC_LINK_REQUEST_START:
+    case actionTypes.MAGIC_LINK_VERIFY_START:
       return {
         ...state,
         isLoading: true,
         error: null,
       };
 
+    case actionTypes.MAGIC_LINK_REQUEST_SUCCESS:
+      return {
+        ...state,
+        isLoading: false,
+        error: null,
+      };
+
     case actionTypes.LOGIN_SUCCESS:
-    case actionTypes.REGISTER_SUCCESS:
+    case actionTypes.MAGIC_LINK_VERIFY_SUCCESS:
       return {
         ...state,
         user: action.payload.user,
@@ -46,8 +54,8 @@ const authReducer = (state, action) => {
         error: null,
       };
 
-    case actionTypes.LOGIN_FAILURE:
-    case actionTypes.REGISTER_FAILURE:
+    case actionTypes.MAGIC_LINK_REQUEST_FAILURE:
+    case actionTypes.MAGIC_LINK_VERIFY_FAILURE:
       return {
         ...state,
         user: null,
@@ -129,58 +137,49 @@ export const AuthProvider = ({ children }) => {
     loadUser();
   }, []);
 
-  // Login function
-  const login = async (credentials) => {
-    dispatch({ type: actionTypes.LOGIN_START });
+  // Request magic link
+  const requestMagicLink = async (email) => {
+    dispatch({ type: actionTypes.MAGIC_LINK_REQUEST_START });
 
     try {
-      const response = await authAPI.login(credentials);
+      const response = await authAPI.requestMagicLink(email);
       
-      const { token, user } = response.data;
+      dispatch({ type: actionTypes.MAGIC_LINK_REQUEST_SUCCESS });
 
-      // Save to localStorage
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-
-      dispatch({
-        type: actionTypes.LOGIN_SUCCESS,
-        payload: { user, token },
-      });
-
-      return { success: true, user };
+      return { success: true, message: response.message };
     } catch (error) {
       const errorMessage = handleAPIError(error);
       dispatch({
-        type: actionTypes.LOGIN_FAILURE,
+        type: actionTypes.MAGIC_LINK_REQUEST_FAILURE,
         payload: errorMessage,
       });
       return { success: false, error: errorMessage };
     }
   };
 
-  // Register function
-  const register = async (userData) => {
-    dispatch({ type: actionTypes.REGISTER_START });
+  // Verify magic link token
+  const verifyMagicLink = async (token) => {
+    dispatch({ type: actionTypes.MAGIC_LINK_VERIFY_START });
 
     try {
-      const response = await authAPI.register(userData);
+      const response = await authAPI.verifyMagicLink(token);
       
-      const { token, user } = response.data;
+      const { token: jwtToken, user, isNewUser } = response.data;
 
       // Save to localStorage
-      localStorage.setItem('token', token);
+      localStorage.setItem('token', jwtToken);
       localStorage.setItem('user', JSON.stringify(user));
 
       dispatch({
-        type: actionTypes.REGISTER_SUCCESS,
-        payload: { user, token },
+        type: actionTypes.MAGIC_LINK_VERIFY_SUCCESS,
+        payload: { user, token: jwtToken },
       });
 
-      return { success: true, user };
+      return { success: true, user, isNewUser };
     } catch (error) {
       const errorMessage = handleAPIError(error);
       dispatch({
-        type: actionTypes.REGISTER_FAILURE,
+        type: actionTypes.MAGIC_LINK_VERIFY_FAILURE,
         payload: errorMessage,
       });
       return { success: false, error: errorMessage };
@@ -235,8 +234,8 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     ...state,
-    login,
-    register,
+    requestMagicLink,
+    verifyMagicLink,
     logout,
     updateUser,
     clearError,

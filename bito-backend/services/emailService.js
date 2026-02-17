@@ -65,59 +65,63 @@ class EmailService {
     return { messageId: data.id };
   }
 
-  async sendPasswordResetEmail(user, resetUrl) {
+  async sendMagicLinkEmail(user, magicLinkUrl) {
     if (!this.transporter) {
       throw new Error('Email service not initialized');
     }
 
+    const greeting = user.name
+      ? `<p style="font-size:15px;color:${BRAND.colors.textSecondary};margin:0 0 20px 0;line-height:1.7;">
+          Hi <strong style="color:${BRAND.colors.text};">${user.name}</strong>,
+        </p>`
+      : '';
+
     const body = `
-      <p style="font-size:15px;color:${BRAND.colors.textSecondary};margin:0 0 20px 0;line-height:1.7;">
-        Hi <strong style="color:${BRAND.colors.text};">${user.name}</strong>,
-      </p>
+      ${greeting}
 
       <p style="font-size:15px;color:${BRAND.colors.textSecondary};margin:0 0 20px 0;line-height:1.7;">
-        We received a request to reset your password. Click the button below to choose a new password:
+        Click the button below to sign in to Bito. No password needed.
       </p>
 
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td align="center" style="padding:8px 0 28px 0;">
-            ${button('Reset Password', resetUrl)}
+            ${button('Sign in to Bito', magicLinkUrl)}
           </td>
         </tr>
       </table>
 
       ${infoCard(
-        '<strong>This link expires in 1 hour.</strong> If you didn\'t request a password reset, you can safely ignore this email — your password will remain unchanged.'
+        '<strong>This link expires in 15 minutes</strong> and can only be used once. If you didn\'t request this, you can safely ignore this email.'
       )}
 
       <p style="font-size:13px;color:${BRAND.colors.textMuted};margin:20px 0 0 0;line-height:1.6;">
         If the button doesn't work, copy and paste this link into your browser:<br>
-        <a href="${resetUrl}" style="color:${BRAND.colors.primary};word-break:break-all;">${resetUrl}</a>
+        <a href="${magicLinkUrl}" style="color:${BRAND.colors.primary};word-break:break-all;">${magicLinkUrl}</a>
       </p>
     `;
 
     const html = baseLayout({
-      preheader: 'Reset your Bito password — this link expires in 1 hour.',
-      heading: 'Reset Your Password',
-      headingEmoji: '🔑',
+      preheader: 'Your Bito sign-in link — expires in 15 minutes.',
+      heading: 'Sign In to Bito',
+      headingEmoji: '✨',
       body,
-      footerNote: 'You received this email because a password reset was requested for your account.',
+      footerNote: 'You received this email because a sign-in was requested for your account.',
     });
 
     const mailOptions = {
       from: process.env.EMAIL_FROM || '"Bito Team" <noreply@bito.app>',
       to: user.email,
-      subject: 'Reset your Bito password',
+      subject: 'Your Bito sign-in link',
       html,
     };
 
     try {
       const info = await this.sendMail(mailOptions);
-      console.log('📧 Password reset email sent to:', mailOptions.to);
+      console.log('📧 Magic link email sent to:', mailOptions.to);
       return { success: true, messageId: info.messageId };
     } catch (error) {
-      console.error('❌ Failed to send password reset email:', error);
+      console.error('❌ Failed to send magic link email:', error);
       throw error;
     }
   }

@@ -1,5 +1,4 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Habit = require('../models/Habit');
 const HabitEntry = require('../models/HabitEntry');
@@ -145,64 +144,14 @@ router.put('/profile', validateUserUpdate, async (req, res) => {
   }
 });
 
-// @route   PUT /api/users/change-password
-// @desc    Change user password
-// @access  Private
-router.put('/change-password', async (req, res) => {
-  try {
-    const { currentPassword, newPassword } = req.body;
 
-    // Validation
-    if (!newPassword || newPassword.length < 6) {
-      return res.status(400).json({
-        success: false,
-        error: 'New password must be at least 6 characters long'
-      });
-    }
-
-    const user = await User.findById(req.user._id);
-
-    // Check current password if user has one
-    if (user.password) {
-      if (!currentPassword) {
-        return res.status(400).json({
-          success: false,
-          error: 'Current password is required'
-        });
-      }
-
-      const isCurrentPasswordValid = await user.comparePassword(currentPassword);
-      if (!isCurrentPasswordValid) {
-        return res.status(400).json({
-          success: false,
-          error: 'Current password is incorrect'
-        });
-      }
-    }
-
-    // Update password
-    user.password = newPassword;
-    await user.save();
-
-    res.json({
-      success: true,
-      message: 'Password changed successfully'
-    });
-  } catch (error) {
-    console.error('Password change error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to change password'
-    });
-  }
-});
 
 // @route   PUT /api/users/change-email
 // @desc    Change user email
 // @access  Private
 router.put('/change-email', async (req, res) => {
   try {
-    const { newEmail, password } = req.body;
+    const { newEmail } = req.body;
 
     // Validation
     if (!newEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
@@ -213,24 +162,6 @@ router.put('/change-email', async (req, res) => {
     }
 
     const user = await User.findById(req.user._id);
-
-    // Verify password if user has one
-    if (user.password) {
-      if (!password) {
-        return res.status(400).json({
-          success: false,
-          error: 'Password is required to change email'
-        });
-      }
-
-      const isPasswordValid = await user.comparePassword(password);
-      if (!isPasswordValid) {
-        return res.status(400).json({
-          success: false,
-          error: 'Password is incorrect'
-        });
-      }
-    }
 
     // Check if email is already taken
     const existingUser = await User.findOne({ email: newEmail.toLowerCase() });

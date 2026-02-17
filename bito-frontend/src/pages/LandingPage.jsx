@@ -437,7 +437,7 @@ const LandingPage = () => {
                 Sign In
               </button>
               <button
-                onClick={() => navigate("/signup")}
+                onClick={() => navigate("/login")}
                 className="btn btn-primary btn-sm"
               >
                 Get Started
@@ -501,7 +501,7 @@ const LandingPage = () => {
                     Sign In
                   </button>
                   <button
-                    onClick={() => navigate("/signup")}
+                    onClick={() => navigate("/login")}
                     className="btn btn-primary btn-sm text-center"
                   >
                     Get Started
@@ -546,7 +546,7 @@ const LandingPage = () => {
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-12 font-spartan px-4">
             <button
-              onClick={() => navigate("/signup")}
+              onClick={() => navigate("/login")}
               className="btn btn-primary btn-lg group"
             >
               Start for free
@@ -1157,7 +1157,7 @@ const LandingPage = () => {
           </p>
 
           <button
-            onClick={() => navigate("/signup")}
+            onClick={() => navigate("/login")}
             className="btn btn-primary btn-lg group font-spartan"
           >
             Start for free

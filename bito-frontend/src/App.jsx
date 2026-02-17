@@ -1,12 +1,10 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Theme } from "@radix-ui/themes";
 import Layout from "./components/layout/Layout";
 import LandingPage from "./pages/LandingPage";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import AuthPage from "./pages/AuthPage";
+import MagicLinkVerify from "./pages/MagicLinkVerify";
 import OAuthCallback from "./pages/OAuthCallback";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 // import HabitsPage from "./pages/HabitsPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
@@ -56,11 +54,12 @@ const ThemedApp = () => {
             <Route path="/" element={<LandingPage />} />
             
             {/* Auth routes without layout */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+            <Route path="/login" element={<AuthPage />} />
+            <Route path="/signup" element={<Navigate to="/login" replace />} />
+            <Route path="/auth/verify" element={<MagicLinkVerify />} />
             <Route path="/auth/callback" element={<OAuthCallback />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/forgot-password" element={<Navigate to="/login" replace />} />
+            <Route path="/reset-password" element={<Navigate to="/login" replace />} />
             
             {/* Invitation route without layout */}
             <Route path="/invite/:token" element={<InvitationPage />} />

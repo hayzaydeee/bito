@@ -21,18 +21,12 @@ import '../components/ui/ModalAnimation.css';
 const InvitationPage = () => {
   const { token } = useParams();
   const navigate = useNavigate();
-  const { user, login } = useAuth();
+  const { user } = useAuth();
   
   const [invitation, setInvitation] = useState(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState(null);
-  const [showLoginForm, setShowLoginForm] = useState(false);
-  
-  const [loginData, setLoginData] = useState({
-    email: '',
-    password: ''
-  });
 
   useEffect(() => {
     fetchInvitation();
@@ -45,9 +39,10 @@ const InvitationPage = () => {
       
       if (data.success) {
         setInvitation(data.invitation);
-        // Pre-fill email if user not logged in
         if (!user) {
-          setLoginData(prev => ({ ...prev, email: data.invitation.email }));
+          // Redirect to login, preserving the invitation URL
+          navigate(`/login`);
+          return;
         }
       } else {
         setError(data.error);
@@ -62,7 +57,8 @@ const InvitationPage = () => {
 
   const handleAcceptInvitation = async () => {
     if (!user) {
-      setShowLoginForm(true);
+      // Redirect to login page
+      navigate(`/login`);
       return;
     }
 
@@ -101,25 +97,6 @@ const InvitationPage = () => {
     } catch (error) {
       console.error('Error declining invitation:', error);
       setError('Failed to decline invitation');
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      setProcessing(true);
-      const response = await login(loginData.email, loginData.password);
-      if (response.success) {
-        // After successful login, automatically accept the invitation
-        await handleAcceptInvitation();
-      } else {
-        setError(response.error || 'Login failed');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      setError('Login failed');
     } finally {
       setProcessing(false);
     }
@@ -278,52 +255,24 @@ const InvitationPage = () => {
             </div>
           )}
 
-          {/* Login Form (if not authenticated) */}
-          {!user && showLoginForm && (
+          {/* Sign in prompt (if not authenticated) */}
+          {!user && (
             <div className="mx-6">
               <div className="bg-[var(--color-surface-secondary)] rounded-xl p-4 space-y-4">
                 <div className="text-center">
                   <h3 className="text-sm font-semibold text-[var(--color-text-primary)] font-outfit mb-1">
-                    Login to Accept Invitation
+                    Sign in to Accept
                   </h3>
-                  <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
+                  <p className="text-xs text-[var(--color-text-secondary)] font-outfit mb-3">
                     Sign in to your Bito account to join the workspace
                   </p>
-                </div>
-                
-                <form onSubmit={handleLogin} className="space-y-3">
-                  <div>
-                    <input
-                      type="email"
-                      value={loginData.email}
-                      onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
-                      placeholder="Email address"
-                      className="w-full px-3 py-2 bg-[var(--color-surface-primary)] border border-[var(--color-border-primary)] rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] font-outfit text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)] focus:border-transparent"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <input
-                      type="password"
-                      value={loginData.password}
-                      onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
-                      placeholder="Password"
-                      className="w-full px-3 py-2 bg-[var(--color-surface-primary)] border border-[var(--color-border-primary)] rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] font-outfit text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)] focus:border-transparent"
-                      required
-                    />
-                  </div>
                   <button
-                    type="submit"
-                    disabled={processing}
-                    className="w-full py-2 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] disabled:opacity-50 text-white rounded-lg font-outfit font-medium text-sm transition-all duration-200"
+                    onClick={() => navigate('/login')}
+                    className="w-full py-2 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white rounded-lg font-outfit font-medium text-sm transition-all duration-200"
                   >
-                    {processing ? 'Logging in...' : 'Login & Join Workspace'}
+                    Sign in with email
                   </button>
-                </form>
-                
-                <p className="text-center text-xs text-[var(--color-text-secondary)] font-outfit">
-                  Don't have an account? <a href="/signup" className="text-[var(--color-brand-600)] hover:underline font-medium">Sign up here</a>
-                </p>
+                </div>
               </div>
             </div>
           )}
