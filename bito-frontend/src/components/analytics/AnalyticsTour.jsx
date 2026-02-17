@@ -104,25 +104,40 @@ const AnalyticsTour = ({ forceShow = false, onComplete, userId }) => {
     });
   }, [step, STEPS]);
 
-  // Scroll target into view, then measure once scroll settles
+  // Track actual tooltip height for smart positioning
+  const [tooltipH, setTooltipH] = useState(0);
+  useEffect(() => {
+    if (tooltipRef.current) {
+      const h = tooltipRef.current.getBoundingClientRect().height;
+      if (h > 0) setTooltipH(h);
+    }
+  });
+
+  // Scroll target into view with room for its tooltip, then measure
   useEffect(() => {
     if (step >= 0 && step < STEPS.length) {
-      const { target } = STEPS[step];
+      const { target, position } = STEPS[step];
       if (target) {
         const el = document.querySelector(target);
         if (el) {
           const rect = el.getBoundingClientRect();
-          const inView = rect.top >= 0 && rect.bottom <= window.innerHeight;
+          const vh = window.innerHeight;
+          const tooltipSpace = 220;
+
+          const needsAbove = position === 'top' || rect.bottom > vh * 0.55;
+          const topBound = needsAbove ? 0 : -tooltipSpace;
+          const bottomBound = needsAbove ? vh - tooltipSpace : vh;
+          const inView = rect.top >= topBound && rect.bottom <= bottomBound;
+
           if (!inView) {
             el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
         }
       }
     }
-    // Measure immediately, then re-measure after scroll animation
     measureTarget();
     const t1 = setTimeout(measureTarget, 120);
-    const t2 = setTimeout(measureTarget, 450); // after smooth scroll finishes
+    const t2 = setTimeout(measureTarget, 450);
     window.addEventListener('resize', measureTarget);
     window.addEventListener('scroll', measureTarget, true);
     return () => {
@@ -231,13 +246,18 @@ const AnalyticsTour = ({ forceShow = false, onComplete, userId }) => {
     const tooltipEstH = 200;
     const margin = 16;
 
+    const actualH = tooltipH > 0 ? tooltipH : tooltipEstH;
     let vertical = currentStep.position;
     const spaceBelow = window.innerHeight - (y + h + gap);
     const spaceAbove = y - gap;
 
-    if (vertical === 'bottom' && spaceBelow < tooltipEstH && spaceAbove > spaceBelow) {
+    // If the target sits in the lower 45% of the viewport, always prefer above
+    const targetMidpoint = y + h / 2;
+    if (targetMidpoint > window.innerHeight * 0.55) {
       vertical = 'top';
-    } else if (vertical === 'top' && spaceAbove < tooltipEstH && spaceBelow > spaceAbove) {
+    } else if (vertical === 'bottom' && spaceBelow < actualH && spaceAbove > spaceBelow) {
+      vertical = 'top';
+    } else if (vertical === 'top' && spaceAbove < actualH && spaceBelow > spaceAbove) {
       vertical = 'bottom';
     }
 
@@ -254,8 +274,16 @@ const AnalyticsTour = ({ forceShow = false, onComplete, userId }) => {
 
     if (vertical === 'bottom') {
       style.top = `${y + h + gap}px`;
+      const maxTop = window.innerHeight - actualH - margin;
+      if (parseFloat(style.top) > maxTop) {
+        style.top = `${Math.max(margin, maxTop)}px`;
+      }
     } else {
       style.bottom = `${window.innerHeight - y + gap}px`;
+      const maxBottom = window.innerHeight - margin - actualH;
+      if (parseFloat(style.bottom) > maxBottom) {
+        style.bottom = `${Math.max(margin, maxBottom)}px`;
+      }
     }
 
     return style;
