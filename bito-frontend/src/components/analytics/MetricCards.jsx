@@ -5,11 +5,11 @@
    Desktop: 4-col grid  |  Mobile: 2-col grid
 ----------------------------------------------------------------- */
 
-const MetricCards = ({ habits, entries, timeRange }) => {
+const MetricCards = ({ habits, entries, timeRange, accountAgeDays = 365 }) => {
   const data = useMemo(() => {
     if (!habits.length) return { total: 0, completions: 0, rate: 0, bestStreak: 0, prevRate: 0 };
 
-    const days = timeRange === 'all' ? 365 : parseInt(timeRange) || 30;
+    const days = timeRange === 'all' ? accountAgeDays : parseInt(timeRange) || 30;
     const endDate = new Date();
     const startDate = new Date(endDate);
     startDate.setDate(startDate.getDate() - days);

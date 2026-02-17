@@ -31,10 +31,17 @@ const AnalyticsPage = () => {
     try { localStorage.setItem(LS_KEY, v); } catch { /* ignore */ }
   }, []);
 
+  /* ── compute account age for 'all' range ── */
+  const accountAgeDays = (() => {
+    if (!user?.createdAt) return 365;
+    const diff = Date.now() - new Date(user.createdAt).getTime();
+    return Math.max(1, Math.ceil(diff / 86400000));
+  })();
+
   /* ── fetch entries for the visible range ──── */
   useEffect(() => {
     if (!habits.length) return;
-    const days = timeRange === 'all' ? 365 : parseInt(timeRange) || 30;
+    const days = timeRange === 'all' ? accountAgeDays : parseInt(timeRange) || 30;
     const end = new Date();
     const start = new Date(end);
     start.setDate(start.getDate() - days);
@@ -73,12 +80,12 @@ const AnalyticsPage = () => {
 
       {/* ── Metric cards ───────────────────────── */}
       <div data-tour="analytics-metrics">
-        <MetricCards habits={habits} entries={entries} timeRange={timeRange} />
+      <MetricCards habits={habits} entries={entries} timeRange={timeRange} accountAgeDays={accountAgeDays} />
       </div>
 
       {/* ── Charts: 2-col on desktop ───────────── */}
       <div className="grid gap-4 lg:grid-cols-2" data-tour="analytics-charts">
-        <CompletionAreaChart habits={habits} entries={entries} timeRange={timeRange} />
+        <CompletionAreaChart habits={habits} entries={entries} timeRange={timeRange} accountAgeDays={accountAgeDays} />
         <StreakBarChart habits={habits} entries={entries} />
       </div>
 
@@ -96,6 +103,7 @@ const AnalyticsPage = () => {
           entries={entries}
           timeRange={timeRange}
           maxHabitsDisplayed={5}
+          accountAgeDays={accountAgeDays}
         />
         </div>
       )}

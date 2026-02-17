@@ -15,11 +15,11 @@ import {
    Smooth curve, subtle grid, average reference line, rich tooltip
 ----------------------------------------------------------------- */
 
-const CompletionAreaChart = ({ habits, entries, timeRange }) => {
+const CompletionAreaChart = ({ habits, entries, timeRange, accountAgeDays = 365 }) => {
   const { chartData, average } = useMemo(() => {
     if (!habits.length) return { chartData: [], average: 0 };
 
-    const days = timeRange === 'all' ? 365 : parseInt(timeRange) || 30;
+    const days = timeRange === 'all' ? accountAgeDays : parseInt(timeRange) || 30;
     const endDate = new Date();
     const startDate = new Date(endDate);
     startDate.setDate(startDate.getDate() - days);

@@ -7,13 +7,13 @@
 
 const DAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
 
-const ActivityHeatmap = ({ habits, entries, timeRange }) => {
+const ActivityHeatmap = ({ habits, entries, timeRange, accountAgeDays = 365 }) => {
   const [hoveredCell, setHoveredCell] = useState(null);
 
   const { weeks, maxActivity, totalCompletions } = useMemo(() => {
     if (!habits.length) return { weeks: [], maxActivity: 0, totalCompletions: 0 };
 
-    const days = timeRange === 'all' ? 365 : parseInt(timeRange) || 30;
+    const days = timeRange === 'all' ? accountAgeDays : parseInt(timeRange) || 30;
     const endDate = new Date();
     const startDate = new Date(endDate);
     startDate.setDate(startDate.getDate() - days);

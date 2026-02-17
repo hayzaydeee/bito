@@ -44,6 +44,7 @@ const HabitStreakChart = ({
   showLegend = true,
   showTopStreaks = true,
   onAddHabit,
+  accountAgeDays = 365,
 }) => {
   const { chartData, topHabits, peakStreak } = useMemo(() => {
     if (!habits.length) return { chartData: [], topHabits: [], peakStreak: 0 };
@@ -56,7 +57,7 @@ const HabitStreakChart = ({
     } else {
       endDate = new Date();
       startDate = new Date();
-      const days = parseInt(timeRange) || 30;
+      const days = timeRange === 'all' ? accountAgeDays : parseInt(timeRange) || 30;
       startDate.setDate(endDate.getDate() - days);
     }
 

@@ -6,11 +6,11 @@
    rank | color dot | icon+name | progress bar | rate %
 ----------------------------------------------------------------- */
 
-const TopHabitsList = ({ habits, entries, timeRange }) => {
+const TopHabitsList = ({ habits, entries, timeRange, accountAgeDays = 365 }) => {
   const ranked = useMemo(() => {
     if (!habits.length) return [];
 
-    const days = timeRange === 'all' ? 365 : parseInt(timeRange) || 30;
+    const days = timeRange === 'all' ? accountAgeDays : parseInt(timeRange) || 30;
     const endDate = new Date();
     const startDate = new Date(endDate);
     startDate.setDate(startDate.getDate() - days);
