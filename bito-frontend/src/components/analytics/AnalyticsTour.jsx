@@ -104,17 +104,34 @@ const AnalyticsTour = ({ forceShow = false, onComplete, userId }) => {
     });
   }, [step, STEPS]);
 
+  // Scroll target into view, then measure once scroll settles
   useEffect(() => {
+    if (step >= 0 && step < STEPS.length) {
+      const { target } = STEPS[step];
+      if (target) {
+        const el = document.querySelector(target);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          const inView = rect.top >= 0 && rect.bottom <= window.innerHeight;
+          if (!inView) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }
+      }
+    }
+    // Measure immediately, then re-measure after scroll animation
     measureTarget();
-    const timer = setTimeout(measureTarget, 100);
+    const t1 = setTimeout(measureTarget, 120);
+    const t2 = setTimeout(measureTarget, 450); // after smooth scroll finishes
     window.addEventListener('resize', measureTarget);
     window.addEventListener('scroll', measureTarget, true);
     return () => {
-      clearTimeout(timer);
+      clearTimeout(t1);
+      clearTimeout(t2);
       window.removeEventListener('resize', measureTarget);
       window.removeEventListener('scroll', measureTarget, true);
     };
-  }, [measureTarget]);
+  }, [measureTarget, step, STEPS]);
 
   /* ── Keyboard ───────────────────────────────────────────────── */
   useEffect(() => {
