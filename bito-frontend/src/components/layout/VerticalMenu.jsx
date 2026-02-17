@@ -15,12 +15,15 @@ import {
   ChevronDownIcon,
   DotsHorizontalIcon,
   BackpackIcon,
+  ExitIcon,
 } from "@radix-ui/react-icons";
 import { groupsAPI } from "../../services/api";
+import { useAuth } from "../../contexts/AuthContext";
 
 const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () => {} }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuth();
   const [workspaces, setWorkspaces] = useState([]);
   const [loadingWorkspaces, setLoadingWorkspaces] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -136,6 +139,15 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
       path: "/app/settings",
     },
   ];
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
   const groupTypeIcons = {
     family: HomeIcon,
@@ -401,6 +413,47 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
         {/* Bottom Navigation */}
         <div className="mt-auto pt-2 border-t" style={{ borderColor: "var(--color-border-primary)" }}>
           {bottomItems.map((item) => renderMenuItem(item, true))}
+
+          {/* Logout button */}
+          {isCollapsed && !isMobile ? (
+            <div className="group relative mb-1">
+              <button
+                className="w-full h-10 rounded-lg transition-all duration-200 flex items-center justify-center hover:bg-[rgba(239,68,68,0.08)]"
+                onClick={handleLogout}
+                title="Log out"
+              >
+                <ExitIcon
+                  className="w-5 h-5 transition-colors"
+                  style={{ color: "var(--color-text-tertiary)" }}
+                />
+              </button>
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)] rounded-lg px-3 py-2 shadow-lg">
+                  <span className="text-sm font-medium font-spartan" style={{ color: "var(--color-text-primary)" }}>
+                    Log out
+                  </span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="mb-0.5">
+              <button
+                className="w-full px-3 py-2.5 rounded-lg transition-all duration-200 flex items-center gap-3 hover:bg-[rgba(239,68,68,0.08)]"
+                onClick={handleLogout}
+              >
+                <ExitIcon
+                  className="w-[18px] h-[18px] flex-shrink-0"
+                  style={{ color: "var(--color-text-tertiary)" }}
+                />
+                <span
+                  className="font-medium text-sm font-spartan"
+                  style={{ color: "var(--color-text-tertiary)" }}
+                >
+                  Log out
+                </span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
