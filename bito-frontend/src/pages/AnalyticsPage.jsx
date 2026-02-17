@@ -85,24 +85,12 @@ const AnalyticsPage = () => {
 
       {/* ── Streak timeline: full-width row ──── */}
       {habits.length > 0 && (
-        <div
-          className="rounded-2xl border p-5"
-          style={{
-            background: 'var(--color-surface-elevated)',
-            borderColor: 'var(--color-border-primary)',
-          }}
-        >
-          <HabitStreakChart
-            habits={habits}
-            entries={entries}
-            timeRange={timeRange}
-            widgetMode={false}
-            maxHabitsDisplayed={5}
-            chartHeight={300}
-            showLegend={true}
-            showTopStreaks={true}
-          />
-        </div>
+        <HabitStreakChart
+          habits={habits}
+          entries={entries}
+          timeRange={timeRange}
+          maxHabitsDisplayed={5}
+        />
       )}
 
       {/* ── AI Insights ────────────────────────── */}

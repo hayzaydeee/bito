@@ -7,319 +7,241 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend
 } from 'recharts';
-import { StarIcon } from '@radix-ui/react-icons';
 
-const HabitStreakChart = ({ 
-  habits = [], 
-  entries = {}, 
+/* -----------------------------------------------------------------
+   HabitStreakChart -- running streak over time for top habits
+   Multi-line chart showing how each habit's streak evolves day-by-day.
+   Matches analytics design language: .analytics-chart-card, League
+   Spartan, Garamond titles, dashed cursor, analytics-tooltip.
+----------------------------------------------------------------- */
+
+const fmtDate = (d) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
+};
+
+/* ── Color palette ─────────────────────────────────────────────── */
+const COLORS = [
+  '#818cf8', // indigo (brand)
+  '#34d399', // emerald
+  '#fbbf24', // amber
+  '#f87171', // red
+  '#8B5CF6', // purple
+  '#06B6D4', // cyan
+];
+
+const HabitStreakChart = ({
+  habits = [],
+  entries = {},
   timeRange = '30d',
   dateRange,
   widgetMode = false,
-  showLegend = true,
-  maxHabitsDisplayed = 3,
+  maxHabitsDisplayed = 5,
   chartHeight = 320,
+  showLegend = true,
   showTopStreaks = true,
-  onAddHabit
+  onAddHabit,
 }) => {
-  // Calculate streak data for the time period
-  const { chartData, topHabits } = useMemo(() => {
-    if (!habits.length) {
-      return { chartData: [], topHabits: [] };
-    }
+  const { chartData, topHabits, peakStreak } = useMemo(() => {
+    if (!habits.length) return { chartData: [], topHabits: [], peakStreak: 0 };
 
     // Determine date range
     let startDate, endDate;
-    if (dateRange && dateRange.start && dateRange.end) {
+    if (dateRange?.start && dateRange?.end) {
       startDate = new Date(dateRange.start);
       endDate = new Date(dateRange.end);
     } else {
-      // Default to timeRange
       endDate = new Date();
       startDate = new Date();
       const days = parseInt(timeRange) || 30;
       startDate.setDate(endDate.getDate() - days);
     }
 
-    // Calculate total completions for each habit in the period
+    // Rank habits by total completions in period
     const habitCompletions = habits.map(habit => {
       const habitEntries = entries[habit._id] || {};
-      let totalCompletions = 0;
-
+      let total = 0;
       for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        // Use local timezone date string to avoid UTC conversion issues
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        const dateStr = `${year}-${month}-${day}`;
-        const entry = habitEntries[dateStr];
-        if (entry && entry.completed) {
-          totalCompletions++;
-        }
+        const entry = habitEntries[fmtDate(d)];
+        if (entry?.completed) total++;
       }
-
-      return {
-        habit,
-        totalCompletions,
-        name: habit.name,
-        color: habit.color || 'var(--color-brand-400)'
-      };
+      return { habit, total, color: habit.color || null };
     });
 
-    // Sort by total completions and take top 3 (only habits with completions)
     const topHabitsData = habitCompletions
-      .filter(({ totalCompletions }) => totalCompletions > 0)
-      .sort((a, b) => b.totalCompletions - a.totalCompletions)
-      .slice(0, maxHabitsDisplayed);
+      .filter(({ total }) => total > 0)
+      .sort((a, b) => b.total - a.total)
+      .slice(0, maxHabitsDisplayed)
+      .map((h, i) => ({ ...h, color: h.color || COLORS[i % COLORS.length] }));
 
-    // Generate chart data for each day
+    // Build per-day running-streak data
+    let peak = 0;
     const data = [];
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-      // Use local timezone date string to avoid UTC conversion issues
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      const dateStr = `${year}-${month}-${day}`;
-      
-      
+      const dateStr = fmtDate(d);
       const dayData = {
         date: dateStr,
-        formattedDate: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       };
 
-      // Calculate running streak for each top habit
       topHabitsData.forEach(({ habit }) => {
-        const habitEntries = entries[habit._id] || {};
-        let currentStreak = 0;
-        
-        // Calculate streak up to this date
-        for (let streakDate = new Date(d); streakDate >= startDate; streakDate.setDate(streakDate.getDate() - 1)) {
-          // Use local timezone date string to avoid UTC conversion issues
-          const year = streakDate.getFullYear();
-          const month = String(streakDate.getMonth() + 1).padStart(2, '0');
-          const day = String(streakDate.getDate()).padStart(2, '0');
-          const streakDateStr = `${year}-${month}-${day}`;
-          const entry = habitEntries[streakDateStr];
-          
-          if (entry && entry.completed) {
-            currentStreak++;
-          } else {
-            break;
-          }
+        const he = entries[habit._id] || {};
+        let streak = 0;
+        for (let s = new Date(d); s >= startDate; s.setDate(s.getDate() - 1)) {
+          if (he[fmtDate(s)]?.completed) streak++;
+          else break;
         }
-        
-        dayData[habit._id] = currentStreak;
+        dayData[habit._id] = streak;
+        if (streak > peak) peak = streak;
       });
 
       data.push(dayData);
     }
 
-    return { 
-      chartData: data, 
-      topHabits: topHabitsData 
-    };
+    return { chartData: data, topHabits: topHabitsData, peakStreak: peak };
   }, [habits, entries, timeRange, dateRange, maxHabitsDisplayed]);
 
-  // Color palette for different habits (using brand colors)
-  const colors = [
-    'var(--color-brand-400)', // Primary brand color
-    'var(--color-success)', // Green
-    'var(--color-warning)', // Yellow/Orange
-    'var(--color-error)', // Red
-    '#8B5CF6', // Purple
-    '#06B6D4', // Cyan
-    '#84CC16', // Lime
-    '#F97316'  // Orange
-  ];
-
-  // Custom tooltip
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (!active || !payload || !payload.length) return null;
-
-    let dateDisplay = label; // fallback to the label itself
-    
-    // The label is actually the formattedDate (like "Jul 4"), not the full date
-    // We need to get the actual date from the payload data
-    if (payload[0] && payload[0].payload && payload[0].payload.date) {
-      const fullDateStr = payload[0].payload.date;
-      
-      try {
-        if (fullDateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-          const [year, month, day] = fullDateStr.split('-').map(Number);
-          const date = new Date(year, month - 1, day); // month is 0-indexed
-          
-          if (!isNaN(date.getTime())) {
-            dateDisplay = date.toLocaleDateString('en-US', { 
-              weekday: 'short', 
-              month: 'short', 
-              day: 'numeric' 
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Date parsing error:', error);
-      }
-    }
-
+  /* ── Empty states ─────────────────────────────── */
+  if (!habits.length || !topHabits.length) {
     return (
-      <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-secondary)] rounded-lg p-3 shadow-lg"
-           style={{
-             boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-             fontFamily: "var(--font-outfit)",
-             fontSize: "12px"
-           }}>
-        <p className="text-sm font-medium text-[var(--color-text-secondary)] mb-2" 
-           style={{ fontSize: "11px", marginBottom: "4px" }}>
-          {dateDisplay}
+      <div className="analytics-chart-card flex flex-col items-center justify-center h-[280px] gap-2">
+        <span className="text-3xl opacity-40">📈</span>
+        <p className="text-sm font-spartan text-[var(--color-text-tertiary)] text-center leading-relaxed">
+          Complete habits on consecutive days to see streak timelines
         </p>
-        {payload.map((entry, index) => {
-          const habit = topHabits.find(h => h.habit._id === entry.dataKey);
-          return (
-            <div key={index} className="flex items-center gap-2 text-sm">
-              <div 
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: entry.color }}
-              />
-              <span className="text-[var(--color-text-secondary)]">
-                {habit?.habit.name}: 
-              </span>
-              <span className="font-medium text-[var(--color-text-primary)]">
-                {entry.value} day{entry.value !== 1 ? 's' : ''}
-              </span>
-            </div>
-          );
-        })}
       </div>
     );
-  };
+  }
 
-  if (!habits.length) {
+  /* ── Shared chart elements ───────────────────── */
+  const chartContent = (
+    <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: -20 }}>
+      <CartesianGrid
+        strokeDasharray="3 6"
+        stroke="var(--color-border-primary)"
+        strokeOpacity={0.4}
+        vertical={false}
+      />
+      <XAxis
+        dataKey="label"
+        tick={{ fontSize: 11, fill: 'var(--color-text-tertiary)', fontFamily: 'League Spartan' }}
+        tickLine={false}
+        axisLine={false}
+        interval="preserveStartEnd"
+      />
+      <YAxis
+        tick={{ fontSize: 11, fill: 'var(--color-text-tertiary)', fontFamily: 'League Spartan' }}
+        tickLine={false}
+        axisLine={false}
+        tickFormatter={(v) => `${Math.round(v)}d`}
+        domain={[0, (max) => Math.max(max + 1, 3)]}
+      />
+      <Tooltip
+        content={<StreakTimelineTooltip topHabits={topHabits} />}
+        cursor={{ stroke: 'var(--color-brand-400)', strokeWidth: 1, strokeDasharray: '4 4' }}
+      />
+      {topHabits.map((habitData) => (
+        <Line
+          key={habitData.habit._id}
+          type="monotone"
+          dataKey={habitData.habit._id}
+          stroke={habitData.color}
+          strokeWidth={2.5}
+          dot={false}
+          activeDot={{
+            r: 5,
+            fill: habitData.color,
+            stroke: 'var(--color-surface-primary)',
+            strokeWidth: 2,
+          }}
+          name={habitData.habit.name}
+          animationDuration={600}
+          animationEasing="ease-out"
+        />
+      ))}
+    </LineChart>
+  );
+
+  /* ── Widget mode: plain wrapper, no chrome ───── */
+  if (widgetMode) {
     return (
-      <div className="glass-card p-6 rounded-2xl">
-        <h3 className="text-xl font-semibold font-dmSerif text-[var(--color-text-primary)] mb-4">
-          Habit Streaks
-        </h3>
-        <div className="text-center py-12">
-          <StarIcon className="w-12 h-12 text-[var(--color-text-tertiary)] mx-auto mb-4" />
-          <p className="text-[var(--color-text-secondary)] font-outfit">
-            Your top 3 habits streaks will appear here
-          </p>
+      <div className="w-full h-full flex flex-col">
+        <div className="flex-1 min-h-0">
+          <ResponsiveContainer width="100%" height="100%">
+            {chartContent}
+          </ResponsiveContainer>
         </div>
       </div>
     );
   }
 
-  if (!topHabits.length) {
-    return (
-      <div className="w-full h-full flex items-center justify-center">
-        <div className="text-center text-[var(--color-text-secondary)]">
-          <div className="text-lg font-semibold mb-2">No Data Available</div>
-          <div className="text-sm">Start completing habits to see your streaks</div>
-        </div>
-      </div>
-    );
-  }
-
+  /* ── Analytics mode: full card with header + legend */
   return (
-    <div className="w-full h-full flex flex-col">
-      {!widgetMode && (
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
-            Habit Streaks
-          </h3>
-          <p className="text-sm text-[var(--color-text-secondary)]">
-            Tracking streaks for your top {maxHabitsDisplayed} most completed habits
-          </p>
-        </div>
-      )}
-      
-      <div className="flex-1 min-h-0">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 10, right: 20, left: 10, bottom: 10 }}>
-            <CartesianGrid 
-              strokeDasharray="3 3" 
-              stroke="var(--color-border-primary)" 
-              opacity={0.3}
-              vertical={false}
-            />
-            <XAxis
-              dataKey="formattedDate"
-              stroke="var(--color-text-secondary)"
-              fontSize={11}
-              fontFamily="var(--font-outfit)"
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis
-              stroke="var(--color-text-secondary)"
-              fontSize={11}
-              fontFamily="var(--font-outfit)"
-              axisLine={false}
-              tickLine={false}
-              width={25}
-              tickFormatter={(value) => Math.round(value).toString()}
+    <div className="analytics-chart-card">
+      {/* ── Header ─────────────────────────────── */}
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base font-garamond font-semibold text-[var(--color-text-primary)]">
+          Streak Timeline
+        </h3>
+        {peakStreak > 0 && (
+          <span
+            className="text-xs font-spartan px-2 py-0.5 rounded-full"
+            style={{ background: 'rgba(99,102,241,0.12)', color: 'var(--color-brand-400)' }}
+          >
+            peak {peakStreak}d
+          </span>
+        )}
+      </div>
 
-            />
-            <Tooltip content={<CustomTooltip />} />
-            {showLegend && (
-              <Legend 
-                wrapperStyle={{
-                  paddingTop: '20px',
-                  fontSize: '12px',
-                  fontFamily: 'var(--font-outfit)'
-                }}
-              />
-            )}
-            {topHabits.map((habitData, index) => (
-              <Line
-                key={habitData.habit._id}
-                type="monotone"
-                dataKey={habitData.habit._id}
-                stroke={habitData.color || colors[index % colors.length]}
-                strokeWidth={3}
-                dot={{ 
-                  fill: habitData.color || colors[index % colors.length],
-                  r: 4 
-                }}
-                activeDot={{ 
-                  r: 6,
-                  fill: habitData.color || colors[index % colors.length],
-                  stroke: "var(--color-surface-primary)",
-                  strokeWidth: 2
-                }}
-                name={habitData.habit.name}
-              />
-            ))}
-          </LineChart>
+      {/* ── Chart ──────────────────────────────── */}
+      <div style={{ width: '100%', height: 240 }}>
+        <ResponsiveContainer>
+          {chartContent}
         </ResponsiveContainer>
       </div>
 
-      {showTopStreaks && !widgetMode && (
-        <div className="mt-4 p-4 bg-[var(--color-surface-elevated)] rounded-lg border border-[var(--color-border-primary)]">
-          <h4 className="text-sm font-semibold text-[var(--color-text-primary)] mb-3">
-            Top Habits by Completions
-          </h4>
-          <div className="space-y-2">
-            {topHabits.map((habitData, index) => (
-              <div key={habitData.habit._id} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div 
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: habitData.color || colors[index % colors.length] }}
-                  />
-                  <span className="text-sm font-medium text-[var(--color-text-primary)]">
-                    {habitData.habit.name}
-                  </span>
-                </div>
-                <span className="text-sm text-[var(--color-text-secondary)]">
-                  {habitData.totalCompletions} completion{habitData.totalCompletions !== 1 ? 's' : ''}
-                </span>
-              </div>
-            ))}
+      {/* ── Legend (inline pills) ──────────────── */}
+      <div className="flex flex-wrap gap-3 mt-4 pt-3 border-t border-[var(--color-border-primary)]">
+        {topHabits.map((h) => (
+          <div key={h.habit._id} className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: h.color }} />
+            <span className="text-xs font-spartan text-[var(--color-text-secondary)]">
+              {h.habit.name}
+            </span>
+            <span className="text-[10px] font-spartan text-[var(--color-text-tertiary)]">
+              ({h.total})
+            </span>
           </div>
-        </div>
-      )}
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/* ── Tooltip ────────────────────────────────────────────────────── */
+const StreakTimelineTooltip = ({ active, payload, topHabits }) => {
+  if (!active || !payload?.length) return null;
+  const d = payload[0]?.payload;
+  return (
+    <div className="analytics-tooltip">
+      <p className="font-medium text-[var(--color-text-primary)] mb-1">{d?.label}</p>
+      {payload.map((entry, i) => {
+        const habit = topHabits?.find((h) => h.habit._id === entry.dataKey);
+        return (
+          <div key={i} className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+            <span className="text-[var(--color-text-secondary)]">
+              {habit?.habit.name}:
+            </span>
+            <span className="font-semibold" style={{ color: entry.color }}>
+              {entry.value}d
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 };
