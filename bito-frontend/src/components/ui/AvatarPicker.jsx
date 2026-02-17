@@ -39,6 +39,7 @@ const AvatarPicker = ({
   size = "md",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isViewing, setIsViewing] = useState(false);
   const [tab, setTab] = useState("generate"); // "generate" | "upload"
   const [selectedStyle, setSelectedStyle] = useState("avataaars");
   const [seed, setSeed] = useState(userName);
@@ -137,17 +138,15 @@ const AvatarPicker = ({
       <div className="flex flex-col items-center gap-1.5">
         <button
           type="button"
-          onClick={handleOpen}
-          className={`${dims} rounded-full overflow-hidden border-2 border-dashed border-[var(--color-border-primary)] hover:border-[var(--color-brand-500)] transition-colors relative group cursor-pointer`}
+          onClick={() => setIsViewing(true)}
+          className={`${dims} rounded-full overflow-hidden border-2 border-[var(--color-border-primary)] hover:border-[var(--color-brand-500)] transition-colors relative group cursor-pointer`}
         >
           <img
             src={displayAvatar}
             alt="Avatar"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <ImageIcon className="w-5 h-5 text-white" />
-          </div>
+          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
         </button>
         <button
           type="button"
@@ -158,6 +157,28 @@ const AvatarPicker = ({
           {currentAvatar ? "Change avatar" : "Choose avatar"}
         </button>
       </div>
+
+      {/* ── Enlarged view (portalled) ── */}
+      {isViewing && createPortal(
+        <>
+          <div
+            className="fixed inset-0 z-[9998] bg-black/60"
+            onClick={() => setIsViewing(false)}
+          />
+          <div
+            className="fixed z-[9999] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+            onClick={() => setIsViewing(false)}
+          >
+            <img
+              src={displayAvatar}
+              alt="Avatar"
+              className="w-56 h-56 sm:w-64 sm:h-64 rounded-full object-cover border-4 shadow-2xl"
+              style={{ borderColor: "var(--color-border-primary)" }}
+            />
+          </div>
+        </>,
+        document.body
+      )}
 
       {/* ── Picker overlay (portalled to body so fixed positioning works inside transformed parents) ── */}
       {isOpen && createPortal(
