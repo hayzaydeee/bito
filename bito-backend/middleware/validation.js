@@ -55,8 +55,12 @@ const validateUserUpdate = [
     .withMessage('Please provide a valid email'),
   body('preferences.theme')
     .optional()
-    .isIn(['light', 'dark', 'auto'])
-    .withMessage('Theme must be light, dark, or auto'),
+    .isIn(['light', 'dark', 'auto', 'bw'])
+    .withMessage('Theme must be light, dark, auto, or bw'),
+  body('preferences.scale')
+    .optional()
+    .isIn(['small', 'medium', 'large'])
+    .withMessage('Scale must be small, medium, or large'),
   body('preferences.weekStartsOn')
     .optional()
     .isInt({ min: 0, max: 6 })
