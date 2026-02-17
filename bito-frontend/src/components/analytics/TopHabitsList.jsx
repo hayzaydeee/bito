@@ -20,6 +20,7 @@ const TopHabitsList = ({ habits, entries, timeRange, accountAgeDays = 365 }) => 
         const hEntries = entries[habit._id] || {};
         let completions = 0;
         let possible = 0;
+        const isWeekly = habit.frequency === 'weekly';
 
         // Sparkline: last 14 days (binary dots)
         const sparkDays = Math.min(14, days);
@@ -27,14 +28,43 @@ const TopHabitsList = ({ habits, entries, timeRange, accountAgeDays = 365 }) => 
         sparkStart.setDate(sparkStart.getDate() - sparkDays + 1);
         const spark = [];
 
-        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-          const dateStr = fmtDate(d);
-          if (habit.schedule?.days?.length && !habit.schedule.days.includes(d.getDay())) continue;
-          possible++;
-          const entry = hEntries[dateStr];
-          const done = !!(entry && entry.completed);
-          if (done) completions++;
-          if (d >= sparkStart) spark.push(done ? 1 : 0);
+        if (isWeekly) {
+          // For weekly habits: count weeks met vs total weeks
+          const target = habit.weeklyTarget || 3;
+          let weekStart = new Date(startDate);
+          // Align to Monday
+          const startDay = weekStart.getDay();
+          const toMonday = startDay === 0 ? 1 : (startDay === 1 ? 0 : 8 - startDay);
+          weekStart.setDate(weekStart.getDate() + toMonday);
+
+          while (weekStart <= endDate) {
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+            let weekCompletions = 0;
+            for (let d = new Date(weekStart); d <= weekEnd && d <= endDate; d.setDate(d.getDate() + 1)) {
+              const entry = hEntries[fmtDate(d)];
+              if (entry?.completed) weekCompletions++;
+            }
+            possible++;
+            if (weekCompletions >= target) completions++;
+            weekStart.setDate(weekStart.getDate() + 7);
+          }
+
+          // Sparkline for weekly: last 14 days of individual completions
+          for (let d = new Date(sparkStart); d <= endDate; d.setDate(d.getDate() + 1)) {
+            const entry = hEntries[fmtDate(d)];
+            spark.push(entry?.completed ? 1 : 0);
+          }
+        } else {
+          for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+            const dateStr = fmtDate(d);
+            if (habit.schedule?.days?.length && !habit.schedule.days.includes(d.getDay())) continue;
+            possible++;
+            const entry = hEntries[dateStr];
+            const done = !!(entry && entry.completed);
+            if (done) completions++;
+            if (d >= sparkStart) spark.push(done ? 1 : 0);
+          }
         }
 
         const rate = possible > 0 ? Math.round((completions / possible) * 100) : 0;
@@ -48,6 +78,8 @@ const TopHabitsList = ({ habits, entries, timeRange, accountAgeDays = 365 }) => 
           completions,
           possible,
           spark,
+          isWeekly,
+          rateLabel: isWeekly ? `${completions}/${possible}w` : `${rate}%`,
         };
       })
       .filter(h => h.possible > 0)

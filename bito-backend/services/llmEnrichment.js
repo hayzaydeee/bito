@@ -51,18 +51,70 @@ function getClient() {
  * (keeps token usage low).
  */
 function buildDataSummary(habits, entries, journalEntries) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Week start (Monday)
+  const getWeekStart = (d) => {
+    const dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const day = dt.getUTCDay();
+    const diff = day === 0 ? 6 : day - 1;
+    dt.setUTCDate(dt.getUTCDate() - diff);
+    return dt;
+  };
+
+  const weekStart = getWeekStart(today);
+
   // Compute per-habit stats directly from the entries array (ground truth)
-  const habitSummaries = habits.map(h => {
+  const habitSummaries = habits.filter(h => h.frequency !== 'weekly').map(h => {
     const hEntries = entries.filter(e => String(e.habitId) === String(h._id));
     const completed = hEntries.filter(e => e.completed).length;
     const total = hEntries.length;
     return {
       name: h.name,
       category: h.category,
+      type: 'daily',
       entriesInPeriod: total,
       completedInPeriod: completed,
       completionRate: total > 0 ? Math.round((completed / total) * 100) : null,
       noData: total === 0,
+    };
+  });
+
+  // Weekly habit summaries — different metrics
+  const weeklyHabitSummaries = habits.filter(h => h.frequency === 'weekly').map(h => {
+    const target = h.weeklyTarget || 3;
+    const thisWeekEntries = entries.filter(e =>
+      String(e.habitId) === String(h._id) &&
+      e.completed &&
+      new Date(e.date) >= weekStart &&
+      new Date(e.date) <= today
+    );
+    const completedThisWeek = thisWeekEntries.length;
+
+    // Classify pacing within the week
+    const dayOfWeek = today.getDay(); // 0=Sun
+    const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Mon=0
+    const daysElapsed = dayIndex + 1;
+    const expectedPace = Math.round((target / 7) * daysElapsed * 10) / 10;
+    let pacing = 'on-track';
+    if (completedThisWeek >= target) pacing = 'met';
+    else if (completedThisWeek >= expectedPace) pacing = 'ahead';
+    else if (completedThisWeek < expectedPace - 1) pacing = 'behind';
+
+    // Streak from stats
+    const weeklyStreak = h.stats?.currentStreak || 0;
+
+    return {
+      name: h.name,
+      category: h.category,
+      type: 'weekly',
+      weeklyTarget: target,
+      completedThisWeek,
+      remaining: Math.max(0, target - completedThisWeek),
+      met: completedThisWeek >= target,
+      pacing,
+      weeklyStreak,
     };
   });
 
@@ -104,7 +156,10 @@ function buildDataSummary(habits, entries, journalEntries) {
 
   return {
     habits: habitSummaries,
+    weeklyHabits: weeklyHabitSummaries,
     totalHabits: habits.length,
+    totalDailyHabits: habitSummaries.length,
+    totalWeeklyHabits: weeklyHabitSummaries.length,
     habitsTracked: habitSummaries.filter(h => !h.noData).length,
     thisWeek: {
       daysTracked,

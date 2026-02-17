@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import "./ModalAnimation.css";
 import { 
-  PlusIcon,
   Cross2Icon,
   TrashIcon,
   CheckIcon,
@@ -54,6 +53,8 @@ const CustomHabitEditModal = ({
     description: "",
     color: "#4f46e5",
     isActive: true,
+    frequency: "daily",
+    weeklyTarget: 3,
     schedule: {
       days: [0, 1, 2, 3, 4, 5, 6], // Default to every day (0=Sunday, 6=Saturday)
       reminderTime: "",
@@ -97,8 +98,10 @@ const CustomHabitEditModal = ({
         description: habit.description || "",
         color: habit.color || "#4f46e5",
         isActive: habit.isActive !== undefined ? habit.isActive : true,
+        frequency: habit.frequency || "daily",
+        weeklyTarget: habit.weeklyTarget || 3,
         schedule: {
-          days: habit.schedule?.days || habit.frequency || [0, 1, 2, 3, 4, 5, 6], // Support legacy frequency
+          days: habit.schedule?.days || (habit.frequency === 'weekly' ? [0,1,2,3,4,5,6] : (habit.frequency && Array.isArray(habit.frequency) ? habit.frequency : [0, 1, 2, 3, 4, 5, 6])),
           reminderTime: habit.schedule?.reminderTime || "",
           reminderEnabled: habit.schedule?.reminderEnabled || false
         },
@@ -154,8 +157,12 @@ const CustomHabitEditModal = ({
       newErrors.name = "Name is required";
     }
     
-    if (formData.schedule.days.length === 0) {
+    if (formData.frequency === 'daily' && formData.schedule.days.length === 0) {
       newErrors.schedule = "Please select at least one day";
+    }
+    
+    if (formData.frequency === 'weekly' && (formData.weeklyTarget < 1 || formData.weeklyTarget > 7)) {
+      newErrors.weeklyTarget = "Weekly target must be between 1 and 7";
     }
     
     if (Object.keys(newErrors).length > 0) {
@@ -167,49 +174,28 @@ const CustomHabitEditModal = ({
     
     // Determine if this is a create or update operation
     const isUpdate = !!habit && !!habit._id;
+    if (!isUpdate) return; // Edit-only — creation uses the wizard
     
-    let submitData;
+    // For updates, send basic fields and properly formatted schedule
+    const scheduleData = {
+      days: formData.frequency === 'weekly' ? [0,1,2,3,4,5,6] : formData.schedule.days,
+      reminderEnabled: formData.schedule.reminderEnabled,
+      // Only include reminderTime if it's not empty and reminderEnabled is true
+      ...(formData.schedule.reminderEnabled && formData.schedule.reminderTime && {
+        reminderTime: formData.schedule.reminderTime
+      })
+    };
     
-    if (isUpdate) {
-      // For updates, send basic fields and properly formatted schedule
-      const scheduleData = {
-        days: formData.schedule.days,
-        reminderEnabled: formData.schedule.reminderEnabled,
-        // Only include reminderTime if it's not empty and reminderEnabled is true
-        ...(formData.schedule.reminderEnabled && formData.schedule.reminderTime && {
-          reminderTime: formData.schedule.reminderTime
-        })
-      };
-      
-      submitData = {
-        name: formData.name,
-        description: formData.description,
-        color: formData.color,
-        icon: formData.icon,
-        isActive: formData.isActive,
-        schedule: scheduleData
-      };
-    } else {
-      // For creates, send all necessary fields
-      const scheduleData = {
-        days: formData.schedule.days,
-        reminderEnabled: formData.schedule.reminderEnabled,
-        // Only include reminderTime if it's not empty and reminderEnabled is true
-        ...(formData.schedule.reminderEnabled && formData.schedule.reminderTime && {
-          reminderTime: formData.schedule.reminderTime
-        })
-      };
-      
-      submitData = {
-        name: formData.name,
-        color: formData.color,
-        icon: formData.icon,
-        description: formData.description,
-        isActive: formData.isActive,
-        frequency: 'daily', // Backend expects this field for creates
-        schedule: scheduleData,
-      };
-    }
+    const submitData = {
+      name: formData.name,
+      description: formData.description,
+      color: formData.color,
+      icon: formData.icon,
+      isActive: formData.isActive,
+      frequency: formData.frequency,
+      ...(formData.frequency === 'weekly' && { weeklyTarget: formData.weeklyTarget }),
+      schedule: scheduleData
+    };
     
 
     
@@ -262,13 +248,13 @@ const CustomHabitEditModal = ({
           {/* Header */}
           <div className="text-center">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center mx-auto mb-3">
-              {habit ? <CheckIcon className="w-6 h-6 text-white" /> : <PlusIcon className="w-6 h-6 text-white" />}
+              <CheckIcon className="w-6 h-6 text-white" />
             </div>
             <h2 className="text-xl font-bold text-[var(--color-text-primary)] font-dmSerif mb-1">
-              {habit ? "Edit Habit" : "Create Habit"}
+              Edit Habit
             </h2>
             <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
-              {habit ? "Update your habit details" : "Add a new habit to track"}
+              Update your habit details
             </p>
           </div>
           
@@ -296,15 +282,13 @@ const CustomHabitEditModal = ({
               >
                 Settings
               </button>
-              {habit && (
-                <button
-                  type="button"
-                  className={`px-3 py-2 font-medium text-xs ${activeTab === "danger" ? "text-[var(--color-brand-600)] border-b-2 border-[var(--color-brand-600)]" : "text-[var(--color-text-secondary)]"}`}
-                  onClick={() => setActiveTab("danger")}
-                >
-                  Manage
-                </button>
-              )}
+              <button
+                type="button"
+                className={`px-3 py-2 font-medium text-xs ${activeTab === "danger" ? "text-[var(--color-brand-600)] border-b-2 border-[var(--color-brand-600)]" : "text-[var(--color-text-secondary)]"}`}
+                onClick={() => setActiveTab("danger")}
+              >
+                Manage
+              </button>
             </div>
           </div>
 
@@ -344,30 +328,93 @@ const CustomHabitEditModal = ({
                 {/* Schedule */}
                 <div>
                   <label className="text-xs font-medium text-[var(--color-text-primary)] font-outfit block mb-2">
-                    Schedule
+                    Frequency
                   </label>
-                  <div className="flex flex-wrap gap-1">
-                    {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, index) => {
-                      const dayId = index === 6 ? 0 : index + 1; // Convert to backend format (0=Sunday)
-                      const isSelected = formData.schedule?.days?.includes(dayId) ?? true;
-                      
-                      return (
-                        <button
-                          key={index}
-                          type="button"
-                          onClick={() => handleFrequencyToggle(dayId)}
-                          className={`w-8 h-8 rounded-lg text-xs font-medium transition-all duration-200 font-outfit ${
-                            isSelected
-                              ? 'bg-[var(--color-brand-500)] text-white'
-                              : 'bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
-                          }`}
-                        >
-                          {day}
-                        </button>
-                      );
-                    })}
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, frequency: 'daily' }))}
+                      className={`flex-1 h-9 rounded-lg text-xs font-medium transition-all duration-200 font-outfit ${
+                        formData.frequency !== 'weekly'
+                          ? 'bg-[var(--color-brand-500)] text-white'
+                          : 'bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                      }`}
+                    >
+                      Daily
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, frequency: 'weekly' }))}
+                      className={`flex-1 h-9 rounded-lg text-xs font-medium transition-all duration-200 font-outfit ${
+                        formData.frequency === 'weekly'
+                          ? 'bg-[var(--color-brand-500)] text-white'
+                          : 'bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                      }`}
+                    >
+                      Weekly target
+                    </button>
                   </div>
-                  {errors.schedule && <p className="text-xs text-red-500 mt-1">{errors.schedule}</p>}
+
+                  {formData.frequency === 'weekly' ? (
+                    <>
+                      {/* Weekly target stepper */}
+                      <div className="flex items-center gap-3 p-3 bg-[var(--color-surface-elevated)] rounded-lg">
+                        <span className="text-sm font-outfit text-[var(--color-text-primary)] flex-1">
+                          Complete on any
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, weeklyTarget: Math.max(1, prev.weeklyTarget - 1) }))}
+                          className="w-7 h-7 rounded-lg bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] font-bold text-sm flex items-center justify-center hover:bg-[var(--color-border-primary)] transition-colors"
+                        >
+                          −
+                        </button>
+                        <span className="text-lg font-bold font-spartan text-[var(--color-brand-500)] tabular-nums w-6 text-center">
+                          {formData.weeklyTarget}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, weeklyTarget: Math.min(7, prev.weeklyTarget + 1) }))}
+                          className="w-7 h-7 rounded-lg bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] font-bold text-sm flex items-center justify-center hover:bg-[var(--color-border-primary)] transition-colors"
+                        >
+                          +
+                        </button>
+                        <span className="text-sm font-outfit text-[var(--color-text-primary)]">
+                          days/week
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[var(--color-text-tertiary)] font-outfit mt-1.5">
+                        No fixed schedule — pick any {formData.weeklyTarget} day{formData.weeklyTarget > 1 ? 's' : ''} each week. Your streak counts consecutive weeks.
+                      </p>
+                      {errors.weeklyTarget && <p className="text-xs text-red-500 mt-1">{errors.weeklyTarget}</p>}
+                    </>
+                  ) : (
+                    <>
+                      {/* Day-of-week toggles (daily habits) */}
+                      <div className="flex flex-wrap gap-1">
+                        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, index) => {
+                          const dayId = index === 6 ? 0 : index + 1;
+                          const isSelected = formData.schedule?.days?.includes(dayId) ?? true;
+                          
+                          return (
+                            <button
+                              key={index}
+                              type="button"
+                              onClick={() => handleFrequencyToggle(dayId)}
+                              className={`w-8 h-8 rounded-lg text-xs font-medium transition-all duration-200 font-outfit ${
+                                isSelected
+                                  ? 'bg-[var(--color-brand-500)] text-white'
+                                  : 'bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                              }`}
+                            >
+                              {day}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {errors.schedule && <p className="text-xs text-red-500 mt-1">{errors.schedule}</p>}
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -581,7 +628,7 @@ const CustomHabitEditModal = ({
               disabled={!formData.name.trim()}
             >
               <CheckIcon className="w-4 h-4" />
-              {habit ? "Update" : "Create"}
+              Update
             </button>
           </div>
         </div>

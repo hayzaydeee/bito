@@ -15,6 +15,12 @@ const { buildSystemPrompt, getTemperature, DEFAULT_PERSONALITY } = require('../p
  * Used when LLM is unavailable or onboardingData is missing.
  */
 const STATIC_KICKSTART = {
+  empty: {
+    summary: "You're all set up — head to your dashboard and tap + to create your first habit. The wizard will walk you through it.",
+    insights: [
+      { title: 'Start with one', body: 'Pick the habit that feels most natural and build from there. Daily or weekly — the wizard lets you choose.', icon: '🎯', category: 'kickstart' },
+    ],
+  },
   light: {
     summary: "You've picked a focused set of habits — starting small is the smartest move. Let's build from here.",
     insights: [
@@ -76,7 +82,13 @@ async function generateKickstartInsights({ user, habits }) {
         goals: onboarding.goals || [],
         capacity: onboarding.capacity || 'balanced',
         preferredTimes: onboarding.preferredTimes || [],
-        habits: habits.map(h => ({ name: h.name, icon: h.icon || '', category: h.category || '' })),
+        habits: habits.map(h => ({
+          name: h.name,
+          icon: h.icon || '',
+          category: h.category || '',
+          frequency: h.frequency || 'daily',
+          ...(h.frequency === 'weekly' && { weeklyTarget: h.weeklyTarget || 3 }),
+        })),
       });
 
       const completion = await client.chat.completions.create({
@@ -112,7 +124,14 @@ async function generateKickstartInsights({ user, habits }) {
     }
   }
 
-  // Fallback: static messages based on capacity
+  // Fallback: static messages based on capacity or empty state
+  if (!habits || habits.length === 0) {
+    return {
+      summary: STATIC_KICKSTART.empty.summary,
+      insights: STATIC_KICKSTART.empty.insights,
+      generatedAt: new Date(),
+    };
+  }
   const capacity = onboarding.capacity || 'balanced';
   const fallback = STATIC_KICKSTART[capacity] || STATIC_KICKSTART.balanced;
 

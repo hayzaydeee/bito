@@ -36,7 +36,7 @@ const ProgressRing = ({ value = 0, size = 52, stroke = 4 }) => {
 };
 
 /* ─── Stat Pills row ─── */
-const StatPills = memo(({ completed, total, streak }) => {
+const StatPills = memo(({ completed, total, streak, weeklyProgress }) => {
   const dailyPct = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   return (
@@ -63,6 +63,31 @@ const StatPills = memo(({ completed, total, streak }) => {
           today
         </span>
       </div>
+
+      {/* Weekly progress pill (only if weekly habits exist) */}
+      {weeklyProgress && weeklyProgress.total > 0 && (
+        <div
+          className="flex items-center gap-1.5 rounded-full px-3 py-2 border"
+          style={{
+            backgroundColor: "var(--color-surface-primary)",
+            borderColor: "var(--color-border-primary)",
+          }}
+        >
+          <span className="text-sm">📅</span>
+          <span
+            className="text-sm font-spartan font-bold tabular-nums"
+            style={{ color: "var(--color-text-primary)" }}
+          >
+            {weeklyProgress.met}/{weeklyProgress.total}
+          </span>
+          <span
+            className="text-[10px] font-spartan"
+            style={{ color: "var(--color-text-tertiary)" }}
+          >
+            weekly
+          </span>
+        </div>
+      )}
 
       {/* Streak pill */}
       <div

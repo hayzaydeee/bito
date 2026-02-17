@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useHabits } from "../contexts/HabitContext";
 import { habitUtils as habitLogic } from "../utils/habitLogic";
 import CustomHabitEditModal from "../components/ui/CustomHabitEditModal";
+import HabitCreationWizard from "../components/ui/HabitCreationWizard";
 
 /* ── Redesigned dashboard components (Phase 6) ── */
 import GreetingBar from "../components/dashboard/GreetingBar";
@@ -59,14 +60,20 @@ const Dashboard = () => {
 
   /* ── Today's habits (respects scheduling) ── */
   const todaysHabits = useMemo(
-    () => habitLogic.getTodaysHabits(habits),
+    () => habitLogic.getTodaysDailyHabits(habits),
+    [habits]
+  );
+
+  /* ── Weekly habits (always shown) ── */
+  const weeklyHabits = useMemo(
+    () => habitLogic.getWeeklyHabits(habits),
     [habits]
   );
 
   /* ── Stats computation ── */
   const stats = useMemo(() => {
     if (isLoading || !habits.length) {
-      return { completed: 0, total: 0, streak: 0, weeklyPct: 0 };
+      return { completed: 0, total: 0, streak: 0, weeklyPct: 0, weeklyProgress: null };
     }
 
     const todayStr = habitLogic.normalizeDate(new Date());
@@ -78,7 +85,7 @@ const Dashboard = () => {
       if (entry && entry.completed) completed++;
     });
 
-    // Best current streak across all habits
+    // Best current streak across all habits (daily streaks)
     const calcStreak = (habitId) => {
       const habit = habits.find((h) => h._id === habitId);
       if (!habit) return 0;
@@ -103,8 +110,19 @@ const Dashboard = () => {
       weekStart
     );
 
-    return { completed, total: todaysHabits.length, streak, weeklyPct };
-  }, [habits, entries, isLoading, todaysHabits]);
+    // Weekly habits progress summary
+    let weeklyProgressSummary = null;
+    if (weeklyHabits.length > 0) {
+      let metCount = 0;
+      weeklyHabits.forEach((h) => {
+        const wp = habitLogic.getWeeklyProgress(h, entries);
+        if (wp.met) metCount++;
+      });
+      weeklyProgressSummary = { met: metCount, total: weeklyHabits.length };
+    }
+
+    return { completed, total: todaysHabits.length, streak, weeklyPct, weeklyProgress: weeklyProgressSummary };
+  }, [habits, entries, isLoading, todaysHabits, weeklyHabits]);
 
   /* ── Habit handlers ── */
   const handleAddHabit = useCallback(() => {
@@ -206,6 +224,7 @@ const Dashboard = () => {
           completed={stats.completed}
           total={stats.total}
           streak={stats.streak}
+          weeklyProgress={stats.weeklyProgress}
         />
       )}
 
@@ -220,6 +239,7 @@ const Dashboard = () => {
         onToggle={handleToggle}
         onEdit={handleEditHabit}
         onAdd={handleAddHabit}
+        weeklyHabits={weeklyHabits}
       />
       </div>
 
@@ -246,9 +266,37 @@ const Dashboard = () => {
         />
       )}
 
-      {/* Habit modal */}
+      {/* Weekly habit streak celebration */}
+      {weeklyHabits.map(h => {
+        const he = entries[h._id];
+        if (!he) return null;
+        const weeklyStreak = habitLogic.calculateWeeklyStreak(
+          h._id, h,
+          new Map(Object.entries(he).map(([d, e]) => [`${d}_${h._id}`, e])),
+          new Date()
+        );
+        if (weeklyStreak <= 0) return null;
+        return (
+          <StreakCelebration
+            key={h._id}
+            streak={weeklyStreak}
+            habitName={h.name}
+            isWeekly
+          />
+        );
+      })}
+
+      {/* Habit creation wizard (when no habit selected) */}
+      <HabitCreationWizard
+        isOpen={editModalOpen && !currentHabit}
+        onClose={handleCloseModal}
+        onSave={handleSaveHabit}
+        userId={user?._id || user?.id}
+      />
+
+      {/* Habit edit modal (when editing existing habit) */}
       <CustomHabitEditModal
-        isOpen={editModalOpen}
+        isOpen={editModalOpen && !!currentHabit}
         onClose={handleCloseModal}
         habit={currentHabit}
         onSave={handleSaveHabit}

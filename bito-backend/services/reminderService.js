@@ -97,6 +97,23 @@ class ReminderService {
           // Scheduled for today?
           if (habit.schedule.days?.length && !habit.schedule.days.includes(dayOfWeek)) continue;
 
+          // Weekly habit: skip if target already met this week
+          if (habit.frequency === 'weekly') {
+            const weekStart = new Date(nowLocal);
+            const day = weekStart.getDay();
+            const diff = day === 0 ? 6 : day - 1;
+            weekStart.setDate(weekStart.getDate() - diff);
+            weekStart.setHours(0, 0, 0, 0);
+            const weekStartStr = `${weekStart.getFullYear()}-${String(weekStart.getMonth() + 1).padStart(2, '0')}-${String(weekStart.getDate()).padStart(2, '0')}`;
+
+            const weeklyCompleted = await HabitEntry.countDocuments({
+              habitId: habit._id,
+              date: { $gte: weekStartStr, $lte: todayStr },
+              completed: true,
+            });
+            if (weeklyCompleted >= (habit.weeklyTarget || 3)) continue;
+          }
+
           // Already completed today?
           const entry = await HabitEntry.findOne({
             habitId: habit._id,

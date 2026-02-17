@@ -1,5 +1,7 @@
 import React, { memo, useState, useCallback } from "react";
 import { CheckIcon, Pencil1Icon, PlusIcon } from "@radix-ui/react-icons";
+import WeeklyHabitRow from "./WeeklyHabitRow";
+import { habitUtils } from "../../utils/habitLogic";
 
 /* ─── Single habit row ─── */
 const HabitRow = memo(({ habit, isCompleted, onToggle, onEdit }) => {
@@ -98,8 +100,10 @@ const HabitRow = memo(({ habit, isCompleted, onToggle, onEdit }) => {
 
 /* ─── Today's Habits list ─── */
 const TodayHabits = memo(
-  ({ habits, entries, onToggle, onEdit, onAdd }) => {
-    if (habits.length === 0) {
+  ({ habits, entries, onToggle, onEdit, onAdd, weeklyHabits = [] }) => {
+    const todayStr = new Date().toISOString().split("T")[0];
+
+    if (habits.length === 0 && weeklyHabits.length === 0) {
       return (
         <div className="text-center py-10">
           <div className="text-4xl mb-3">🌱</div>
@@ -122,14 +126,12 @@ const TodayHabits = memo(
       );
     }
 
-    // Separate completed & pending, pending first
+    // Separate completed & pending daily habits, pending first
     const pending = habits.filter((h) => {
-      const todayStr = new Date().toISOString().split("T")[0];
       const entry = entries[h._id]?.[todayStr];
       return !(entry && entry.completed);
     });
     const done = habits.filter((h) => {
-      const todayStr = new Date().toISOString().split("T")[0];
       const entry = entries[h._id]?.[todayStr];
       return entry && entry.completed;
     });
@@ -167,28 +169,59 @@ const TodayHabits = memo(
             </button>
         </div>
 
-        <div
-          className={
-            sortedHabits.length > 6
-              ? "grid grid-cols-1 sm:grid-cols-2 gap-2"
-              : "space-y-2"
-          }
-        >
-          {sortedHabits.map((habit) => {
-            const todayStr = new Date().toISOString().split("T")[0];
-            const entry = entries[habit._id]?.[todayStr];
-            const isCompleted = !!(entry && entry.completed);
-            return (
-              <HabitRow
-                key={habit._id}
-                habit={habit}
-                isCompleted={isCompleted}
-                onToggle={onToggle}
-                onEdit={onEdit}
-              />
-            );
-          })}
-        </div>
+        {/* Daily habits */}
+        {sortedHabits.length > 0 && (
+          <div
+            className={
+              sortedHabits.length > 6
+                ? "grid grid-cols-1 sm:grid-cols-2 gap-2"
+                : "space-y-2"
+            }
+          >
+            {sortedHabits.map((habit) => {
+              const entry = entries[habit._id]?.[todayStr];
+              const isCompleted = !!(entry && entry.completed);
+              return (
+                <HabitRow
+                  key={habit._id}
+                  habit={habit}
+                  isCompleted={isCompleted}
+                  onToggle={onToggle}
+                  onEdit={onEdit}
+                />
+              );
+            })}
+          </div>
+        )}
+
+        {/* Weekly habits section */}
+        {weeklyHabits.length > 0 && (
+          <div className="mt-4">
+            <h3
+              className="text-xs font-spartan font-semibold uppercase tracking-wider mb-2"
+              style={{ color: "var(--color-text-tertiary)" }}
+            >
+              This Week
+            </h3>
+            <div className="space-y-2">
+              {weeklyHabits.map((habit) => {
+                const weekProgress = habitUtils.getWeeklyProgress(habit, entries);
+                const entry = entries[habit._id]?.[todayStr];
+                const isTodayCompleted = !!(entry && entry.completed);
+                return (
+                  <WeeklyHabitRow
+                    key={habit._id}
+                    habit={habit}
+                    weekProgress={weekProgress}
+                    isTodayCompleted={isTodayCompleted}
+                    onToggle={onToggle}
+                    onEdit={onEdit}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     );
   }

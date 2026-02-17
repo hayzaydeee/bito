@@ -210,16 +210,23 @@ class WeeklyReportService {
       const moods = habitEntries.filter((e) => e.mood).map((e) => e.mood);
       const avgMood = moods.length ? (moods.reduce((a, b) => a + b, 0) / moods.length).toFixed(1) : null;
 
+      const isWeekly = habit.frequency === 'weekly';
+      const weeklyTarget = habit.weeklyTarget || 3;
+
       return {
         name: habit.name,
         icon: habit.icon || '🎯',
         category: habit.category || 'General',
         completed,
         total,
-        rate: total > 0 ? Math.round((completed / 7) * 100) : 0, // out of 7 days
+        rate: isWeekly
+          ? (completed >= weeklyTarget ? 100 : Math.round((completed / weeklyTarget) * 100))
+          : (total > 0 ? Math.round((completed / 7) * 100) : 0),
         currentStreak: habit.stats?.currentStreak || 0,
         longestStreak: habit.stats?.longestStreak || 0,
         avgMood,
+        isWeekly,
+        weeklyTarget: isWeekly ? weeklyTarget : undefined,
       };
     });
   }
@@ -237,7 +244,9 @@ class WeeklyReportService {
       const temperature = getTemperature(personality);
 
       const habitSummary = habitBreakdown
-        .map((h) => `- ${h.icon} ${h.name}: ${h.completed}/7 days (${h.rate}%), streak: ${h.currentStreak}`)
+        .map((h) => h.isWeekly
+          ? `- ${h.icon} ${h.name} [WEEKLY]: ${h.completed}/${h.weeklyTarget} target (${h.rate}%), weekly streak: ${h.currentStreak} weeks`
+          : `- ${h.icon} ${h.name}: ${h.completed}/7 days (${h.rate}%), streak: ${h.currentStreak}`)
         .join('\n');
 
       const completion = await client.chat.completions.create({

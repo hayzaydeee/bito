@@ -29,6 +29,18 @@ const daysBetween = (a, b) => {
   return Math.floor((ub - ua) / msPerDay);
 };
 
+/** Get Monday-based week start for a date (ISO week: Mon=start) */
+const getWeekStartUTC = (d) => {
+  const dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = dt.getUTCDay(); // 0=Sun
+  const diff = day === 0 ? 6 : day - 1; // Mon=0
+  dt.setUTCDate(dt.getUTCDate() - diff);
+  return dt;
+};
+
+/** Is a habit a weekly-target habit? */
+const isWeeklyHabit = (h) => h.frequency === 'weekly';
+
 // ─── Detectors ─────────────────────────────────────────────────────────
 
 /**
@@ -40,15 +52,24 @@ function detectStreaks(habits) {
     const { currentStreak, longestStreak } = h.stats || {};
     if (!currentStreak) continue;
 
-    // Milestone streaks
-    const milestones = [100, 50, 30, 21, 14, 7];
+    const weekly = isWeeklyHabit(h);
+    const unit = weekly ? 'week' : 'day';
+    const units = weekly ? 'weeks' : 'days';
+
+    // Milestone streaks (different scales for weekly vs daily)
+    const milestones = weekly
+      ? [52, 26, 12, 8, 4]          // ~1yr, 6mo, 3mo, 2mo, 1mo
+      : [100, 50, 30, 21, 14, 7];
+
     for (const m of milestones) {
       if (currentStreak === m) {
         insights.push({
           type: 'streak_milestone',
-          title: `${m}-day streak! 🔥`,
-          body: `You've completed "${h.name}" ${m} days in a row. Incredible dedication!`,
-          priority: m >= 30 ? 1 : 2,
+          title: `${m}-${unit} streak! 🔥`,
+          body: weekly
+            ? `You've met your weekly target for "${h.name}" ${m} weeks running. Incredible consistency!`
+            : `You've completed "${h.name}" ${m} days in a row. Incredible dedication!`,
+          priority: weekly ? (m >= 12 ? 1 : 2) : (m >= 30 ? 1 : 2),
           icon: '🔥',
           category: 'celebration',
           habitId: h._id,
@@ -62,7 +83,9 @@ function detectStreaks(habits) {
       insights.push({
         type: 'streak_near_record',
         title: 'Almost a new record!',
-        body: `"${h.name}" is at ${currentStreak} days — your record is ${longestStreak}. Just ${longestStreak - currentStreak} more!`,
+        body: weekly
+          ? `"${h.name}" is at ${currentStreak} ${units} — your record is ${longestStreak}. Just ${longestStreak - currentStreak} more!`
+          : `"${h.name}" is at ${currentStreak} days — your record is ${longestStreak}. Just ${longestStreak - currentStreak} more!`,
         priority: 1,
         icon: '🏆',
         category: 'motivation',
@@ -71,11 +94,14 @@ function detectStreaks(habits) {
     }
 
     // New record just set
-    if (longestStreak > 0 && currentStreak === longestStreak && currentStreak > 3) {
+    const recordThreshold = weekly ? 2 : 3;
+    if (longestStreak > 0 && currentStreak === longestStreak && currentStreak > recordThreshold) {
       insights.push({
         type: 'streak_new_record',
         title: 'New personal best! 🎉',
-        body: `"${h.name}" just hit a record ${currentStreak}-day streak!`,
+        body: weekly
+          ? `"${h.name}" just hit a record ${currentStreak}-week streak of meeting your target!`
+          : `"${h.name}" just hit a record ${currentStreak}-day streak!`,
         priority: 1,
         icon: '🎉',
         category: 'celebration',
@@ -88,14 +114,62 @@ function detectStreaks(habits) {
 
 /**
  * 2. At-risk habits — haven't been completed recently
+ *    Weekly habits: late-in-week but below target
  */
-function detectAtRisk(habits) {
+function detectAtRisk(habits, entries) {
   const insights = [];
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const dayOfWeek = today.getDay(); // 0=Sun
 
   for (const h of habits) {
     if (!h.isActive || h.isArchived) continue;
+
+    if (isWeeklyHabit(h)) {
+      // Weekly habit: check pacing within the current week
+      const weekStart = getWeekStartUTC(today);
+      const target = h.weeklyTarget || 3;
+      const thisWeekEntries = entries.filter(e =>
+        String(e.habitId) === String(h._id) &&
+        e.completed &&
+        new Date(e.date) >= weekStart &&
+        new Date(e.date) <= today
+      );
+      const completed = thisWeekEntries.length;
+      const remaining = target - completed;
+
+      if (remaining <= 0) continue; // already met target
+
+      // Days left in the week (Mon=start, Sun=end)
+      const daysLeft = dayOfWeek === 0 ? 0 : 7 - dayOfWeek; // Sun=0 left
+
+      if (daysLeft === 0 && remaining > 0) {
+        // Last day of week, still behind
+        insights.push({
+          type: 'weekly_at_risk',
+          title: `Last chance for "${h.name}"`,
+          body: `Today's the last day of the week and you still need ${remaining} more to hit your ${target}/week target.`,
+          priority: 1,
+          icon: '⏰',
+          category: 'nudge',
+          habitId: h._id,
+        });
+      } else if (daysLeft <= 2 && remaining > daysLeft) {
+        // Very tight — more remaining than days left
+        insights.push({
+          type: 'weekly_at_risk_mild',
+          title: `"${h.name}" needs a push`,
+          body: `${completed}/${target} done this week with ${daysLeft} day${daysLeft !== 1 ? 's' : ''} left. You'll need to hit every remaining day!`,
+          priority: 2,
+          icon: '💡',
+          category: 'nudge',
+          habitId: h._id,
+        });
+      }
+      continue;
+    }
+
+    // Daily habit: original logic
     const last = h.stats?.lastChecked ? new Date(h.stats.lastChecked) : null;
     if (!last) continue;
 
@@ -421,6 +495,120 @@ function detectTimeOfDay(entries) {
   }];
 }
 
+/**
+ * 10. Weekly habit pacing — front-loaded vs back-loaded vs even
+ */
+function detectWeeklyPacing(habits, entries) {
+  const weeklyHabits = habits.filter(h => isWeeklyHabit(h) && h.isActive && !h.isArchived);
+  if (weeklyHabits.length === 0) return [];
+
+  const insights = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Look back 4 weeks for pacing patterns
+  const fourWeeksAgo = new Date(today);
+  fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+
+  for (const h of weeklyHabits) {
+    const hEntries = entries.filter(e =>
+      String(e.habitId) === String(h._id) &&
+      e.completed &&
+      new Date(e.date) >= fourWeeksAgo
+    );
+
+    if (hEntries.length < 8) continue; // need enough data
+
+    // Classify each completion's position within its week (Mon=0, Sun=6)
+    let earlyCount = 0; // Mon-Wed (positions 0-2)
+    let lateCount = 0;  // Thu-Sun (positions 3-6)
+
+    for (const e of hEntries) {
+      const d = new Date(e.date);
+      const dow = d.getDay(); // 0=Sun
+      const weekPos = dow === 0 ? 6 : dow - 1; // Mon=0, Sun=6
+      if (weekPos <= 2) earlyCount++;
+      else lateCount++;
+    }
+
+    const total = earlyCount + lateCount;
+    const earlyPct = earlyCount / total;
+
+    if (earlyPct >= 0.7) {
+      insights.push({
+        type: 'weekly_pacing',
+        title: `"${h.name}" front-loader 🏃`,
+        body: `You tend to knock out "${h.name}" early in the week — ${Math.round(earlyPct * 100)}% Mon–Wed. Great for staying ahead!`,
+        priority: 3,
+        icon: '🏃',
+        category: 'pattern',
+        habitId: h._id,
+      });
+    } else if (earlyPct <= 0.3) {
+      insights.push({
+        type: 'weekly_pacing',
+        title: `"${h.name}" weekend warrior`,
+        body: `Most of your "${h.name}" completions happen Thu–Sun. Consider spreading them out to reduce end-of-week pressure.`,
+        priority: 3,
+        icon: '📅',
+        category: 'suggestion',
+        habitId: h._id,
+      });
+    }
+  }
+  return insights;
+}
+
+/**
+ * 11. Weekly habit target met celebration
+ */
+function detectWeeklyTargetMet(habits, entries) {
+  const weeklyHabits = habits.filter(h => isWeeklyHabit(h) && h.isActive && !h.isArchived);
+  if (weeklyHabits.length === 0) return [];
+
+  const insights = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const weekStart = getWeekStartUTC(today);
+
+  for (const h of weeklyHabits) {
+    const target = h.weeklyTarget || 3;
+    const thisWeekCompleted = entries.filter(e =>
+      String(e.habitId) === String(h._id) &&
+      e.completed &&
+      new Date(e.date) >= weekStart &&
+      new Date(e.date) <= today
+    ).length;
+
+    // Just met target (exactly at or 1 over)
+    if (thisWeekCompleted === target || thisWeekCompleted === target + 1) {
+      insights.push({
+        type: 'weekly_target_met',
+        title: `"${h.name}" target hit! ✅`,
+        body: `You've reached your ${target}/week goal for "${h.name}" this week. Keep the momentum going!`,
+        priority: 2,
+        icon: '✅',
+        category: 'celebration',
+        habitId: h._id,
+      });
+    }
+
+    // Over-achiever
+    if (thisWeekCompleted >= target + 2) {
+      insights.push({
+        type: 'weekly_over_target',
+        title: `Above and beyond! 🌟`,
+        body: `"${h.name}" is at ${thisWeekCompleted}/${target} this week — exceeding your target. Consider raising it!`,
+        priority: 3,
+        icon: '🌟',
+        category: 'suggestion',
+        habitId: h._id,
+      });
+    }
+  }
+  return insights;
+}
+
 
 // ─── Main Engine ───────────────────────────────────────────────────────
 
@@ -448,7 +636,7 @@ async function generateInsights(userId) {
   // Run all detectors
   const raw = [
     ...detectStreaks(habits),
-    ...detectAtRisk(habits),
+    ...detectAtRisk(habits, entries),
     ...detectDayOfWeek(entries),
     ...detectConsistencyTrend(entries),
     ...detectMoodCorrelation(entries, journalEntries),
@@ -456,6 +644,8 @@ async function generateInsights(userId) {
     ...detectMilestones(habits),
     ...detectCategoryBalance(habits),
     ...detectTimeOfDay(entries),
+    ...detectWeeklyPacing(habits, entries),
+    ...detectWeeklyTargetMet(habits, entries),
   ];
 
   // De-duplicate by type+habitId, keep highest priority

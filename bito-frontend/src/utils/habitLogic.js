@@ -22,12 +22,61 @@ export const habitUtils = {
     return day === 0 ? 7 : day; // Convert Sunday (0) to 7, keep Monday (1) as 1
   },
 
+  // Check if a habit is a weekly-target habit
+  isWeeklyHabit: (habit) => {
+    return habit?.frequency === 'weekly';
+  },
+
+  // Get Monday 00:00 and Sunday 23:59 bounds for a given date
+  getWeekBounds: (date, weekStartDay = null) => {
+    const start = habitUtils.getWeekStart(date, weekStartDay);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+    return { start, end };
+  },
+
+  // Get weekly progress for a weekly habit within a Mon-Sun window
+  getWeeklyProgress: (habit, entries, weekStartDate = null) => {
+    if (!habitUtils.isWeeklyHabit(habit)) {
+      return { completed: 0, target: 0, met: false, remaining: 0, isWeekly: false };
+    }
+    const target = habit.weeklyTarget || 3;
+    const { start, end } = habitUtils.getWeekBounds(weekStartDate || new Date());
+    const startStr = habitUtils.normalizeDate(start);
+    const endStr = habitUtils.normalizeDate(end);
+
+    // Count completed entries for this habit in the week range
+    const habitEntries = entries[habit._id] || {};
+    let completed = 0;
+    const completedDays = [];
+    Object.keys(habitEntries).forEach(dateStr => {
+      if (dateStr >= startStr && dateStr <= endStr && habitEntries[dateStr]?.completed) {
+        completed++;
+        completedDays.push(dateStr);
+      }
+    });
+
+    return {
+      completed,
+      target,
+      met: completed >= target,
+      remaining: Math.max(0, target - completed),
+      completedDays,
+      isWeekly: true
+    };
+  },
+
   // Check if a habit is scheduled for a specific date
   isHabitScheduledForDate: (habit, date) => {
+    // Weekly habits are always "scheduled" — they can be completed any day
+    if (habitUtils.isWeeklyHabit(habit)) {
+      return true;
+    }
     // Check schedule.days first (backend model), then fall back to frequency array (legacy)
     const scheduleDays = habit.schedule?.days || habit.frequency;
     
-    if (!scheduleDays || scheduleDays.length === 0) {
+    if (!scheduleDays || !Array.isArray(scheduleDays) || scheduleDays.length === 0) {
       return true; // If no schedule set, assume daily
     }
     
@@ -46,6 +95,16 @@ export const habitUtils = {
   // Get habits that should be shown for today
   getTodaysHabits: (habits) => {
     return habitUtils.getHabitsForDate(habits, new Date());
+  },
+
+  // Get only daily (non-weekly) habits for today
+  getTodaysDailyHabits: (habits) => {
+    return habitUtils.getTodaysHabits(habits).filter(h => !habitUtils.isWeeklyHabit(h));
+  },
+
+  // Get weekly habits (always shown, regardless of day)
+  getWeeklyHabits: (habits) => {
+    return habits.filter(h => h.isActive && habitUtils.isWeeklyHabit(h));
   },
   
   // Week calculations with configurable start day
@@ -119,6 +178,11 @@ export const habitUtils = {
   calculateStreak: (habitId, habit, completions, endDate = new Date()) => {
     if (!habit) return 0;
     
+    // Weekly habits: streak = consecutive weeks target met
+    if (habitUtils.isWeeklyHabit(habit)) {
+      return habitUtils.calculateWeeklyStreak(habitId, habit, completions, endDate);
+    }
+
     let streak = 0;
     const current = new Date(endDate);
     
@@ -143,6 +207,53 @@ export const habitUtils = {
       if (streak > 365) break;
     }
     
+    return streak;
+  },
+
+  // Weekly streak: consecutive weeks where completions >= weeklyTarget
+  calculateWeeklyStreak: (habitId, habit, completions, endDate = new Date()) => {
+    const target = habit.weeklyTarget || 3;
+    let streak = 0;
+    const currentWeekStart = habitUtils.getWeekStart(endDate);
+    const cursor = new Date(currentWeekStart);
+
+    // Helper: count completions in a Mon-Sun week
+    const countWeekCompletions = (weekStartDate) => {
+      let count = 0;
+      for (let d = 0; d < 7; d++) {
+        const day = new Date(weekStartDate);
+        day.setDate(day.getDate() + d);
+        const dateStr = habitUtils.normalizeDate(day);
+        const key = `${dateStr}_${habitId}`;
+        if (completions.has(key)) {
+          const entry = completions.get(key);
+          if (entry && (entry.completed || entry === true)) count++;
+        }
+      }
+      return count;
+    };
+
+    // Check current week
+    const currentCount = countWeekCompletions(cursor);
+    if (currentCount >= target) {
+      streak = 1;
+      cursor.setDate(cursor.getDate() - 7);
+    } else {
+      // Current week not met yet, check previous weeks
+      cursor.setDate(cursor.getDate() - 7);
+    }
+
+    // Walk backward through previous weeks (max ~2 years)
+    for (let i = 0; i < 104; i++) {
+      const count = countWeekCompletions(cursor);
+      if (count >= target) {
+        streak++;
+        cursor.setDate(cursor.getDate() - 7);
+      } else {
+        break;
+      }
+    }
+
     return streak;
   },
 

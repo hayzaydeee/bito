@@ -1768,6 +1768,7 @@ router.post('/:workspaceId/habits/:habitId/adopt', [
       
       // Personal settings (can override defaults)
       frequency: workspaceHabit.defaultSettings?.frequency || 'daily',
+      weeklyTarget: personalSettings?.weeklyTarget || workspaceHabit.defaultSettings?.weeklyTarget || 3,
       target: personalSettings?.target || workspaceHabit.defaultSettings?.target || { value: 1, unit: 'times' },
       schedule: {
         days: workspaceHabit.defaultSettings?.schedule?.days || [0,1,2,3,4,5,6],

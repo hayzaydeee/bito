@@ -95,6 +95,10 @@ const validateHabitCreation = [
     .optional()
     .isIn(['daily', 'weekly', 'monthly'])
     .withMessage('Frequency must be daily, weekly, or monthly'),
+  body('weeklyTarget')
+    .optional()
+    .isInt({ min: 1, max: 7 })
+    .withMessage('Weekly target must be between 1 and 7'),
   body('target.value')
     .optional()
     .isInt({ min: 1 })

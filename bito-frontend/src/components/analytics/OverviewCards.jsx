@@ -8,7 +8,7 @@ import {
   CalendarIcon
 } from '@radix-ui/react-icons';
 
-const OverviewCards = ({ data, timeRange, className = '' }) => {
+const OverviewCards = ({ data, timeRange, className = '', weeklyHabitData }) => {
   const cards = [
     {
       title: 'Total Habits',
@@ -34,14 +34,25 @@ const OverviewCards = ({ data, timeRange, className = '' }) => {
       suffix: '%',
       description: 'average completion rate'
     },
-    {
-      title: 'Active Habits',
-      value: data.activeHabits,
-      icon: ActivityLogIcon,
-      color: 'warning',
-      suffix: '',
-      description: 'habits with recent activity'
-    }
+    // Show weekly goals card if weekly habits exist, otherwise show active habits
+    ...(weeklyHabitData && weeklyHabitData.total > 0
+      ? [{
+          title: 'Weekly Goals',
+          value: weeklyHabitData.met,
+          icon: CalendarIcon,
+          color: 'warning',
+          suffix: `/${weeklyHabitData.total}`,
+          description: 'weekly targets met this week'
+        }]
+      : [{
+          title: 'Active Habits',
+          value: data.activeHabits,
+          icon: ActivityLogIcon,
+          color: 'warning',
+          suffix: '',
+          description: 'habits with recent activity'
+        }]
+    )
   ];
 
   const getColorClasses = (color) => {

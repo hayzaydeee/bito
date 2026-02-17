@@ -43,14 +43,29 @@ const CompletionRateChart = ({
 
       habits.forEach(habit => {
         const habitEntries = entries[habit._id] || {};
+        const isWeekly = habit.frequency === 'weekly';
         
-        for (let d = new Date(week.start); d <= week.end; d.setDate(d.getDate() + 1)) {
-          const dateStr = d.toISOString().split('T')[0];
-          const entry = habitEntries[dateStr];
-          
-          totalPossible++;
-          if (entry && entry.completed) {
-            totalCompletions++;
+        if (isWeekly) {
+          // For weekly habits: one "possible" per week, met if completions >= weeklyTarget
+          const target = habit.weeklyTarget || 3;
+          let weekCompletions = 0;
+          for (let d = new Date(week.start); d <= week.end; d.setDate(d.getDate() + 1)) {
+            const dateStr = d.toISOString().split('T')[0];
+            const entry = habitEntries[dateStr];
+            if (entry && entry.completed) weekCompletions++;
+          }
+          totalPossible += target;
+          totalCompletions += Math.min(weekCompletions, target);
+        } else {
+          // Daily habits: one possible per day
+          for (let d = new Date(week.start); d <= week.end; d.setDate(d.getDate() + 1)) {
+            const dateStr = d.toISOString().split('T')[0];
+            const entry = habitEntries[dateStr];
+            
+            totalPossible++;
+            if (entry && entry.completed) {
+              totalCompletions++;
+            }
           }
         }
       });

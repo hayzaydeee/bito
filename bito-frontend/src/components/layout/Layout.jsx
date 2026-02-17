@@ -3,7 +3,7 @@ import { Outlet, useLocation, Navigate } from "react-router-dom";
 import VerticalMenu from "./VerticalMenu";
 import StatusBar from "./StatusBar";
 import BottomTabBar from "./BottomTabBar";
-import CustomHabitEditModal from "../ui/CustomHabitEditModal";
+import HabitCreationWizard from "../ui/HabitCreationWizard";
 import { useAuth, withAuth } from "../../contexts/AuthContext";
 import { useHabits } from "../../contexts/HabitContext";
 
@@ -93,14 +93,12 @@ const Layout = () => {
       {/* Mobile Bottom Tab Bar — hidden on desktop */}
       {isMobile && <BottomTabBar onAddHabit={handleOpenAddHabit} />}
 
-      {/* Global Add Habit Modal (accessible from BottomTabBar on any page) */}
-      <CustomHabitEditModal
+      {/* Global Add Habit Wizard (accessible from BottomTabBar on any page) */}
+      <HabitCreationWizard
         isOpen={addHabitModalOpen}
         onClose={() => setAddHabitModalOpen(false)}
-        habit={null}
         onSave={handleSaveNewHabit}
-        onDelete={() => {}}
-        onArchive={() => {}}
+        userId={user?._id || user?.id}
       />
     </div>
   );

@@ -46,8 +46,13 @@ const HabitStreakChart = ({
   onAddHabit,
   accountAgeDays = 365,
 }) => {
-  const { chartData, topHabits, peakStreak } = useMemo(() => {
-    if (!habits.length) return { chartData: [], topHabits: [], peakStreak: 0 };
+  const { chartData, topHabits, peakStreak, hasWeeklyHabits } = useMemo(() => {
+    if (!habits.length) return { chartData: [], topHabits: [], peakStreak: 0, hasWeeklyHabits: false };
+
+    // Split daily and weekly habits
+    const dailyHabits = habits.filter(h => h.frequency !== 'weekly');
+    const weeklyHabits = habits.filter(h => h.frequency === 'weekly');
+    const hasWeekly = weeklyHabits.length > 0;
 
     // Determine date range
     let startDate, endDate;
@@ -61,8 +66,8 @@ const HabitStreakChart = ({
       startDate.setDate(endDate.getDate() - days);
     }
 
-    // Rank habits by total completions in period
-    const habitCompletions = habits.map(habit => {
+    // Rank daily habits by total completions in period
+    const habitCompletions = dailyHabits.map(habit => {
       const habitEntries = entries[habit._id] || {};
       let total = 0;
       for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -76,9 +81,9 @@ const HabitStreakChart = ({
       .filter(({ total }) => total > 0)
       .sort((a, b) => b.total - a.total)
       .slice(0, maxHabitsDisplayed)
-      .map((h, i) => ({ ...h, color: h.color || COLORS[i % COLORS.length] }));
+      .map((h, i) => ({ ...h, color: h.color || COLORS[i % COLORS.length], isWeekly: false }));
 
-    // Build per-day running-streak data
+    // Build per-day running-streak data for daily habits
     let peak = 0;
     const data = [];
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -102,7 +107,7 @@ const HabitStreakChart = ({
       data.push(dayData);
     }
 
-    return { chartData: data, topHabits: topHabitsData, peakStreak: peak };
+    return { chartData: data, topHabits: topHabitsData, peakStreak: peak, hasWeeklyHabits: hasWeekly };
   }, [habits, entries, timeRange, dateRange, maxHabitsDisplayed]);
 
   /* ── Empty states ─────────────────────────────── */

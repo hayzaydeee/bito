@@ -35,6 +35,13 @@ const memberHabitSchema = new mongoose.Schema({
       unit: String,
       customUnit: String
     },
+
+    // Personal weekly target (overrides workspace default for weekly habits)
+    weeklyTarget: {
+      type: Number,
+      min: 1,
+      max: 7,
+    },
     
     // Personal schedule
     schedule: {

@@ -239,13 +239,16 @@ const DashboardTour = ({ forceShow = false, onComplete, userId }) => {
     onComplete?.();
   }, [onComplete, lsKey]);
 
-  const startTour = () => setStep(0);
+  const startTour = () => {
+    setStep(0);
+  };
 
   const advance = () => {
-    if (step >= STEPS.length - 1) {
+    const next = step + 1;
+    if (next >= STEPS.length) {
       finish();
     } else {
-      setStep((s) => s + 1);
+      setStep(next);
     }
   };
 

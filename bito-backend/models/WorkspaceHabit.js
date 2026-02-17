@@ -77,6 +77,12 @@ const workspaceHabitSchema = new mongoose.Schema({
       enum: ['daily', 'weekly', 'monthly'],
       default: 'daily'
     },
+    weeklyTarget: {
+      type: Number,
+      min: 1,
+      max: 7,
+      default: 3  // For weekly frequency: complete on any X days per week
+    },
     target: {
       value: {
         type: Number,

@@ -325,11 +325,41 @@ router.post('/:id/check', [validateObjectId('id'), validateHabitEntry], async (r
       challengeResult = await processChallengeProgress(req.user._id, habit.workspaceId, habit._id);
     }
 
+    // Calculate weekly progress for weekly habits
+    let weekProgress = null;
+    if (habit.frequency === 'weekly') {
+      const target = habit.weeklyTarget || 3;
+      // Find Monday of the current week (UTC)
+      const now = new Date();
+      const day = now.getUTCDay(); // 0=Sun
+      const mondayOffset = day === 0 ? 6 : day - 1;
+      const weekStart = new Date(now);
+      weekStart.setUTCDate(weekStart.getUTCDate() - mondayOffset);
+      weekStart.setUTCHours(0, 0, 0, 0);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
+      weekEnd.setUTCHours(23, 59, 59, 999);
+
+      const weekEntries = await HabitEntry.countDocuments({
+        habitId: habit._id,
+        date: { $gte: weekStart, $lte: weekEnd },
+        completed: true
+      });
+
+      weekProgress = {
+        completed: weekEntries,
+        target,
+        met: weekEntries >= target,
+        remaining: Math.max(0, target - weekEntries)
+      };
+    }
+
     res.json({
       success: true,
       message: `Habit ${completed ? 'checked' : 'unchecked'} successfully`,
       data: { 
         entry,
+        weekProgress,
         challengeProgress: challengeResult?.processed ? challengeResult.updates : null
       }
     });
@@ -355,13 +385,17 @@ router.get('/stats', validateDateRange, async (req, res) => {
     const start = startDate ? new Date(startDate) : new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
 
     // Get habits with their stats
-    const habits = await Habit.find({ userId, isActive: true }).select('name category stats');
+    const habits = await Habit.find({ userId, isActive: true }).select('name category stats frequency weeklyTarget');
 
     // Get entries for the date range
     const entries = await HabitEntry.find({
       userId,
       date: { $gte: start, $lte: end }
     });
+
+    // Separate daily and weekly habits
+    const dailyHabits = habits.filter(h => h.frequency !== 'weekly');
+    const weeklyHabits = habits.filter(h => h.frequency === 'weekly');
 
     // Calculate aggregate stats
     const totalEntries = entries.length;
@@ -435,14 +469,25 @@ router.get('/stats', validateDateRange, async (req, res) => {
           totalHabits: habits.length,
           totalEntries,
           completedEntries,
-          completionRate
+          completionRate,
+          dailyHabitCount: dailyHabits.length,
+          weeklyHabitCount: weeklyHabits.length
         },
+        weeklyHabits: weeklyHabits.map(h => ({
+          id: h._id,
+          name: h.name,
+          category: h.category,
+          weeklyTarget: h.weeklyTarget || 3,
+          stats: h.stats
+        })),
         categoryStats,
         dailyStats: Object.values(dailyStats),
         habits: habits.map(habit => ({
           id: habit._id,
           name: habit.name,
           category: habit.category,
+          frequency: habit.frequency,
+          weeklyTarget: habit.frequency === 'weekly' ? (habit.weeklyTarget || 3) : undefined,
           stats: habit.stats
         }))
       }
