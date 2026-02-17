@@ -300,8 +300,8 @@ const WeekStrip = memo(({ habits, entries, onToggle, fetchHabitEntries }) => {
     <div className="flex items-end gap-1.5 sm:gap-2">
       {data.map((day) => (
         <div key={day.date} className="flex-1 flex flex-col items-center gap-1.5">
-          <span className="text-[10px] font-spartan font-medium" style={{ color: day.isToday ? "var(--color-brand-500)" : "var(--color-text-tertiary)" }}>
-            {day.shortDay?.charAt(0) || ""}
+          <span className="text-[10px] font-spartan font-medium truncate w-full text-center" style={{ color: day.isToday ? "var(--color-brand-500)" : "var(--color-text-tertiary)" }}>
+            {day.dayName || day.shortDay || ""}
           </span>
           <button
             onClick={() => day.total > 0 && handleCellClick(day.date)}
