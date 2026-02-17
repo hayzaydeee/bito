@@ -253,7 +253,7 @@ const AuthPage = () => {
                     className="text-sm font-spartan"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
-                    Enter your email — we'll send you a sign-in link
+                    Enter your email — we'll send you a login link, or sign up if you're new here. No passwords needed.
                   </p>
                 </div>
 
