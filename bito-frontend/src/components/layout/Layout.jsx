@@ -71,6 +71,7 @@ const Layout = () => {
           isMenuCollapsed={isMenuCollapsed}
           setIsMenuCollapsed={setIsMenuCollapsed}
           userName={user?.name || user?.username || 'User'}
+          userAvatar={user?.avatar}
           firstName={user?.firstName}
           isMobile={isMobile}
         />

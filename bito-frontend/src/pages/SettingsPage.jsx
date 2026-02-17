@@ -24,6 +24,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useScale } from "../contexts/ScaleContext";
 import usePushNotifications from "../hooks/usePushNotifications";
 import PersonalityQuiz from "../components/settingsPage/PersonalityQuiz";
+import AvatarPicker from "../components/ui/AvatarPicker";
 
 /* ================================================================
    SettingsPage — sectioned list layout (no widget grid)
@@ -42,7 +43,7 @@ import PersonalityQuiz from "../components/settingsPage/PersonalityQuiz";
    ================================================================ */
 
 const SettingsPage = ({ section }) => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const { theme, changeTheme } = useTheme();
   const { scale: currentScale, changeScale } = useScale();
   const navigate = useNavigate();
@@ -695,17 +696,15 @@ const SettingsPage = ({ section }) => {
         {/* ═══════ 1. PROFILE ═══════ */}
         <Section title="Profile" icon={PersonIcon}>
           <div className="flex items-center gap-4 p-4 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20">
-            <div className="w-14 h-14 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center text-white font-bold text-lg flex-shrink-0 overflow-hidden">
-              {userProfile?.avatar ? (
-                <img
-                  src={userProfile.avatar}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                userProfile?.firstName?.charAt(0)?.toUpperCase() || userProfile?.name?.charAt(0)?.toUpperCase() || "U"
-              )}
-            </div>
+            <AvatarPicker
+              currentAvatar={userProfile?.avatar}
+              userName={userProfile?.firstName || userProfile?.name || userProfile?.email?.split("@")[0] || "User"}
+              onAvatarChange={(url) => {
+                setUserProfile((prev) => ({ ...prev, avatar: url }));
+                if (updateUser) updateUser({ avatar: url });
+              }}
+              size="md"
+            />
             <div className="min-w-0 flex-1">
               <p className="text-base font-medium font-spartan text-[var(--color-text-primary)] truncate">
                 {userProfile?.name || "—"}

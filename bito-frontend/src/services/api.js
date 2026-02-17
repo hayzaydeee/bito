@@ -108,6 +108,30 @@ export const userAPI = {
     return apiRequest(`/api/users/check-username/${encodeURIComponent(username)}`);
   },
 
+  // Upload avatar image (multipart/form-data)
+  uploadAvatar: async (file) => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${API_BASE_URL}/api/users/avatar/upload`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Upload failed');
+    return data;
+  },
+
+  // Set avatar to a URL (e.g. DiceBear)
+  setAvatar: async (avatarUrl) => {
+    return apiRequest('/api/users/avatar', {
+      method: 'PUT',
+      body: JSON.stringify({ avatarUrl }),
+    });
+  },
+
   // Get user statistics
   getStats: async () => {
     return apiRequest('/api/users/stats');

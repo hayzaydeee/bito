@@ -9,6 +9,7 @@ import {
 } from "@radix-ui/react-icons";
 import { useAuth } from "../contexts/AuthContext";
 import { userAPI } from "../services/api";
+import AvatarPicker from "../components/ui/AvatarPicker";
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/;
 const DEBOUNCE_MS = 400;
@@ -20,6 +21,8 @@ const ProfileSetupPage = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
+
+  const [avatar, setAvatar] = useState("");
 
   const [errors, setErrors] = useState({});
   const [usernameStatus, setUsernameStatus] = useState("idle"); // 'idle' | 'checking' | 'available' | 'taken' | 'invalid'
@@ -131,11 +134,16 @@ const ProfileSetupPage = () => {
     setSubmitError("");
 
     try {
-      const response = await userAPI.completeProfile({
+      const profileData = {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         username: username.trim().toLowerCase(),
-      });
+      };
+      // If user picked an avatar during setup, save it alongside profile
+      if (avatar) {
+        profileData.avatar = avatar;
+      }
+      const response = await userAPI.completeProfile(profileData);
 
       // Update auth context with new user data
       updateUser(response.data.user);
@@ -215,6 +223,16 @@ const ProfileSetupPage = () => {
             borderColor: "var(--color-border-primary)",
           }}
         >
+          {/* Avatar picker */}
+          <div className="flex justify-center mb-4">
+            <AvatarPicker
+              currentAvatar={avatar}
+              userName={firstName || user?.email?.split("@")[0] || "User"}
+              onAvatarChange={(url) => setAvatar(url)}
+              size="lg"
+            />
+          </div>
+
           <div className="text-center mb-6">
             <h1
               className="heading-lg font-garamond mb-2"

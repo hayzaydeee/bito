@@ -9,6 +9,7 @@ const { validateUserUpdate, validateProfileSetup } = require('../middleware/vali
 const { derivePersonality } = require('../utils/derivePersonality');
 const { clearUserCache } = require('./insights');
 const { generateKickstartInsights } = require('../services/kickstartService');
+const { upload, uploadToCloudinary } = require('../config/cloudinary');
 
 const router = express.Router();
 
@@ -43,7 +44,7 @@ router.get('/check-username/:username', async (req, res) => {
 // @access  Private
 router.put('/complete-profile', validateProfileSetup, async (req, res) => {
   try {
-    const { firstName, lastName, username } = req.body;
+    const { firstName, lastName, username, avatar } = req.body;
     const normalizedUsername = username.toLowerCase().trim();
 
     // Check username uniqueness
@@ -60,6 +61,7 @@ router.put('/complete-profile', validateProfileSetup, async (req, res) => {
     user.lastName = lastName.trim();
     user.username = normalizedUsername;
     user.profileComplete = true;
+    if (avatar) user.avatar = avatar;
     await user.save();
 
     res.json({
@@ -87,6 +89,71 @@ router.put('/complete-profile', validateProfileSetup, async (req, res) => {
       success: false,
       error: 'Failed to complete profile setup'
     });
+  }
+});
+
+// @route   POST /api/users/avatar/upload
+// @desc    Upload an avatar image to Cloudinary
+// @access  Private
+router.post('/avatar/upload', upload.single('avatar'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'No image file provided' });
+    }
+
+    const result = await uploadToCloudinary(req.file.buffer, {
+      public_id: `user_${req.user._id}`,
+      overwrite: true,
+    });
+
+    // Save the URL to the user model
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { avatar: result.secure_url },
+      { new: true }
+    );
+
+    res.json({
+      success: true,
+      data: { avatar: user.avatar },
+    });
+  } catch (error) {
+    console.error('Avatar upload error:', error);
+    res.status(500).json({ success: false, error: 'Failed to upload avatar' });
+  }
+});
+
+// @route   PUT /api/users/avatar
+// @desc    Set avatar to a URL (e.g. DiceBear generated)
+// @access  Private
+router.put('/avatar', async (req, res) => {
+  try {
+    const { avatarUrl } = req.body;
+
+    if (!avatarUrl || typeof avatarUrl !== 'string') {
+      return res.status(400).json({ success: false, error: 'avatarUrl is required' });
+    }
+
+    // Basic URL validation
+    try {
+      new URL(avatarUrl);
+    } catch {
+      return res.status(400).json({ success: false, error: 'Invalid URL' });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { avatar: avatarUrl },
+      { new: true }
+    );
+
+    res.json({
+      success: true,
+      data: { avatar: user.avatar },
+    });
+  } catch (error) {
+    console.error('Avatar set error:', error);
+    res.status(500).json({ success: false, error: 'Failed to set avatar' });
   }
 });
 

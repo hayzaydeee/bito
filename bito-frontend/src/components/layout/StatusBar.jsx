@@ -17,6 +17,7 @@ const StatusBar = ({
   isMenuCollapsed,
   setIsMenuCollapsed,
   userName = "User",
+  userAvatar,
   isMobile = false,
 }) => {
   const location = useLocation();
@@ -171,7 +172,7 @@ const StatusBar = ({
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
             >
               <Avatar
-                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}&backgroundColor=6366f1`}
+                src={userAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}&backgroundColor=6366f1`}
                 alt={userName}
                 fallback={userName.charAt(0).toUpperCase()}
                 size="1"
