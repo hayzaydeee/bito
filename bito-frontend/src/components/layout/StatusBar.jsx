@@ -77,19 +77,19 @@ const StatusBar = ({
   if (isMobile) {
     return (
       <div
-        className="px-4 py-3 flex items-center justify-between font-spartan relative z-30"
+        className="px-5 py-4 flex items-center justify-between font-spartan relative z-30"
         style={{ backgroundColor: "var(--color-bg-primary)" }}
       >
         {/* Logo */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center"
+            className="w-8 h-8 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: "var(--color-brand-600)" }}
           >
-            <TargetIcon className="w-4 h-4 text-white" />
+            <TargetIcon className="w-5 h-5 text-white" />
           </div>
           <span
-            className="text-base font-bold font-garamond"
+            className="text-lg font-bold font-garamond"
             style={{ color: "var(--color-text-primary)" }}
           >
             bito
