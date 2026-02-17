@@ -9,11 +9,37 @@ const userSchema = new mongoose.Schema({  // Basic user information
     match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Please provide a valid email']
   },
   // User profile
+  firstName: {
+    type: String,
+    trim: true,
+    maxlength: [30, 'First name cannot exceed 30 characters'],
+    default: null
+  },
+  lastName: {
+    type: String,
+    trim: true,
+    maxlength: [30, 'Last name cannot exceed 30 characters'],
+    default: null
+  },
+  username: {
+    type: String,
+    trim: true,
+    lowercase: true,
+    minlength: [3, 'Username must be at least 3 characters'],
+    maxlength: [20, 'Username cannot exceed 20 characters'],
+    match: [/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'],
+    default: null
+  },
+  // Computed from firstName + lastName (auto-set via pre-save hook)
   name: {
     type: String,
-    required: [true, 'Name is required'],
     trim: true,
-    maxlength: [50, 'Name cannot exceed 50 characters']
+    maxlength: [61, 'Name cannot exceed 61 characters']
+  },
+  // Whether the user has completed their profile setup (firstName, lastName, username)
+  profileComplete: {
+    type: Boolean,
+    default: false
   },
   avatar: {
     type: String,
@@ -189,9 +215,18 @@ const userSchema = new mongoose.Schema({  // Basic user information
   }
 });
 
+// Pre-save hook: compute name from firstName + lastName
+userSchema.pre('save', function(next) {
+  if (this.isModified('firstName') || this.isModified('lastName')) {
+    this.name = [this.firstName, this.lastName].filter(Boolean).join(' ') || null;
+  }
+  next();
+});
+
 // Indexes for performance
 userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ googleId: 1 }, { sparse: true });
+userSchema.index({ username: 1 }, { unique: true, sparse: true });
 userSchema.index({ createdAt: -1 });
 
 // Instance method to generate JWT payload
@@ -199,7 +234,10 @@ userSchema.methods.getJWTPayload = function() {
   return {
     userId: this._id,
     email: this.email,
-    name: this.name
+    name: this.name,
+    firstName: this.firstName,
+    lastName: this.lastName,
+    username: this.username
   };
 };
 
@@ -212,9 +250,13 @@ userSchema.statics.findByOAuthId = function(provider, oauthId) {
 
 // Static method to create OAuth user
 userSchema.statics.createOAuthUser = function(provider, profile) {
+  const displayName = profile.displayName || profile.username || '';
+  const nameParts = displayName.split(' ');
   const userData = {
     email: profile.emails[0].value,
-    name: profile.displayName || profile.username,
+    firstName: nameParts[0] || null,
+    lastName: nameParts.slice(1).join(' ') || null,
+    name: displayName, // will be recomputed by pre-save hook
     isVerified: true,
     avatar: profile.photos && profile.photos[0] ? profile.photos[0].value : null
   };

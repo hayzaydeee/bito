@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, Navigate } from "react-router-dom";
 import VerticalMenu from "./VerticalMenu";
 import StatusBar from "./StatusBar";
 import BottomTabBar from "./BottomTabBar";
@@ -14,6 +14,14 @@ const Layout = () => {
   const { user } = useAuth();
   const { createHabit } = useHabits();
   const location = useLocation();
+
+  // Route guard: redirect to profile-setup or onboarding if needed
+  if (user && !user.profileComplete) {
+    return <Navigate to="/profile-setup" replace />;
+  }
+  if (user && !user.onboardingComplete) {
+    return <Navigate to="/onboarding" replace />;
+  }
 
   const handleOpenAddHabit = useCallback(() => {
     setAddHabitModalOpen(true);
@@ -63,6 +71,7 @@ const Layout = () => {
           isMenuCollapsed={isMenuCollapsed}
           setIsMenuCollapsed={setIsMenuCollapsed}
           userName={user?.name || user?.username || 'User'}
+          firstName={user?.firstName}
           isMobile={isMobile}
         />
 

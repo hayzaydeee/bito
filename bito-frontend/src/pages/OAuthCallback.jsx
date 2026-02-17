@@ -23,15 +23,23 @@ const OAuthCallback = () => {
           localStorage.setItem('token', token);
 
           // Fetch user data using the token
+          let userData = null;
           try {
             const response = await authAPI.getMe();
-            localStorage.setItem('user', JSON.stringify(response.data.user));
+            userData = response.data.user;
+            localStorage.setItem('user', JSON.stringify(userData));
           } catch (fetchError) {
             console.error('Failed to fetch user after OAuth:', fetchError);
           }
 
-          // Redirect to app
-          window.location.href = '/app';
+          // Route based on profile/onboarding completeness
+          if (userData && !userData.profileComplete) {
+            window.location.href = '/profile-setup';
+          } else if (userData && !userData.onboardingComplete) {
+            window.location.href = '/onboarding';
+          } else {
+            window.location.href = '/app';
+          }
         } else {
           console.error('Missing token');
           navigate('/login?error=oauth_invalid');

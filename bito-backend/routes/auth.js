@@ -67,12 +67,11 @@ router.post('/magic-link', validateMagicLinkRequest, async (req, res) => {
     let user = await User.findOne({ email: normalizedEmail });
 
     if (!user) {
-      // Auto-create account for new users
+      // Auto-create account for new users (profile fields filled in later)
       user = new User({
         email: normalizedEmail,
-        name: normalizedEmail.split('@')[0], // default name from email prefix
       });
-      await user.save();
+      await user.save({ validateBeforeSave: false });
 
       // Fire-and-forget welcome email
       sendWelcomeEmail(user);
@@ -173,12 +172,16 @@ router.post('/magic-link/verify', validateMagicLinkVerify, async (req, res) => {
           id: user._id,
           email: user.email,
           name: user.name,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          username: user.username,
           avatar: user.avatar,
           preferences: user.preferences,
           aiPersonality: user.aiPersonality,
           personalityCustomized: user.personalityCustomized,
           personalityPromptDismissed: user.personalityPromptDismissed,
           onboardingComplete: user.onboardingComplete,
+          profileComplete: user.profileComplete,
           lastLogin: user.lastLogin,
           createdAt: user.createdAt
         }
@@ -214,12 +217,16 @@ router.get('/me', authenticateJWT, (req, res) => {
         id: req.user._id,
         email: req.user.email,
         name: req.user.name,
+        firstName: req.user.firstName,
+        lastName: req.user.lastName,
+        username: req.user.username,
         avatar: req.user.avatar,
         preferences: req.user.preferences,
         aiPersonality: req.user.aiPersonality,
         personalityCustomized: req.user.personalityCustomized,
         personalityPromptDismissed: req.user.personalityPromptDismissed,
         onboardingComplete: req.user.onboardingComplete,
+        profileComplete: req.user.profileComplete,
         isVerified: req.user.isVerified,
         lastLogin: req.user.lastLogin,
         createdAt: req.user.createdAt

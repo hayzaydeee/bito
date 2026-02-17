@@ -5,7 +5,7 @@ const HabitEntry = require('../models/HabitEntry');
 const Workspace = require('../models/Workspace');
 const Activity = require('../models/Activity');
 const { authenticateJWT } = require('../middleware/auth');
-const { validateUserUpdate } = require('../middleware/validation');
+const { validateUserUpdate, validateProfileSetup } = require('../middleware/validation');
 const { derivePersonality } = require('../utils/derivePersonality');
 const { clearUserCache } = require('./insights');
 const { generateKickstartInsights } = require('../services/kickstartService');
@@ -14,6 +14,81 @@ const router = express.Router();
 
 // All routes require authentication
 router.use(authenticateJWT);
+
+// @route   GET /api/users/check-username/:username
+// @desc    Check if a username is available
+// @access  Private
+router.get('/check-username/:username', async (req, res) => {
+  try {
+    const username = req.params.username.toLowerCase().trim();
+
+    if (!/^[a-zA-Z0-9_]+$/.test(username) || username.length < 3 || username.length > 20) {
+      return res.json({ success: true, data: { available: false, reason: 'Invalid format' } });
+    }
+
+    const existing = await User.findOne({ username, _id: { $ne: req.user._id } });
+
+    res.json({
+      success: true,
+      data: { available: !existing }
+    });
+  } catch (error) {
+    console.error('Username check error:', error);
+    res.status(500).json({ success: false, error: 'Failed to check username' });
+  }
+});
+
+// @route   PUT /api/users/complete-profile
+// @desc    Complete profile setup (firstName, lastName, username)
+// @access  Private
+router.put('/complete-profile', validateProfileSetup, async (req, res) => {
+  try {
+    const { firstName, lastName, username } = req.body;
+    const normalizedUsername = username.toLowerCase().trim();
+
+    // Check username uniqueness
+    const existing = await User.findOne({ username: normalizedUsername, _id: { $ne: req.user._id } });
+    if (existing) {
+      return res.status(409).json({
+        success: false,
+        error: 'Username is already taken'
+      });
+    }
+
+    const user = await User.findById(req.user._id);
+    user.firstName = firstName.trim();
+    user.lastName = lastName.trim();
+    user.username = normalizedUsername;
+    user.profileComplete = true;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Profile setup complete',
+      data: {
+        user: {
+          id: user._id,
+          email: user.email,
+          name: user.name,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          username: user.username,
+          profileComplete: user.profileComplete,
+          avatar: user.avatar,
+          preferences: user.preferences,
+          onboardingComplete: user.onboardingComplete,
+          createdAt: user.createdAt
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Complete profile error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to complete profile setup'
+    });
+  }
+});
 
 // @route   GET /api/users/profile
 // @desc    Get user profile
@@ -26,6 +101,9 @@ router.get('/profile', (req, res) => {
         id: req.user._id,
         email: req.user.email,
         name: req.user.name,
+        firstName: req.user.firstName,
+        lastName: req.user.lastName,
+        username: req.user.username,
         avatar: req.user.avatar,
         preferences: req.user.preferences,
         aiPersonality: req.user.aiPersonality,
@@ -34,6 +112,7 @@ router.get('/profile', (req, res) => {
         onboardingData: req.user.onboardingData,
         isVerified: req.user.isVerified,
         hasGoogleAuth: !!req.user.googleId,
+        profileComplete: req.user.profileComplete,
         lastLogin: req.user.lastLogin,
         createdAt: req.user.createdAt,
         updatedAt: req.user.updatedAt
@@ -48,7 +127,7 @@ router.get('/profile', (req, res) => {
 router.put('/profile', validateUserUpdate, async (req, res) => {
   try {
     const allowedUpdates = [
-      'name', 'avatar', 'preferences', 'onboardingComplete',
+      'firstName', 'lastName', 'username', 'avatar', 'preferences', 'onboardingComplete',
       'aiPersonality', 'onboardingData', 'personalityPromptDismissed', 'personalityCustomized'
     ];
     const updates = {};
@@ -122,6 +201,9 @@ router.put('/profile', validateUserUpdate, async (req, res) => {
           id: user._id,
           email: user.email,
           name: user.name,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          username: user.username,
           avatar: user.avatar,
           preferences: user.preferences,
           aiPersonality: user.aiPersonality,
@@ -129,6 +211,7 @@ router.put('/profile', validateUserUpdate, async (req, res) => {
           personalityPromptDismissed: user.personalityPromptDismissed,
           onboardingData: user.onboardingData,
           onboardingComplete: user.onboardingComplete,
+          profileComplete: user.profileComplete,
           updatedAt: user.updatedAt
         }
       }
@@ -183,6 +266,9 @@ router.put('/change-email', async (req, res) => {
           id: user._id,
           email: user.email,
           name: user.name,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          username: user.username,
           isVerified: user.isVerified
         }
       }

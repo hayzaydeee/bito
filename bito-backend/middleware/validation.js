@@ -31,11 +31,23 @@ const validateMagicLinkVerify = [
 ];
 
 const validateUserUpdate = [
-  body('name')
+  body('firstName')
     .optional()
     .trim()
-    .isLength({ min: 2, max: 50 })
-    .withMessage('Name must be between 2 and 50 characters'),
+    .isLength({ min: 1, max: 30 })
+    .withMessage('First name must be between 1 and 30 characters'),
+  body('lastName')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 30 })
+    .withMessage('Last name must be between 1 and 30 characters'),
+  body('username')
+    .optional()
+    .trim()
+    .isLength({ min: 3, max: 20 })
+    .withMessage('Username must be between 3 and 20 characters')
+    .matches(/^[a-zA-Z0-9_]+$/)
+    .withMessage('Username can only contain letters, numbers, and underscores'),
   body('email')
     .optional()
     .isEmail()
@@ -200,11 +212,36 @@ const validatePagination = [
   handleValidationErrors
 ];
 
+const validateProfileSetup = [
+  body('firstName')
+    .trim()
+    .notEmpty()
+    .withMessage('First name is required')
+    .isLength({ min: 1, max: 30 })
+    .withMessage('First name must be between 1 and 30 characters'),
+  body('lastName')
+    .trim()
+    .notEmpty()
+    .withMessage('Last name is required')
+    .isLength({ min: 1, max: 30 })
+    .withMessage('Last name must be between 1 and 30 characters'),
+  body('username')
+    .trim()
+    .notEmpty()
+    .withMessage('Username is required')
+    .isLength({ min: 3, max: 20 })
+    .withMessage('Username must be between 3 and 20 characters')
+    .matches(/^[a-zA-Z0-9_]+$/)
+    .withMessage('Username can only contain letters, numbers, and underscores'),
+  handleValidationErrors
+];
+
 module.exports = {
   handleValidationErrors,
   validateMagicLinkRequest,
   validateMagicLinkVerify,
   validateUserUpdate,
+  validateProfileSetup,
   validateHabitCreation,
   validateHabitUpdate,
   validateHabitEntry,

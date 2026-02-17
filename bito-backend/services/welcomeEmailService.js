@@ -75,7 +75,7 @@ function getStaticWelcome(name) {
  */
 async function sendWelcomeEmail(user) {
   try {
-    const firstName = (user.name || 'there').split(' ')[0];
+    const firstName = user.firstName || (user.name || 'there').split(' ')[0];
     const message = await generateWelcomeMessage(firstName);
 
     const tips = [

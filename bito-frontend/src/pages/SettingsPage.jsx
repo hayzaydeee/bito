@@ -703,13 +703,18 @@ const SettingsPage = ({ section }) => {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                userProfile?.name?.charAt(0)?.toUpperCase() || "U"
+                userProfile?.firstName?.charAt(0)?.toUpperCase() || userProfile?.name?.charAt(0)?.toUpperCase() || "U"
               )}
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-base font-medium font-spartan text-[var(--color-text-primary)] truncate">
                 {userProfile?.name || "—"}
               </p>
+              {userProfile?.username && (
+                <p className="text-sm text-[var(--color-text-tertiary)] font-spartan truncate">
+                  @{userProfile.username}
+                </p>
+              )}
               <p className="text-sm text-[var(--color-text-secondary)] font-spartan truncate">
                 {userProfile?.email || "—"}
               </p>

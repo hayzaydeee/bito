@@ -16,6 +16,7 @@ import WorkspaceSettings from "./pages/WorkspaceSettings";
 import MemberDashboardView from "./pages/MemberDashboardView";
 import GroupSelection from "./pages/GroupSelection";
 import OnboardingPage from "./pages/OnboardingPage";
+import ProfileSetupPage from "./pages/ProfileSetupPage";
 import InvitationPage from "./pages/InvitationPage";
 import { HabitProvider } from "./contexts/HabitContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
@@ -63,6 +64,9 @@ const ThemedApp = () => {
             
             {/* Invitation route without layout */}
             <Route path="/invite/:token" element={<InvitationPage />} />
+            
+            {/* Profile setup (no layout) */}
+            <Route path="/profile-setup" element={<ProfileSetupPage />} />
             
             {/* Onboarding (no layout) */}
             <Route path="/onboarding" element={<OnboardingPage />} />

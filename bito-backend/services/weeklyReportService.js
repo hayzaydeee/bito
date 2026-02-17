@@ -229,7 +229,7 @@ class WeeklyReportService {
     if (!client) return this._getStaticInsights(stats, habitBreakdown);
 
     try {
-      const firstName = (user.name || 'there').split(' ')[0];
+      const firstName = user.firstName || (user.name || 'there').split(' ')[0];
       const model = process.env.INSIGHTS_LLM_MODEL || 'gpt-4o-mini';
 
       const personality = user.aiPersonality || DEFAULT_PERSONALITY;
@@ -285,7 +285,7 @@ class WeeklyReportService {
 
   async _sendReport(user, data) {
     const { startDate, endDate, periodStats, habitBreakdown, aiInsights } = data;
-    const firstName = (user.name || 'there').split(' ')[0];
+    const firstName = user.firstName || (user.name || 'there').split(' ')[0];
 
     const overallRate = periodStats.totalEntries > 0
       ? Math.round((periodStats.completedEntries / periodStats.totalEntries) * 100)

@@ -72,7 +72,7 @@ async function generateKickstartInsights({ user, habits }) {
       const model = process.env.INSIGHTS_LLM_MODEL || 'gpt-4o-mini';
 
       const userMessage = JSON.stringify({
-        userName: user.name || 'there',
+        userName: user.firstName || user.name || 'there',
         goals: onboarding.goals || [],
         capacity: onboarding.capacity || 'balanced',
         preferredTimes: onboarding.preferredTimes || [],

@@ -1,11 +1,12 @@
 import React, { useMemo, memo } from "react";
 
 /* ─── Compact one-line greeting ─── */
-const GreetingBar = memo(({ userName = "User" }) => {
-  const firstName = useMemo(() => {
+const GreetingBar = memo(({ userName = "User", firstName }) => {
+  const displayFirstName = useMemo(() => {
+    if (firstName) return firstName;
     if (!userName || userName === "User") return "User";
     return userName.split(" ")[0];
-  }, [userName]);
+  }, [userName, firstName]);
 
   const { greeting, dateStr } = useMemo(() => {
     const h = new Date().getHours();
@@ -24,7 +25,7 @@ const GreetingBar = memo(({ userName = "User" }) => {
         className="text-xl sm:text-2xl font-garamond font-bold"
         style={{ color: "var(--color-text-primary)" }}
       >
-        {greeting}, {firstName}
+        {greeting}, {displayFirstName}
       </h1>
       <span
         className="text-sm font-spartan"

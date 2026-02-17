@@ -198,7 +198,7 @@ const Dashboard = () => {
   return (
     <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-6">
       {/* 1. Compact greeting */}
-      <GreetingBar userName={user?.name || user?.username || "User"} />
+      <GreetingBar userName={user?.name || user?.username || "User"} firstName={user?.firstName} />
 
       {/* 2. Stat pills (only when habits exist) */}
       {habits.length > 0 && (

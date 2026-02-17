@@ -153,7 +153,7 @@ const OnboardingPage = () => {
     }
   }, [user, navigate]);
 
-  const firstName = user?.name?.split(" ")[0] || "there";
+  const firstName = user?.firstName || user?.name?.split(" ")[0] || "there";
 
   const toggleGoal = (goalId) => {
     setSelectedGoals((prev) =>

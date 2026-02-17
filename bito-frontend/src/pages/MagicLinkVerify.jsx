@@ -34,7 +34,9 @@ const MagicLinkVerify = () => {
       const result = await verifyMagicLink(token);
 
       if (result.success) {
-        if (result.isNewUser) {
+        if (result.isNewUser || !result.user?.profileComplete) {
+          navigate("/profile-setup");
+        } else if (!result.user?.onboardingComplete) {
           navigate("/onboarding");
         } else {
           navigate("/app");

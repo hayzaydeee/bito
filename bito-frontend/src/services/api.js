@@ -95,6 +95,19 @@ export const userAPI = {
     });
   },
 
+  // Complete profile setup (firstName, lastName, username)
+  completeProfile: async (profileData) => {
+    return apiRequest('/api/users/complete-profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData),
+    });
+  },
+
+  // Check username availability
+  checkUsername: async (username) => {
+    return apiRequest(`/api/users/check-username/${encodeURIComponent(username)}`);
+  },
+
   // Get user statistics
   getStats: async () => {
     return apiRequest('/api/users/stats');
