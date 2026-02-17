@@ -132,21 +132,31 @@ const AvatarPicker = ({
 
   return (
     <div className="relative" ref={containerRef}>
-      {/* ── Trigger button ── */}
-      <button
-        type="button"
-        onClick={handleOpen}
-        className={`${dims} rounded-full overflow-hidden border-2 border-dashed border-[var(--color-border-primary)] hover:border-[var(--color-brand-500)] transition-colors relative group cursor-pointer`}
-      >
-        <img
-          src={displayAvatar}
-          alt="Avatar"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <ImageIcon className="w-5 h-5 text-white" />
-        </div>
-      </button>
+      {/* ── Trigger: avatar + text link ── */}
+      <div className="flex flex-col items-center gap-1.5">
+        <button
+          type="button"
+          onClick={handleOpen}
+          className={`${dims} rounded-full overflow-hidden border-2 border-dashed border-[var(--color-border-primary)] hover:border-[var(--color-brand-500)] transition-colors relative group cursor-pointer`}
+        >
+          <img
+            src={displayAvatar}
+            alt="Avatar"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <ImageIcon className="w-5 h-5 text-white" />
+          </div>
+        </button>
+        <button
+          type="button"
+          onClick={handleOpen}
+          className="text-xs font-spartan font-medium hover:underline transition-colors cursor-pointer"
+          style={{ color: "var(--color-brand-500)" }}
+        >
+          {currentAvatar ? "Change avatar" : "Choose avatar"}
+        </button>
+      </div>
 
       {/* ── Picker overlay ── */}
       {isOpen && (
