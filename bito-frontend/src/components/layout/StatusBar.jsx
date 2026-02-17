@@ -77,7 +77,7 @@ const StatusBar = ({
   if (isMobile) {
     return (
       <div
-        className="px-5 py-4 flex items-center justify-between font-spartan relative z-30"
+        className="px-5 py-4 flex items-center justify-between font-spartan relative z-30 border-b-gray-300"
         style={{ backgroundColor: "var(--color-bg-primary)" }}
       >
         {/* Logo */}
