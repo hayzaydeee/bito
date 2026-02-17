@@ -58,7 +58,7 @@ const SettingsPage = ({ section }) => {
     timezone: "UTC",
     weekStartsOn: 1,
     theme: "auto",
-    scale: "small",
+    scale: "medium",
   });
 
   /* ── habit-privacy sub-route state ────── */
@@ -95,7 +95,7 @@ const SettingsPage = ({ section }) => {
           timezone: u.preferences?.timezone ?? "UTC",
           weekStartsOn: u.preferences?.weekStartsOn ?? 1,
           theme: u.preferences?.theme ?? "auto",
-          scale: u.preferences?.scale ?? "small",
+          scale: u.preferences?.scale ?? "medium",
         }));
       } catch {
         console.error("Failed to load profile");

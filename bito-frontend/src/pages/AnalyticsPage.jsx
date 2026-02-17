@@ -23,7 +23,7 @@ const AnalyticsPage = () => {
       const saved = localStorage.getItem(LS_KEY);
       if (saved && ['7d', '30d', '90d', 'all'].includes(saved)) return saved;
     } catch { /* ignore */ }
-    return '30d';
+    return 'all';
   });
 
   const handleTimeRangeChange = useCallback((v) => {
