@@ -13,7 +13,7 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }) => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [theme, setTheme] = useState('dark'); // Default to dark
   const [systemTheme, setSystemTheme] = useState('dark');
   const [isLoading, setIsLoading] = useState(true);
@@ -84,6 +84,10 @@ export const ThemeProvider = ({ children }) => {
             theme: newTheme
           }
         });
+        // Keep AuthContext user in sync so the [user] effect doesn't revert
+        if (updateUser) {
+          updateUser({ preferences: { ...user.preferences, theme: newTheme } });
+        }
       } catch (error) {
         console.error('Failed to save theme preference:', error);
         // Revert on error

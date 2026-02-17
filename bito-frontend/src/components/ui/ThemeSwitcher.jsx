@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SunIcon, MoonIcon, DesktopIcon } from '@radix-ui/react-icons';
+import { SunIcon, MoonIcon, DesktopIcon, Half2Icon } from '@radix-ui/react-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 
 const ThemeSwitcher = ({ compact = false }) => {
@@ -14,8 +14,10 @@ const ThemeSwitcher = ({ compact = false }) => {
         return <MoonIcon className="w-4 h-4" />;
       case 'auto':
         return <DesktopIcon className="w-4 h-4" />;
+      case 'bw':
+        return <Half2Icon className="w-4 h-4" />;
       default:
-        return <DesktopIcon className="w-4 h-4" />;
+        return <MoonIcon className="w-4 h-4" />;
     }
   };
 
@@ -49,24 +51,27 @@ const ThemeSwitcher = ({ compact = false }) => {
             
             {/* Menu */}
             <div className="absolute  top-full right-0 mt-2 w-36 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)] rounded-lg shadow-lg z-50 py-1">
-              {themeOptions.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => handleThemeChange(option.value)}
-                  className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
-                    theme === option.value
-                      ? 'bg-[var(--color-brand-500)]/10 text-[var(--color-brand-500)]'
-                      : 'text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]'
-                  }`}
-                >
-                  <span className="text-base font-normal">
-                    {option.value === 'light' ? '☀️' : option.value === 'dark' ? '🌙' : '🖥️'}
-                  </span>
-                  <span className="text-xs font-medium font-outfit">
-                    {option.value === 'light' ? 'Light' : option.value === 'dark' ? 'Dark' : 'Auto'}
-                  </span>
-                </button>
-              ))}
+              {themeOptions.map((option) => {
+                const icons = { light: '☀️', dark: '🌙', auto: '🖥️', bw: '◐' };
+                return (
+                  <button
+                    key={option.value}
+                    onClick={() => handleThemeChange(option.value)}
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                      theme === option.value
+                        ? 'bg-[var(--color-brand-500)]/10 text-[var(--color-brand-500)]'
+                        : 'text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]'
+                    }`}
+                  >
+                    <span className="text-base font-normal">
+                      {icons[option.value] || '🖥️'}
+                    </span>
+                    <span className="text-xs font-medium font-outfit">
+                      {option.label.replace(/^[^\s]+\s/, '')}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </>
         )}
