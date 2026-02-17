@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import {
   ImageIcon,
   UploadIcon,
@@ -158,22 +159,18 @@ const AvatarPicker = ({
         </button>
       </div>
 
-      {/* ── Picker overlay ── */}
-      {isOpen && (
+      {/* ── Picker overlay (portalled to body so fixed positioning works inside transformed parents) ── */}
+      {isOpen && createPortal(
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 z-40 bg-black/30 sm:bg-transparent"
+            className="fixed inset-0 z-[9998] bg-black/30"
             onClick={handleClose}
           />
 
-          {/* Panel — bottom sheet on mobile, dropdown on desktop */}
+          {/* Panel — centred bottom sheet on mobile, dropdown on desktop */}
           <div
-            className={`
-              fixed inset-x-0 bottom-0 z-50 rounded-t-2xl
-              sm:absolute sm:inset-auto sm:top-full sm:left-0 sm:mt-2 sm:rounded-xl sm:w-80
-              border shadow-xl
-            `}
+            className="fixed inset-x-0 bottom-0 z-[9999] rounded-t-2xl sm:fixed sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:w-80 border shadow-xl"
             style={{
               backgroundColor: "var(--color-surface-elevated)",
               borderColor: "var(--color-border-primary)",
@@ -372,7 +369,8 @@ const AvatarPicker = ({
               )}
             </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
     </div>
   );
