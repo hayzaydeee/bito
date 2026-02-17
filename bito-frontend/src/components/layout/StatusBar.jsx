@@ -7,6 +7,7 @@ import {
   GearIcon,
   BellIcon,
   ExitIcon,
+  TargetIcon,
 } from "@radix-ui/react-icons";
 import { useAuth } from "../../contexts/AuthContext";
 import NotificationsDropdown from "./NotificationsDropdown";
@@ -72,6 +73,50 @@ const StatusBar = ({
     }
   };
 
+  // ── Mobile: minimal header with logo + avatar ──
+  if (isMobile) {
+    return (
+      <div
+        className="px-4 py-3 flex items-center justify-between font-spartan relative z-30"
+        style={{ backgroundColor: "var(--color-bg-primary)" }}
+      >
+        {/* Logo */}
+        <div className="flex items-center gap-2">
+          <div
+            className="w-7 h-7 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: "var(--color-brand-600)" }}
+          >
+            <TargetIcon className="w-4 h-4 text-white" />
+          </div>
+          <span
+            className="text-base font-bold font-garamond"
+            style={{ color: "var(--color-text-primary)" }}
+          >
+            bito
+          </span>
+        </div>
+
+        {/* Avatar → Settings */}
+        <button
+          onClick={() => navigate("/app/settings")}
+          className="rounded-full transition-opacity hover:opacity-80"
+        >
+          <Avatar
+            src={
+              userAvatar ||
+              `https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}&backgroundColor=6366f1`
+            }
+            alt={userName}
+            fallback={userName.charAt(0).toUpperCase()}
+            size="1"
+            className="ring-1 ring-[var(--color-border-primary)]"
+          />
+        </button>
+      </div>
+    );
+  }
+
+  // ── Desktop: full status bar ──
   return (
     <div
       className="border-b px-4 py-2 flex items-center justify-between font-spartan relative z-30"
