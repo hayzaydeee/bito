@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { userAPI } from '../services/api';
 
@@ -20,17 +20,24 @@ const RADIX_SCALING = {
 };
 
 export const ScaleProvider = ({ children }) => {
-  const { user } = useAuth();
+  const { user, updateUser, isLoading: authLoading } = useAuth();
   const [scale, setScale] = useState('small');
+  const initializedForRef = useRef(undefined);
 
-  // Load scale from user preferences
+  // Load scale from user preferences — only once per user session
   useEffect(() => {
+    if (authLoading) return;
+
+    const userId = user?._id || null;
+    if (initializedForRef.current === userId) return;
+    initializedForRef.current = userId;
+
     if (user?.preferences?.scale) {
       setScale(user.preferences.scale);
     } else {
       setScale('small');
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   // Apply scale to document
   useEffect(() => {
@@ -54,6 +61,10 @@ export const ScaleProvider = ({ children }) => {
             scale: newScale,
           },
         });
+        // Keep AuthContext user in sync
+        if (updateUser) {
+          updateUser({ preferences: { ...user.preferences, scale: newScale } });
+        }
       } catch (error) {
         console.error('Failed to save scale preference:', error);
         // Revert on error

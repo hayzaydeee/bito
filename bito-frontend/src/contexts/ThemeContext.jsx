@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { userAPI } from '../services/api';
 
@@ -13,10 +13,11 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }) => {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, isLoading: authLoading } = useAuth();
   const [theme, setTheme] = useState('dark'); // Default to dark
   const [systemTheme, setSystemTheme] = useState('dark');
   const [isLoading, setIsLoading] = useState(true);
+  const initializedForRef = useRef(undefined); // tracks which user id we've initialized from
 
   // Detect system theme preference
   useEffect(() => {
@@ -32,16 +33,24 @@ export const ThemeProvider = ({ children }) => {
     return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
   }, []);
 
-  // Load theme from user preferences
+  // Load theme from user preferences — only once per user session.
+  // Subsequent changes go through changeTheme() which sets state directly.
   useEffect(() => {
+    // Wait for auth to finish before making theme decisions
+    if (authLoading) return;
+
+    const userId = user?._id || null;
+    // Skip if we already initialized for this exact user
+    if (initializedForRef.current === userId) return;
+    initializedForRef.current = userId;
+
     if (user?.preferences?.theme) {
       setTheme(user.preferences.theme);
     } else {
-      // Default to system preference if no user preference
       setTheme('auto');
     }
     setIsLoading(false);
-  }, [user]);
+  }, [user, authLoading]);
 
   // Apply theme to document
   useEffect(() => {
