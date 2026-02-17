@@ -347,12 +347,11 @@ app.get('/api', (req, res) => {
     documentation: 'Available endpoints:',
     endpoints: {
       auth: [
-        'POST /api/auth/register',
-        'POST /api/auth/login',
+        'POST /api/auth/magic-link',
+        'POST /api/auth/magic-link/verify',
         'POST /api/auth/logout',
         'GET /api/auth/me',
-        'GET /api/auth/google',
-        'GET /api/auth/github'
+        'GET /api/auth/google'
       ],
       users: [
         'GET /api/users/profile',

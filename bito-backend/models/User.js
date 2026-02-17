@@ -23,10 +23,6 @@ const userSchema = new mongoose.Schema({  // Basic user information
     type: String,
     default: null
   },
-  githubId: {
-    type: String,
-    default: null
-  },
   
   // Account settings
   isVerified: {
@@ -196,7 +192,6 @@ const userSchema = new mongoose.Schema({  // Basic user information
 // Indexes for performance
 userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ googleId: 1 }, { sparse: true });
-userSchema.index({ githubId: 1 }, { sparse: true });
 userSchema.index({ createdAt: -1 });
 
 // Instance method to generate JWT payload

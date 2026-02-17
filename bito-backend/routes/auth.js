@@ -253,11 +253,12 @@ router.put('/refresh', authenticateJWT, (req, res) => {
 // @route   GET /api/auth/google
 // @desc    Google OAuth login
 // @access  Public
-router.get('/google',
-  passport.authenticate('google', {
-    scope: ['profile', 'email']
-  })
-);
+router.get('/google', (req, res, next) => {
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    return res.status(501).json({ success: false, error: 'Google OAuth is not configured' });
+  }
+  passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
+});
 
 // @route   GET /api/auth/google/callback
 // @desc    Google OAuth callback
@@ -277,32 +278,7 @@ router.get('/google/callback',
   }
 );
 
-// @route   GET /api/auth/github
-// @desc    GitHub OAuth login
-// @access  Public
-router.get('/github',
-  passport.authenticate('github', {
-    scope: ['user:email']
-  })
-);
 
-// @route   GET /api/auth/github/callback
-// @desc    GitHub OAuth callback
-// @access  Public
-router.get('/github/callback',
-  passport.authenticate('github', { failureRedirect: `${process.env.FRONTEND_URL}/login?error=oauth_failed` }),
-  (req, res) => {
-    try {
-      const token = generateToken(req.user);
-      
-      // Redirect to frontend with token
-      res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
-    } catch (error) {
-      console.error('GitHub OAuth callback error:', error);
-      res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_callback_failed`);
-    }
-  }
-);
 
 // @route   DELETE /api/auth/oauth/:provider
 // @desc    Unlink OAuth provider
@@ -312,19 +288,11 @@ router.delete('/oauth/:provider', authenticateJWT, async (req, res) => {
     const { provider } = req.params;
     const user = req.user;
 
-    if (!['google', 'github'].includes(provider)) {
+    if (provider !== 'google') {
       return res.status(400).json({
         success: false,
         error: 'Invalid OAuth provider'
       });
-    }
-
-    // Check if user has another OAuth method — can always use magic link as fallback
-    const hasOtherOAuth = (provider === 'google' && user.githubId) || 
-                         (provider === 'github' && user.googleId);
-
-    if (!hasOtherOAuth) {
-      // Still allow unlinking — user can always sign in via magic link
     }
 
     // Remove OAuth ID

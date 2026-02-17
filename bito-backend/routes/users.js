@@ -34,8 +34,6 @@ router.get('/profile', (req, res) => {
         onboardingData: req.user.onboardingData,
         isVerified: req.user.isVerified,
         hasGoogleAuth: !!req.user.googleId,
-        hasGithubAuth: !!req.user.githubId,
-        hasPassword: !!req.user.password,
         lastLogin: req.user.lastLogin,
         createdAt: req.user.createdAt,
         updatedAt: req.user.updatedAt

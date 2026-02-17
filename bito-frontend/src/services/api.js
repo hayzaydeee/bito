@@ -701,7 +701,6 @@ export const testAPI = {
 // OAuth URLs
 export const oauthAPI = {
   getGoogleLoginUrl: () => `${API_BASE_URL}/api/auth/google`,
-  getGithubLoginUrl: () => `${API_BASE_URL}/api/auth/github`,
 };
 
 // Error handler

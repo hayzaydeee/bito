@@ -713,15 +713,9 @@ const SettingsPage = ({ section }) => {
               <p className="text-sm text-[var(--color-text-secondary)] font-spartan truncate">
                 {userProfile?.email || "—"}
               </p>
-              {(userProfile?.hasGoogleAuth || userProfile?.hasGithubAuth) && (
+              {userProfile?.hasGoogleAuth && (
                 <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mt-0.5">
-                  Connected:{" "}
-                  {[
-                    userProfile.hasGoogleAuth && "Google",
-                    userProfile.hasGithubAuth && "GitHub",
-                  ]
-                    .filter(Boolean)
-                    .join(", ")}
+                  Connected: Google
                 </p>
               )}
             </div>
