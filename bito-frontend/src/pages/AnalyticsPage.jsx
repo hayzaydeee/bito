@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useHabits } from '../contexts/HabitContext';
+import { useAuth } from '../contexts/AuthContext';
 import TimeRangePills from '../components/analytics/TimeRangePills';
 import MetricCards from '../components/analytics/MetricCards';
 import CompletionAreaChart from '../components/analytics/CompletionAreaChart';
@@ -8,11 +9,13 @@ import ActivityHeatmap from '../components/analytics/ActivityHeatmap';
 import TopHabitsList from '../components/analytics/TopHabitsList';
 import AnalyticsInsights from '../components/analytics/AnalyticsInsights';
 import HabitStreakChart from '../components/analytics/HabitStreakChart';
+import AnalyticsTour from '../components/analytics/AnalyticsTour';
 
 const LS_KEY = 'bito_analytics_timeRange';
 
 const AnalyticsPage = () => {
   const { habits, entries, isLoading, fetchHabitEntries } = useHabits();
+  const { user } = useAuth();
 
   /* ── time range ────────────────────────────── */
   const [timeRange, setTimeRange] = useState(() => {
@@ -61,7 +64,7 @@ const AnalyticsPage = () => {
   return (
     <div className="page-container p-4 sm:p-6 max-w-5xl mx-auto space-y-6">
       {/* ── Header row ─────────────────────────── */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex items-center justify-between flex-wrap gap-3" data-tour="analytics-header">
         <h1 className="text-2xl font-garamond font-bold text-[var(--color-text-primary)]">
           Analytics
         </h1>
@@ -69,10 +72,12 @@ const AnalyticsPage = () => {
       </div>
 
       {/* ── Metric cards ───────────────────────── */}
-      <MetricCards habits={habits} entries={entries} timeRange={timeRange} />
+      <div data-tour="analytics-metrics">
+        <MetricCards habits={habits} entries={entries} timeRange={timeRange} />
+      </div>
 
       {/* ── Charts: 2-col on desktop ───────────── */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2" data-tour="analytics-charts">
         <CompletionAreaChart habits={habits} entries={entries} timeRange={timeRange} />
         <StreakBarChart habits={habits} entries={entries} />
       </div>
@@ -85,16 +90,23 @@ const AnalyticsPage = () => {
 
       {/* ── Streak timeline: full-width row ──── */}
       {habits.length > 0 && (
+        <div data-tour="analytics-streak-timeline">
         <HabitStreakChart
           habits={habits}
           entries={entries}
           timeRange={timeRange}
           maxHabitsDisplayed={5}
         />
+        </div>
       )}
 
       {/* ── AI Insights ────────────────────────── */}
-      <AnalyticsInsights habits={habits} entries={entries} timeRange={timeRange} />
+      <div data-tour="analytics-ai-insights">
+        <AnalyticsInsights habits={habits} entries={entries} timeRange={timeRange} />
+      </div>
+
+      {/* ── Analytics tour ─────────────────────── */}
+      <AnalyticsTour userId={user?._id || user?.id} />
     </div>
   );
 };
