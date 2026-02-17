@@ -7,6 +7,7 @@ import {
   MoonIcon,
   SunIcon,
   DesktopIcon,
+  Half2Icon,
   LockClosedIcon,
   DownloadIcon,
   TrashIcon,
@@ -658,6 +659,15 @@ const SettingsPage = ({ section }) => {
       accent: "#4f46e5",
       surface: "#ccc",
     },
+    {
+      value: "bw",
+      label: "B/W",
+      icon: Half2Icon,
+      bg: "#000000",
+      fg: "#f0f0f0",
+      accent: "#888",
+      surface: "#222",
+    },
   ];
 
   const timezones = [
@@ -728,7 +738,7 @@ const SettingsPage = ({ section }) => {
 
         {/* ═══════ 2. APPEARANCE ═══════ */}
         <Section title="Appearance" icon={MoonIcon}>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-4 gap-3">
             {themeCards.map((t) => {
               const active = settings.theme === t.value;
               const Icon = t.icon;

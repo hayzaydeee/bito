@@ -29,7 +29,7 @@ import { ScaleProvider, useScale } from "./contexts/ScaleContext";
 
 // ThemedApp component to use theme context
 const ThemedApp = () => {
-  const { effectiveTheme, isLoading } = useTheme();
+  const { effectiveTheme, radixAppearance, isLoading } = useTheme();
   const { radixScaling } = useScale();
 
   if (isLoading) {
@@ -42,8 +42,8 @@ const ThemedApp = () => {
 
   return (
     <Theme
-      appearance={effectiveTheme}
-      accentColor="indigo"
+      appearance={radixAppearance}
+      accentColor={effectiveTheme === 'bw' ? 'gray' : 'indigo'}
       grayColor="slate"
       radius="large"
       scaling={radixScaling}

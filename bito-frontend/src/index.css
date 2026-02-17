@@ -105,6 +105,61 @@
   --glass-inset: rgba(99, 102, 241, 0.04);
 }
 
+/* B/W High-Contrast Theme — desaturated dark with muted indigo accent */
+[data-theme="bw"] {
+  /* Background Colors — pure blacks/near-blacks */
+  --color-bg-primary: #000000;
+  --color-bg-secondary: #0A0A0A;
+  --color-bg-tertiary: #111111;
+  --color-bg-accent: #1A1A1A;
+
+  /* Surface Colors — neutral grays */
+  --color-surface-primary: #141414;
+  --color-surface-secondary: #1A1A1A;
+  --color-surface-elevated: #222222;
+  --color-surface-hover: #2A2A2A;
+
+  /* Text Colors — high contrast */
+  --color-text-primary: #F0F0F0;
+  --color-text-secondary: #A0A0A0;
+  --color-text-tertiary: #666666;
+  --color-text-accent: #8B8BCC;
+
+  /* Border Colors — neutral */
+  --color-border-primary: rgba(255, 255, 255, 0.1);
+  --color-border-secondary: rgba(255, 255, 255, 0.18);
+  --color-border-accent: #8B8BCC;
+
+  /* Glass Effect Colors — neutral */
+  --glass-bg: rgba(20, 20, 20, 0.7);
+  --glass-bg-minimal: rgba(20, 20, 20, 0.5);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-border-hover: rgba(255, 255, 255, 0.18);
+  --glass-inset: rgba(255, 255, 255, 0.04);
+
+  /* Brand Colors — muted indigo (desaturated) */
+  --color-brand-50: #e8e8f0;
+  --color-brand-100: #d0d0e0;
+  --color-brand-200: #b0b0cc;
+  --color-brand-300: #9090b8;
+  --color-brand-400: #7878aa;
+  --color-brand-500: #6868a0;
+  --color-brand-600: #585890;
+  --color-brand-700: #4a4a7a;
+  --color-brand-800: #3c3c66;
+  --color-brand-900: #2c2c4a;
+  --color-brand-950: #1c1c30;
+
+  /* Secondary — desaturated blues */
+  --color-secondary-300: #90b0c8;
+  --color-secondary-400: #7098b8;
+  --color-secondary-500: #5080a0;
+  --color-secondary-600: #406888;
+
+  /* Interactive glow — subtle neutral */
+  --color-glow: rgba(140, 140, 200, 0.15);
+}
+
 /* Global Styles */
 * {
   box-sizing: border-box;
