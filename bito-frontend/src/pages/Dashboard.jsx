@@ -229,7 +229,9 @@ const Dashboard = () => {
       )}
 
       {/* 3. Insights nudge */}
-      <InsightsNudge habits={habits} entries={entries} />
+      {user?.preferences?.aiDashboard !== false && (
+        <InsightsNudge habits={habits} entries={entries} />
+      )}
 
       {/* 4. Today's habit checklist */}
       <div data-tour="today-habits">

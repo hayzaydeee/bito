@@ -161,6 +161,14 @@ const userSchema = new mongoose.Schema({  // Basic user information
       type: String,
       enum: ['small', 'medium', 'large'],
       default: 'small'
+    },
+    aiDashboard: {
+      type: Boolean,
+      default: true
+    },
+    aiAnalytics: {
+      type: Boolean,
+      default: true
     }
   },
 

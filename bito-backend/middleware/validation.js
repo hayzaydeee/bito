@@ -61,6 +61,14 @@ const validateUserUpdate = [
     .optional()
     .isIn(['small', 'medium', 'large'])
     .withMessage('Scale must be small, medium, or large'),
+  body('preferences.aiDashboard')
+    .optional()
+    .isBoolean()
+    .withMessage('AI Dashboard must be a boolean'),
+  body('preferences.aiAnalytics')
+    .optional()
+    .isBoolean()
+    .withMessage('AI Analytics must be a boolean'),
   body('preferences.weekStartsOn')
     .optional()
     .isInt({ min: 0, max: 6 })

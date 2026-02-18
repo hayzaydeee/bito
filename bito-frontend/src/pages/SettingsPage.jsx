@@ -18,6 +18,7 @@ import {
   ChevronRightIcon,
   ArrowLeftIcon,
   CheckIcon,
+  MagicWandIcon,
 } from "@radix-ui/react-icons";
 import { userAPI } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
@@ -61,6 +62,8 @@ const SettingsPage = ({ section }) => {
     weekStartsOn: 1,
     theme: "auto",
     scale: "medium",
+    aiDashboard: true,
+    aiAnalytics: true,
   });
 
   /* ── habit-privacy sub-route state ────── */
@@ -98,6 +101,8 @@ const SettingsPage = ({ section }) => {
           weekStartsOn: u.preferences?.weekStartsOn ?? 1,
           theme: u.preferences?.theme ?? "auto",
           scale: u.preferences?.scale ?? "medium",
+          aiDashboard: u.preferences?.aiDashboard ?? true,
+          aiAnalytics: u.preferences?.aiAnalytics ?? true,
         }));
       } catch {
         console.error("Failed to load profile");
@@ -218,7 +223,7 @@ const SettingsPage = ({ section }) => {
       return;
     }
 
-    const supported = ["emailNotifications", "timezone", "weekStartsOn"];
+    const supported = ["emailNotifications", "timezone", "weekStartsOn", "aiDashboard", "aiAnalytics"];
     if (!supported.includes(key)) return;
 
     try {
@@ -234,6 +239,8 @@ const SettingsPage = ({ section }) => {
         emailNotifications: "Email notifications",
         timezone: "Timezone",
         weekStartsOn: "Week start day",
+        aiDashboard: "Dashboard AI insights",
+        aiAnalytics: "Analytics AI insights",
       };
       showToast(`${names[key]} updated`);
     } catch {
@@ -916,7 +923,31 @@ const SettingsPage = ({ section }) => {
           </SettingRow>
         </Section>
 
-        {/* ═══════ 4. NOTIFICATIONS ═══════ */}
+        {/* ═══════ 4. AI FEATURES ═══════ */}
+        <Section title="AI Features" icon={MagicWandIcon}>
+          <SettingRow
+            label="Dashboard Insights"
+            description="AI-powered nudges and tips on your dashboard"
+          >
+            <Toggle
+              checked={settings.aiDashboard}
+              onChange={(v) => saveSetting("aiDashboard", v)}
+              disabled={saving}
+            />
+          </SettingRow>
+          <SettingRow
+            label="Analytics Insights"
+            description="AI analysis and recommendations on the analytics page"
+          >
+            <Toggle
+              checked={settings.aiAnalytics}
+              onChange={(v) => saveSetting("aiAnalytics", v)}
+              disabled={saving}
+            />
+          </SettingRow>
+        </Section>
+
+        {/* ═══════ 5. NOTIFICATIONS ═══════ */}
         <NotificationSection saving={saving} settings={settings} saveSetting={saveSetting} />
 
         {/* ═══════ 5. PRIVACY ═══════ */}

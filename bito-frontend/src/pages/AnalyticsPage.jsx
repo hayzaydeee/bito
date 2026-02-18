@@ -114,9 +114,11 @@ const AnalyticsPage = () => {
       )}
 
       {/* ── AI Insights ────────────────────────── */}
-      <div data-tour="analytics-ai-insights">
-        <AnalyticsInsights habits={habits} entries={entries} timeRange={timeRange} />
-      </div>
+      {user?.preferences?.aiAnalytics !== false && (
+        <div data-tour="analytics-ai-insights">
+          <AnalyticsInsights habits={habits} entries={entries} timeRange={timeRange} />
+        </div>
+      )}
 
       {/* ── Analytics tour ─────────────────────── */}
       <AnalyticsTour userId={user?._id || user?.id} />
