@@ -5,8 +5,8 @@ import BlockNoteEditor from '../journal/BlockNoteEditor';
 import JournalWeekStrip from './JournalWeekStrip';
 import JournalDayFeed from './JournalDayFeed';
 import JournalArchiveView from './JournalArchiveView';
-import JournalPrivacySettings, { PrivacyBadge, AIOptInNudge } from './JournalPrivacy';
-import { ArchiveIcon, MagnifyingGlassIcon, Cross2Icon } from '@radix-ui/react-icons';
+import JournalPrivacySettings, { AIOptInNudge } from './JournalPrivacy';
+import { ArchiveIcon, MagnifyingGlassIcon, Cross2Icon, LockClosedIcon, LockOpen1Icon } from '@radix-ui/react-icons';
 import { journalV2Service } from '../../services/journalV2Service';
 import { userAPI } from '../../services/api';
 
@@ -145,11 +145,31 @@ const JournalPageV2 = () => {
 
           {/* Right: Accessory icons */}
           <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-            {/* Privacy / AI badge */}
-            <PrivacyBadge
-              journalAI={journalAI}
+            {/* Journal Intelligence button */}
+            <button
               onClick={() => setShowPrivacySettings(true)}
-            />
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-spartan font-semibold transition-all duration-200 active:scale-95"
+              style={{
+                color: 'white',
+                backgroundColor: 'var(--color-brand-500)',
+                boxShadow: '0 1px 4px var(--color-glow)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--color-brand-600)';
+                e.currentTarget.style.boxShadow = '0 2px 8px var(--color-glow)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--color-brand-500)';
+                e.currentTarget.style.boxShadow = '0 1px 4px var(--color-glow)';
+              }}
+              aria-label="Journal Intelligence settings"
+            >
+              {journalAI?.insightNudges || journalAI?.contentAnalysis || journalAI?.weeklySummaries
+                ? <LockOpen1Icon className="w-3.5 h-3.5" />
+                : <LockClosedIcon className="w-3.5 h-3.5" />
+              }
+              Intelligence
+            </button>
 
             {/* Search toggle */}
             <button
