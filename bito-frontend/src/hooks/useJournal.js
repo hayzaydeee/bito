@@ -112,6 +112,10 @@ export function useJournal() {
       if (data) {
         setLongform(data.longform);
         setMicros(data.micros || []);
+        // Seed fingerprint so the first onChange doesn't trigger a redundant save
+        lastContentFpRef.current = getContentFingerprint(
+          data.longform?.richContent
+        );
         // Set metadata from longform entry (if exists)
         if (data.longform) {
           setMood(data.longform.mood);
@@ -127,6 +131,7 @@ export function useJournal() {
       } else {
         setLongform(null);
         setMicros([]);
+        lastContentFpRef.current = '';
         setMood(null);
         setEnergy(null);
         setTags([]);
@@ -160,7 +165,8 @@ export function useJournal() {
     setSaveStatus('saving');
 
     saveTimerRef.current = setTimeout(async () => {
-      if (!isAuthenticated || isSaving) return;
+      if (!isAuthenticated || isSavingRef.current) return;
+      isSavingRef.current = true;
       setIsSaving(true);
       try {
         const plainText = journalV2Service.extractPlainText(content);
@@ -192,10 +198,11 @@ export function useJournal() {
       } catch {
         setSaveStatus('error');
       } finally {
+        isSavingRef.current = false;
         setIsSaving(false);
       }
     }, 1500);
-  }, [isAuthenticated, isSaving, selectedDate, mood, energy, tags]);
+  }, [isAuthenticated, selectedDate, mood, energy, tags]);
 
   /* ── Editor content change ───────────────────────────────────── */
   const handleEditorChange = useCallback((content) => {
@@ -203,9 +210,13 @@ export function useJournal() {
     const pt = journalV2Service.extractPlainText(content);
     setWordCount(journalV2Service.getWordCount(pt));
 
-    // Always schedule save — debounce handles rate-limiting.
-    // Previous plain-text-only comparison missed embed changes (images, files).
-    scheduleSave(content);
+    // Compare fingerprint (text + embed URLs + table content) to detect all
+    // meaningful changes including images/files, not just plain-text edits.
+    const fp = getContentFingerprint(content);
+    if (fp !== lastContentFpRef.current) {
+      lastContentFpRef.current = fp;
+      scheduleSave(content);
+    }
   }, [editorReady, scheduleSave]);
 
   /* ── Metadata changes → save ─────────────────────────────────── */
