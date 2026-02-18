@@ -122,11 +122,16 @@
   background: var(--color-text-tertiary);
 }
 
-/* Side menu (+ / drag handle) sits inline — no overflow issues on any screen */
-.journal-v2-editor .bn-side-menu {
-  position: relative !important;
-  left: 0 !important;
-  margin-left: 0 !important;
+/* Give blocks enough left indent so the floating side-menu (+/drag)
+   sits inside the card instead of overflowing past the edge. */
+.journal-v2-editor .bn-editor {
+  padding-left: 44px !important;
+}
+
+@media (max-width: 640px) {
+  .journal-v2-editor .bn-editor {
+    padding-left: 36px !important;
+  }
 }
 
 /* On mobile, tighten font size */
