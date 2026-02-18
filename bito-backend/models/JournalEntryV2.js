@@ -238,27 +238,53 @@ journalEntryV2Schema.statics.getOrCreateLongform = async function (userId, date)
 
 /**
  * Extract plain text from BlockNote JSON content.
- * Shared with frontend (src/services/journalService.js) — keep in sync.
+ * Handles inline content, tableContent rows, links, and nested children.
+ * Shared with frontend (src/utils/sanitizeBlock.js) — keep in sync.
  */
 journalEntryV2Schema.statics.extractPlainText = function (blockNoteContent) {
   if (!blockNoteContent || !Array.isArray(blockNoteContent)) {
     return '';
   }
 
-  const extractTextFromBlock = (block) => {
+  const extractInline = (items) => {
+    if (!Array.isArray(items)) return '';
     let text = '';
-    if (block.content && Array.isArray(block.content)) {
-      for (const item of block.content) {
-        if (typeof item === 'string') {
-          text += item;
-        } else if (item.text) {
-          text += item.text;
-        } else if (item.content) {
-          text += extractTextFromBlock(item);
-        }
+    for (const item of items) {
+      if (typeof item === 'string') {
+        text += item;
+      } else if (item && item.type === 'link') {
+        text += extractInline(item.content);
+      } else if (item && item.text) {
+        text += item.text;
       }
     }
-    return text + '\n';
+    return text;
+  };
+
+  const extractTextFromBlock = (block) => {
+    if (!block) return '';
+    let text = '';
+
+    // Table content
+    if (block.content && block.content.type === 'tableContent') {
+      const rows = block.content.rows || [];
+      for (const row of rows) {
+        const cells = row.cells || [];
+        const cellTexts = cells.map(cell => extractInline(cell));
+        text += cellTexts.join('\t') + '\n';
+      }
+    } else if (block.content && Array.isArray(block.content)) {
+      text += extractInline(block.content) + '\n';
+    }
+
+    // Recurse into children (nested blocks)
+    if (Array.isArray(block.children)) {
+      for (const child of block.children) {
+        text += extractTextFromBlock(child);
+      }
+    }
+
+    return text;
   };
 
   return blockNoteContent.map(extractTextFromBlock).join('').trim();

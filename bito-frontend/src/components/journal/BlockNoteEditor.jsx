@@ -1,7 +1,9 @@
-import React, { useEffect, useMemo, useCallback } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useCreateBlockNote } from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/mantine';
 import { useTheme } from '../../contexts/ThemeContext';
+import { sanitizeDocument } from '../../utils/sanitizeBlock';
+import { journalV2Service } from '../../services/journalV2Service';
 
 // Import BlockNote styles (Inter font intentionally omitted — app uses EB Garamond + League Spartan)
 import '@blocknote/mantine/style.css';
@@ -19,105 +21,16 @@ const BlockNoteEditor = ({
   // State to handle editor errors
   const [editorError, setEditorError] = React.useState(null);
   
-  // Utility function to create a valid block with proper sanitization
-  const createValidBlock = useCallback((block) => {
-    if (!block || typeof block !== 'object') {
-      return {
-        id: crypto.randomUUID?.() || Math.random().toString(36),
-        type: "paragraph",
-        props: {},
-        content: []
-      };
-    }
-    
-    const blockType = block.type || "paragraph";
-    
-    // Sanitize block content
-    let blockContent = [];
-    if (Array.isArray(block.content)) {
-      blockContent = block.content.map(item => {
-        if (typeof item === 'string') {
-          return item;
-        }
-        
-        if (item && typeof item === 'object') {
-          // Ensure text content has proper structure
-          if (item.type === 'text' || item.text !== undefined) {
-            return {
-              type: 'text',
-              text: String(item.text || ''),
-              styles: item.styles || {}
-            };
-          }
-          
-          // Handle other content types
-          return {
-            type: item.type || 'text',
-            text: String(item.text || item.content || ''),
-            styles: item.styles || {}
-          };
-        }
-        
-        return '';
-      }).filter(item => item !== ''); // Remove empty items
-    }
-    
-    // Ensure props is a valid object
-    const sanitizedProps = {};
-    if (block.props && typeof block.props === 'object' && !Array.isArray(block.props)) {
-      // Only copy valid properties
-      for (const [key, value] of Object.entries(block.props)) {
-        if (value !== null && value !== undefined) {
-          sanitizedProps[key] = value;
-        }
-      }
-    }
-
-    return {
-      id: block.id || crypto.randomUUID?.() || Math.random().toString(36),
-      type: blockType,
-      props: sanitizedProps,
-      content: blockContent
-    };
-  }, []);
-  
   // Reset error when initialContent changes
   React.useEffect(() => {
     setEditorError(null);
   }, [initialContent]);
   
-  // Safely process initial content - ensure it's always a valid BlockNote structure
-  const processedInitialContent = useMemo(() => {
-    // If no initial content or invalid format, return default empty paragraph
-    if (!initialContent) {
-      return [createValidBlock(null)];
-    }
-    
-    // Handle different content formats
-    let contentArray;
-    
-    if (Array.isArray(initialContent)) {
-      contentArray = initialContent;
-    } else if (typeof initialContent === 'object') {
-      // Single block object
-      contentArray = [initialContent];
-    } else {
-      // Invalid format
-      return [createValidBlock(null)];
-    }
-    
-    // Sanitize and validate each block
-    const validatedContent = contentArray
-      .filter(block => block != null) // Remove null/undefined blocks
-      .map(createValidBlock);
-    
-    // Ensure we have at least one block
-    if (validatedContent.length === 0) {
-      return [createValidBlock(null)];
-    }
-    
-    return validatedContent;
-  }, [initialContent, createValidBlock]);
+  // Safely process initial content using shared sanitizer
+  const processedInitialContent = useMemo(
+    () => sanitizeDocument(initialContent),
+    [initialContent]
+  );
   
   // Create editor with default configuration - BlockNote includes all block types by default
   const editor = useCreateBlockNote({
@@ -125,6 +38,11 @@ const BlockNoteEditor = ({
     animations: true,
     defaultStyles: true,
     trailingBlock: true,
+    // Upload handler for image / file blocks (drag-drop, paste, toolbar)
+    uploadFile: async (file) => {
+      const url = await journalV2Service.uploadImage(file);
+      return url;
+    },
   });
   
   // If editor creation failed, the component will unmount and remount

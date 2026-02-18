@@ -1,8 +1,10 @@
 // src/services/journalV2Service.js
 // Journal V2 API service — multi-entry per day, longform + micro
 import api from './api';
+import { extractPlainText as extractPlainTextUtil } from '../utils/sanitizeBlock';
 
 const BASE = '/api/journal-v2';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export const journalV2Service = {
   /* ── Day operations ──────────────────────────────────────────── */
@@ -96,20 +98,27 @@ export const journalV2Service = {
 
   /* ── Utilities ───────────────────────────────────────────────── */
 
+  /**
+   * Upload an image file for use in journal entries.
+   * Returns the Cloudinary secure URL.
+   */
+  async uploadImage(file) {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${API_BASE_URL}${BASE}/upload-image`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Image upload failed');
+    return data.url;
+  },
+
   extractPlainText(blockNoteContent) {
-    if (!blockNoteContent || !Array.isArray(blockNoteContent)) return '';
-    const extract = (block) => {
-      let text = '';
-      if (block.content && Array.isArray(block.content)) {
-        for (const item of block.content) {
-          if (typeof item === 'string') text += item;
-          else if (item.text) text += item.text;
-          else if (item.content) text += extract(item);
-        }
-      }
-      return text + '\n';
-    };
-    return blockNoteContent.map(extract).join('').trim();
+    return extractPlainTextUtil(blockNoteContent);
   },
 
   formatDateForAPI(date) {

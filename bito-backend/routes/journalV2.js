@@ -4,6 +4,7 @@ const JournalEntryV2 = require('../models/JournalEntryV2');
 const JournalEntry = require('../models/JournalEntry'); // Legacy model for archive
 const { authenticateJWT } = require('../middleware/auth');
 const { body, param, query, validationResult } = require('express-validator');
+const { upload, uploadToCloudinary } = require('../config/cloudinary');
 
 /* ═══════════════════════════════════════════════════════════════
    Journal V2 Routes — Multi-entry per day
@@ -38,6 +39,27 @@ const validateLongformEntry = [
   body('tags').optional().isArray(),
   body('tags.*').optional().isString().isLength({ max: 50 }),
 ];
+
+// ── POST /api/journal-v2/upload-image — Upload an image for journal entries ──
+
+router.post('/upload-image', authenticateJWT, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file provided' });
+    }
+
+    const result = await uploadToCloudinary(req.file.buffer, {
+      folder: 'bito/journal',
+      transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+      public_id: `journal_${req.user._id}_${Date.now()}`,
+    });
+
+    res.json({ url: result.secure_url });
+  } catch (error) {
+    console.error('Journal image upload error:', error);
+    res.status(500).json({ error: 'Failed to upload image' });
+  }
+});
 
 // ── GET /api/journal-v2/day/:date — All entries for a day ──────
 

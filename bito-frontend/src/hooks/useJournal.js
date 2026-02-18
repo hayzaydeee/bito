@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { journalV2Service } from '../services/journalV2Service';
 import { useAuth } from '../contexts/AuthContext';
+import { sanitizeDocument } from '../utils/sanitizeBlock';
 
 const todayStr = () => {
   const d = new Date();
@@ -122,14 +123,9 @@ export function useJournal() {
         const plainText = journalV2Service.extractPlainText(content);
         const wc = journalV2Service.getWordCount(plainText);
 
-        // Sanitize blocks
+        // Sanitize blocks (preserves tables, embeds, links, children)
         const sanitized = Array.isArray(content)
-          ? content.map(b => ({
-              id: b.id || crypto.randomUUID?.() || Math.random().toString(36),
-              type: b.type || 'paragraph',
-              props: b.props || {},
-              content: Array.isArray(b.content) ? b.content : [],
-            }))
+          ? sanitizeDocument(content)
           : null;
 
         const saved = await journalV2Service.saveLongform(selectedDate, {
