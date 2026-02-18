@@ -44,7 +44,7 @@ const JournalDayFeed = ({
   return (
     <div className="flex flex-col h-full">
       {/* ── Centralized content column ─────────────────────── */}
-      <div className="flex-shrink-0 pt-4 pb-3 max-w-[740px] mx-auto w-full">
+      <div className="flex-shrink-0 pt-4 pb-3 max-w-[740px] mx-auto w-full" data-tour="journal-mood-energy">
         <JournalMeta
           mood={mood}
           energy={energy}
@@ -60,7 +60,7 @@ const JournalDayFeed = ({
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-[740px] mx-auto w-full">
         {/* Quick capture bar */}
-        <div className="pb-4">
+        <div className="pb-4" data-tour="journal-quick-capture">
           <QuickCapture
             onSubmit={(text) => onAddMicro(text)}
             placeholder="Quick thought..."
@@ -96,7 +96,7 @@ const JournalDayFeed = ({
 
         {/* Longform editor */}
         <div className="pb-6">
-          <div className="rounded-xl border overflow-hidden"
+          <div className="rounded-xl border overflow-hidden" data-tour="journal-editor"
             style={{
               backgroundColor: 'var(--color-surface-primary)',
               borderColor: 'var(--color-border-primary)',
@@ -112,6 +112,7 @@ const JournalDayFeed = ({
 
       {/* ── Footer status bar ───────────────────────────────── */}
       <div className="flex-shrink-0 border-t py-2 max-w-[740px] mx-auto w-full flex items-center justify-between text-xs font-spartan"
+        data-tour="journal-status-bar"
         style={{ borderColor: 'var(--color-border-primary)', color: 'var(--color-text-tertiary)' }}>
         <div className="flex items-center gap-3">
           <span>{wordCount} words</span>

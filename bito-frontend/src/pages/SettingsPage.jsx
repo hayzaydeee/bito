@@ -1085,6 +1085,25 @@ const SettingsPage = ({ section }) => {
             </div>
             <ChevronRightIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
           </button>
+
+          {/* Replay journal tour */}
+          <button
+            onClick={() => {
+              const uid = user?._id || user?.id || '';
+              const key = uid ? `bito_journal_tour_completed_${uid}` : 'bito_journal_tour_completed';
+              try { localStorage.removeItem(key); } catch {}
+              navigate('/app/journal');
+            }}
+            className="w-full mt-2 flex items-center justify-between p-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="text-base">📓</span>
+              <span className="text-sm font-medium font-spartan text-[var(--color-text-primary)]">
+                Replay journal tour
+              </span>
+            </div>
+            <ChevronRightIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
+          </button>
         </Section>
 
         {/* ═══════ 7.5 AI VOICE ═══════ */}

@@ -241,7 +241,7 @@ const JournalWeekStrip = ({ selectedDate, onSelect, indicators = {} }) => {
   }, [selectedDate, onSelect]);
 
   return (
-    <div className="relative">
+    <div className="relative" data-tour="journal-week-strip">
       {/* Week strip with calendar toggle */}
       <div className="flex items-center gap-1">
         <button

@@ -6,6 +6,7 @@ import JournalWeekStrip from './JournalWeekStrip';
 import JournalDayFeed from './JournalDayFeed';
 import JournalArchiveView from './JournalArchiveView';
 import JournalPrivacySettings, { AIOptInNudge } from './JournalPrivacy';
+import JournalTour from './JournalTour';
 import { ArchiveIcon, MagnifyingGlassIcon, Cross2Icon, LockClosedIcon, LockOpen1Icon } from '@radix-ui/react-icons';
 import { journalV2Service } from '../../services/journalV2Service';
 import { userAPI } from '../../services/api';
@@ -27,6 +28,7 @@ const JournalPageV2 = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState(null);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [forceJournalTour, setForceJournalTour] = useState(false);
 
   // AI privacy state from user profile
   const journalAI = user?.preferences?.journalAI || {};
@@ -163,6 +165,7 @@ const JournalPageV2 = () => {
                 e.currentTarget.style.boxShadow = '0 1px 4px var(--color-glow)';
               }}
               aria-label="Journal Intelligence settings"
+              data-tour="journal-intelligence"
             >
               {journalAI?.insightNudges || journalAI?.contentAnalysis || journalAI?.weeklySummaries
                 ? <LockOpen1Icon className="w-3.5 h-3.5" />
@@ -177,6 +180,7 @@ const JournalPageV2 = () => {
               className="p-2.5 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
               style={{ color: 'var(--color-text-secondary)' }}
               aria-label={showSearch ? 'Close search' : 'Search journal'}
+              data-tour="journal-search"
             >
               {showSearch
                 ? <Cross2Icon className="w-5 h-5" />
@@ -191,6 +195,7 @@ const JournalPageV2 = () => {
               style={{ color: 'var(--color-text-secondary)' }}
               aria-label="View archive"
               title="View archived entries"
+              data-tour="journal-archive"
             >
               <ArchiveIcon className="w-5 h-5" />
             </button>
@@ -331,6 +336,13 @@ const JournalPageV2 = () => {
           onClose={() => setShowPrivacySettings(false)}
         />
       )}
+
+      {/* ── Journal tour ────────────────────────────────────── */}
+      <JournalTour
+        userId={user?._id || user?.id}
+        forceShow={forceJournalTour}
+        onComplete={() => setForceJournalTour(false)}
+      />
     </div>
   );
 };
