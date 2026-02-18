@@ -125,7 +125,7 @@ const DayLabels = memo(({ weekStartDay }) => {
   return (
     <div className="grid grid-cols-7 mb-1">
       {labels.map((l, i) => (
-        <span key={i} className="text-center text-[10px] font-spartan font-medium" style={{ color: "var(--color-text-tertiary)" }}>
+        <span key={i} className="text-center text-xs font-spartan font-medium" style={{ color: "var(--color-text-tertiary)" }}>
           {l}
         </span>
       ))}
