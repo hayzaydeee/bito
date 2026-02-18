@@ -104,7 +104,7 @@ export const journalV2Service = {
    */
   async uploadImage(file) {
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append('file', file);
 
     const token = localStorage.getItem('token');
     const res = await fetch(`${API_BASE_URL}${BASE}/upload-image`, {

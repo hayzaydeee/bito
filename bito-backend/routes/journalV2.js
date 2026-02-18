@@ -4,7 +4,33 @@ const JournalEntryV2 = require('../models/JournalEntryV2');
 const JournalEntry = require('../models/JournalEntry'); // Legacy model for archive
 const { authenticateJWT } = require('../middleware/auth');
 const { body, param, query, validationResult } = require('express-validator');
-const { upload, uploadToCloudinary } = require('../config/cloudinary');
+const { uploadToCloudinary } = require('../config/cloudinary');
+const multer = require('multer');
+
+// Journal-specific upload — accepts images + common file types, rejects videos
+const journalUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith('video/')) {
+      return cb(new Error('Video uploads are not supported'), false);
+    }
+    const allowed = [
+      'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel',
+      'text/plain', 'text/csv',
+    ];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error(`File type ${file.mimetype} is not supported`), false);
+    }
+  },
+});
 
 /* ═══════════════════════════════════════════════════════════════
    Journal V2 Routes — Multi-entry per day
@@ -40,24 +66,33 @@ const validateLongformEntry = [
   body('tags.*').optional().isString().isLength({ max: 50 }),
 ];
 
-// ── POST /api/journal-v2/upload-image — Upload an image for journal entries ──
+// ── POST /api/journal-v2/upload-image — Upload an image or file for journal entries ──
 
-router.post('/upload-image', authenticateJWT, upload.single('image'), async (req, res) => {
+router.post('/upload-image', authenticateJWT, (req, res, next) => {
+  journalUpload.single('file')(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ error: err.message });
+    }
+    next();
+  });
+}, async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'No image file provided' });
+      return res.status(400).json({ error: 'No file provided' });
     }
 
+    const isImage = req.file.mimetype.startsWith('image/');
     const result = await uploadToCloudinary(req.file.buffer, {
       folder: 'bito/journal',
-      transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+      resource_type: isImage ? 'image' : 'raw',
+      transformation: isImage ? [{ quality: 'auto', fetch_format: 'auto' }] : [],
       public_id: `journal_${req.user._id}_${Date.now()}`,
     });
 
     res.json({ url: result.secure_url });
   } catch (error) {
-    console.error('Journal image upload error:', error);
-    res.status(500).json({ error: 'Failed to upload image' });
+    console.error('Journal upload error:', error);
+    res.status(500).json({ error: 'Failed to upload file' });
   }
 });
 

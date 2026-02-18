@@ -40,6 +40,10 @@ const BlockNoteEditor = ({
     trailingBlock: true,
     // Upload handler for image / file blocks (drag-drop, paste, toolbar)
     uploadFile: async (file) => {
+      // Reject video uploads (too heavy)
+      if (file.type.startsWith('video/')) {
+        throw new Error('Video uploads are not supported. Try linking a video URL instead.');
+      }
       const url = await journalV2Service.uploadImage(file);
       return url;
     },

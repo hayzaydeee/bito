@@ -160,10 +160,10 @@ export function useJournal() {
     const pt = journalV2Service.extractPlainText(content);
     setWordCount(journalV2Service.getWordCount(pt));
 
-    // Only save if content actually changed
-    const oldPt = longform?.plainTextContent || '';
-    if (pt !== oldPt) scheduleSave(content);
-  }, [editorReady, longform, scheduleSave]);
+    // Always schedule save — debounce handles rate-limiting.
+    // Previous plain-text-only comparison missed embed changes (images, files).
+    scheduleSave(content);
+  }, [editorReady, scheduleSave]);
 
   /* ── Metadata changes → save ─────────────────────────────────── */
   const saveMetadata = useCallback(async (newMood, newEnergy, newTags) => {
