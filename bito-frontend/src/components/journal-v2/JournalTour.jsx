@@ -128,57 +128,26 @@ const JournalTour = ({ forceShow = false, onComplete, userId }) => {
     }
   });
 
-  // Find the nearest scrollable ancestor of an element
-  const findScrollParent = useCallback((el) => {
-    let node = el.parentElement;
-    while (node && node !== document.body) {
-      const style = window.getComputedStyle(node);
-      const overflowY = style.overflowY;
-      if ((overflowY === 'auto' || overflowY === 'scroll') && node.scrollHeight > node.clientHeight) {
-        return node;
-      }
-      node = node.parentElement;
-    }
-    return null;
-  }, []);
-
-  // Scroll target into view with room for its tooltip, then measure
+  // Scroll target into view, then measure
   useEffect(() => {
     if (step >= 0 && step < STEPS.length) {
-      const { target, position } = STEPS[step];
+      const { target } = STEPS[step];
       if (target) {
         const el = document.querySelector(target);
         if (el) {
-          const rect = el.getBoundingClientRect();
-          const vh = window.innerHeight;
-          const tooltipSpace = 220;
-
-          const needsAbove = position === 'top' || rect.bottom > vh * 0.55;
-          const topBound = needsAbove ? 0 : -tooltipSpace;
-          const bottomBound = needsAbove ? vh - tooltipSpace : vh;
-          const inView = rect.top >= topBound && rect.bottom <= bottomBound;
-
-          if (!inView) {
-            // Try scrolling the nearest scrollable ancestor first,
-            // then fall back to scrollIntoView for the layout scroll container
-            const scrollParent = findScrollParent(el);
-            if (scrollParent) {
-              const parentRect = scrollParent.getBoundingClientRect();
-              const elTop = el.getBoundingClientRect().top - parentRect.top + scrollParent.scrollTop;
-              const targetScroll = elTop - scrollParent.clientHeight / 2 + el.offsetHeight / 2;
-              scrollParent.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' });
-            }
-            // Also call scrollIntoView to handle the Layout.jsx overflow-y-auto wrapper
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
+          // scrollIntoView propagates through ALL scrollable ancestors
+          // including the Layout.jsx overflow-y-auto wrapper.
+          // Always scroll — don't check inView since nested containers
+          // make that check unreliable.
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       }
     }
     // Measure immediately, then re-measure after scroll animation
     measureTarget();
-    const t1 = setTimeout(measureTarget, 120);
-    const t2 = setTimeout(measureTarget, 450);
-    const t3 = setTimeout(measureTarget, 800); // extra delay for nested scroll containers
+    const t1 = setTimeout(measureTarget, 100);
+    const t2 = setTimeout(measureTarget, 350);
+    const t3 = setTimeout(measureTarget, 600);
     window.addEventListener('resize', measureTarget);
     window.addEventListener('scroll', measureTarget, true);
     return () => {

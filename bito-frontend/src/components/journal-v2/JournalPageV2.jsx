@@ -131,7 +131,7 @@ const JournalPageV2 = () => {
   }
 
   return (
-    <div className="journal-v2-page flex flex-col h-full overflow-hidden p-4 sm:p-6 max-w-5xl mx-auto w-full">
+    <div className="journal-v2-page flex flex-col h-full overflow-clip p-4 sm:p-6 max-w-5xl mx-auto w-full">
       {/* ── Top bar ─────────────────────────────────────────── */}
       <div className="flex-shrink-0 pb-2">
         <div className="flex items-center justify-between mb-2">
