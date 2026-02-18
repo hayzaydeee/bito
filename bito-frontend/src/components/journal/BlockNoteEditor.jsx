@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
-import { useCreateBlockNote } from '@blocknote/react';
+import { useCreateBlockNote, SuggestionMenuController } from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/mantine';
+import { offset, flip, shift, size } from '@floating-ui/react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { sanitizeDocument } from '../../utils/sanitizeBlock';
 import { journalV2Service } from '../../services/journalV2Service';
@@ -111,7 +112,31 @@ const BlockNoteEditor = ({
         editable={editable}
         className="min-h-[300px] focus:outline-none"
         placeholder={placeholder}
-      />
+        slashMenu={false}
+      >
+        {/* Slash menu: prefer opening above the cursor so it stays
+            accessible inside the scrollable editor card. Falls back
+            to bottom-start when near the top (e.g. first line). */}
+        <SuggestionMenuController
+          triggerCharacter="/"
+          floatingUIOptions={{
+            useFloatingOptions: {
+              placement: 'top-start',
+              middleware: [
+                offset(10),
+                flip({ fallbackPlacements: ['bottom-start'], padding: 10 }),
+                shift(),
+                size({
+                  apply({ elements, availableHeight }) {
+                    elements.floating.style.maxHeight = `${Math.max(0, availableHeight)}px`;
+                  },
+                  padding: 10,
+                }),
+              ],
+            },
+          }}
+        />
+      </BlockNoteView>
     </div>
   );
 };

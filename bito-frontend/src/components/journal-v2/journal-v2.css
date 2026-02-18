@@ -125,12 +125,12 @@
 /* Give blocks enough left indent so the floating side-menu (+/drag)
    sits inside the card instead of overflowing past the edge. */
 .journal-v2-editor .bn-editor {
-  padding-left: 44px !important;
+  padding-left: 48px !important;
 }
 
 @media (max-width: 640px) {
   .journal-v2-editor .bn-editor {
-    padding-left: 36px !important;
+    padding-left: 38px !important;
   }
 }
 
