@@ -78,7 +78,7 @@ const Layout = () => {
 
         {/* Content Pane */}
         <div
-          className="flex-1 overflow-y-auto overflow-x-hidden"
+          className="flex-1 overflow-y-auto overflow-x-hidden layout-scroll-container"
           style={{
             backgroundColor: "var(--color-bg-primary)",
             paddingBottom: isMobile ? "calc(64px + env(safe-area-inset-bottom, 0px))" : "0",
