@@ -1,4 +1,4 @@
-import React, { useState, useMemo, memo } from 'react';
+import React, { useState, memo } from 'react';
 import JournalMeta from '../journal/JournalMeta';
 import { MicroStack, QuickCapture } from './MicroEntry';
 import { journalV2Service } from '../../services/journalV2Service';
@@ -33,43 +33,6 @@ const JournalDayFeed = ({
 }) => {
   const [microsExpanded, setMicrosExpanded] = useState(false);
 
-  // Formatted heading date
-  const headingDate = useMemo(() => {
-    const d = new Date(selectedDate + 'T12:00:00');
-    const now = new Date();
-    const isToday =
-      d.getFullYear() === now.getFullYear() &&
-      d.getMonth() === now.getMonth() &&
-      d.getDate() === now.getDate();
-
-    if (isToday) return 'Today';
-
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const isYesterday =
-      d.getFullYear() === yesterday.getFullYear() &&
-      d.getMonth() === yesterday.getMonth() &&
-      d.getDate() === yesterday.getDate();
-
-    if (isYesterday) return 'Yesterday';
-
-    return d.toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-    });
-  }, [selectedDate]);
-
-  const fullDate = useMemo(() => {
-    const d = new Date(selectedDate + 'T12:00:00');
-    return d.toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  }, [selectedDate]);
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -80,30 +43,17 @@ const JournalDayFeed = ({
 
   return (
     <div className="flex flex-col h-full">
-      {/* ── Header section ──────────────────────────────────── */}
-      <div className="flex-shrink-0 px-6 sm:px-10 pt-6 pb-3">
-        {/* Date heading */}
-        <h1 className="text-2xl sm:text-3xl font-garamond font-bold text-[var(--color-text-primary)] leading-tight">
-          {headingDate}
-        </h1>
-        {headingDate !== fullDate && (
-          <p className="text-xs font-spartan mt-0.5" style={{ color: 'var(--color-text-tertiary)' }}>
-            {fullDate}
-          </p>
-        )}
-
-        {/* Metadata strip */}
-        <div className="mt-3">
-          <JournalMeta
-            mood={mood}
-            energy={energy}
-            tags={tags}
-            onMoodChange={onMoodChange}
-            onEnergyChange={onEnergyChange}
-            onAddTag={onAddTag}
-            onRemoveTag={onRemoveTag}
-          />
-        </div>
+      {/* ── Metadata strip ─────────────────────────────────── */}
+      <div className="flex-shrink-0 px-6 sm:px-10 pt-4 pb-3">
+        <JournalMeta
+          mood={mood}
+          energy={energy}
+          tags={tags}
+          onMoodChange={onMoodChange}
+          onEnergyChange={onEnergyChange}
+          onAddTag={onAddTag}
+          onRemoveTag={onRemoveTag}
+        />
       </div>
 
       {/* ── Content area ────────────────────────────────────── */}

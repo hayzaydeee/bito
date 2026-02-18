@@ -240,29 +240,9 @@ const JournalWeekStrip = ({ selectedDate, onSelect, indicators = {} }) => {
     onSelect(toDateStr(sel));
   }, [selectedDate, onSelect]);
 
-  const monthLabel = useMemo(() => {
-    const sel = parseDate(selectedDate);
-    return sel.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  }, [selectedDate]);
-
   return (
     <div className="relative">
-      {/* Month label + calendar toggle */}
-      <div className="flex items-center justify-between mb-2 px-1">
-        <span className="text-xs font-spartan font-semibold" style={{ color: 'var(--color-text-tertiary)' }}>
-          {monthLabel}
-        </span>
-        <button
-          onClick={() => setCalendarOpen(!calendarOpen)}
-          className="p-1.5 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
-          aria-label="Open calendar"
-          style={{ color: 'var(--color-text-secondary)' }}
-        >
-          <CalendarIcon className="w-3.5 h-3.5" />
-        </button>
-      </div>
-
-      {/* Week strip */}
+      {/* Week strip with calendar toggle */}
       <div className="flex items-center gap-1">
         <button
           onClick={() => navigateWeek(-1)}
@@ -293,6 +273,16 @@ const JournalWeekStrip = ({ selectedDate, onSelect, indicators = {} }) => {
           style={{ color: 'var(--color-text-secondary)' }}
         >
           <ChevronRightIcon className="w-4 h-4" />
+        </button>
+
+        {/* Calendar toggle */}
+        <button
+          onClick={() => setCalendarOpen(!calendarOpen)}
+          className="p-1.5 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors flex-shrink-0 ml-0.5"
+          aria-label="Open calendar"
+          style={{ color: 'var(--color-text-secondary)' }}
+        >
+          <CalendarIcon className="w-4 h-4" />
         </button>
       </div>
 

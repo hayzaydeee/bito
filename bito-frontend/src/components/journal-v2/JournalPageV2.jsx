@@ -85,6 +85,33 @@ const JournalPageV2 = () => {
     setSearchResults(null);
   }, []);
 
+  // Contextual date label for header
+  const headerDateLabel = useMemo(() => {
+    const d = new Date(journal.selectedDate + 'T12:00:00');
+    const now = new Date();
+    const isToday =
+      d.getFullYear() === now.getFullYear() &&
+      d.getMonth() === now.getMonth() &&
+      d.getDate() === now.getDate();
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const isYesterday =
+      d.getFullYear() === yesterday.getFullYear() &&
+      d.getMonth() === yesterday.getMonth() &&
+      d.getDate() === yesterday.getDate();
+
+    const fullDate = d.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    });
+
+    if (isToday) return `Today, ${d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`;
+    if (isYesterday) return `Yesterday, ${d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`;
+    return fullDate;
+  }, [journal.selectedDate]);
+
   // Not authenticated
   if (!isAuthenticated) {
     return (
@@ -105,20 +132,25 @@ const JournalPageV2 = () => {
     <div className="journal-v2-page flex flex-col h-full overflow-hidden">
       {/* ── Top bar ─────────────────────────────────────────── */}
       <div className="flex-shrink-0 px-6 sm:px-10 pt-4 pb-2">
-        <div className="flex items-center justify-between mb-3">
-          {/* Left: Title + privacy badge */}
-          <div className="flex items-center gap-3">
-            <h1 className="text-lg font-garamond font-bold" style={{ color: 'var(--color-text-primary)' }}>
+        <div className="flex items-center justify-between mb-2">
+          {/* Left: Title · contextual date */}
+          <div className="flex items-baseline gap-2 min-w-0">
+            <h1 className="text-xl sm:text-2xl font-garamond font-bold flex-shrink-0" style={{ color: 'var(--color-text-primary)' }}>
               Journal
             </h1>
+            <span className="text-sm font-spartan font-medium truncate" style={{ color: 'var(--color-text-secondary)' }}>
+              ·&nbsp; {headerDateLabel}
+            </span>
+          </div>
+
+          {/* Right: Accessory icons */}
+          <div className="flex items-center gap-1.5 flex-shrink-0 ml-3">
+            {/* Privacy / AI badge */}
             <PrivacyBadge
               journalAI={journalAI}
               onClick={() => setShowPrivacySettings(true)}
             />
-          </div>
 
-          {/* Right: Actions */}
-          <div className="flex items-center gap-1">
             {/* Search toggle */}
             <button
               onClick={() => showSearch ? clearSearch() : setShowSearch(true)}

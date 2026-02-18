@@ -66,6 +66,8 @@ const StatusBar = ({
         return "Calendar View";
       case "/app/analytics":
         return "Analytics";
+      case "/app/journal":
+        return "Journal";
       case "/app/settings":
         return "Settings";
       default:
