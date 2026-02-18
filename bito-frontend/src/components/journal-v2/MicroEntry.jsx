@@ -143,22 +143,22 @@ export const MicroEntryCard = memo(({ entry, onEdit, onDelete }) => {
       </div>
 
       {/* Actions */}
-      <div className={`flex items-center gap-0.5 flex-shrink-0 transition-opacity duration-150 ${showActions ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={`flex items-center gap-1 flex-shrink-0 transition-opacity duration-150 ${showActions ? 'opacity-100' : 'opacity-0'}`}>
         <button
           onClick={() => { setEditText(entry.plainTextContent); setIsEditing(true); }}
-          className="p-1 rounded hover:bg-[var(--color-surface-elevated)] transition-colors"
-          style={{ color: 'var(--color-text-tertiary)' }}
+          className="p-1.5 rounded-md border hover:bg-[var(--color-surface-elevated)] transition-colors"
+          style={{ color: 'var(--color-text-secondary)', borderColor: 'var(--color-border-primary)' }}
           aria-label="Edit"
         >
-          <Pencil1Icon className="w-3 h-3" />
+          <Pencil1Icon className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={() => onDelete(entry._id)}
-          className="p-1 rounded hover:bg-[var(--color-surface-elevated)] transition-colors"
-          style={{ color: 'var(--color-text-tertiary)' }}
+          className="p-1.5 rounded-md border hover:bg-red-50 hover:border-red-200 transition-colors"
+          style={{ color: 'var(--color-error)', borderColor: 'var(--color-border-primary)' }}
           aria-label="Delete"
         >
-          <TrashIcon className="w-3 h-3" />
+          <TrashIcon className="w-3.5 h-3.5" />
         </button>
       </div>
     </div>
