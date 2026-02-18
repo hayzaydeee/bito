@@ -33,6 +33,25 @@ const COLORS = [
   '#06B6D4', // cyan
 ];
 
+/* ── Helpers ────────────────────────────────────────────────────── */
+const getMonday = (d) => {
+  const dt = new Date(d);
+  const day = dt.getDay();
+  dt.setDate(dt.getDate() - ((day + 6) % 7));
+  dt.setHours(0, 0, 0, 0);
+  return dt;
+};
+
+const countWeekCompletions = (he, monday) => {
+  let c = 0;
+  for (let i = 0; i < 7; i++) {
+    const wd = new Date(monday);
+    wd.setDate(wd.getDate() + i);
+    if (he[fmtDate(wd)]?.completed) c++;
+  }
+  return c;
+};
+
 const HabitStreakChart = ({
   habits = [],
   entries = {},
@@ -46,13 +65,11 @@ const HabitStreakChart = ({
   onAddHabit,
   accountAgeDays = 365,
 }) => {
-  const { chartData, topHabits, peakStreak, hasWeeklyHabits } = useMemo(() => {
-    if (!habits.length) return { chartData: [], topHabits: [], peakStreak: 0, hasWeeklyHabits: false };
+  const { chartData, topHabits, peakStreak } = useMemo(() => {
+    if (!habits.length) return { chartData: [], topHabits: [], peakStreak: 0 };
 
-    // Split daily and weekly habits
     const dailyHabits = habits.filter(h => h.frequency !== 'weekly');
     const weeklyHabits = habits.filter(h => h.frequency === 'weekly');
-    const hasWeekly = weeklyHabits.length > 0;
 
     // Determine date range
     let startDate, endDate;
@@ -66,24 +83,46 @@ const HabitStreakChart = ({
       startDate.setDate(endDate.getDate() - days);
     }
 
-    // Rank daily habits by total completions in period
-    const habitCompletions = dailyHabits.map(habit => {
-      const habitEntries = entries[habit._id] || {};
+    /* ── Rank daily habits by total completions ── */
+    const dailyRanked = dailyHabits.map(habit => {
+      const he = entries[habit._id] || {};
       let total = 0;
       for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        const entry = habitEntries[fmtDate(d)];
-        if (entry?.completed) total++;
+        if (he[fmtDate(d)]?.completed) total++;
       }
-      return { habit, total, color: habit.color || null };
+      return { habit, total, color: habit.color || null, isWeekly: false };
     });
 
-    const topHabitsData = habitCompletions
+    /* ── Rank weekly habits by weeks-met ────────── */
+    const weeklyRanked = weeklyHabits.map(habit => {
+      const he = entries[habit._id] || {};
+      const target = habit.weeklyTarget || 1;
+      let weeksMet = 0;
+      const firstMon = getMonday(startDate);
+      for (let w = new Date(firstMon); w <= endDate; w.setDate(w.getDate() + 7)) {
+        if (countWeekCompletions(he, w) >= target) weeksMet++;
+      }
+      return { habit, total: weeksMet, color: habit.color || null, isWeekly: true };
+    });
+
+    /* ── Merge top habits ──────────────────────── */
+    const dailySlots = Math.min(dailyRanked.filter(h => h.total > 0).length, maxHabitsDisplayed);
+    const weeklySlots = Math.min(weeklyRanked.filter(h => h.total > 0).length, Math.max(1, maxHabitsDisplayed - dailySlots));
+
+    const topDaily = dailyRanked
       .filter(({ total }) => total > 0)
       .sort((a, b) => b.total - a.total)
-      .slice(0, maxHabitsDisplayed)
-      .map((h, i) => ({ ...h, color: h.color || COLORS[i % COLORS.length], isWeekly: false }));
+      .slice(0, dailySlots);
 
-    // Build per-day running-streak data for daily habits
+    const topWeekly = weeklyRanked
+      .filter(({ total }) => total > 0)
+      .sort((a, b) => b.total - a.total)
+      .slice(0, weeklySlots);
+
+    const topHabitsData = [...topDaily, ...topWeekly]
+      .map((h, i) => ({ ...h, color: h.color || COLORS[i % COLORS.length] }));
+
+    /* ── Build per-day data ────────────────────── */
     let peak = 0;
     const data = [];
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -93,21 +132,40 @@ const HabitStreakChart = ({
         label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       };
 
-      topHabitsData.forEach(({ habit }) => {
+      topHabitsData.forEach(({ habit, isWeekly }) => {
         const he = entries[habit._id] || {};
-        let streak = 0;
-        for (let s = new Date(d); s >= startDate; s.setDate(s.getDate() - 1)) {
-          if (he[fmtDate(s)]?.completed) streak++;
-          else break;
+
+        if (isWeekly) {
+          /* Weekly running streak: consecutive completed weeks
+             ending before the current day's week */
+          const target = habit.weeklyTarget || 1;
+          const monday = getMonday(d);
+          let streak = 0;
+          let ws = new Date(monday);
+          ws.setDate(ws.getDate() - 7); // start from last complete week
+          while (ws >= new Date(startDate.getTime() - 90 * 86400000)) {
+            if (countWeekCompletions(he, ws) >= target) streak++;
+            else break;
+            ws.setDate(ws.getDate() - 7);
+          }
+          dayData[habit._id] = streak;
+          if (streak > peak) peak = streak;
+        } else {
+          /* Daily running streak */
+          let streak = 0;
+          for (let s = new Date(d); s >= startDate; s.setDate(s.getDate() - 1)) {
+            if (he[fmtDate(s)]?.completed) streak++;
+            else break;
+          }
+          dayData[habit._id] = streak;
+          if (streak > peak) peak = streak;
         }
-        dayData[habit._id] = streak;
-        if (streak > peak) peak = streak;
       });
 
       data.push(dayData);
     }
 
-    return { chartData: data, topHabits: topHabitsData, peakStreak: peak, hasWeeklyHabits: hasWeekly };
+    return { chartData: data, topHabits: topHabitsData, peakStreak: peak };
   }, [habits, entries, timeRange, dateRange, maxHabitsDisplayed]);
 
   /* ── Empty states ─────────────────────────────── */
@@ -116,7 +174,7 @@ const HabitStreakChart = ({
       <div className="analytics-chart-card flex flex-col items-center justify-center h-[280px] gap-2">
         <span className="text-3xl opacity-40">📈</span>
         <p className="text-sm font-spartan text-[var(--color-text-tertiary)] text-center leading-relaxed">
-          Complete habits on consecutive days to see streak timelines
+          Complete habits consistently to see streak timelines
         </p>
       </div>
     );
@@ -142,7 +200,7 @@ const HabitStreakChart = ({
         tick={{ fontSize: '0.6875rem', fill: 'var(--color-text-tertiary)', fontFamily: 'League Spartan' }}
         tickLine={false}
         axisLine={false}
-        tickFormatter={(v) => `${Math.round(v)}d`}
+        tickFormatter={(v) => Math.round(v)}
         domain={[0, (max) => Math.max(max + 1, 3)]}
       />
       <Tooltip
@@ -155,8 +213,7 @@ const HabitStreakChart = ({
           type="monotone"
           dataKey={habitData.habit._id}
           stroke={habitData.color}
-          strokeWidth={2.5}
-          dot={false}
+          strokeWidth={2.5}          strokeDasharray={habitData.isWeekly ? '6 3' : undefined}          dot={false}
           activeDot={{
             r: 5,
             fill: habitData.color,
@@ -197,7 +254,7 @@ const HabitStreakChart = ({
             className="text-xs font-spartan px-2 py-0.5 rounded-full"
             style={{ background: 'rgba(99,102,241,0.12)', color: 'var(--color-brand-400)' }}
           >
-            peak {peakStreak}d
+            peak {peakStreak}
           </span>
         )}
       </div>
@@ -218,7 +275,7 @@ const HabitStreakChart = ({
               {h.habit.name}
             </span>
             <span className="text-[10px] font-spartan text-[var(--color-text-tertiary)]">
-              ({h.total})
+              ({h.total}{h.isWeekly ? 'w' : 'd'})
             </span>
           </div>
         ))}
@@ -236,6 +293,8 @@ const StreakTimelineTooltip = ({ active, payload, topHabits }) => {
       <p className="font-medium text-[var(--color-text-primary)] mb-1">{d?.label}</p>
       {payload.map((entry, i) => {
         const habit = topHabits?.find((h) => h.habit._id === entry.dataKey);
+        const unit = habit?.isWeekly ? 'w' : 'd';
+        const label = habit?.isWeekly ? 'week streak' : 'day streak';
         return (
           <div key={i} className="flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
@@ -243,7 +302,10 @@ const StreakTimelineTooltip = ({ active, payload, topHabits }) => {
               {habit?.habit.name}:
             </span>
             <span className="font-semibold" style={{ color: entry.color }}>
-              {entry.value}d
+              {entry.value}{unit}
+            </span>
+            <span className="text-[10px] text-[var(--color-text-tertiary)]">
+              {label}
             </span>
           </div>
         );

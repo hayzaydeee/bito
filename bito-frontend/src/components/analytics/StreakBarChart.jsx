@@ -12,7 +12,8 @@ import {
 
 /* -----------------------------------------------------------------
    StreakBarChart -- per-habit current streak as horizontal bars
-   Rounded bars with per-habit color, subtle grid, fire emoji empty state
+   Rounded bars with per-habit color, subtle grid, fire emoji empty state.
+   Weekly habits show streak in weeks; daily habits in days.
 ----------------------------------------------------------------- */
 
 const StreakBarChart = ({ habits, entries }) => {
@@ -22,14 +23,52 @@ const StreakBarChart = ({ habits, entries }) => {
     return habits
       .map(habit => {
         const hEntries = entries[habit._id] || {};
+        const isWeekly = habit.frequency === 'weekly';
+
+        if (isWeekly) {
+          // ── Weekly streak: consecutive weeks meeting target ──
+          const target = habit.weeklyTarget || 3;
+          let streak = 0;
+          const today = new Date();
+          const cursor = getMonday(today);
+
+          // Check current week
+          let count = countWeekCompletions(cursor, hEntries);
+          if (count >= target) {
+            streak = 1;
+            cursor.setDate(cursor.getDate() - 7);
+          } else {
+            cursor.setDate(cursor.getDate() - 7);
+          }
+
+          // Walk backward
+          for (let i = 0; i < 104; i++) {
+            const c = countWeekCompletions(new Date(cursor), hEntries);
+            if (c >= target) {
+              streak++;
+              cursor.setDate(cursor.getDate() - 7);
+            } else {
+              break;
+            }
+          }
+
+          return {
+            name: habit.name.length > 14 ? habit.name.slice(0, 13) + '…' : habit.name,
+            fullName: habit.name,
+            streak,
+            color: habit.color || '#8B5CF6',
+            icon: habit.icon || '🎯',
+            isWeekly: true,
+            unit: 'w',
+          };
+        }
+
+        // ── Daily streak: consecutive scheduled days ──
         let streak = 0;
         const today = new Date();
 
         for (let d = new Date(today); ; d.setDate(d.getDate() - 1)) {
-          const y = d.getFullYear();
-          const m = String(d.getMonth() + 1).padStart(2, '0');
-          const dd = String(d.getDate()).padStart(2, '0');
-          const dateStr = `${y}-${m}-${dd}`;
+          const dateStr = fmtDateLocal(d);
 
           if (habit.schedule?.days?.length && !habit.schedule.days.includes(d.getDay())) {
             if (d < new Date(today.getFullYear(), today.getMonth(), today.getDate() - 90)) break;
@@ -47,6 +86,8 @@ const StreakBarChart = ({ habits, entries }) => {
           streak,
           color: habit.color || '#818cf8',
           icon: habit.icon || '🎯',
+          isWeekly: false,
+          unit: 'd',
         };
       })
       .sort((a, b) => b.streak - a.streak)
@@ -61,7 +102,7 @@ const StreakBarChart = ({ habits, entries }) => {
       <div className="analytics-chart-card flex flex-col items-center justify-center h-[280px] gap-2">
         <span className="text-3xl opacity-40">🔥</span>
         <p className="text-sm font-spartan text-[var(--color-text-tertiary)]">
-          Complete habits on consecutive days to build streaks
+          Complete habits consistently to build streaks
         </p>
       </div>
     );
@@ -72,7 +113,7 @@ const StreakBarChart = ({ habits, entries }) => {
       <div className="analytics-chart-card flex flex-col items-center justify-center h-[280px] gap-2">
         <span className="text-3xl opacity-40">🔥</span>
         <p className="text-sm font-spartan text-[var(--color-text-tertiary)] text-center leading-relaxed">
-          Complete habits on consecutive days to build streaks
+          Complete habits consistently to build streaks
         </p>
         <div className="flex flex-wrap justify-center gap-2 mt-2 max-w-xs">
           {streakData.slice(0, 5).map((h, i) => (
@@ -113,7 +154,7 @@ const StreakBarChart = ({ habits, entries }) => {
               tick={{ fontSize: '0.6875rem', fill: 'var(--color-text-tertiary)', fontFamily: 'League Spartan' }}
               tickLine={false}
               axisLine={false}
-              tickFormatter={v => `${v}d`}
+              tickFormatter={v => `${v}`}
             />
             <YAxis
               type="category"
@@ -139,14 +180,43 @@ const StreakBarChart = ({ habits, entries }) => {
 const StreakTooltip = ({ active, payload }) => {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
+  const unitLabel = d.isWeekly ? 'week' : 'day';
   return (
     <div className="analytics-tooltip">
       <p className="font-medium text-[var(--color-text-primary)]">{d.icon} {d.fullName}</p>
       <p style={{ color: d.color }}>
-        🔥 <span className="font-semibold">{d.streak}</span> day streak
+        🔥 <span className="font-semibold">{d.streak}</span> {unitLabel} streak
+        {d.isWeekly && <span className="text-xs opacity-70"> (weekly target)</span>}
       </p>
     </div>
   );
 };
 
 export default StreakBarChart;
+
+function fmtDateLocal(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
+}
+
+function getMonday(d) {
+  const date = new Date(d);
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  date.setDate(date.getDate() + diff);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function countWeekCompletions(weekStart, hEntries) {
+  let count = 0;
+  for (let i = 0; i < 7; i++) {
+    const day = new Date(weekStart);
+    day.setDate(day.getDate() + i);
+    const entry = hEntries[fmtDateLocal(day)];
+    if (entry && entry.completed) count++;
+  }
+  return count;
+}

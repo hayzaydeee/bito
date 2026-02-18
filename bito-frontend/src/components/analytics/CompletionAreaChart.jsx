@@ -12,12 +12,15 @@ import {
 
 /* -----------------------------------------------------------------
    CompletionAreaChart -- daily completion % as a gradient area
-   Smooth curve, subtle grid, average reference line, rich tooltip
+   Smooth curve, subtle grid, average reference line, rich tooltip.
+   Only tracks daily habits — weekly habits have separate metrics.
 ----------------------------------------------------------------- */
 
 const CompletionAreaChart = ({ habits, entries, timeRange, accountAgeDays = 365 }) => {
   const { chartData, average } = useMemo(() => {
-    if (!habits.length) return { chartData: [], average: 0 };
+    // Filter to daily habits only — weekly habits shouldn't drag down daily %
+    const dailyHabits = habits.filter(h => h.frequency !== 'weekly');
+    if (!dailyHabits.length) return { chartData: [], average: 0 };
 
     const days = timeRange === 'all' ? accountAgeDays : parseInt(timeRange) || 30;
     const endDate = new Date();
@@ -32,7 +35,7 @@ const CompletionAreaChart = ({ habits, entries, timeRange, accountAgeDays = 365 
       let completed = 0;
       let possible = 0;
 
-      habits.forEach(habit => {
+      dailyHabits.forEach(habit => {
         if (habit.schedule?.days?.length) {
           if (!habit.schedule.days.includes(new Date(d).getDay())) return;
         }
@@ -51,11 +54,11 @@ const CompletionAreaChart = ({ habits, entries, timeRange, accountAgeDays = 365 
     return { chartData: data, average: data.length > 0 ? Math.round(sum / data.length) : 0 };
   }, [habits, entries, timeRange]);
 
-  if (!habits.length) {
+  if (!habits.length || !habits.some(h => h.frequency !== 'weekly')) {
     return (
       <div className="analytics-chart-card flex items-center justify-center h-[280px]">
         <p className="text-sm font-spartan text-[var(--color-text-tertiary)]">
-          Track habits to see completion trends
+          Track daily habits to see completion trends
         </p>
       </div>
     );
@@ -65,7 +68,7 @@ const CompletionAreaChart = ({ habits, entries, timeRange, accountAgeDays = 365 
     <div className="analytics-chart-card">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-base font-garamond font-semibold text-[var(--color-text-primary)]">
-          Completion Rate
+          Daily Completion Rate
         </h3>
         {average > 0 && (
           <span className="text-xs font-spartan px-2 py-0.5 rounded-full"
