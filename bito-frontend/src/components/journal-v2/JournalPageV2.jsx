@@ -138,9 +138,9 @@ const JournalPageV2 = () => {
             <h1 className="text-2xl font-garamond font-bold flex-shrink-0" style={{ color: 'var(--color-text-primary)' }}>
               Journal
             </h1>
-            <span className="text-sm font-spartan font-medium truncate" style={{ color: 'var(--color-text-secondary)' }}>
+            {/* <span className="text-sm font-spartan font-medium truncate" style={{ color: 'var(--color-text-secondary)' }}>
               ·&nbsp; {headerDateLabel}
-            </span>
+            </span> */}
           </div>
 
           {/* Right: Accessory icons */}
