@@ -83,17 +83,22 @@ const AnalyticsPage = () => {
       <MetricCards habits={habits} entries={entries} timeRange={timeRange} accountAgeDays={accountAgeDays} />
       </div>
 
-      {/* ── Charts: 2-col on desktop ───────────── */}
-      <div className="grid gap-4 lg:grid-cols-2" data-tour="analytics-charts">
+      {/* ── Daily completion rate: full-width row ─── */}
+      <div data-tour="analytics-charts">
         <CompletionAreaChart habits={habits} entries={entries} timeRange={timeRange} accountAgeDays={accountAgeDays} />
-        <StreakBarChart habits={habits} entries={entries} />
       </div>
 
-      {/* ── Heatmap + Top habits: 2-col ────────── */}
+      {/* ── Current streaks + Top habits: 2-col ──── */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <ActivityHeatmap habits={habits} entries={entries} timeRange={timeRange} accountAgeDays={accountAgeDays} />
+        <StreakBarChart habits={habits} entries={entries} />
         <TopHabitsList habits={habits} entries={entries} timeRange={timeRange} accountAgeDays={accountAgeDays} />
       </div>
+
+      {/* ── Activity heatmap (disabled — WeekStrip covers this) ──
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ActivityHeatmap habits={habits} entries={entries} timeRange={timeRange} accountAgeDays={accountAgeDays} />
+      </div>
+      */}
 
       {/* ── Streak timeline: full-width row ──── */}
       {habits.length > 0 && (
