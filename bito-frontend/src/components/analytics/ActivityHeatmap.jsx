@@ -34,6 +34,7 @@ const ActivityHeatmap = ({ habits, entries, timeRange, accountAgeDays = 365 }) =
         let possible = 0;
 
         habits.forEach(h => {
+          if (h.frequency === 'weekly') return; // weekly habits don't count per-day
           if (h.schedule?.days?.length && !h.schedule.days.includes(d.getDay())) return;
           possible++;
           const entry = (entries[h._id] || {})[dateStr];

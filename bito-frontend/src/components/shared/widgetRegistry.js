@@ -25,46 +25,11 @@ export const WIDGET_TYPES = {
   },
 
   // Analytics widgets
-  "overview-cards": {
-    title: "Overview Cards",
-    icon: "📊",
-    description: "Key metrics at a glance",
-    defaultProps: { w: 12, h: 3 },
-    category: "analytics"
-  },
   "habit-streak-chart": {
     title: "Habit Streaks",
     icon: "📈",
     description: "Track your consistency over time",
     defaultProps: { w: 6, h: 6 },
-    category: "analytics"
-  },
-  "completion-rate-chart": {
-    title: "Completion Rates",
-    icon: "🎯",
-    description: "Success percentages over time",
-    defaultProps: { w: 6, h: 6 },
-    category: "analytics"
-  },
-  "weekly-heatmap": {
-    title: "Weekly Heatmap",
-    icon: "🔥",
-    description: "Visual activity patterns",
-    defaultProps: { w: 8, h: 5 },
-    category: "analytics"
-  },
-  "top-habits": {
-    title: "Top Performers",
-    icon: "🏆",
-    description: "Your most successful habits",
-    defaultProps: { w: 4, h: 5 },
-    category: "analytics"
-  },
-  "insights-panel": {
-    title: "AI Insights",
-    icon: "🧠",
-    description: "Personalized recommendations",
-    defaultProps: { w: 12, h: 4 },
     category: "analytics"
   },
 
@@ -183,7 +148,7 @@ export const WIDGET_TYPES = {
 // Default widget sets
 export const DEFAULT_WIDGETS = {
   dashboard: ["habits-overview", "quick-actions", "habit-list"],
-  analytics: ["overview-cards", "habit-streak-chart", "completion-rate-chart", "weekly-heatmap", "top-habits", "insights-panel"],
+  analytics: ["habit-streak-chart"],
   habits: ["habit-stats", "habits-list-widget", "quick-add-habit", "recent-activity"],
   settings: [
     "profile-widget",
@@ -227,44 +192,19 @@ export const DEFAULT_LAYOUTS = {
   },
   analytics: {
     lg: [
-      { i: "overview-cards", x: 0, y: 0, w: 12, h: 4 },
-      { i: "habit-streak-chart", x: 0, y: 4, w: 7, h: 6 },
-      { i: "top-habits", x: 7, y: 4, w: 5, h: 6 },
-      { i: "completion-rate-chart", x: 0, y: 10, w: 6, h: 9 },
-      { i: "weekly-heatmap", x: 6, y: 10, w: 6, h: 8 },
-      { i: "insights-panel", x: 0, y: 19, w: 12, h: 8 }
+      { i: "habit-streak-chart", x: 0, y: 0, w: 12, h: 6 }
     ],
     md: [
-      { i: "overview-cards", x: 1, y: 0, w: 10, h: 4 },
-      { i: "habit-streak-chart", x: 1, y: 3, w: 10, h: 6 },
-      { i: "completion-rate-chart", x: 1, y: 9, w: 10, h: 6 },
-      { i: "weekly-heatmap", x: 1, y: 15, w: 10, h: 6 },
-      { i: "top-habits", x: 1, y: 20, w: 12, h: 5 },
-      { i: "insights-panel", x: 1, y: 25, w: 10, h: 7 }
+      { i: "habit-streak-chart", x: 0, y: 0, w: 12, h: 6 }
     ],
     sm: [
-      { i: "overview-cards", x: 0, y: 0, w: 12, h: 6 },
-      { i: "habit-streak-chart", x: 0, y: 4, w: 12, h: 6 },
-      { i: "completion-rate-chart", x: 0, y: 11, w: 12, h: 7 },
-      { i: "weekly-heatmap", x: 0, y: 18, w: 12, h: 6 },
-      { i: "top-habits", x: 0, y: 24, w: 12, h: 6 },
-      { i: "insights-panel", x: 0, y: 30, w: 12, h: 6 }
+      { i: "habit-streak-chart", x: 0, y: 0, w: 12, h: 6 }
     ],
     xs: [
-      { i: "overview-cards", x: 0, y: 0, w: 4, h: 6 },
-      { i: "habit-streak-chart", x: 0, y: 4, w: 4, h: 6 },
-      { i: "completion-rate-chart", x: 0, y: 11, w: 4, h: 7 },
-      { i: "weekly-heatmap", x: 0, y: 18, w: 4, h: 6 },
-      { i: "top-habits", x: 0, y: 24, w: 4, h: 6 },
-      { i: "insights-panel", x: 0, y: 30, w: 4, h: 6 }
+      { i: "habit-streak-chart", x: 0, y: 0, w: 4, h: 6 }
     ],
     xxs: [
-      { i: "overview-cards", x: 0, y: 0, w: 2, h: 4 },
-      { i: "habit-streak-chart", x: 0, y: 4, w: 2, h: 7 },
-      { i: "completion-rate-chart", x: 0, y: 11, w: 2, h: 7 },
-      { i: "weekly-heatmap", x: 0, y: 18, w: 2, h: 6 },
-      { i: "top-habits", x: 0, y: 24, w: 2, h: 6 },
-      { i: "insights-panel", x: 0, y: 30, w: 2, h: 5 }
+      { i: "habit-streak-chart", x: 0, y: 0, w: 2, h: 7 }
     ]
   },
   habits: {
@@ -389,8 +329,7 @@ export const STORAGE_KEYS = {
   analytics: {
     layouts: "habitTracker_analyticsLayouts", 
     widgets: "habitTracker_analyticsWidgets",
-    timeRange: "habitTracker_analyticsTimeRange",
-    topHabitsCategory: "habitTracker_analyticsTopHabitsCategory"
+    timeRange: "habitTracker_analyticsTimeRange"
   },
   habits: {
     layouts: "habitTracker_habitsLayouts",

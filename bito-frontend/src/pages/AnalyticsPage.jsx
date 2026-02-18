@@ -90,10 +90,10 @@ const AnalyticsPage = () => {
       </div>
 
       {/* ── Heatmap + Top habits: 2-col ────────── */}
-      {/* <div className="grid gap-4 lg:grid-cols-2">
-        <ActivityHeatmap habits={habits} entries={entries} timeRange={timeRange} />
-        <TopHabitsList habits={habits} entries={entries} timeRange={timeRange} />
-      </div> */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ActivityHeatmap habits={habits} entries={entries} timeRange={timeRange} accountAgeDays={accountAgeDays} />
+        <TopHabitsList habits={habits} entries={entries} timeRange={timeRange} accountAgeDays={accountAgeDays} />
+      </div>
 
       {/* ── Streak timeline: full-width row ──── */}
       {habits.length > 0 && (

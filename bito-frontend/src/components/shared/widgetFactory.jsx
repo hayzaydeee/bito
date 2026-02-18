@@ -102,14 +102,7 @@ class WidgetErrorBoundary extends React.Component {
 const ChartWidget = lazy(() => import('../widgets/ChartWidget'));
 const DatabaseWidget = lazy(() => import('../widgets/database/components/DatabaseWidget'));
 const QuickActionsWidget = lazy(() => import('../widgets/QuickActionsWidget'));
-const OverviewCardsWidget = lazy(() => import('../analytics/widgets/OverviewCardsWidget'));
 const HabitStreakChartWidget = lazy(() => import('../analytics/widgets/HabitStreakChartWidget'));
-const CompletionRateChartWidget = lazy(() => import('../analytics/widgets/CompletionRateChartWidget'));
-
-// Additional analytics widgets
-const WeeklyHeatmapWidget = lazy(() => import('../analytics/widgets/WeeklyHeatmapWidget'));
-const TopHabitsWidget = lazy(() => import('../analytics/widgets/TopHabitsWidget'));
-const InsightsPanelWidget = lazy(() => import('../analytics/widgets/InsightsPanelWidget'));
 
 // Group Accountability widgets
 const GroupOverviewWidget = lazy(() => import('../widgets/GroupOverviewWidget'));
@@ -397,62 +390,12 @@ const WidgetRenderer = ({
       }
 
     // Analytics widgets
-    case 'overview-cards':
-      return (
-        <Suspense fallback={<WidgetSkeleton title="Overview Cards" />}>
-          <OverviewCardsWidget 
-            timeRange="30d"
-            {...commonProps}
-          />
-        </Suspense>
-      );
-
     case 'habit-streak-chart':
       return (
         <Suspense fallback={<WidgetSkeleton title="Habit Streaks" />}>
           <HabitStreakChartWidget 
             timeRange="30d"
             onAddHabit={onAddHabit}
-            {...commonProps}
-          />
-        </Suspense>
-      );
-
-    case 'completion-rate-chart':
-      return (
-        <Suspense fallback={<WidgetSkeleton title="Completion Rates" />}>
-          <CompletionRateChartWidget 
-            timeRange="30d"
-            {...commonProps}
-          />
-        </Suspense>
-      );
-
-    case 'weekly-heatmap':
-      return (
-        <Suspense fallback={<WidgetSkeleton title="Weekly Heatmap" />}>
-          <WeeklyHeatmapWidget 
-            timeRange="30d"
-            {...commonProps}
-          />
-        </Suspense>
-      );
-
-    case 'top-habits':
-      return (
-        <Suspense fallback={<WidgetSkeleton title="Top Performers" />}>
-          <TopHabitsWidget 
-            timeRange="30d"
-            {...commonProps}
-          />
-        </Suspense>
-      );
-
-    case 'insights-panel':
-      return (
-        <Suspense fallback={<WidgetSkeleton title="AI Insights" />}>
-          <InsightsPanelWidget 
-            timeRange="30d"
             {...commonProps}
           />
         </Suspense>

@@ -143,10 +143,10 @@ const TopHabitsList = ({ habits, entries, timeRange, accountAgeDays = 365 }) => 
 
             {/* Rate */}
             <span
-              className="w-10 text-right text-sm font-spartan font-semibold tabular-nums"
+              className="w-12 text-right text-sm font-spartan font-semibold tabular-nums"
               style={{ color: h.rate > 0 ? h.color : 'var(--color-text-tertiary)' }}
             >
-              {h.rate}%
+              {h.rateLabel}
             </span>
           </div>
         ))}
