@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { authAPI, handleAPIError } from '../services/api';
+import userPreferencesService from '../services/userPreferencesService';
 
 // Initial state
 const initialState = {
@@ -116,6 +117,9 @@ export const AuthProvider = ({ children }) => {
           // Verify token is still valid
           const response = await authAPI.getMe();
           
+          // Sync user preferences (weekStartsOn, etc.) to the preferences service
+          userPreferencesService.syncWithBackend(response.data.user);
+
           dispatch({
             type: actionTypes.LOGIN_SUCCESS,
             payload: {
@@ -170,6 +174,9 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', jwtToken);
       localStorage.setItem('user', JSON.stringify(user));
 
+      // Sync user preferences on login
+      userPreferencesService.syncWithBackend(user);
+
       dispatch({
         type: actionTypes.MAGIC_LINK_VERIFY_SUCCESS,
         payload: { user, token: jwtToken },
@@ -207,6 +214,8 @@ export const AuthProvider = ({ children }) => {
   const updateUser = (userData) => {
     const updatedUser = { ...state.user, ...userData };
     localStorage.setItem('user', JSON.stringify(updatedUser));
+    // Keep preferences service in sync
+    userPreferencesService.syncWithBackend(updatedUser);
     dispatch({
       type: actionTypes.UPDATE_USER,
       payload: userData,
