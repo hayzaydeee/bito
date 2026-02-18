@@ -96,7 +96,7 @@ const JournalDayFeed = ({
 
         {/* Longform editor */}
         <div className="pb-6">
-          <div className="rounded-xl border p-4 sm:p-6"
+          <div className="rounded-xl border p-4 sm:p-6 overflow-visible"
             style={{
               backgroundColor: 'var(--color-surface-primary)',
               borderColor: 'var(--color-border-primary)',

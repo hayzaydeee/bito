@@ -98,7 +98,20 @@
 }
 
 /* ── Responsive adjustments ──────────────────────────────────── */
+
+/* Keep BlockNote side menu (+ / drag handle) visible outside the card */
+.journal-v2-editor {
+  overflow: visible;
+}
+
+/* On mobile, pull the side menu inside the editor so it doesn't clip */
 @media (max-width: 640px) {
+  .journal-v2-editor .bn-side-menu {
+    position: relative;
+    left: 0 !important;
+    margin-left: 0 !important;
+  }
+
   .journal-v2-editor .bn-block-content {
     font-size: 1rem;
     line-height: 1.7;
