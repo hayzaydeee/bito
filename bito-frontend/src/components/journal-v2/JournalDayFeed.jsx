@@ -44,7 +44,7 @@ const JournalDayFeed = ({
   return (
     <div className="flex flex-col h-full">
       {/* ── Metadata strip ─────────────────────────────────── */}
-      <div className="flex-shrink-0 px-6 sm:px-10 pt-4 pb-3">
+      <div className="flex-shrink-0 pt-4 pb-3">
         <JournalMeta
           mood={mood}
           energy={energy}
@@ -59,7 +59,7 @@ const JournalDayFeed = ({
       {/* ── Content area ────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto">
         {/* Quick capture bar */}
-        <div className="px-6 sm:px-10 pb-4">
+        <div className="pb-4">
           <QuickCapture
             onSubmit={(text) => onAddMicro(text)}
             placeholder="Quick thought..."
@@ -68,7 +68,7 @@ const JournalDayFeed = ({
 
         {/* Micro-entries stack (smart collapse) */}
         {micros.length > 0 && (
-          <div className="px-6 sm:px-10 pb-4">
+          <div className="pb-4">
             <MicroStack
               micros={micros}
               isExpanded={microsExpanded}
@@ -81,7 +81,7 @@ const JournalDayFeed = ({
 
         {/* Divider between micros and longform */}
         {micros.length > 0 && (
-          <div className="px-6 sm:px-10 pb-4">
+          <div className="pb-4">
             <div className="flex items-center gap-3">
               <div className="flex-1 h-px" style={{ backgroundColor: 'var(--color-border-primary)' }} />
               <span className="text-[10px] font-spartan font-semibold uppercase tracking-wider"
@@ -94,7 +94,7 @@ const JournalDayFeed = ({
         )}
 
         {/* Longform editor */}
-        <div className="px-6 sm:px-10 pb-6">
+        <div className="pb-6">
           <div className="max-w-2xl mx-auto rounded-xl border p-4 sm:p-6"
             style={{
               backgroundColor: 'var(--color-surface-primary)',
@@ -106,7 +106,7 @@ const JournalDayFeed = ({
       </div>
 
       {/* ── Footer status bar ───────────────────────────────── */}
-      <div className="flex-shrink-0 border-t px-6 sm:px-10 py-2 flex items-center justify-between text-xs font-spartan"
+      <div className="flex-shrink-0 border-t py-2 flex items-center justify-between text-xs font-spartan"
         style={{ borderColor: 'var(--color-border-primary)', color: 'var(--color-text-tertiary)' }}>
         <div className="flex items-center gap-3">
           <span>{wordCount} words</span>

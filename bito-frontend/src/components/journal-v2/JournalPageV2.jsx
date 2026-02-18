@@ -129,13 +129,13 @@ const JournalPageV2 = () => {
   }
 
   return (
-    <div className="journal-v2-page flex flex-col h-full overflow-hidden">
+    <div className="journal-v2-page flex flex-col h-full overflow-hidden p-4 sm:p-6 max-w-5xl mx-auto w-full">
       {/* ── Top bar ─────────────────────────────────────────── */}
-      <div className="flex-shrink-0 px-6 sm:px-10 pt-4 pb-2">
+      <div className="flex-shrink-0 pb-2">
         <div className="flex items-center justify-between mb-2">
           {/* Left: Title · contextual date */}
           <div className="flex items-baseline gap-2 min-w-0">
-            <h1 className="text-xl sm:text-2xl font-garamond font-bold flex-shrink-0" style={{ color: 'var(--color-text-primary)' }}>
+            <h1 className="text-2xl font-garamond font-bold flex-shrink-0" style={{ color: 'var(--color-text-primary)' }}>
               Journal
             </h1>
             <span className="text-sm font-spartan font-medium truncate" style={{ color: 'var(--color-text-secondary)' }}>
@@ -144,7 +144,7 @@ const JournalPageV2 = () => {
           </div>
 
           {/* Right: Accessory icons */}
-          <div className="flex items-center gap-1.5 flex-shrink-0 ml-3">
+          <div className="flex items-center gap-2 flex-shrink-0 ml-3">
             {/* Privacy / AI badge */}
             <PrivacyBadge
               journalAI={journalAI}
@@ -154,25 +154,25 @@ const JournalPageV2 = () => {
             {/* Search toggle */}
             <button
               onClick={() => showSearch ? clearSearch() : setShowSearch(true)}
-              className="p-2 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
+              className="p-2.5 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
               style={{ color: 'var(--color-text-secondary)' }}
               aria-label={showSearch ? 'Close search' : 'Search journal'}
             >
               {showSearch
-                ? <Cross2Icon className="w-4 h-4" />
-                : <MagnifyingGlassIcon className="w-4 h-4" />
+                ? <Cross2Icon className="w-5 h-5" />
+                : <MagnifyingGlassIcon className="w-5 h-5" />
               }
             </button>
 
             {/* Archive link */}
             <button
               onClick={() => setShowArchive(true)}
-              className="p-2 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
+              className="p-2.5 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
               style={{ color: 'var(--color-text-secondary)' }}
               aria-label="View archive"
               title="View archived entries"
             >
-              <ArchiveIcon className="w-4 h-4" />
+              <ArchiveIcon className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -263,7 +263,7 @@ const JournalPageV2 = () => {
 
       {/* ── AI opt-in nudge ─────────────────────────────────── */}
       {showNudgeBanner && (
-        <div className="flex-shrink-0 px-6 sm:px-10 pb-2">
+        <div className="flex-shrink-0 pb-2">
           <AIOptInNudge
             onStartTour={() => setShowPrivacySettings(true)}
             onDismiss={handleDismissNudge}
