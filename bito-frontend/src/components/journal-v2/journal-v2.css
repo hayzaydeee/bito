@@ -39,17 +39,19 @@
 }
 
 /* Table cells & embed captions use EB Garamond */
-.journal-v2-editor .bn-table-cell,
-.journal-v2-editor .bn-table-cell p,
-.journal-v2-editor .bn-file-block-caption,
+.journal-v2-editor [data-content-type="table"] td,
+.journal-v2-editor [data-content-type="table"] th,
+.journal-v2-editor [data-content-type="table"] td p,
+.journal-v2-editor [data-content-type="table"] th p,
+.journal-v2-editor .bn-file-caption,
 .journal-v2-editor [data-content-type="image"] input,
-.journal-v2-editor [data-content-type="image"] .bn-caption,
+.journal-v2-editor [data-content-type="image"] .bn-file-caption,
 .journal-v2-editor [data-content-type="video"] input,
-.journal-v2-editor [data-content-type="video"] .bn-caption,
+.journal-v2-editor [data-content-type="video"] .bn-file-caption,
 .journal-v2-editor [data-content-type="audio"] input,
-.journal-v2-editor [data-content-type="audio"] .bn-caption,
+.journal-v2-editor [data-content-type="audio"] .bn-file-caption,
 .journal-v2-editor [data-content-type="file"] input,
-.journal-v2-editor [data-content-type="file"] .bn-caption {
+.journal-v2-editor [data-content-type="file"] .bn-file-caption {
   font-family: 'EB Garamond', serif !important;
 }
 
