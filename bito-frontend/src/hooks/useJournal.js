@@ -10,6 +10,47 @@ const todayStr = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
+/**
+ * Build a lightweight fingerprint of the document content.
+ * Captures text, link hrefs, embed URLs, and table cell text
+ * so we detect changes to embeds (images, files) that plain-text comparison misses.
+ */
+function getContentFingerprint(content) {
+  if (!Array.isArray(content)) return '';
+  let fp = '';
+  const visit = (blocks) => {
+    for (const b of blocks) {
+      if (!b) continue;
+      fp += b.type || '';
+      if (Array.isArray(b.content)) {
+        for (const ic of b.content) {
+          if (ic?.text) fp += ic.text;
+          if (ic?.type === 'link') {
+            fp += ic.href || '';
+            if (Array.isArray(ic.content)) {
+              for (const lc of ic.content) { if (lc?.text) fp += lc.text; }
+            }
+          }
+        }
+      }
+      if (b.content?.type === 'tableContent') {
+        for (const row of (b.content.rows || [])) {
+          for (const cell of (row.cells || [])) {
+            if (Array.isArray(cell)) {
+              for (const item of cell) { if (item?.text) fp += item.text; }
+            }
+          }
+        }
+      }
+      if (b.props?.url) fp += b.props.url;
+      if (b.props?.caption) fp += b.props.caption;
+      if (Array.isArray(b.children) && b.children.length > 0) visit(b.children);
+    }
+  };
+  visit(content);
+  return fp;
+}
+
 export function useJournal() {
   const { isAuthenticated } = useAuth();
 
@@ -35,6 +76,8 @@ export function useJournal() {
   const [editorReady, setEditorReady] = useState(false);
   const saveTimerRef = useRef(null);
   const abortRef = useRef(null);
+  const isSavingRef = useRef(false);
+  const lastContentFpRef = useRef('');
 
   /* ── Load indicators for the week strip ──────────────────────── */
   const loadIndicators = useCallback(async () => {
