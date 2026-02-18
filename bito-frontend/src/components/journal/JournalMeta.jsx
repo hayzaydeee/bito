@@ -52,7 +52,7 @@ const JournalMeta = ({ mood, energy, tags, onMoodChange, onEnergyChange, onAddTa
         </div>
 
         {/* Energy */}
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl border"
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl border sm:px2 sm:py-1"
           style={{ borderColor: 'var(--color-border-primary)', backgroundColor: 'var(--color-surface-secondary)' }}>
           <span className="text-xs font-spartan font-semibold tracking-wide uppercase"
             style={{ color: 'var(--color-text-tertiary)' }}>
