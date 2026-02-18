@@ -44,7 +44,7 @@ const JournalDayFeed = ({
   return (
     <div className="flex flex-col h-full">
       {/* ── Centralized content column ─────────────────────── */}
-      <div className="flex-shrink-0 pt-4 pb-3 max-w-2xl mx-auto w-full">
+      <div className="flex-shrink-0 pt-4 pb-3 max-w-[740px] mx-auto w-full">
         <JournalMeta
           mood={mood}
           energy={energy}
@@ -58,7 +58,7 @@ const JournalDayFeed = ({
 
       {/* ── Content area ────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-2xl mx-auto w-full">
+        <div className="max-w-[740px] mx-auto w-full">
         {/* Quick capture bar */}
         <div className="pb-4">
           <QuickCapture
@@ -111,7 +111,7 @@ const JournalDayFeed = ({
       </div>
 
       {/* ── Footer status bar ───────────────────────────────── */}
-      <div className="flex-shrink-0 border-t py-2 max-w-2xl mx-auto w-full flex items-center justify-between text-xs font-spartan"
+      <div className="flex-shrink-0 border-t py-2 max-w-[740px] mx-auto w-full flex items-center justify-between text-xs font-spartan"
         style={{ borderColor: 'var(--color-border-primary)', color: 'var(--color-text-tertiary)' }}>
         <div className="flex items-center gap-3">
           <span>{wordCount} words</span>
