@@ -99,6 +99,29 @@
 
 /* ── Responsive adjustments ──────────────────────────────────── */
 
+/* Scrollable editor area — subtle scrollbar */
+.journal-v2-editor-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-primary) transparent;
+}
+
+.journal-v2-editor-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.journal-v2-editor-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.journal-v2-editor-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-border-primary);
+  border-radius: 3px;
+}
+
+.journal-v2-editor-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-tertiary);
+}
+
 /* Keep BlockNote side menu (+ / drag handle) visible outside the card */
 .journal-v2-editor {
   overflow: visible;

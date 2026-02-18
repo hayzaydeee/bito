@@ -105,7 +105,7 @@ const BlockNoteEditor = ({
         editor={editor}
         theme={effectiveTheme}
         editable={editable}
-        className="min-h-[400px] focus:outline-none"
+        className="min-h-[300px] focus:outline-none"
         placeholder={placeholder}
       />
     </div>
