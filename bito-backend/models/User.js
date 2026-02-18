@@ -169,6 +169,35 @@ const userSchema = new mongoose.Schema({  // Basic user information
     aiAnalytics: {
       type: Boolean,
       default: true
+    },
+
+    // Journal AI privacy tiers (all off by default — opt-in via tour)
+    journalAI: {
+      // Tier 1: Pattern detection from mood/tags only (no content reading)
+      insightNudges: {
+        type: Boolean,
+        default: false
+      },
+      // Tier 2: AI reads plain text to surface themes and correlations
+      contentAnalysis: {
+        type: Boolean,
+        default: false
+      },
+      // Tier 3: AI generates weekly narrative summaries from journal content
+      weeklySummaries: {
+        type: Boolean,
+        default: false
+      },
+      // Whether user has completed the Journal Intelligence tour
+      tourCompleted: {
+        type: Boolean,
+        default: false
+      },
+      // Whether the first-week nudge has been dismissed
+      nudgeDismissed: {
+        type: Boolean,
+        default: false
+      }
     }
   },
 

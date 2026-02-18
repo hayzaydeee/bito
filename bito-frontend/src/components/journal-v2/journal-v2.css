@@ -1,0 +1,128 @@
+/* ═══════════════════════════════════════════════════════════════
+   Journal V2 — Fluid Writing Surface + Micro-Journal Feed
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Page layout ─────────────────────────────────────────────── */
+.journal-v2-page {
+  background-color: var(--color-surface-primary);
+}
+
+/* ── Editor overrides ────────────────────────────────────────── */
+.journal-v2-editor .bn-container {
+  font-family: 'EB Garamond', serif;
+}
+
+.journal-v2-editor .bn-block-content {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: var(--color-text-primary);
+}
+
+.journal-v2-editor .bn-inline-content {
+  font-family: 'EB Garamond', serif;
+}
+
+/* Clean placeholder styling */
+.journal-v2-editor .bn-block-content[data-is-empty-and-focused]::before,
+.journal-v2-editor .bn-block-content[data-placeholder]::before {
+  color: var(--color-text-tertiary);
+  font-style: italic;
+  opacity: 0.6;
+}
+
+/* Heading overrides */
+.journal-v2-editor h1 .bn-inline-content,
+.journal-v2-editor h2 .bn-inline-content,
+.journal-v2-editor h3 .bn-inline-content {
+  font-family: 'EB Garamond', serif;
+  font-weight: 700;
+}
+
+/* Remove default editor border/shadow */
+.journal-v2-editor .bn-editor {
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  background: transparent;
+}
+
+/* Minimal toolbar when it appears */
+.journal-v2-editor .bn-toolbar {
+  border-radius: 12px;
+  border: 1px solid var(--color-border-primary);
+  box-shadow: var(--shadow-lg);
+  background: var(--color-surface-primary);
+}
+
+/* Slash menu styling */
+.journal-v2-editor .bn-slash-menu {
+  border-radius: 12px;
+  border: 1px solid var(--color-border-primary);
+  box-shadow: var(--shadow-lg);
+  background: var(--color-surface-primary);
+}
+
+/* ── Smooth transitions across the page ──────────────────────── */
+.journal-v2-page * {
+  transition-property: background-color, border-color, color, opacity;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+}
+
+/* Don't transition editor typing */
+.journal-v2-editor .bn-block-content *,
+.journal-v2-editor .bn-inline-content * {
+  transition: none;
+}
+
+/* ── Quick capture focus animation ───────────────────────────── */
+@keyframes journal-focus-in {
+  from {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+  }
+  to {
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+  }
+}
+
+/* ── Micro entry slide-in ────────────────────────────────────── */
+@keyframes micro-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Responsive adjustments ──────────────────────────────────── */
+@media (max-width: 640px) {
+  .journal-v2-editor .bn-block-content {
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .journal-v2-page h1 {
+    font-size: 1.5rem;
+  }
+}
+
+/* ── Print-friendly ──────────────────────────────────────────── */
+@media print {
+  .journal-v2-page {
+    background: white;
+  }
+
+  .journal-v2-page button,
+  .journal-v2-page [role="toolbar"] {
+    display: none !important;
+  }
+
+  .journal-v2-editor .bn-block-content {
+    color: #000;
+    font-size: 12pt;
+    line-height: 1.6;
+  }
+}
