@@ -21,23 +21,24 @@ const JournalMeta = ({ mood, energy, tags, onMoodChange, onEnergyChange, onAddTa
 
   return (
     <div className="space-y-3 text-sm">
-      {/* Mood & Energy — single row on all screens */}
-      <div className="flex items-stretch gap-2">
+      {/* Mood & Energy row */}
+      <div className="flex flex-wrap items-stretch gap-3 justify-between">
         {/* Mood */}
-        <div className="flex-1 flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-xl border"
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl border"
           style={{ borderColor: 'var(--color-border-primary)', backgroundColor: 'var(--color-surface-secondary)' }}>
-          <span className="text-[10px] sm:text-xs font-spartan font-semibold tracking-wide uppercase shrink-0"
+          <span className="text-xs font-spartan font-semibold tracking-wide uppercase"
             style={{ color: 'var(--color-text-tertiary)' }}>
             Mood
           </span>
-          <div className="flex items-center gap-0.5 sm:gap-1">
+          <div className="w-px h-5 mx-0.5" style={{ backgroundColor: 'var(--color-border-primary)' }} />
+          <div className="flex items-center gap-1">
             {MOOD_EMOJI.map((e, i) => {
               const val = i + 1;
               return (
                 <button
                   key={val}
                   onClick={() => onMoodChange(mood === val ? null : val)}
-                  className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg text-sm sm:text-lg transition-all ${
+                  className={`w-8 h-8 rounded-lg text-lg transition-all ${
                     mood === val
                       ? 'bg-[var(--color-brand-500)]/15 scale-110 ring-2 ring-[var(--color-brand-400)]'
                       : 'hover:bg-[var(--color-surface-hover)] opacity-40 hover:opacity-100'
@@ -51,20 +52,21 @@ const JournalMeta = ({ mood, energy, tags, onMoodChange, onEnergyChange, onAddTa
         </div>
 
         {/* Energy */}
-        <div className="flex-1 flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-xl border"
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl border"
           style={{ borderColor: 'var(--color-border-primary)', backgroundColor: 'var(--color-surface-secondary)' }}>
-          <span className="text-[10px] sm:text-xs font-spartan font-semibold tracking-wide uppercase shrink-0"
+          <span className="text-xs font-spartan font-semibold tracking-wide uppercase"
             style={{ color: 'var(--color-text-tertiary)' }}>
             Energy
           </span>
-          <div className="flex items-center gap-0.5 sm:gap-1">
+          <div className="w-px h-5 mx-0.5" style={{ backgroundColor: 'var(--color-border-primary)' }} />
+          <div className="flex items-center gap-1">
             {ENERGY_EMOJI.map((e, i) => {
               const val = i + 1;
               return (
                 <button
                   key={val}
                   onClick={() => onEnergyChange(energy === val ? null : val)}
-                  className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg text-sm sm:text-lg transition-all ${
+                  className={`w-8 h-8 rounded-lg text-lg transition-all ${
                     energy === val
                       ? 'bg-[var(--color-success)]/15 scale-110 ring-2 ring-[var(--color-success)]'
                       : 'hover:bg-[var(--color-surface-hover)] opacity-40 hover:opacity-100'
