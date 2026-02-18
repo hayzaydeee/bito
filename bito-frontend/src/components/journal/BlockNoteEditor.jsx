@@ -1,5 +1,10 @@
 import React, { useEffect, useMemo } from 'react';
-import { useCreateBlockNote, SuggestionMenuController } from '@blocknote/react';
+import {
+  useCreateBlockNote,
+  SuggestionMenuController,
+  getDefaultReactSlashMenuItems,
+} from '@blocknote/react';
+import { filterSuggestionItems } from '@blocknote/core/extensions';
 import { BlockNoteView } from '@blocknote/mantine';
 import { offset, flip, shift, size } from '@floating-ui/react';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -119,6 +124,14 @@ const BlockNoteEditor = ({
             to bottom-start when near the top (e.g. first line). */}
         <SuggestionMenuController
           triggerCharacter="/"
+          getItems={async (query) =>
+            filterSuggestionItems(
+              getDefaultReactSlashMenuItems(editor).filter(
+                (item) => !['File', 'Audio', 'Video'].includes(item.title)
+              ),
+              query
+            )
+          }
           floatingUIOptions={{
             useFloatingOptions: {
               placement: 'top-start',
