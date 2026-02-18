@@ -246,7 +246,7 @@ const Dashboard = () => {
       {/* 5. 7-day heatmap strip */}
       {habits.length > 0 && (
         <div className="pt-2">
-          <WeekStrip habits={habits} entries={entries} onToggle={handleToggleDate} fetchHabitEntries={fetchHabitEntries} />
+          <WeekStrip habits={habits} entries={entries} onToggle={handleToggleDate} onEdit={handleEditHabit} fetchHabitEntries={fetchHabitEntries} />
         </div>
       )}
 

@@ -5,14 +5,16 @@ import {
   EyeOpenIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  Pencil1Icon,
 } from "@radix-ui/react-icons";
+import { useWeekStartDay } from "../../hooks/useUserPreferences";
 
 /* ════════════════════════════════════════════
    Sub-components
    ════════════════════════════════════════════ */
 
 /* ─── Inline habit row for the expanded day panel ─── */
-const DayHabitRow = memo(({ habit, isCompleted, onToggle, dateStr }) => {
+const DayHabitRow = memo(({ habit, isCompleted, onToggle, onEdit, dateStr }) => {
   const [animating, setAnimating] = useState(false);
 
   const handleToggle = useCallback(() => {
@@ -64,10 +66,16 @@ const DayHabitRow = memo(({ habit, isCompleted, onToggle, dateStr }) => {
         {habit.name}
       </span>
 
-      <div
-        className="w-1.5 h-1.5 rounded-full flex-shrink-0 ml-auto"
-        style={{ backgroundColor: habit.color || "var(--color-brand-500)" }}
-      />
+      {onEdit && (
+        <button
+          onClick={() => onEdit(habit)}
+          className="p-1 rounded-md ml-auto flex-shrink-0 transition-opacity"
+          style={{ color: "var(--color-text-secondary)" }}
+          aria-label={`Edit ${habit.name}`}
+        >
+          <Pencil1Icon className="w-3.5 h-3.5" />
+        </button>
+      )}
     </div>
   );
 });
@@ -157,7 +165,8 @@ const buildDayStats = (dates, habits, entries) =>
    Main component
    ════════════════════════════════════════════ */
 
-const WeekStrip = memo(({ habits, entries, onToggle, fetchHabitEntries }) => {
+const WeekStrip = memo(({ habits, entries, onToggle, onEdit, fetchHabitEntries }) => {
+  const [weekStartDay] = useWeekStartDay();
   const [view, setView] = useState("week"); // week | month | year
   const [anchor, setAnchor] = useState(() => new Date());
   const [expandedDate, setExpandedDate] = useState(null);
@@ -186,13 +195,13 @@ const WeekStrip = memo(({ habits, entries, onToggle, fetchHabitEntries }) => {
   const isCurrentPeriod = useMemo(() => {
     const now = new Date();
     if (view === "week") {
-      return habitUtils.normalizeDate(habitUtils.getWeekStart(now)) === habitUtils.normalizeDate(habitUtils.getWeekStart(anchor));
+      return habitUtils.normalizeDate(habitUtils.getWeekStart(now, weekStartDay)) === habitUtils.normalizeDate(habitUtils.getWeekStart(anchor, weekStartDay));
     }
     if (view === "month") {
       return now.getFullYear() === anchor.getFullYear() && now.getMonth() === anchor.getMonth();
     }
     return now.getFullYear() === anchor.getFullYear();
-  }, [view, anchor]);
+  }, [view, anchor, weekStartDay]);
 
   // Fetch entries for the visible range
   useEffect(() => {
@@ -207,10 +216,10 @@ const WeekStrip = memo(({ habits, entries, onToggle, fetchHabitEntries }) => {
   // ── WEEK data ──
   const weekData = useMemo(() => {
     if (view !== "week") return [];
-    const ws = habitUtils.getWeekStart(anchor);
-    const dates = habitUtils.getWeekDates(ws);
+    const ws = habitUtils.getWeekStart(anchor, weekStartDay);
+    const dates = habitUtils.getWeekDates(ws, weekStartDay);
     return buildDayStats(dates, habits, entries);
-  }, [view, anchor, habits, entries]);
+  }, [view, anchor, habits, entries, weekStartDay]);
 
   // ── MONTH data ──
   const monthGrid = useMemo(() => {
@@ -448,7 +457,7 @@ const WeekStrip = memo(({ habits, entries, onToggle, fetchHabitEntries }) => {
             const entry = entries[habit._id]?.[expandedDay.date];
             const isCompleted = !!(entry && entry.completed);
             return (
-              <DayHabitRow key={habit._id} habit={habit} isCompleted={isCompleted} onToggle={onToggle} dateStr={expandedDay.date} />
+              <DayHabitRow key={habit._id} habit={habit} isCompleted={isCompleted} onToggle={onToggle} onEdit={onEdit} dateStr={expandedDay.date} />
             );
           })}
         </div>
