@@ -30,7 +30,7 @@ const JournalMeta = ({ mood, energy, tags, onMoodChange, onEnergyChange, onAddTa
             style={{ color: 'var(--color-text-tertiary)' }}>
             Mood
           </span> */}
-          <div className="w-px h-5 mx-0.5" style={{ backgroundColor: 'var(--color-border-primary)' }} />
+          {/* <div className="w-px h-5 mx-0.5" style={{ backgroundColor: 'var(--color-border-primary)' }} /> */}
           <div className="flex items-center gap-1">
             {MOOD_EMOJI.map((e, i) => {
               const val = i + 1;
@@ -58,7 +58,7 @@ const JournalMeta = ({ mood, energy, tags, onMoodChange, onEnergyChange, onAddTa
             style={{ color: 'var(--color-text-tertiary)' }}>
             Energy
           </span> */}
-          <div className="w-px h-5 mx-0.5" style={{ backgroundColor: 'var(--color-border-primary)' }} />
+          {/* <div className="w-px h-5 mx-0.5" style={{ backgroundColor: 'var(--color-border-primary)' }} /> */}
           <div className="flex items-center gap-1">
             {ENERGY_EMOJI.map((e, i) => {
               const val = i + 1;
