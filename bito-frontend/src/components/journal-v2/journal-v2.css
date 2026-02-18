@@ -50,7 +50,7 @@
 .journal-v2-editor [data-content-type="audio"] .bn-caption,
 .journal-v2-editor [data-content-type="file"] input,
 .journal-v2-editor [data-content-type="file"] .bn-caption {
-  font-family: 'EB Garamond', serif;
+  font-family: 'EB Garamond', serif !important;
 }
 
 /* Remove default editor border/shadow */

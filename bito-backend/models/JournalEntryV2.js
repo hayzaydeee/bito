@@ -270,7 +270,19 @@ journalEntryV2Schema.statics.extractPlainText = function (blockNoteContent) {
       const rows = block.content.rows || [];
       for (const row of rows) {
         const cells = row.cells || [];
-        const cellTexts = cells.map(cell => extractInline(cell));
+        const cellTexts = cells.map(cell => {
+          // v0.46 tableCell object
+          if (cell && typeof cell === 'object' && cell.type === 'tableCell') {
+            return extractInline(cell.content);
+          }
+          // Legacy flat array
+          if (Array.isArray(cell)) {
+            return extractInline(cell);
+          }
+          // String shorthand
+          if (typeof cell === 'string') return cell;
+          return '';
+        });
         text += cellTexts.join('\t') + '\n';
       }
     } else if (block.content && Array.isArray(block.content)) {

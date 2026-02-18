@@ -36,9 +36,16 @@ function getContentFingerprint(content) {
       if (b.content?.type === 'tableContent') {
         for (const row of (b.content.rows || [])) {
           for (const cell of (row.cells || [])) {
-            if (Array.isArray(cell)) {
+            // v0.46 tableCell object
+            if (cell && typeof cell === 'object' && cell.type === 'tableCell') {
+              for (const item of (cell.content || [])) { if (item?.text) fp += item.text; }
+            }
+            // Legacy flat array
+            else if (Array.isArray(cell)) {
               for (const item of cell) { if (item?.text) fp += item.text; }
             }
+            // String shorthand
+            else if (typeof cell === 'string') { fp += cell; }
           }
         }
       }

@@ -44,8 +44,33 @@ function sanitizeContent(content) {
 }
 
 /**
+ * Sanitize a single table cell.
+ * BlockNote v0.46 uses { type: "tableCell", props: {...}, content: [...] } objects.
+ * Older versions used flat InlineContent[][] arrays.
+ */
+function sanitizeTableCell(cell) {
+  // v0.46 tableCell object: { type: "tableCell", props: {...}, content: [...] }
+  if (cell && typeof cell === 'object' && cell.type === 'tableCell') {
+    return {
+      type: 'tableCell',
+      props: sanitizeProps(cell.props),
+      content: sanitizeContent(cell.content),
+    };
+  }
+  // Legacy flat array of inline content
+  if (Array.isArray(cell)) {
+    return sanitizeContent(cell);
+  }
+  // String shorthand (BlockNote accepts plain strings for cells)
+  if (typeof cell === 'string') {
+    return cell;
+  }
+  return [];
+}
+
+/**
  * Sanitize tableContent (used by the "table" block type).
- * Structure: { type: "tableContent", columnWidths?: number[], headerRows?: number, rows: [{ cells: [[inlineContent]] }] }
+ * Handles both v0.46 TableCell objects and legacy InlineContent[][] arrays.
  */
 function sanitizeTableContent(tc) {
   if (!tc || typeof tc !== 'object') return undefined;
@@ -54,12 +79,11 @@ function sanitizeTableContent(tc) {
     type: 'tableContent',
     ...(tc.columnWidths ? { columnWidths: tc.columnWidths } : {}),
     ...(tc.headerRows !== undefined ? { headerRows: tc.headerRows } : {}),
+    ...(tc.headerCols !== undefined ? { headerCols: tc.headerCols } : {}),
     rows: Array.isArray(tc.rows)
       ? tc.rows.map(row => ({
           cells: Array.isArray(row.cells)
-            ? row.cells.map(cell =>
-                Array.isArray(cell) ? sanitizeContent(cell) : []
-              )
+            ? row.cells.map(sanitizeTableCell)
             : [],
         }))
       : [],
@@ -182,7 +206,19 @@ export function extractPlainText(blockNoteContent) {
       const rows = block.content.rows || [];
       for (const row of rows) {
         const cells = row.cells || [];
-        const cellTexts = cells.map(cell => extractInline(cell));
+        const cellTexts = cells.map(cell => {
+          // v0.46 tableCell object
+          if (cell && typeof cell === 'object' && cell.type === 'tableCell') {
+            return extractInline(cell.content);
+          }
+          // Legacy flat array
+          if (Array.isArray(cell)) {
+            return extractInline(cell);
+          }
+          // String shorthand
+          if (typeof cell === 'string') return cell;
+          return '';
+        });
         text += cellTexts.join('\t') + '\n';
       }
     } else if (Array.isArray(block.content)) {
