@@ -101,8 +101,7 @@ const JournalDayFeed = ({
               backgroundColor: 'var(--color-surface-primary)',
               borderColor: 'var(--color-border-primary)',
             }}>
-            <div className="pl-0 pr-4 py-4 sm:pr-6 sm:py-6 overflow-y-auto journal-v2-editor-scroll"
-              style={{ maxHeight: 'clamp(400px, 60vh, 720px)' }}>
+            <div className="pl-0 pr-4 py-4 sm:pr-6 sm:py-6">
               {editorSlot}
             </div>
           </div>
