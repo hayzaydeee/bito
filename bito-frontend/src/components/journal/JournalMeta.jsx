@@ -81,7 +81,7 @@ const JournalMeta = ({ mood, energy, tags, onMoodChange, onEnergyChange, onAddTa
       </div>
 
       {/* Tags */}
-      <div className="flex items-center gap-1.5 flex-wrap">
+      {/* <div className="flex items-center gap-1.5 flex-wrap">
         {tags.map(t => (
           <span
             key={t}
@@ -105,7 +105,7 @@ const JournalMeta = ({ mood, energy, tags, onMoodChange, onEnergyChange, onAddTa
           className="w-16 bg-transparent text-xs font-spartan text-[var(--color-text-secondary)]
                      placeholder:text-[var(--color-text-tertiary)] outline-none"
         />
-      </div>
+      </div> */}
     </div>
   );
 };
