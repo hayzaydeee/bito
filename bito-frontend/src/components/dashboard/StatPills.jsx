@@ -57,7 +57,7 @@ const StatPills = memo(({ completed, total, streak, weeklyProgress }) => {
           {completed}/{total}
         </span>
         <span
-          className="text-[10px] font-spartan"
+          className="text-xs font-spartan"
           style={{ color: "var(--color-text-tertiary)" }}
         >
           today
@@ -81,7 +81,7 @@ const StatPills = memo(({ completed, total, streak, weeklyProgress }) => {
             {weeklyProgress.met}/{weeklyProgress.total}
           </span>
           <span
-            className="text-[10px] font-spartan"
+            className="text-xs font-spartan"
             style={{ color: "var(--color-text-tertiary)" }}
           >
             weekly
