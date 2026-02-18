@@ -26,10 +26,10 @@ const JournalMeta = ({ mood, energy, tags, onMoodChange, onEnergyChange, onAddTa
         {/* Mood */}
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl border"
           style={{ borderColor: 'var(--color-border-primary)', backgroundColor: 'var(--color-surface-secondary)' }}>
-          <span className="text-xs font-spartan font-semibold tracking-wide uppercase"
+          {/* <span className="text-xs font-spartan font-semibold tracking-wide uppercase"
             style={{ color: 'var(--color-text-tertiary)' }}>
             Mood
-          </span>
+          </span> */}
           <div className="w-px h-5 mx-0.5" style={{ backgroundColor: 'var(--color-border-primary)' }} />
           <div className="flex items-center gap-1">
             {MOOD_EMOJI.map((e, i) => {
@@ -54,10 +54,10 @@ const JournalMeta = ({ mood, energy, tags, onMoodChange, onEnergyChange, onAddTa
         {/* Energy */}
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl border sm:px2 sm:py-1"
           style={{ borderColor: 'var(--color-border-primary)', backgroundColor: 'var(--color-surface-secondary)' }}>
-          <span className="text-xs font-spartan font-semibold tracking-wide uppercase"
+          {/* <span className="text-xs font-spartan font-semibold tracking-wide uppercase"
             style={{ color: 'var(--color-text-tertiary)' }}>
             Energy
-          </span>
+          </span> */}
           <div className="w-px h-5 mx-0.5" style={{ backgroundColor: 'var(--color-border-primary)' }} />
           <div className="flex items-center gap-1">
             {ENERGY_EMOJI.map((e, i) => {
