@@ -4,7 +4,7 @@
 
 /* ── Page layout ─────────────────────────────────────────────── */
 .journal-v2-page {
-  background-color: var(--color-surface-primary);
+  background-color: var(--color-bg-primary);
 }
 
 /* ── Editor overrides ────────────────────────────────────────── */

@@ -145,7 +145,11 @@ const JournalDayFeed = ({
 
         {/* Longform editor */}
         <div className="px-6 sm:px-10 pb-6">
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-2xl mx-auto rounded-xl border p-4 sm:p-6"
+            style={{
+              backgroundColor: 'var(--color-surface-primary)',
+              borderColor: 'var(--color-border-primary)',
+            }}>
             {editorSlot}
           </div>
         </div>
