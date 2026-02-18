@@ -96,12 +96,12 @@ const JournalDayFeed = ({
 
         {/* Longform editor */}
         <div className="pb-6">
-          <div className="rounded-xl border overflow-visible"
+          <div className="rounded-xl border overflow-hidden"
             style={{
               backgroundColor: 'var(--color-surface-primary)',
               borderColor: 'var(--color-border-primary)',
             }}>
-            <div className="p-4 sm:p-6 overflow-y-auto journal-v2-editor-scroll"
+            <div className="pl-2 pr-4 py-4 sm:pl-3 sm:pr-6 sm:py-6 overflow-y-auto journal-v2-editor-scroll"
               style={{ maxHeight: 'clamp(400px, 60vh, 720px)' }}>
               {editorSlot}
             </div>
