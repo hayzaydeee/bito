@@ -139,6 +139,17 @@
   background: var(--color-text-tertiary);
 }
 
+/* Hide scrollbar on the journal content scroll area on mobile */
+@media (max-width: 767px) {
+  .journal-v2-content-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .journal-v2-content-scroll::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* Give blocks enough left indent so the floating side-menu (+/drag)
    sits inside the card instead of overflowing past the edge. */
 .journal-v2-editor .bn-editor {

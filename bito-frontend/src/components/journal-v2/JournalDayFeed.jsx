@@ -57,7 +57,7 @@ const JournalDayFeed = ({
       </div>
 
       {/* ── Content area ────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto journal-v2-content-scroll">
         <div className="max-w-[740px] mx-auto w-full">
         {/* Quick capture bar */}
         <div className="pb-4" data-tour="journal-quick-capture">
