@@ -22,7 +22,7 @@ const JournalMeta = ({ mood, energy, tags, onMoodChange, onEnergyChange, onAddTa
   return (
     <div className="space-y-3 text-sm">
       {/* Mood & Energy row */}
-      <div className="flex flex-wrap items-stretch gap-3 justify-between">
+      <div className="flex flex-wrap items-stretch gap-3 justify-between sm:justify-center">
         {/* Mood */}
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl border"
           style={{ borderColor: 'var(--color-border-primary)', backgroundColor: 'var(--color-surface-secondary)' }}>
