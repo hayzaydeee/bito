@@ -25,7 +25,7 @@ const habitSchema = new mongoose.Schema({
   // Workspace adoption tracking
   source: {
     type: String,
-    enum: ['personal', 'workspace'],
+    enum: ['personal', 'workspace', 'transformer'],
     default: 'personal'
   },
   workspaceId: {
@@ -47,6 +47,18 @@ const habitSchema = new mongoose.Schema({
     required: function() {
       return this.source === 'workspace';
     }
+  },
+
+  // Transformer linkage (v2).
+  // When a transformer generates habits, these link back to it.
+  transformerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Transformer',
+    default: null
+  },
+  transformerPhaseId: {
+    type: mongoose.Schema.Types.ObjectId,
+    default: null
   },
   
   // Workspace privacy settings (only for workspace-sourced habits)
@@ -110,6 +122,14 @@ const habitSchema = new mongoose.Schema({
       type: String,
       maxlength: 20
     }
+  },
+
+  // How this habit is measured (v2). Transformers set this explicitly.
+  // v1 inferred it from target.unit; v2 makes it a first-class field.
+  methodology: {
+    type: String,
+    enum: ['boolean', 'numeric', 'duration', 'rating'],
+    default: 'boolean'
   },
   
   // Scheduling
@@ -217,154 +237,200 @@ function getWeekEndUTC(weekStart) {
 // Instance methods
 habitSchema.methods.updateStats = async function() {
   const HabitEntry = mongoose.model('HabitEntry');
-  
-  // Get all entries for this habit
-  const entries = await HabitEntry.find({ habitId: this._id }).sort({ date: 1 });
-  
-  // Calculate total checks
-  this.stats.totalChecks = entries.reduce((sum, entry) => sum + entry.value, 0);
-  
+
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  today.setUTCHours(0, 0, 0, 0);
+
+  // 1. Total checks — aggregate sum (no documents loaded into memory)
+  const [totals] = await HabitEntry.aggregate([
+    { $match: { habitId: this._id } },
+    { $group: { _id: null, totalChecks: { $sum: '$value' } } }
+  ]);
+  const totalChecks = totals?.totalChecks || 0;
+
+  // 2. Last checked — single targeted query
+  const lastCompleted = await HabitEntry.findOne(
+    { habitId: this._id, completed: true },
+    { date: 1 },
+    { sort: { date: -1 } }
+  ).lean();
+  const lastChecked = lastCompleted?.date || null;
+
+  // 3. Streaks and completion rate (frequency-dependent)
+  let currentStreak, longestStreak, completionRate;
 
   if (this.frequency === 'weekly') {
-    // ── Weekly habit streak logic ──
-    // Streak = consecutive weeks where completed entries >= weeklyTarget
-    const target = this.weeklyTarget || 3;
-    const completedEntries = entries.filter(e => e.completed);
+    ({ currentStreak, longestStreak, completionRate } =
+      await this._computeWeeklyStats(HabitEntry, today));
+  } else {
+    ({ currentStreak, longestStreak, completionRate } =
+      await this._computeDailyStats(HabitEntry, today));
+  }
 
-    // Group completed entries by week (Mon-Sun)
-    const weekMap = new Map(); // weekStartStr -> count
-    completedEntries.forEach(entry => {
-      const ws = getWeekStartUTC(entry.date);
-      const key = ws.toISOString().split('T')[0];
-      weekMap.set(key, (weekMap.get(key) || 0) + 1);
-    });
+  // 4. Atomic $set — avoids triggering pre-save hooks / validation on whole doc
+  await mongoose.model('Habit').updateOne(
+    { _id: this._id },
+    { $set: {
+      'stats.totalChecks': totalChecks,
+      'stats.lastChecked': lastChecked,
+      'stats.currentStreak': currentStreak,
+      'stats.longestStreak': longestStreak,
+      'stats.completionRate': completionRate
+    }}
+  );
 
-    // Build sorted list of week-start dates
-    const weekKeys = Array.from(weekMap.keys()).sort();
+  // Keep in-memory copy in sync for callers that read habit.stats after
+  this.stats.totalChecks = totalChecks;
+  this.stats.lastChecked = lastChecked;
+  this.stats.currentStreak = currentStreak;
+  this.stats.longestStreak = longestStreak;
+  this.stats.completionRate = completionRate;
+};
 
-    // Current streak: walk backward from current week
-    let currentStreak = 0;
-    const currentWeekStart = getWeekStartUTC(today);
-    const cursor = new Date(currentWeekStart);
+// ── Daily stats: query only dates+completed, walk backward for streak ──
+habitSchema.methods._computeDailyStats = async function(HabitEntry, today) {
+  // Load only date+completed for completed entries, descending, lean
+  const completedDates = await HabitEntry.find(
+    { habitId: this._id, completed: true },
+    { date: 1, _id: 0 }
+  ).sort({ date: -1 }).lean();
 
-    // Check current week (in-progress)
-    const currentWeekKey = cursor.toISOString().split('T')[0];
-    const currentWeekCount = weekMap.get(currentWeekKey) || 0;
-    const currentWeekMet = currentWeekCount >= target;
+  // Current streak: walk backward from today
+  let currentStreak = 0;
+  const dateSet = new Set(
+    completedDates.map(e => {
+      const d = new Date(e.date);
+      d.setUTCHours(0, 0, 0, 0);
+      return d.getTime();
+    })
+  );
 
-    if (currentWeekMet) {
-      currentStreak = 1;
+  const cursor = new Date(today);
+  while (dateSet.has(cursor.getTime())) {
+    currentStreak++;
+    cursor.setUTCDate(cursor.getUTCDate() - 1);
+  }
+
+  // Longest streak: walk forward through sorted dates
+  const sortedTimestamps = Array.from(dateSet).sort((a, b) => a - b);
+  let longestStreak = 0;
+  let tempStreak = 1;
+
+  for (let i = 1; i < sortedTimestamps.length; i++) {
+    const diff = (sortedTimestamps[i] - sortedTimestamps[i - 1]) / (1000 * 60 * 60 * 24);
+    if (diff === 1) {
+      tempStreak++;
+    } else {
+      longestStreak = Math.max(longestStreak, tempStreak);
+      tempStreak = 1;
+    }
+  }
+  longestStreak = Math.max(longestStreak, tempStreak);
+  if (sortedTimestamps.length === 0) longestStreak = 0;
+
+  // Completion rate (last 30 days) — countDocuments, no loading
+  const thirtyDaysAgo = new Date(today);
+  thirtyDaysAgo.setUTCDate(thirtyDaysAgo.getUTCDate() - 30);
+
+  const completedCount = await HabitEntry.countDocuments({
+    habitId: this._id,
+    completed: true,
+    date: { $gte: thirtyDaysAgo, $lte: today }
+  });
+
+  const totalDays = Math.min(30, Math.ceil((today - this.createdAt) / (1000 * 60 * 60 * 24)));
+  const completionRate = totalDays > 0 ? Math.round((completedCount / totalDays) * 100) : 0;
+
+  return { currentStreak, longestStreak, completionRate };
+};
+
+// ── Weekly stats: aggregate completed entries by week ──
+habitSchema.methods._computeWeeklyStats = async function(HabitEntry, today) {
+  const target = this.weeklyTarget || 3;
+
+  // Aggregate: count completed entries per ISO week (Mon-Sun)
+  const weekCounts = await HabitEntry.aggregate([
+    { $match: { habitId: this._id, completed: true } },
+    { $group: {
+      _id: {
+        // Shift Sunday (1) to end of week: (dayOfWeek + 5) % 7 → Mon=0..Sun=6
+        // Then compute week-start as date minus that offset
+        weekStart: {
+          $dateFromParts: {
+            isoWeekYear: { $isoWeekYear: '$date' },
+            isoWeek: { $isoWeek: '$date' },
+            isoDayOfWeek: 1
+          }
+        }
+      },
+      count: { $sum: 1 }
+    }},
+    { $sort: { '_id.weekStart': 1 } }
+  ]);
+
+  // Build a map of weekStart → count
+  const weekMap = new Map();
+  weekCounts.forEach(w => {
+    const key = w._id.weekStart.getTime();
+    weekMap.set(key, w.count);
+  });
+
+  const currentWeekStart = getWeekStartUTC(today);
+
+  // Current streak: walk backward from current week
+  let currentStreak = 0;
+  let cursor = new Date(currentWeekStart);
+
+  // Check current week first
+  if ((weekMap.get(cursor.getTime()) || 0) >= target) {
+    currentStreak = 1;
+    cursor.setUTCDate(cursor.getUTCDate() - 7);
+  } else {
+    cursor.setUTCDate(cursor.getUTCDate() - 7);
+  }
+
+  const createdWeekStart = getWeekStartUTC(this.createdAt);
+  while (cursor >= createdWeekStart) {
+    if ((weekMap.get(cursor.getTime()) || 0) >= target) {
+      currentStreak++;
       cursor.setUTCDate(cursor.getUTCDate() - 7);
     } else {
-      // Current week not met yet — check if previous week was met to continue streak
-      cursor.setUTCDate(cursor.getUTCDate() - 7);
+      break;
     }
-
-    // Walk backward through previous weeks
-    for (let i = 0; i < 520; i++) { // ~10 years max
-      const key = cursor.toISOString().split('T')[0];
-      const count = weekMap.get(key) || 0;
-      // Don't count weeks before habit was created
-      if (cursor < this.createdAt) break;
-      if (count >= target) {
-        currentStreak++;
-        cursor.setUTCDate(cursor.getUTCDate() - 7);
-      } else {
-        break;
-      }
-    }
-
-    this.stats.currentStreak = currentStreak;
-
-    // Longest streak: scan all weeks from creation to now
-    let longestStreak = 0;
-    let tempStreak = 0;
-    const scanCursor = getWeekStartUTC(this.createdAt);
-    const nowWeekStart = getWeekStartUTC(today);
-
-    while (scanCursor <= nowWeekStart) {
-      const key = scanCursor.toISOString().split('T')[0];
-      const count = weekMap.get(key) || 0;
-      if (count >= target) {
-        tempStreak++;
-        longestStreak = Math.max(longestStreak, tempStreak);
-      } else {
-        tempStreak = 0;
-      }
-      scanCursor.setUTCDate(scanCursor.getUTCDate() + 7);
-    }
-
-    this.stats.longestStreak = longestStreak;
-
-    // Completion rate: weeks met / total weeks in last ~30 days (4 weeks)
-    const fourWeeksAgo = new Date(currentWeekStart);
-    fourWeeksAgo.setUTCDate(fourWeeksAgo.getUTCDate() - 21); // 3 previous weeks + current = 4
-    let weeksMet = 0;
-    let totalWeeks = 0;
-    const rateCursor = new Date(fourWeeksAgo);
-    while (rateCursor <= currentWeekStart) {
-      if (rateCursor >= this.createdAt) {
-        totalWeeks++;
-        const key = rateCursor.toISOString().split('T')[0];
-        if ((weekMap.get(key) || 0) >= target) weeksMet++;
-      }
-      rateCursor.setUTCDate(rateCursor.getUTCDate() + 7);
-    }
-    this.stats.completionRate = totalWeeks > 0 ? Math.round((weeksMet / totalWeeks) * 100) : 0;
-
-  } else {
-    // ── Daily habit streak logic (original) ──
-    let currentStreak = 0;
-    
-    for (let i = entries.length - 1; i >= 0; i--) {
-      const entryDate = new Date(entries[i].date);
-      entryDate.setHours(0, 0, 0, 0);
-      
-      const daysDiff = Math.floor((today - entryDate) / (1000 * 60 * 60 * 24));
-      
-      if (daysDiff === currentStreak && entries[i].completed) {
-        currentStreak++;
-      } else {
-        break;
-      }
-    }
-    
-    this.stats.currentStreak = currentStreak;
-    
-    // Calculate longest streak
-    let longestStreak = 0;
-    let tempStreak = 0;
-    
-    entries.forEach(entry => {
-      if (entry.completed) {
-        tempStreak++;
-        longestStreak = Math.max(longestStreak, tempStreak);
-      } else {
-        tempStreak = 0;
-      }
-    });
-    
-    this.stats.longestStreak = longestStreak;
-
-    // Completion rate (last 30 days)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
-    const recentEntries = entries.filter(entry => entry.date >= thirtyDaysAgo);
-    const completedCount = recentEntries.filter(entry => entry.completed).length;
-    const totalDays = Math.min(30, Math.ceil((today - this.createdAt) / (1000 * 60 * 60 * 24)));
-    
-    this.stats.completionRate = totalDays > 0 ? Math.round((completedCount / totalDays) * 100) : 0;
   }
-  
-  // Last checked date (shared)
-  const sortedDesc = [...entries].sort((a, b) => new Date(b.date) - new Date(a.date));
-  const lastCompletedEntry = sortedDesc.find(entry => entry.completed);
-  this.stats.lastChecked = lastCompletedEntry ? lastCompletedEntry.date : null;
-  
-  await this.save();
+
+  // Longest streak: scan all weeks from creation to now
+  let longestStreak = 0;
+  let tempStreak = 0;
+  const scan = new Date(createdWeekStart);
+
+  while (scan <= currentWeekStart) {
+    if ((weekMap.get(scan.getTime()) || 0) >= target) {
+      tempStreak++;
+      longestStreak = Math.max(longestStreak, tempStreak);
+    } else {
+      tempStreak = 0;
+    }
+    scan.setUTCDate(scan.getUTCDate() + 7);
+  }
+
+  // Completion rate: last 4 weeks
+  const fourWeeksAgo = new Date(currentWeekStart);
+  fourWeeksAgo.setUTCDate(fourWeeksAgo.getUTCDate() - 21);
+  let weeksMet = 0;
+  let totalWeeks = 0;
+  const rateCursor = new Date(fourWeeksAgo);
+
+  while (rateCursor <= currentWeekStart) {
+    if (rateCursor >= createdWeekStart) {
+      totalWeeks++;
+      if ((weekMap.get(rateCursor.getTime()) || 0) >= target) weeksMet++;
+    }
+    rateCursor.setUTCDate(rateCursor.getUTCDate() + 7);
+  }
+  const completionRate = totalWeeks > 0 ? Math.round((weeksMet / totalWeeks) * 100) : 0;
+
+  return { currentStreak, longestStreak, completionRate };
 };
 
 // Workspace-specific methods

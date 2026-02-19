@@ -201,6 +201,12 @@ const userSchema = new mongoose.Schema({  // Basic user information
     }
   },
 
+  // Timestamp of when the user last marked notifications as read
+  lastReadNotificationsAt: {
+    type: Date,
+    default: null // null = never read; treat all notifications as unread
+  },
+
   // Workspace dashboard sharing permissions
   dashboardSharingPermissions: [{
     workspaceId: {
@@ -222,6 +228,51 @@ const userSchema = new mongoose.Schema({  // Basic user information
     }
   }],
   
+  // Subscription & billing (v2)
+  // Embedded for fast lookups — every feature gate reads this.
+  // All existing users default to 'free' / 'active'.
+  subscription: {
+    plan: {
+      type: String,
+      enum: ['free', 'premium', 'team'],
+      default: 'free'
+    },
+    status: {
+      type: String,
+      enum: ['active', 'trialing', 'past_due', 'cancelled', 'expired'],
+      default: 'active'
+    },
+    provider: {
+      type: String,
+      enum: ['stripe', 'apple', 'google', null],
+      default: null
+    },
+    providerId: { type: String, default: null },
+    currentPeriodStart: { type: Date, default: null },
+    currentPeriodEnd: { type: Date, default: null },
+    cancelAtPeriodEnd: { type: Boolean, default: false },
+    trialEnd: { type: Date, default: null },
+    trialUsed: { type: Boolean, default: false },
+
+    // Cached limits (computed from plan via PLAN_LIMITS constant).
+    // Services read this instead of computing from the plan string.
+    limits: {
+      maxHabits: { type: Number, default: 10 },
+      maxActiveTransformers: { type: Number, default: 1 },
+      maxGenerationsPerMonth: { type: Number, default: 3 },
+      maxWorkspacesJoined: { type: Number, default: 2 },
+      maxWorkspacesCreated: { type: Number, default: 0 },
+      maxWorkspaceMembers: { type: Number, default: 0 },
+      historyRetentionDays: { type: Number, default: 90 }
+    },
+
+    // Usage counters (reset monthly)
+    usage: {
+      generationsThisMonth: { type: Number, default: 0 },
+      generationsResetAt: { type: Date, default: null }
+    }
+  },
+
   // Security
   lastLogin: {
     type: Date,

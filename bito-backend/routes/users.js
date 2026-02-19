@@ -541,12 +541,17 @@ router.get('/notifications', async (req, res) => {
       .skip(parseInt(offset))
       .lean();
 
-    // Add workspace name to each activity for easier frontend handling
+    // Determine read cutoff from user's lastReadNotificationsAt
+    const user = await User.findById(userId).select('lastReadNotificationsAt').lean();
+    const readCutoff = user?.lastReadNotificationsAt;
+
+    // Add workspace name and isRead flag to each activity
     const activitiesWithWorkspace = activities.map(activity => ({
       ...activity,
-      workspaceId: activity.workspaceId?._id?.toString() || activity.workspaceId?.toString(), // Ensure workspaceId is a string
+      workspaceId: activity.workspaceId?._id?.toString() || activity.workspaceId?.toString(),
       workspaceName: activity.workspaceId?.name,
-      userName: activity.userId?.name
+      userName: activity.userId?.name,
+      isRead: readCutoff ? activity.createdAt <= readCutoff : false
     }));
 
     res.json({
@@ -579,14 +584,19 @@ router.get('/notifications/unread-count', async (req, res) => {
 
     const workspaceIds = workspaces.map(w => w._id);
 
-    // Count recent activities (last 24 hours) from all workspaces
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
+    // Get user's last-read timestamp
+    const user = await User.findById(userId).select('lastReadNotificationsAt').lean();
+    const readCutoff = user?.lastReadNotificationsAt;
+
+    // Count unread activities (after last read, or last 7 days if never read)
+    const fallback = new Date();
+    fallback.setDate(fallback.getDate() - 7);
+    const since = readCutoff || fallback;
 
     const count = await Activity.countDocuments({
       workspaceId: { $in: workspaceIds },
-      userId: { $ne: userId }, // Don't include user's own activities
-      createdAt: { $gte: yesterday },
+      userId: { $ne: userId },
+      createdAt: { $gt: since },
       type: { 
         $in: ['habit_completed', 'habit_adopted', 'streak_milestone', 'member_joined', 'badge_earned'] 
       }
@@ -612,8 +622,8 @@ router.get('/notifications/unread-count', async (req, res) => {
 // @access  Private
 router.put('/notifications/:notificationId/read', async (req, res) => {
   try {
-    // For now, we'll just return success since we don't have read status tracking
-    // In a full implementation, you'd update the activity or maintain a separate read status table
+    // Individual read is handled client-side (removed from local list).
+    // We still return success — bulk read-all handles timestamp persistence.
     res.json({
       success: true,
       message: 'Notification marked as read'
@@ -632,8 +642,10 @@ router.put('/notifications/:notificationId/read', async (req, res) => {
 // @access  Private
 router.put('/notifications/read-all', async (req, res) => {
   try {
-    // For now, we'll just return success since we don't have read status tracking
-    // In a full implementation, you'd update all activities or maintain a separate read status table
+    await User.findByIdAndUpdate(req.user._id, {
+      lastReadNotificationsAt: new Date()
+    });
+
     res.json({
       success: true,
       message: 'All notifications marked as read'

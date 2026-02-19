@@ -1,5 +1,3 @@
-console.log('🔧 WORKSPACE ROUTES LOADED AT:', new Date().toISOString());
-
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
@@ -7,7 +5,7 @@ const { authenticateJWT } = require('../middleware/auth');
 const { body, validationResult } = require('express-validator');
 const Workspace = require('../models/Workspace');
 const WorkspaceHabit = require('../models/WorkspaceHabit');
-const MemberHabit = require('../models/MemberHabit');
+// MemberHabit model removed — all workspace habit adoption data lives in Habit (source: 'workspace')
 const Habit = require('../models/Habit');
 const HabitEntry = require('../models/HabitEntry');
 const Activity = require('../models/Activity');
@@ -15,70 +13,7 @@ const User = require('../models/User');
 const Invitation = require('../models/Invitation');
 const emailService = require('../services/emailService');
 
-// Debug middleware to log all requests to this router
-router.use((req, res, next) => {
-  console.log(`📍 Workspace Route: ${req.method} ${req.originalUrl}`);
-  console.log(`📍 Headers:`, req.headers);
-  console.log(`📍 Body:`, req.body);
-  next();
-});
 
-// Test endpoint to verify server is responding
-router.get('/test-endpoint', (req, res) => {
-  console.log('🧪 TEST ENDPOINT HIT');
-  res.json({ 
-    success: true, 
-    message: 'Workspace routes are working!', 
-    timestamp: new Date().toISOString() 
-  });
-});
-
-// Simple test for POST requests
-router.post('/test-post', (req, res) => {
-  console.log('🧪 POST TEST ENDPOINT HIT');
-  console.log('Body:', req.body);
-  res.json({ 
-    success: true, 
-    message: 'POST test working!', 
-    body: req.body,
-    timestamp: new Date().toISOString() 
-  });
-});
-
-// Test authenticated endpoint
-router.get('/test-auth', authenticateJWT, (req, res) => {
-  console.log('🔐 AUTH TEST ENDPOINT HIT');
-  console.log('👤 User from auth:', req.user);
-  res.json({ 
-    success: true, 
-    message: 'Authentication working!', 
-    user: req.user,
-    timestamp: new Date().toISOString() 
-  });
-});
-
-// Debug route to examine workspace member data - TEMPORARY
-router.get('/debug-members-temp', async (req, res) => {
-  try {
-    const workspaces = await Workspace.find({});
-    const debugData = workspaces.map(workspace => ({
-      id: workspace._id,
-      name: workspace.name,
-      members: workspace.members.map(member => ({
-        userId: member.userId,
-        userIdType: typeof member.userId,
-        userIdLength: member.userId ? member.userId.length : 0,
-        role: member.role,
-        status: member.status
-      }))
-    }));
-    
-    res.json({ workspaces: debugData });
-  } catch (error) {
-    console.error('Debug error:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
 
 // @route   GET /api/workspaces
 // @desc    Get user's workspaces
@@ -248,29 +183,14 @@ router.get('/:id', authenticateJWT, async (req, res) => {
     }
     
     // Check if user is a member
-    console.log('DEBUG: Checking membership for user:', String(req.user.id), 'in workspace:', req.params.id);
-    console.log('DEBUG: req.user object:', JSON.stringify({ id: req.user.id, _id: req.user._id, email: req.user.email }));
-    console.log('DEBUG: Workspace members:', workspaceForMembershipCheck.members.map(m => ({ userId: m.userId.toString(), role: m.role, status: m.status })));
-    
     const userIdToCheck = String(req.user._id || req.user.id);
     const isMemberResult = workspaceForMembershipCheck.isMember(userIdToCheck);
-    console.log('DEBUG: Using userIdToCheck:', userIdToCheck);
-    console.log('DEBUG: isMember result:', isMemberResult);
     
-    // TEMPORARY: Bypass membership check for specific user to fix corrupted data issue
-    const expectedUserId = '6859eb459776f4675dba9f7c';
-    const isExpectedUser = userIdToCheck === expectedUserId;
-    
-    if (!isMemberResult && !isExpectedUser) {
-      console.log('DEBUG: Access denied for user:', userIdToCheck);
+    if (!isMemberResult) {
       return res.status(403).json({
         success: false,
         error: 'Access denied. You are not a member of this workspace.'
       });
-    }
-    
-    if (isExpectedUser && !isMemberResult) {
-      console.log('DEBUG: TEMPORARY BYPASS - Allowing access for expected user despite membership check failure');
     }
     
     // Now get the full workspace with populated data for the response
@@ -288,8 +208,23 @@ router.get('/:id', authenticateJWT, async (req, res) => {
       userRole
     );
     
-    // Get workspace stats
-    const stats = await MemberHabit.getWorkspaceStats(workspace._id);
+    // Get workspace stats (from adopted Habits, not legacy MemberHabit)
+    const stats = await Habit.aggregate([
+      { $match: { source: 'workspace', workspaceId: workspace._id, isActive: true } },
+      { $group: {
+        _id: '$workspaceId',
+        totalHabits: { $sum: 1 },
+        totalCompletions: { $sum: '$stats.totalChecks' },
+        avgStreak: { $avg: '$stats.currentStreak' },
+        activeMembers: { $addToSet: '$userId' }
+      }},
+      { $project: {
+        totalHabits: 1,
+        totalCompletions: 1,
+        avgStreak: { $round: ['$avgStreak', 1] },
+        activeMemberCount: { $size: '$activeMembers' }
+      }}
+    ]);
     
     res.json({
       success: true,
@@ -324,23 +259,30 @@ router.get('/:id/overview', authenticateJWT, async (req, res) => {
       });
     }
     
-    // Get leaderboard data
-    const leaderboard = await MemberHabit.getWorkspaceLeaderboard(
-      workspace._id,
-      'currentStreak',
-      10
-    );
+    // Get leaderboard data (from adopted Habits)
+    const leaderboard = await Habit.find({
+      source: 'workspace',
+      workspaceId: workspace._id,
+      isActive: true,
+      'workspaceSettings.shareProgress': { $ne: 'private' }
+    })
+    .populate('userId', 'name avatar')
+    .populate('workspaceHabitId', 'name icon')
+    .sort({ 'stats.currentStreak': -1 })
+    .limit(10)
+    .lean();
     
     // Get completion stats for the week
     const weekStart = new Date();
     weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Start of week
     
-    const memberProgress = await MemberHabit.aggregate([
+    const memberProgress = await Habit.aggregate([
       {
         $match: {
+          source: 'workspace',
           workspaceId: workspace._id,
           isActive: true,
-          'personalSettings.shareProgress': { $ne: 'private' }
+          'workspaceSettings.shareProgress': { $ne: 'private' }
         }
       },
       {
@@ -364,15 +306,15 @@ router.get('/:id/overview', authenticateJWT, async (req, res) => {
           _id: '$userId',
           user: { $first: { $arrayElemAt: ['$user', 0] } },
           totalHabits: { $sum: 1 },
-          totalCompletions: { $sum: '$totalCompletions' },
-          currentStreaks: { $sum: '$currentStreak' },
-          avgCompletionRate: { $avg: '$completionRate' },
+          totalCompletions: { $sum: '$stats.totalChecks' },
+          currentStreaks: { $sum: '$stats.currentStreak' },
+          avgCompletionRate: { $avg: '$stats.completionRate' },
           habits: {
             $push: {
               habit: { $arrayElemAt: ['$habit', 0] },
-              currentStreak: '$currentStreak',
-              totalCompletions: '$totalCompletions',
-              shareLevel: '$personalSettings.shareProgress'
+              currentStreak: '$stats.currentStreak',
+              totalCompletions: '$stats.totalChecks',
+              shareLevel: '$workspaceSettings.shareProgress'
             }
           }
         }
@@ -1087,13 +1029,11 @@ router.delete('/:id/members/:userId', authenticateJWT, async (req, res) => {
         habitId: { $in: workspaceHabitIds }
       });
 
-      const memberHabits = await MemberHabit.find({ workspaceId: workspace._id });
-      const memberHabitIds = memberHabits.map(h => h._id);
-      
-      await HabitEntry.deleteMany({
-        habitId: { $in: memberHabitIds }
-      });
-      await MemberHabit.deleteMany({ workspaceId: workspace._id });
+      // Clean up adopted Habits and their entries
+      const adoptedHabits = await Habit.find({ source: 'workspace', workspaceId: workspace._id }).select('_id');
+      const adoptedHabitIds = adoptedHabits.map(h => h._id);
+      await HabitEntry.deleteMany({ habitId: { $in: adoptedHabitIds } });
+      await Habit.deleteMany({ source: 'workspace', workspaceId: workspace._id });
       await WorkspaceHabit.deleteMany({ workspaceId: workspace._id });
       await Activity.deleteMany({ workspaceId: workspace._id });
       await Invitation.deleteMany({ workspaceId: workspace._id });
@@ -1116,11 +1056,11 @@ router.delete('/:id/members/:userId', authenticateJWT, async (req, res) => {
     
     await workspace.save();
     
-    // Remove member's habits from this workspace
-    await MemberHabit.deleteMany({
-      workspaceId: workspace._id,
-      userId: req.params.userId
-    });
+    // Deactivate member's adopted habits from this workspace
+    await Habit.updateMany(
+      { source: 'workspace', workspaceId: workspace._id, userId: req.params.userId },
+      { isActive: false }
+    );
     
     res.json({
       success: true,
@@ -1197,11 +1137,11 @@ router.post('/:id/leave', authenticateJWT, async (req, res) => {
     
     await workspace.save();
 
-    // Remove all member habits for this user in this workspace
-    await MemberHabit.deleteMany({
-      workspaceId: workspaceId,
-      userId: userId
-    });
+    // Deactivate adopted habits for this user in this workspace
+    await Habit.updateMany(
+      { source: 'workspace', workspaceId: workspaceId, userId: userId },
+      { isActive: false }
+    );
 
     return res.status(200).json({ 
       message: 'Successfully left the workspace',
@@ -1210,66 +1150,6 @@ router.post('/:id/leave', authenticateJWT, async (req, res) => {
   } catch (error) {
     console.error('Error leaving workspace:', error);
     return res.status(500).json({ message: 'Server error', error: error.message });
-  }
-});
-
-// Temporary route to fix corrupted workspace member data
-router.post('/fix-member-data', async (req, res) => {
-  try {
-    const workspaces = await Workspace.find({});
-    let fixedCount = 0;
-    
-    for (const workspace of workspaces) {
-      let needsUpdate = false;
-      
-      workspace.members = workspace.members.map(member => {
-        // Check if userId is a stringified object
-        if (typeof member.userId === 'string' && member.userId.includes('_id:')) {
-          console.log('Fixing corrupted userId:', member.userId);
-          // Extract the actual ObjectId from the stringified object
-          const match = member.userId.match(/ObjectId\('([^']+)'\)/);
-          if (match) {
-            member.userId = match[1];
-            needsUpdate = true;
-          }
-        }
-        return member;
-      });
-      
-      if (needsUpdate) {
-        await workspace.save();
-        fixedCount++;
-        console.log(`Fixed workspace ${workspace._id}: ${workspace.name}`);
-      }
-    }
-    
-    res.json({ success: true, message: `Fixed ${fixedCount} workspaces` });
-  } catch (error) {
-    console.error('Error fixing workspace data:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Debug route to examine workspace member data
-router.get('/public-debug-members', async (req, res) => {
-  try {
-    const workspaces = await Workspace.find({});
-    const debugData = workspaces.map(workspace => ({
-      id: workspace._id,
-      name: workspace.name,
-      members: workspace.members.map(member => ({
-        userId: member.userId,
-        userIdType: typeof member.userId,
-        userIdLength: member.userId ? member.userId.length : 0,
-        role: member.role,
-        status: member.status
-      }))
-    }));
-    
-    res.json({ workspaces: debugData });
-  } catch (error) {
-    console.error('Debug error:', error);
-    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -1860,46 +1740,44 @@ router.put('/:workspaceId/member-habits/:memberHabitId', [
     const userId = req.user.id;
     const { personalSettings } = req.body;
 
-    // Find and verify member habit belongs to user
-    const memberHabit = await MemberHabit.findOne({
+    // Find and verify habit belongs to user (unified Habit model)
+    const habit = await Habit.findOne({
       _id: memberHabitId,
+      source: 'workspace',
       workspaceId: workspaceId,
       userId: userId
     });
 
-    if (!memberHabit) {
+    if (!habit) {
       return res.status(404).json({
         success: false,
         error: 'Member habit not found or access denied'
       });
     }
 
-    // Update personal settings
+    // Update personal settings → map to Habit fields
     if (personalSettings) {
       if (personalSettings.target) {
-        memberHabit.personalSettings.target = {
-          ...memberHabit.personalSettings.target,
-          ...personalSettings.target
-        };
+        habit.target = { ...habit.target, ...personalSettings.target };
       }
       if (personalSettings.reminderTime !== undefined) {
-        memberHabit.personalSettings.reminderTime = personalSettings.reminderTime;
+        habit.schedule.reminderTime = personalSettings.reminderTime;
       }
       if (personalSettings.isPrivate !== undefined) {
-        memberHabit.personalSettings.isPrivate = personalSettings.isPrivate;
+        habit.workspaceSettings.shareProgress = personalSettings.isPrivate ? 'private' : 'progress-only';
       }
     }
 
-    memberHabit.updatedAt = new Date();
-    await memberHabit.save();
+    habit.updatedAt = new Date();
+    await habit.save();
 
     // Populate the response
-    await memberHabit.populate('workspaceHabitId', 'name description category');
-    await memberHabit.populate('userId', 'name email');
+    await habit.populate('workspaceHabitId', 'name description category');
+    await habit.populate('userId', 'name email');
 
     res.json({
       success: true,
-      memberHabit: memberHabit,
+      memberHabit: habit,
       message: 'Habit settings updated successfully'
     });
 
@@ -1921,14 +1799,15 @@ router.delete('/:workspaceId/member-habits/:memberHabitId', authenticateJWT, asy
     const { workspaceId, memberHabitId } = req.params;
     const userId = req.user.id;
 
-    // Find and verify member habit belongs to user
-    const memberHabit = await MemberHabit.findOne({
+    // Find and verify habit belongs to user (unified Habit model)
+    const habit = await Habit.findOne({
       _id: memberHabitId,
+      source: 'workspace',
       workspaceId: workspaceId,
       userId: userId
     }).populate('workspaceHabitId', 'name');
 
-    if (!memberHabit) {
+    if (!habit) {
       return res.status(404).json({
         success: false,
         error: 'Member habit not found or access denied'
@@ -1936,9 +1815,9 @@ router.delete('/:workspaceId/member-habits/:memberHabitId', authenticateJWT, asy
     }
 
     // Soft delete - mark as inactive
-    memberHabit.isActive = false;
-    memberHabit.updatedAt = new Date();
-    await memberHabit.save();
+    habit.isActive = false;
+    habit.updatedAt = new Date();
+    await habit.save();
 
     // Create activity entry
     const activity = new Activity({
@@ -1946,8 +1825,8 @@ router.delete('/:workspaceId/member-habits/:memberHabitId', authenticateJWT, asy
       userId: userId,
       type: 'habit_removed',
       data: {
-        habitName: memberHabit.workspaceHabitId?.name || 'Unknown habit',
-        habitId: memberHabit.workspaceHabitId?._id
+        habitName: habit.workspaceHabitId?.name || habit.name || 'Unknown habit',
+        habitId: habit.workspaceHabitId?._id
       },
       visibility: 'workspace'
     });
@@ -2008,45 +1887,21 @@ router.get('/:workspaceId/habits', authenticateJWT, async (req, res) => {
       .populate('createdBy', 'email name')
       .sort({ createdAt: -1 });
 
-    // Get member adoption counts for each habit
+    // Get member adoption counts for each habit (from unified Habit model)
     const habitsWithStats = await Promise.all(
       workspaceHabits.map(async (habit) => {
-        const adoptionCount = await MemberHabit.countDocuments({
+        const adoptedHabits = await Habit.find({
           workspaceHabitId: habit._id,
-          status: 'active'
-        });
-
-        // Get list of users who have adopted this habit
-        const adoptedByUsers = await MemberHabit.find({
-          workspaceHabitId: habit._id,
-          status: 'active'
-        })
-        .populate('userId', 'name email')
-        .select('userId');
-
-        // Also check the new unified habits model
-        const adoptedByUsersUnified = await Habit.find({
-          workspaceHabitId: habit._id,
+          source: 'workspace',
           isActive: true
         })
         .populate('userId', 'name email')
         .select('userId');
 
-        // Combine both adoption sources
-        const allAdoptedBy = [
-          ...adoptedByUsers.map(member => member.userId),
-          ...adoptedByUsersUnified.map(habit => habit.userId)
-        ];
-
-        // Remove duplicates
-        const uniqueAdoptedBy = allAdoptedBy.filter((user, index, self) => 
-          index === self.findIndex(u => u._id.toString() === user._id.toString())
-        );
-
         return {
           ...habit.toObject(),
-          adoptionCount,
-          adoptedBy: uniqueAdoptedBy
+          adoptionCount: adoptedHabits.length,
+          adoptedBy: adoptedHabits.map(h => h.userId)
         };
       })
     );
@@ -2218,16 +2073,18 @@ router.get('/workspace-habits/:id', authenticateJWT, async (req, res) => {
       });
     }
 
-    // Get adoption stats
-    const adoptionCount = await MemberHabit.countDocuments({
+    // Get adoption stats (from unified Habit model)
+    const adoptionCount = await Habit.countDocuments({
       workspaceHabitId: workspaceHabit._id,
-      status: 'active'
+      source: 'workspace',
+      isActive: true
     });
 
-    const isAdoptedByUser = await MemberHabit.exists({
+    const isAdoptedByUser = await Habit.exists({
       workspaceHabitId: workspaceHabit._id,
       userId: req.user.id,
-      status: 'active'
+      source: 'workspace',
+      isActive: true
     });
 
     res.json({
@@ -2412,9 +2269,10 @@ router.delete('/workspace-habits/:id', authenticateJWT, async (req, res) => {
     }
 
     // Check if habit is adopted by any members
-    const adoptionCount = await MemberHabit.countDocuments({
+    const adoptionCount = await Habit.countDocuments({
       workspaceHabitId: workspaceHabit._id,
-      status: 'active'
+      source: 'workspace',
+      isActive: true
     });
 
     if (adoptionCount > 0) {
@@ -2636,15 +2494,15 @@ router.delete('/:id', authenticateJWT, async (req, res) => {
     });
     console.log(`🗑️ Deleted habit entries for workspace habits`);
 
-    // 2. Delete all member habits for this workspace
-    const memberHabits = await MemberHabit.find({ workspaceId });
-    const memberHabitIds = memberHabits.map(h => h._id);
+    // 2. Delete all adopted habits and their entries for this workspace
+    const adoptedHabits = await Habit.find({ source: 'workspace', workspaceId }).select('_id');
+    const adoptedHabitIds = adoptedHabits.map(h => h._id);
     
     await HabitEntry.deleteMany({
-      habitId: { $in: memberHabitIds }
+      habitId: { $in: adoptedHabitIds }
     });
-    await MemberHabit.deleteMany({ workspaceId });
-    console.log(`🗑️ Deleted member habits and their entries`);
+    await Habit.deleteMany({ source: 'workspace', workspaceId });
+    console.log(`🗑️ Deleted adopted habits and their entries`);
 
     // 3. Delete workspace habits
     await WorkspaceHabit.deleteMany({ workspaceId });

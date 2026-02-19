@@ -125,69 +125,13 @@ workspaceSchema.virtual('memberCount').get(function() {
 
 // Methods
 workspaceSchema.methods.isMember = function(userId) {
-  if (!userId) {
-    console.log('isMember: No userId provided');
-    return false;
-  }
-  
-  const userIdString = userId.toString();
-  console.log('isMember: Checking userId:', userIdString);
-  console.log('isMember: Workspace members:', this.members.map(m => ({
-    userId: m.userId,
-    userIdType: typeof m.userId,
-    userIdString: m.userId ? m.userId.toString() : 'null',
-    status: m.status,
-    role: m.role
-  })));
-  
-  const result = this.members.some(member => {
-    if (!member.userId || member.status !== 'active') {
-      console.log('isMember: Skipping inactive or null member:', { userId: member.userId, status: member.status });
-      return false;
-    }
-    
-    // Handle both ObjectId and string comparisons
-    const memberIdString = member.userId.toString();
-    
-    // Also check if the member.userId might be a corrupted string
-    if (typeof member.userId === 'string' && member.userId.includes('_id:')) {
-      // Extract ObjectId from corrupted string format
-      const match = member.userId.match(/_id: new ObjectId\('([^']+)'\)/);
-      if (match && match[1]) {
-        const matches = match[1] === userIdString;
-        console.log('isMember: Corrupted string comparison:', { extracted: match[1], userIdString, matches });
-        return matches;
-      }
-    }
-    
-    const matches = memberIdString === userIdString;
-    console.log('isMember: Normal comparison:', { memberIdString, userIdString, matches });
-    return matches;
-  });
-  
-  console.log('isMember: Final result:', result);
-  return result;
+  if (!userId) return false;
+  return this.members.some(m => m.userId?.equals(userId) && m.status === 'active');
 };
 
 workspaceSchema.methods.getMemberRole = function(userId) {
   if (!userId) return null;
-  
-  const userIdString = userId.toString();
-  
-  const member = this.members.find(member => {
-    if (!member.userId) return false;
-    
-    // Handle corrupted userId strings
-    if (typeof member.userId === 'string' && member.userId.includes('_id:')) {
-      const match = member.userId.match(/_id: new ObjectId\('([^']+)'\)/);
-      if (match && match[1]) {
-        return match[1] === userIdString;
-      }
-    }
-    
-    return member.userId.toString() === userIdString;
-  });
-  
+  const member = this.members.find(m => m.userId?.equals(userId) && m.status === 'active');
   return member ? member.role : null;
 };
 
