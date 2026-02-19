@@ -84,7 +84,7 @@ const Layout = () => {
             paddingBottom: isMobile ? "calc(64px + env(safe-area-inset-bottom, 0px))" : "0",
           }}
         >
-          <div key={location.pathname} className="page-enter h-full">
+          <div key={location.pathname} className="page-enter min-h-full">
             <Outlet />
           </div>
         </div>
