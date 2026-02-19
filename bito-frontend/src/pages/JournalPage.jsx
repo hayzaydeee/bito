@@ -198,7 +198,7 @@ const JournalPage = () => {
 
   /* ── render ──────────────────────────────── */
   return (
-    <div className="flex h-full overflow-hidden">
+    <div className="flex overflow-hidden absolute inset-0">
       {/* ── Date sidebar (desktop) / strip (mobile) ── */}
       {!isMobile && (
         <JournalDateList
