@@ -10,7 +10,7 @@ const validateJournalEntry = [
     // Allow null, undefined, objects, or arrays (BlockNote can send arrays)
     return value === null || value === undefined || typeof value === 'object';
   }),
-  body('plainTextContent').optional().isString().isLength({ max: 10000 }),
+  body('plainTextContent').optional().isString().isLength({ max: 100000 }),
   body('mood').optional().custom(value => {
     return value === null || value === undefined || (Number.isInteger(value) && value >= 1 && value <= 5);
   }),

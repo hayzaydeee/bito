@@ -22,7 +22,7 @@ const journalEntrySchema = new mongoose.Schema({
   // Plain text version for search and fallback
   plainTextContent: {
     type: String,
-    maxlength: [10000, 'Journal content cannot exceed 10000 characters'],
+    maxlength: [100000, 'Journal content cannot exceed 100000 characters'],
     trim: true,
     default: ''
   },

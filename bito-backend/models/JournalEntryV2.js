@@ -36,7 +36,7 @@ const journalEntryV2Schema = new mongoose.Schema({
   // ── Plain text (used for both types: micro stores content here, longform stores extracted text) ──
   plainTextContent: {
     type: String,
-    maxlength: [10000, 'Content cannot exceed 10000 characters'],
+    maxlength: [100000, 'Content cannot exceed 100000 characters'],
     trim: true,
     default: '',
   },

@@ -59,7 +59,7 @@ const validateMicroEntry = [
 
 const validateLongformEntry = [
   body('richContent').optional().custom(v => v === null || typeof v === 'object'),
-  body('plainTextContent').optional().isString().isLength({ max: 10000 }),
+  body('plainTextContent').optional().isString().isLength({ max: 100000 }),
   body('mood').optional().custom(v => v === null || v === undefined || (Number.isInteger(v) && v >= 1 && v <= 5)),
   body('energy').optional().custom(v => v === null || v === undefined || (Number.isInteger(v) && v >= 1 && v <= 5)),
   body('tags').optional().isArray(),
