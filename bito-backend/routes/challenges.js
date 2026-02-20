@@ -6,6 +6,8 @@ const { body, validationResult } = require('express-validator');
 const Challenge = require('../models/Challenge');
 const Workspace = require('../models/Workspace');
 const Activity = require('../models/Activity');
+const Habit = require('../models/Habit');
+const { invalidateCache } = require('../controllers/challengeController');
 
 // All routes require auth
 router.use(authenticateJWT);
@@ -49,6 +51,9 @@ router.post('/workspaces/:workspaceId/challenges', [
   body('description').optional().trim().isLength({ max: 500 }),
   body('icon').optional().isString(),
   body('habitId').optional().isMongoId(),
+  body('habitSlot').optional().trim().isLength({ max: 200 }),
+  body('habitMatchMode').optional().isIn(['single', 'all', 'any', 'minimum']),
+  body('habitMatchMinimum').optional().isInt({ min: 1 }),
   body('rules.targetUnit').optional().isIn(['days', 'completions', 'minutes', 'hours', 'percent', 'custom']),
   body('rules.gracePeriodHours').optional().isInt({ min: 0, max: 12 }),
   body('rules.allowMakeupDays').optional().isBoolean(),
@@ -78,7 +83,7 @@ router.post('/workspaces/:workspaceId/challenges', [
       return res.status(403).json({ success: false, error: 'Viewers cannot create challenges' });
     }
 
-    const { title, description, icon, type, habitId, rules, startDate, endDate, settings, reward, milestones } = req.body;
+    const { title, description, icon, type, habitId, habitSlot, habitMatchMode, habitMatchMinimum, rules, startDate, endDate, settings, reward, milestones } = req.body;
 
     // Validate dates
     const start = new Date(startDate);
@@ -100,6 +105,9 @@ router.post('/workspaces/:workspaceId/challenges', [
       icon: icon || '🏆',
       type,
       habitId: habitId || null,
+      habitSlot: habitSlot || null,
+      habitMatchMode: habitMatchMode || 'single',
+      habitMatchMinimum: habitMatchMode === 'minimum' ? (habitMatchMinimum || 1) : null,
       rules: {
         targetValue: rules.targetValue,
         targetUnit: rules.targetUnit || 'days',
@@ -227,7 +235,7 @@ router.put('/challenges/:id', [
       return res.status(400).json({ success: false, error: 'Cannot edit an active or completed challenge' });
     }
 
-    const allowedFields = ['title', 'description', 'icon', 'reward', 'startDate', 'endDate'];
+    const allowedFields = ['title', 'description', 'icon', 'reward', 'startDate', 'endDate', 'habitSlot', 'habitMatchMode', 'habitMatchMinimum'];
     allowedFields.forEach((field) => {
       if (req.body[field] !== undefined) challenge[field] = req.body[field];
     });
@@ -284,6 +292,8 @@ router.delete('/challenges/:id', async (req, res) => {
 // ─────────────────────────────────────────────────────────
 router.post('/challenges/:id/join', [
   body('linkedHabitId').optional().isMongoId(),
+  body('linkedHabitIds').optional().isArray(),
+  body('linkedHabitIds.*').optional().isMongoId(),
 ], async (req, res) => {
   try {
     const challenge = await Challenge.findById(req.params.id);
@@ -300,12 +310,48 @@ router.post('/challenges/:id/join', [
       return res.status(403).json({ success: false, error: 'Access denied' });
     }
 
-    const participant = challenge.addParticipant(req.user._id, req.body.linkedHabitId || null);
+    // Normalize: accept linkedHabitIds (array) or linkedHabitId (singular, backward compat)
+    let habitIds = req.body.linkedHabitIds || [];
+    if (!habitIds.length && req.body.linkedHabitId) {
+      habitIds = [req.body.linkedHabitId];
+    }
+
+    // Validate that all habit IDs belong to this user
+    if (habitIds.length) {
+      const validCount = await Habit.countDocuments({
+        _id: { $in: habitIds },
+        userId: req.user._id,
+      });
+      if (validCount !== habitIds.length) {
+        return res.status(400).json({ success: false, error: 'One or more habit IDs are invalid or do not belong to you' });
+      }
+    }
+
+    // Validate match mode requirements
+    if (challenge.habitMatchMode === 'all' || challenge.habitMatchMode === 'any') {
+      // These modes typically expect at least 1 habit
+      if (!habitIds.length) {
+        return res.status(400).json({ success: false, error: 'This challenge requires you to link at least one habit' });
+      }
+    }
+    if (challenge.habitMatchMode === 'minimum' && challenge.habitMatchMinimum) {
+      if (habitIds.length < challenge.habitMatchMinimum) {
+        return res.status(400).json({
+          success: false,
+          error: `This challenge requires at least ${challenge.habitMatchMinimum} linked habit(s)`,
+        });
+      }
+    }
+
+    const participant = challenge.addParticipant(req.user._id, habitIds.length ? habitIds : null);
     if (!participant) {
       return res.status(400).json({ success: false, error: 'Cannot join — already participating or challenge is full' });
     }
 
     await challenge.save();
+
+    // Invalidate check-in cache for this user
+    invalidateCache(req.user._id);
 
     // Feed event
     await Activity.create({
@@ -352,10 +398,142 @@ router.post('/challenges/:id/leave', async (req, res) => {
 
     await challenge.save();
 
+    // Invalidate check-in cache for this user
+    invalidateCache(req.user._id);
+
     res.json({ success: true, message: 'Left the challenge' });
   } catch (error) {
     console.error('Error leaving challenge:', error);
     res.status(500).json({ success: false, error: 'Failed to leave challenge' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────
+// POST /api/challenges/:id/suggest-habits
+// AI-assisted habit matching for challenge join
+// ─────────────────────────────────────────────────────────
+router.post('/challenges/:id/suggest-habits', async (req, res) => {
+  try {
+    const challenge = await Challenge.findById(req.params.id);
+    if (!challenge) {
+      return res.status(404).json({ success: false, error: 'Challenge not found' });
+    }
+
+    const workspace = await Workspace.findById(challenge.workspaceId);
+    if (!workspace || !workspace.isMember(req.user._id)) {
+      return res.status(403).json({ success: false, error: 'Access denied' });
+    }
+
+    // Get user's personal habits in this workspace
+    const userHabits = await Habit.find({
+      userId: req.user._id,
+      workspaceId: challenge.workspaceId,
+      archived: { $ne: true },
+    }).select('name description category methodology target frequency icon').lean();
+
+    if (!userHabits.length) {
+      return res.json({ success: true, suggestions: [], habits: [] });
+    }
+
+    // Build challenge context for matching
+    const challengeContext = {
+      title: challenge.title,
+      description: challenge.description || '',
+      type: challenge.type,
+      habitSlot: challenge.habitSlot || '',
+      targetUnit: challenge.rules?.targetUnit || '',
+      targetValue: challenge.rules?.targetValue,
+    };
+
+    // Try LLM-based matching first
+    let suggestions = [];
+    try {
+      const { isLLMAvailable } = require('../services/llmEnrichment');
+      if (isLLMAvailable()) {
+        const OpenAIModule = require('openai');
+        const OpenAI = OpenAIModule.default || OpenAIModule.OpenAI || OpenAIModule;
+        const client = new OpenAI({
+          apiKey: process.env.OPENAI_API_KEY,
+          ...(process.env.OPENAI_BASE_URL && { baseURL: process.env.OPENAI_BASE_URL }),
+        });
+
+        const habitList = userHabits.map((h, i) => ({
+          index: i,
+          name: h.name,
+          description: h.description || '',
+          category: h.category || '',
+          unit: h.target?.unit || '',
+        }));
+
+        const prompt = `You are a habit-matching assistant. Given a challenge and a user's habits, rank each habit by relevance to the challenge.
+
+Challenge:
+- Title: ${challengeContext.title}
+- Description: ${challengeContext.description}
+- Type: ${challengeContext.type}
+- Habit Slot: ${challengeContext.habitSlot || '(open)'}
+- Target: ${challengeContext.targetValue} ${challengeContext.targetUnit}
+
+User's habits:
+${JSON.stringify(habitList, null, 2)}
+
+Return a JSON array of objects with { index, score, reason } where score is 0-100 (relevance to the challenge) and reason is a short 1-sentence explanation. Sort by score descending. Only include habits with score > 0.
+
+Return ONLY the JSON array, no markdown or extra text.`;
+
+        const response = await client.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.3,
+          max_tokens: 500,
+        });
+
+        const text = response.choices?.[0]?.message?.content?.trim();
+        if (text) {
+          const parsed = JSON.parse(text.replace(/```json?\n?/g, '').replace(/```/g, ''));
+          suggestions = parsed.map((s) => ({
+            habitId: userHabits[s.index]?._id,
+            name: userHabits[s.index]?.name,
+            score: s.score,
+            reason: s.reason,
+          })).filter((s) => s.habitId);
+        }
+      }
+    } catch (llmErr) {
+      console.warn('[Challenge] LLM suggest-habits fallback:', llmErr.message);
+    }
+
+    // Fallback: keyword overlap scoring
+    if (!suggestions.length) {
+      const keywords = `${challengeContext.title} ${challengeContext.description} ${challengeContext.habitSlot}`
+        .toLowerCase()
+        .split(/\s+/)
+        .filter((w) => w.length > 2);
+
+      suggestions = userHabits.map((h) => {
+        const text = `${h.name} ${h.description || ''} ${h.category || ''}`.toLowerCase();
+        const matches = keywords.filter((kw) => text.includes(kw)).length;
+        const score = keywords.length > 0 ? Math.round((matches / keywords.length) * 100) : 0;
+        return { habitId: h._id, name: h.name, score, reason: 'Keyword match' };
+      }).filter((s) => s.score > 0).sort((a, b) => b.score - a.score);
+    }
+
+    res.json({
+      success: true,
+      suggestions,
+      habits: userHabits.map((h) => ({
+        _id: h._id,
+        name: h.name,
+        description: h.description,
+        category: h.category,
+        icon: h.icon,
+        frequency: h.frequency,
+        target: h.target,
+      })),
+    });
+  } catch (error) {
+    console.error('Error suggesting habits:', error);
+    res.status(500).json({ success: false, error: 'Failed to suggest habits' });
   }
 });
 

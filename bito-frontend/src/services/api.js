@@ -700,10 +700,24 @@ export const groupsAPI = {
   },
 
   // Join challenge
-  joinChallenge: async (challengeId, linkedHabitId = null) => {
+  joinChallenge: async (challengeId, linkedHabitIds = null) => {
+    // Accept array (v2) or singular ID (v1 backward compat)
+    const body = {};
+    if (Array.isArray(linkedHabitIds) && linkedHabitIds.length) {
+      body.linkedHabitIds = linkedHabitIds;
+    } else if (linkedHabitIds && typeof linkedHabitIds === 'string') {
+      body.linkedHabitId = linkedHabitIds;
+    }
     return apiRequest(`/api/challenges/${challengeId}/join`, {
       method: 'POST',
-      body: JSON.stringify({ linkedHabitId }),
+      body: JSON.stringify(body),
+    });
+  },
+
+  // AI-assisted habit suggestions for challenge join
+  suggestHabitsForChallenge: async (challengeId) => {
+    return apiRequest(`/api/challenges/${challengeId}/suggest-habits`, {
+      method: 'POST',
     });
   },
 

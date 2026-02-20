@@ -48,6 +48,27 @@ const challengeSchema = new mongoose.Schema(
       default: null,
     },
 
+    // ── Multi-habit matching ──
+    // Free-text description of what habits qualify (shown to joiners)
+    habitSlot: {
+      type: String,
+      trim: true,
+      maxlength: [200, 'Habit slot description cannot exceed 200 characters'],
+      default: null,
+    },
+    // How multiple linked habits combine for progress
+    habitMatchMode: {
+      type: String,
+      enum: ['single', 'all', 'any', 'minimum'],
+      default: 'single',
+    },
+    // Only used when habitMatchMode === 'minimum'
+    habitMatchMinimum: {
+      type: Number,
+      default: null,
+      min: 1,
+    },
+
     // ── Rules ──
     rules: {
       targetValue: {
@@ -103,11 +124,17 @@ const challengeSchema = new mongoose.Schema(
           type: Date,
           default: Date.now,
         },
+        // Legacy: singular linkedHabitId kept for backward compat reads
         linkedHabitId: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Habit',
           default: null,
         },
+        // v2: array of personal habits linked to this challenge
+        linkedHabitIds: [{
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Habit',
+        }],
         progress: {
           currentValue: { type: Number, default: 0 },
           currentStreak: { type: Number, default: 0 },
@@ -163,6 +190,7 @@ const challengeSchema = new mongoose.Schema(
 challengeSchema.index({ workspaceId: 1, status: 1 });
 challengeSchema.index({ workspaceId: 1, createdAt: -1 });
 challengeSchema.index({ 'participants.userId': 1 });
+challengeSchema.index({ 'participants.linkedHabitIds': 1 });
 challengeSchema.index({ startDate: 1, endDate: 1 });
 
 // ── Virtuals ──
@@ -191,17 +219,24 @@ challengeSchema.methods.getParticipant = function (userId) {
   );
 };
 
-challengeSchema.methods.addParticipant = function (userId, linkedHabitId = null) {
+challengeSchema.methods.addParticipant = function (userId, linkedHabitIds = null) {
   if (this.isParticipant(userId)) return null;
 
   const activeCount = this.participants.filter((p) => p.status === 'active').length;
   if (this.settings.maxParticipants && activeCount >= this.settings.maxParticipants) return null;
   if (this.status === 'active' && !this.settings.allowLateJoin) return null;
 
+  // Normalize: accept a single ID (backward compat) or an array
+  let ids = [];
+  if (linkedHabitIds) {
+    ids = Array.isArray(linkedHabitIds) ? linkedHabitIds : [linkedHabitIds];
+  }
+
   const participant = {
     userId,
     joinedAt: new Date(),
-    linkedHabitId,
+    linkedHabitId: ids[0] || null, // backward compat
+    linkedHabitIds: ids,
     progress: { currentValue: 0, currentStreak: 0, bestStreak: 0, completionRate: 0, lastLoggedAt: null },
     status: 'active',
     completedAt: null,

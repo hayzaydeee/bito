@@ -52,6 +52,9 @@ const ChallengeCreateModal = ({ isOpen, workspaceId, onClose, onSuccess }) => {
     targetValue: 7,
     targetUnit: "days",
     linkedHabitId: "",
+    habitSlot: "",
+    habitMatchMode: "single",
+    habitMatchMinimum: 2,
     maxParticipants: "",
     allowLateJoin: true,
     showLeaderboard: true,
@@ -74,6 +77,9 @@ const ChallengeCreateModal = ({ isOpen, workspaceId, onClose, onSuccess }) => {
         targetValue: 7,
         targetUnit: "days",
         linkedHabitId: "",
+        habitSlot: "",
+        habitMatchMode: "single",
+        habitMatchMinimum: 2,
         maxParticipants: "",
         allowLateJoin: true,
         showLeaderboard: true,
@@ -117,6 +123,9 @@ const ChallengeCreateModal = ({ isOpen, workspaceId, onClose, onSuccess }) => {
           ...(form.maxParticipants ? { maxParticipants: Number(form.maxParticipants) } : {}),
         },
         ...(form.linkedHabitId ? { linkedHabitId: form.linkedHabitId } : {}),
+        ...(form.habitSlot.trim() ? { habitSlot: form.habitSlot.trim() } : {}),
+        habitMatchMode: form.habitMatchMode,
+        ...(form.habitMatchMode === 'minimum' ? { habitMatchMinimum: Number(form.habitMatchMinimum) || 2 } : {}),
       };
 
       const res = await groupsAPI.createChallenge(workspaceId, payload);
@@ -241,6 +250,39 @@ const ChallengeCreateModal = ({ isOpen, workspaceId, onClose, onSuccess }) => {
                       <option key={h._id} value={h._id}>{h.icon} {h.name}</option>
                     ))}
                   </select>
+                </div>
+              )}
+
+              {/* habit slot description */}
+              <div>
+                <label className="block text-xs font-spartan font-medium text-[var(--color-text-secondary)] mb-1">
+                  Habit Slot <span className="text-[var(--color-text-tertiary)]">(describe qualifying habits)</span>
+                </label>
+                <input
+                  value={form.habitSlot}
+                  onChange={set("habitSlot")}
+                  placeholder="e.g. Any exercise or movement habit"
+                  maxLength={200}
+                  className={inputClass}
+                />
+              </div>
+
+              {/* habit match mode */}
+              <div>
+                <label className="block text-xs font-spartan font-medium text-[var(--color-text-secondary)] mb-1">Habit Match Mode</label>
+                <select value={form.habitMatchMode} onChange={set("habitMatchMode")} className={inputClass}>
+                  <option value="single">Single — one habit tracks progress</option>
+                  <option value="any">Any — complete any linked habit to count</option>
+                  <option value="all">All — must complete every linked habit</option>
+                  <option value="minimum">Minimum — complete at least N habits</option>
+                </select>
+              </div>
+
+              {/* minimum count (only if mode=minimum) */}
+              {form.habitMatchMode === "minimum" && (
+                <div>
+                  <label className="block text-xs font-spartan font-medium text-[var(--color-text-secondary)] mb-1">Minimum habits per day</label>
+                  <input type="number" min={1} value={form.habitMatchMinimum} onChange={set("habitMatchMinimum")} className={inputClass} />
                 </div>
               )}
 

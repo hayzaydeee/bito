@@ -6,6 +6,7 @@ import {
 } from "@radix-ui/react-icons";
 import { groupsAPI } from "../../services/api";
 import ChallengeCreateModal from "../ui/ChallengeCreateModal";
+import ChallengeJoinModal from "../ui/ChallengeJoinModal";
 import { useAuth } from "../../contexts/AuthContext";
 
 /* ── type metadata ── */
@@ -31,6 +32,7 @@ const ChallengeWidget = ({ workspaceId, className = "" }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [joinChallenge, setJoinChallenge] = useState(null); // challenge to join via modal
   const [actionLoading, setActionLoading] = useState(null);
 
   useEffect(() => {
@@ -66,16 +68,13 @@ const ChallengeWidget = ({ workspaceId, className = "" }) => {
     return p?.progress || {};
   };
 
-  const handleJoin = async (challengeId) => {
-    try {
-      setActionLoading(challengeId);
-      const res = await groupsAPI.joinChallenge(challengeId);
-      if (res.success) fetchChallenges();
-    } catch {
-      setError("Failed to join challenge");
-    } finally {
-      setActionLoading(null);
-    }
+  const handleJoin = (challenge) => {
+    setJoinChallenge(challenge);
+  };
+
+  const handleJoinSuccess = () => {
+    setJoinChallenge(null);
+    fetchChallenges();
   };
 
   const handleLeave = async (challengeId) => {
@@ -225,7 +224,7 @@ const ChallengeWidget = ({ workspaceId, className = "" }) => {
                         </button>
                       ) : (
                         <button
-                          onClick={() => handleJoin(c._id)}
+                          onClick={() => handleJoin(c)}
                           disabled={actionLoading === c._id}
                           className="text-xs font-spartan font-medium px-3 py-1.5 rounded-lg bg-[var(--color-brand-600)]/10 text-[var(--color-brand-600)] hover:bg-[var(--color-brand-600)]/20 transition-colors disabled:opacity-50"
                         >
@@ -246,6 +245,13 @@ const ChallengeWidget = ({ workspaceId, className = "" }) => {
         workspaceId={workspaceId}
         onClose={() => setIsCreateModalOpen(false)}
         onSuccess={handleCreated}
+      />
+
+      <ChallengeJoinModal
+        isOpen={!!joinChallenge}
+        challenge={joinChallenge}
+        onClose={() => setJoinChallenge(null)}
+        onSuccess={handleJoinSuccess}
       />
     </div>
   );
