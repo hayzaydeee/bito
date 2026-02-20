@@ -102,7 +102,7 @@ const ChallengeCreateModal = ({ isOpen, workspaceId, onClose, onSuccess }) => {
 
     try {
       const payload = {
-        name: form.name.trim(),
+        title: form.name.trim(),
         description: form.description.trim(),
         type: form.type,
         startDate: form.startDate,

@@ -170,7 +170,7 @@ const ChallengeWidget = ({ workspaceId, className = "" }) => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] truncate">
-                        {c.name}
+                        {c.title || c.name}
                       </p>
                       <span className={`text-[10px] font-spartan font-medium px-2 py-0.5 rounded-md ${STATUS_COLORS[c.status] || ""}`}>
                         {c.status}

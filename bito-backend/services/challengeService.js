@@ -62,9 +62,9 @@ class ChallengeService {
           type: 'challenge_started',
           data: {
             challengeId: challenge._id,
-            challengeName: challenge.name,
+            challengeName: challenge.title,
             challengeType: challenge.type,
-            message: `Challenge "${challenge.name}" has started!`,
+            message: `Challenge "${challenge.title}" has started!`,
           },
           visibility: 'workspace',
         });
@@ -72,7 +72,7 @@ class ChallengeService {
         // Push notification
         await this._notifyParticipants(challenge, {
           title: '🏆 Challenge Started!',
-          body: `"${challenge.name}" is now active. Go!`,
+          body: `"${challenge.title}" is now active. Go!`,
           tag: `challenge-start-${challenge._id}`,
         });
       }
@@ -94,9 +94,9 @@ class ChallengeService {
           type: 'challenge_completed',
           data: {
             challengeId: challenge._id,
-            challengeName: challenge.name,
+            challengeName: challenge.title,
             challengeType: challenge.type,
-            message: `Challenge "${challenge.name}" has ended!`,
+            message: `Challenge "${challenge.title}" has ended!`,
             metadata: {
               participantCount: challenge.stats.participantCount,
               completedCount: challenge.stats.completedCount,
@@ -109,7 +109,7 @@ class ChallengeService {
         // Push notification
         await this._notifyParticipants(challenge, {
           title: '🏁 Challenge Complete!',
-          body: `"${challenge.name}" has ended. ${challenge.stats.completedCount} finished!`,
+          body: `"${challenge.title}" has ended. ${challenge.stats.completedCount} finished!`,
           tag: `challenge-end-${challenge._id}`,
         });
       }
