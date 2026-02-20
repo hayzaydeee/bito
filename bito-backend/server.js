@@ -26,11 +26,13 @@ const journalV2Routes = require('./routes/journalV2');
 const templateRoutes = require('./routes/templates');
 const insightsRoutes = require('./routes/insights');
 const notificationRoutes = require('./routes/notifications');
+const challengeRoutes = require('./routes/challenges');
 const testRoutes = require('./routes/test');
 
 // Import services
 const reminderService = require('./services/reminderService');
 const weeklyReportService = require('./services/weeklyReportService');
+const challengeService = require('./services/challengeService');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -187,6 +189,7 @@ app.use('/api/journal-v2', journalV2Routes);
 app.use('/api/templates', templateRoutes);
 app.use('/api/insights', insightsRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api', challengeRoutes);
 // API documentation endpoint
 app.get('/api', (req, res) => {
   res.json({
@@ -272,6 +275,7 @@ if (require.main === module) {
       // Start cron jobs after DB is connected
       reminderService.start();
       weeklyReportService.start();
+      challengeService.start();
     }
   });
 

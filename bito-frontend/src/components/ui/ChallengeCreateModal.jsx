@@ -1,293 +1,281 @@
-import React, { useState, useEffect } from 'react';
-import { Dialog, Button, Flex, Text, TextField, TextArea, Select } from '@radix-ui/themes';
-import { CalendarIcon, InfoCircledIcon, RocketIcon, Cross2Icon, CheckIcon } from '@radix-ui/react-icons';
-import { groupsAPI } from '../../services/api';
+import { useState, useEffect } from "react";
+import { Cross2Icon } from "@radix-ui/react-icons";
+import { groupsAPI } from "../../services/api";
 
-const ChallengeCreateModal = ({ workspaceId, onClose, onSuccess }) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    type: 'streak',
-    target: 7,
-    duration: 7,
-    reward: '🏆 Challenge Completion Badge',
+/* ── constants ── */
+
+const CHALLENGE_TYPES = [
+  { value: "streak", label: "Streak", icon: "🔥", desc: "Maintain consecutive days" },
+  { value: "cumulative", label: "Cumulative", icon: "📈", desc: "Reach a total target" },
+  { value: "consistency", label: "Consistency", icon: "📅", desc: "Hit a completion-rate %" },
+  { value: "team_goal", label: "Team Goal", icon: "🤝", desc: "Group works toward one total" },
+];
+
+const TARGET_UNITS = [
+  { value: "days", label: "Days" },
+  { value: "times", label: "Times" },
+  { value: "minutes", label: "Minutes" },
+  { value: "hours", label: "Hours" },
+  { value: "percent", label: "%" },
+];
+
+/* ── helpers ── */
+
+function tomorrow() {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().split("T")[0];
+}
+function nextWeek() {
+  const d = new Date();
+  d.setDate(d.getDate() + 8);
+  return d.toISOString().split("T")[0];
+}
+
+const inputClass =
+  "w-full h-10 px-3 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 rounded-xl text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:border-[var(--color-brand-600)]/40";
+
+/* ── component ── */
+
+const ChallengeCreateModal = ({ isOpen, workspaceId, onClose, onSuccess }) => {
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [habits, setHabits] = useState([]);
+
+  const [form, setForm] = useState({
+    name: "",
+    description: "",
+    type: "streak",
+    startDate: tomorrow(),
+    endDate: nextWeek(),
+    targetValue: 7,
+    targetUnit: "days",
+    linkedHabitId: "",
+    maxParticipants: "",
+    allowLateJoin: true,
+    showLeaderboard: true,
   });
-  const [workspaceHabits, setWorkspaceHabits] = useState([]);
-  const [selectedHabits, setSelectedHabits] = useState([]);
 
-  // Fetch workspace habits for habit-specific challenges
   useEffect(() => {
-    const fetchHabits = async () => {
-      try {
-        const response = await groupsAPI.getHabits(workspaceId);
-        if (response.success && response.habits) {
-          setWorkspaceHabits(response.habits);
-        }
-      } catch (error) {
-        // Failed to fetch workspace habits
-        setWorkspaceHabits([]);
-      }
-    };
-
-    if (workspaceId) {
-      fetchHabits();
+    if (isOpen && workspaceId) {
+      groupsAPI
+        .getGroupHabits(workspaceId)
+        .then((r) => setHabits(r.habits || []))
+        .catch(() => setHabits([]));
+      setStep(1);
+      setError("");
+      setForm({
+        name: "",
+        description: "",
+        type: "streak",
+        startDate: tomorrow(),
+        endDate: nextWeek(),
+        targetValue: 7,
+        targetUnit: "days",
+        linkedHabitId: "",
+        maxParticipants: "",
+        allowLateJoin: true,
+        showLeaderboard: true,
+      });
     }
-  }, [workspaceId]);
+  }, [isOpen, workspaceId]);
 
-  // Handle form input changes
-  const handleChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
+  if (!isOpen) return null;
+
+  const set = (key) => (e) =>
+    setForm((p) => ({
+      ...p,
+      [key]: e.target?.type === "checkbox" ? e.target.checked : e.target.value,
     }));
 
-    // Clear errors when user types
-    if (error) setError('');
-  };
+  const selectedType = CHALLENGE_TYPES.find((t) => t.value === form.type);
 
-  // Handle habit selection/deselection
-  const toggleHabitSelection = (habitId) => {
-    if (selectedHabits.includes(habitId)) {
-      setSelectedHabits(prev => prev.filter(id => id !== habitId));
-    } else {
-      setSelectedHabits(prev => [...prev, habitId]);
-    }
-  };
+  const handleSubmit = async () => {
+    if (!form.name.trim()) return setError("Name is required");
+    if (!form.startDate || !form.endDate) return setError("Dates are required");
+    if (new Date(form.endDate) <= new Date(form.startDate))
+      return setError("End date must be after start date");
 
-  // Calculate challenge end date
-  const calculateEndDate = () => {
-    const start = new Date();
-    const end = new Date(start);
-    end.setDate(start.getDate() + parseInt(formData.duration, 10));
-    return end.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
+    setLoading(true);
+    setError("");
 
-  // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!formData.title) {
-      setError('Title is required');
-      return;
-    }
-    
-    if (!formData.type) {
-      setError('Challenge type is required');
-      return;
-    }
-    
-    if (!formData.target || formData.target < 1) {
-      setError('Target must be at least 1');
-      return;
-    }
-    
     try {
-      setIsLoading(true);
-      
-      const challengeData = {
-        ...formData,
-        target: parseInt(formData.target, 10),
-        duration: parseInt(formData.duration, 10),
-        habitIds: formData.type === 'habit-specific' ? selectedHabits : []
+      const payload = {
+        name: form.name.trim(),
+        description: form.description.trim(),
+        type: form.type,
+        startDate: form.startDate,
+        endDate: form.endDate,
+        rules: {
+          targetValue: Number(form.targetValue) || 7,
+          targetUnit: form.targetUnit,
+        },
+        settings: {
+          allowLateJoin: form.allowLateJoin,
+          showLeaderboard: form.showLeaderboard,
+          ...(form.maxParticipants ? { maxParticipants: Number(form.maxParticipants) } : {}),
+        },
+        ...(form.linkedHabitId ? { linkedHabitId: form.linkedHabitId } : {}),
       };
-      
-      const response = await groupsAPI.createChallenge(workspaceId, challengeData);
-      
-      if (response.success && response.challenge) {
-        onSuccess(response.challenge);
+
+      const res = await groupsAPI.createChallenge(workspaceId, payload);
+      if (res.success) {
+        onSuccess?.(res.challenge);
+        onClose();
       } else {
-        setError(response.error || 'Failed to create challenge');
+        setError(res.error || "Failed to create challenge");
       }
-    } catch (error) {
-      setError('An error occurred. Please try again.');
+    } catch (err) {
+      setError(err.message || "Something went wrong");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <Dialog.Root open onOpenChange={onClose}>
-      <Dialog.Content style={{ maxWidth: 500 }}>
-        <Dialog.Title>Create Group Challenge</Dialog.Title>
-        <Dialog.Description size="2" mb="4">
-          Create a new challenge for your workspace members
-        </Dialog.Description>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 rounded-md p-3 mb-4">
-            <div className="flex items-center gap-2">
-              <InfoCircledIcon className="text-red-500" />
-              <span>{error}</span>
-            </div>
-          </div>
-        )}
+      <div className="relative w-full max-w-lg bg-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)]/20 shadow-xl max-h-[85vh] overflow-y-auto">
+        {/* header */}
+        <div className="flex items-center justify-between p-5 border-b border-[var(--color-border-primary)]/10">
+          <h2 className="text-lg font-garamond font-bold text-[var(--color-text-primary)]">
+            {step === 1 ? "Choose Challenge Type" : "Challenge Details"}
+          </h2>
+          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--color-surface-hover)] transition-colors">
+            <Cross2Icon className="w-4 h-4 text-[var(--color-text-secondary)]" />
+          </button>
+        </div>
 
-        <form onSubmit={handleSubmit}>
-          <Flex direction="column" gap="3">
-            <div>
-              <Text as="label" size="2" mb="1" display="block">
-                Challenge Title
-              </Text>
-              <TextField.Input
-                placeholder="e.g., 7-Day Streak Challenge"
-                value={formData.title}
-                onChange={(e) => handleChange('title', e.target.value)}
-                required
-              />
-            </div>
-
-            <div>
-              <Text as="label" size="2" mb="1" display="block">
-                Description
-              </Text>
-              <TextArea
-                placeholder="Describe the challenge and motivate your team"
-                value={formData.description}
-                onChange={(e) => handleChange('description', e.target.value)}
-                rows={3}
-              />
-            </div>
-
-            <div>
-              <Text as="label" size="2" mb="1" display="block">
-                Challenge Type
-              </Text>
-              <Select.Root 
-                value={formData.type}
-                onValueChange={(value) => handleChange('type', value)}
+        <div className="p-5 space-y-4">
+          {/* ── Step 1: Pick type ── */}
+          {step === 1 && (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                {CHALLENGE_TYPES.map((t) => (
+                  <button
+                    key={t.value}
+                    onClick={() => setForm((p) => ({ ...p, type: t.value }))}
+                    className={`p-4 rounded-xl border text-left transition-colors ${
+                      form.type === t.value
+                        ? "border-[var(--color-brand-600)] bg-[var(--color-brand-600)]/5"
+                        : "border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40"
+                    }`}
+                  >
+                    <span className="text-2xl">{t.icon}</span>
+                    <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] mt-2">{t.label}</p>
+                    <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mt-0.5">{t.desc}</p>
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setStep(2)}
+                className="w-full h-10 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white rounded-xl text-sm font-spartan font-medium transition-colors"
               >
-                <Select.Trigger />
-                <Select.Content>
-                  <Select.Group>
-                    <Select.Label>Challenge Types</Select.Label>
-                    <Select.Item value="streak">Streak Challenge</Select.Item>
-                    <Select.Item value="collective">Collective Goal</Select.Item>
-                    <Select.Item value="completion">Completion Count</Select.Item>
-                    <Select.Item value="habit-specific">Habit-Specific</Select.Item>
-                  </Select.Group>
-                </Select.Content>
-              </Select.Root>
-              
-              <Text as="p" size="1" color="gray" mt="1">
-                {formData.type === 'streak' && 'Complete habits for consecutive days to build a streak'}
-                {formData.type === 'collective' && 'Work together to reach a total number of completions'}
-                {formData.type === 'completion' && 'Track individual habit completion counts'}
-                {formData.type === 'habit-specific' && 'Focus on specific habits for this challenge'}
-              </Text>
-            </div>
+                Continue with {selectedType?.label}
+              </button>
+            </>
+          )}
 
-            <Flex gap="3">
-              <div style={{ flex: 1 }}>
-                <Text as="label" size="2" mb="1" display="block">
-                  Target Goal
-                </Text>
-                <TextField.Input
-                  type="number"
-                  min="1"
-                  value={formData.target}
-                  onChange={(e) => handleChange('target', e.target.value)}
-                  required
-                />
-                <Text as="p" size="1" color="gray" mt="1">
-                  {formData.type === 'streak' && 'Consecutive days'}
-                  {formData.type === 'collective' && 'Total completions'}
-                  {formData.type === 'completion' && 'Completions per person'}
-                  {formData.type === 'habit-specific' && 'Habit completions'}
-                </Text>
-              </div>
-              
-              <div style={{ flex: 1 }}>
-                <Text as="label" size="2" mb="1" display="block">
-                  Duration (days)
-                </Text>
-                <TextField.Input
-                  type="number"
-                  min="1"
-                  max="90"
-                  value={formData.duration}
-                  onChange={(e) => handleChange('duration', e.target.value)}
-                  required
-                />
-                <Text as="p" size="1" color="gray" mt="1">
-                  Ends on {calculateEndDate()}
-                </Text>
-              </div>
-            </Flex>
-            
-            {formData.type === 'habit-specific' && workspaceHabits.length > 0 && (
+          {/* ── Step 2: Details ── */}
+          {step === 2 && (
+            <>
+              <button
+                onClick={() => setStep(1)}
+                className="flex items-center gap-2 text-xs font-spartan text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+              >
+                ← Back ·{" "}
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--color-brand-600)]/10 text-[var(--color-brand-600)] font-medium">
+                  {selectedType?.icon} {selectedType?.label}
+                </span>
+              </button>
+
+              {/* name */}
               <div>
-                <Text as="label" size="2" mb="2" display="block">
-                  Select Habits for Challenge
-                </Text>
-                <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto p-1">
-                  {workspaceHabits.map(habit => (
-                    <div 
-                      key={habit.id || habit._id} 
-                      className={`p-2 border rounded-md cursor-pointer flex items-center gap-2 ${
-                        selectedHabits.includes(habit.id || habit._id) 
-                          ? 'border-[var(--color-brand-500)] bg-[var(--color-brand-100)]' 
-                          : 'border-[var(--color-border-primary)]'
-                      }`}
-                      onClick={() => toggleHabitSelection(habit.id || habit._id)}
-                    >
-                      <div className="w-4 h-4 flex-shrink-0">
-                        {selectedHabits.includes(habit.id || habit._id) ? (
-                          <CheckIcon className="text-[var(--color-brand-500)]" />
-                        ) : null}
-                      </div>
-                      <span className="text-sm truncate">{habit.name}</span>
-                    </div>
-                  ))}
-                </div>
-                {selectedHabits.length === 0 && (
-                  <Text as="p" size="1" color="gray" mt="1">
-                    Select at least one habit for this challenge
-                  </Text>
-                )}
+                <label className="block text-xs font-spartan font-medium text-[var(--color-text-secondary)] mb-1">Name *</label>
+                <input value={form.name} onChange={set("name")} placeholder="e.g. 7-Day Meditation Streak" className={inputClass} />
               </div>
-            )}
 
-            <div>
-              <Text as="label" size="2" mb="1" display="block">
-                Reward
-              </Text>
-              <TextField.Input
-                placeholder="e.g., 🏆 Challenge Completion Badge"
-                value={formData.reward}
-                onChange={(e) => handleChange('reward', e.target.value)}
-              />
-            </div>
-          </Flex>
+              {/* description */}
+              <div>
+                <label className="block text-xs font-spartan font-medium text-[var(--color-text-secondary)] mb-1">Description</label>
+                <textarea value={form.description} onChange={set("description")} rows={2} placeholder="Optional details…" className={`${inputClass} h-auto py-2 resize-none`} />
+              </div>
 
-          <Flex gap="3" mt="4" justify="end">
-            <Dialog.Close>
-              <Button variant="soft" color="gray">
-                Cancel
-              </Button>
-            </Dialog.Close>
-            <Button disabled={isLoading} type="submit">
-              {isLoading ? (
-                <>
-                  <span className="animate-spin mr-1">⟳</span>
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <RocketIcon />
-                  Create Challenge
-                </>
+              {/* dates */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-spartan font-medium text-[var(--color-text-secondary)] mb-1">Start *</label>
+                  <input type="date" value={form.startDate} onChange={set("startDate")} className={inputClass} />
+                </div>
+                <div>
+                  <label className="block text-xs font-spartan font-medium text-[var(--color-text-secondary)] mb-1">End *</label>
+                  <input type="date" value={form.endDate} onChange={set("endDate")} className={inputClass} />
+                </div>
+              </div>
+
+              {/* target */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-spartan font-medium text-[var(--color-text-secondary)] mb-1">Target</label>
+                  <input type="number" min={1} value={form.targetValue} onChange={set("targetValue")} className={inputClass} />
+                </div>
+                <div>
+                  <label className="block text-xs font-spartan font-medium text-[var(--color-text-secondary)] mb-1">Unit</label>
+                  <select value={form.targetUnit} onChange={set("targetUnit")} className={inputClass}>
+                    {TARGET_UNITS.map((u) => (
+                      <option key={u.value} value={u.value}>{u.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* linked habit */}
+              {habits.length > 0 && (
+                <div>
+                  <label className="block text-xs font-spartan font-medium text-[var(--color-text-secondary)] mb-1">Link to Habit (optional)</label>
+                  <select value={form.linkedHabitId} onChange={set("linkedHabitId")} className={inputClass}>
+                    <option value="">Any habit</option>
+                    {habits.map((h) => (
+                      <option key={h._id} value={h._id}>{h.icon} {h.name}</option>
+                    ))}
+                  </select>
+                </div>
               )}
-            </Button>
-          </Flex>
-        </form>
-      </Dialog.Content>
-    </Dialog.Root>
+
+              {/* settings */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={form.allowLateJoin} onChange={set("allowLateJoin")} className="rounded" />
+                  <span className="text-sm font-spartan text-[var(--color-text-primary)]">Allow late join</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={form.showLeaderboard} onChange={set("showLeaderboard")} className="rounded" />
+                  <span className="text-sm font-spartan text-[var(--color-text-primary)]">Show leaderboard</span>
+                </label>
+              </div>
+
+              {/* max participants */}
+              <div>
+                <label className="block text-xs font-spartan font-medium text-[var(--color-text-secondary)] mb-1">Max Participants (empty = unlimited)</label>
+                <input type="number" min={2} value={form.maxParticipants} onChange={set("maxParticipants")} placeholder="Unlimited" className={inputClass} />
+              </div>
+
+              {error && <p className="text-xs text-red-500 font-spartan">{error}</p>}
+
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="w-full h-10 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] disabled:opacity-50 text-white rounded-xl text-sm font-spartan font-medium transition-colors"
+              >
+                {loading ? "Creating…" : "Create Challenge"}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 

@@ -1,245 +1,252 @@
-import React, { useState, useEffect } from "react";
-import { Button, Text, Tooltip } from "@radix-ui/themes";
+import { useState, useEffect } from "react";
 import {
-  RocketIcon,
   PlusIcon,
   PersonIcon,
-  CheckCircledIcon,
-  CalendarIcon,
-  InfoCircledIcon,
-  ClockIcon,
-  Cross2Icon,
-  CheckIcon,
-  TargetIcon,
   StarIcon,
 } from "@radix-ui/react-icons";
 import { groupsAPI } from "../../services/api";
 import ChallengeCreateModal from "../ui/ChallengeCreateModal";
+import { useAuth } from "../../contexts/AuthContext";
+
+/* ── type metadata ── */
+const TYPE_META = {
+  streak: { icon: "🔥", label: "Streak" },
+  cumulative: { icon: "📈", label: "Cumulative" },
+  consistency: { icon: "📅", label: "Consistency" },
+  team_goal: { icon: "🤝", label: "Team Goal" },
+  head_to_head: { icon: "⚔️", label: "Head to Head" },
+};
+
+const STATUS_COLORS = {
+  upcoming: "bg-blue-500/10 text-blue-600",
+  active: "bg-green-500/10 text-green-600",
+  completed: "bg-gray-500/10 text-gray-500",
+  cancelled: "bg-red-500/10 text-red-500",
+};
 
 const ChallengeWidget = ({ workspaceId, className = "" }) => {
+  const { user } = useAuth();
+  const currentUserId = user?._id || user?.id;
   const [challenges, setChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [joinLoading, setJoinLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(null);
 
-  // Fetch challenges on mount
   useEffect(() => {
     fetchChallenges();
   }, [workspaceId]);
 
-  // Fetch challenges from API
   const fetchChallenges = async () => {
     if (!workspaceId) return;
-    
     try {
       setLoading(true);
-      const response = await groupsAPI.getChallenges(workspaceId);
-      
-      if (response.success) {
-        setChallenges(response.challenges || []);
+      const res = await groupsAPI.getChallenges(workspaceId);
+      if (res.success) {
+        setChallenges(res.challenges || []);
       } else {
         setError("Failed to load challenges");
       }
-    } catch (err) {
+    } catch {
       setError("Error loading challenges");
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle joining a challenge
+  const isParticipant = (c) =>
+    c.participants?.some(
+      (p) => (p.userId?._id || p.userId)?.toString() === currentUserId?.toString()
+    );
+
+  const getMyProgress = (c) => {
+    const p = c.participants?.find(
+      (p) => (p.userId?._id || p.userId)?.toString() === currentUserId?.toString()
+    );
+    return p?.progress || {};
+  };
+
   const handleJoin = async (challengeId) => {
     try {
-      setJoinLoading(true);
-      const response = await groupsAPI.joinChallenge(workspaceId, challengeId);
-      
-      if (response.success) {
-        setChallenges(prevChallenges => 
-          prevChallenges.map(challenge => 
-            challenge.id === challengeId 
-              ? { ...challenge, participantsCount: response.participantsCount, userJoined: true }
-              : challenge
-          )
-        );
-      }
-    } catch (err) {
+      setActionLoading(challengeId);
+      const res = await groupsAPI.joinChallenge(challengeId);
+      if (res.success) fetchChallenges();
+    } catch {
       setError("Failed to join challenge");
     } finally {
-      setJoinLoading(false);
+      setActionLoading(null);
     }
   };
 
-  // Handle leaving a challenge
   const handleLeave = async (challengeId) => {
     try {
-      setJoinLoading(true);
-      const response = await groupsAPI.leaveChallenge(workspaceId, challengeId);
-      
-      if (response.success) {
-        setChallenges(prevChallenges => 
-          prevChallenges.map(challenge => 
-            challenge.id === challengeId 
-              ? { ...challenge, participantsCount: response.participantsCount, userJoined: false }
-              : challenge
-          )
-        );
-      }
-    } catch (err) {
+      setActionLoading(challengeId);
+      const res = await groupsAPI.leaveChallenge(challengeId);
+      if (res.success) fetchChallenges();
+    } catch {
       setError("Failed to leave challenge");
     } finally {
-      setJoinLoading(false);
+      setActionLoading(null);
     }
   };
 
-  // Handle challenge creation success
-  const handleChallengeCreated = (newChallenge) => {
-    setChallenges(prev => [newChallenge, ...prev]);
+  const handleCreated = () => {
     setIsCreateModalOpen(false);
+    fetchChallenges();
+  };
+
+  /* ── progress bar value ── */
+  const progressPercent = (challenge) => {
+    if (challenge.type === "team_goal") {
+      const total = challenge.participants?.reduce(
+        (s, p) => s + (p.progress?.currentValue || 0),
+        0
+      );
+      return Math.min(100, Math.round(((total || 0) / (challenge.rules?.targetValue || 1)) * 100));
+    }
+    const my = getMyProgress(challenge);
+    return Math.min(
+      100,
+      Math.round(((my.currentValue || 0) / (challenge.rules?.targetValue || 1)) * 100)
+    );
   };
 
   if (loading) {
     return (
-      <div className={`p-6 rounded-xl bg-[var(--color-surface-elevated)] ${className} min-h-[200px] flex items-center justify-center`}>
-        <div className="text-center">
-          <div className="animate-spin w-6 h-6 border-2 border-[var(--color-border-primary)] border-t-[var(--color-brand-500)] rounded-full mx-auto mb-2"></div>
-          <Text size="1" color="gray">Loading challenges...</Text>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className={`p-6 rounded-xl bg-[var(--color-surface-elevated)] ${className}`}>
-        <div className="text-center text-[var(--color-danger)]">
-          <Text size="2">{error}</Text>
-          <Button variant="soft" onClick={fetchChallenges} className="mt-2">
-            Try Again
-          </Button>
+      <div className={`p-6 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 ${className}`}>
+        <div className="animate-pulse space-y-4">
+          <div className="h-5 w-40 bg-[var(--color-surface-hover)] rounded" />
+          <div className="h-16 bg-[var(--color-surface-hover)] rounded-xl" />
+          <div className="h-16 bg-[var(--color-surface-hover)] rounded-xl" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`p-6 rounded-xl bg-[var(--color-surface-elevated)] ${className}`}>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center shadow-lg">
-            <RocketIcon className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold text-[var(--color-text-primary)] font-dmSerif">Group Challenges</h2>
-            <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
-              Team up and complete habits together
-            </p>
-          </div>
-        </div>
-        <Button 
-          variant="soft" 
-          color="brand"
+    <div className={`${className}`}>
+      {/* header */}
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-[var(--color-text-secondary)] font-spartan">
+          {challenges.length} challenge{challenges.length !== 1 && "s"}
+        </p>
+        <button
           onClick={() => setIsCreateModalOpen(true)}
+          className="flex items-center gap-1.5 h-8 px-3 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white rounded-lg text-xs font-spartan font-medium transition-colors"
         >
-          <PlusIcon />
+          <PlusIcon className="w-3.5 h-3.5" />
           New Challenge
-        </Button>
+        </button>
       </div>
 
+      {error && (
+        <p className="text-xs text-red-500 font-spartan mb-3">{error}</p>
+      )}
+
       {challenges.length === 0 ? (
-        <div className="text-center py-12">
-          {/* Main Icon */}
-          <div className="w-16 h-16 bg-gradient-to-br from-[var(--color-brand-100)] to-[var(--color-brand-200)] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
-            <RocketIcon className="w-8 h-8 text-[var(--color-brand-600)]" />
-          </div>
-          
-          {/* Heading */}
-          <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-3 font-dmSerif">
+        <div className="text-center py-20">
+          <p className="text-4xl mb-4">🏆</p>
+          <h3 className="text-lg font-garamond font-bold text-[var(--color-text-primary)] mb-1">
             No challenges yet
           </h3>
-          
-          {/* Description */}
-          <p className="text-sm text-[var(--color-text-secondary)] max-w-sm mx-auto mb-8 font-outfit leading-relaxed">
-            Create your first group challenge to build team accountability and celebrate achievements together!
-          </p>
-          
-          {/* Feature Preview Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto mb-8">
-            <div className="p-4 bg-[var(--color-surface-primary)] rounded-xl border border-[var(--color-border-primary)]/30 hover:border-[var(--color-brand-400)]/50 transition-all duration-200">
-              <div className="w-10 h-10 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <CalendarIcon className="w-5 h-5 text-orange-600" />
-              </div>
-              <h4 className="text-sm font-semibold text-[var(--color-text-primary)] mb-1 font-dmSerif">
-                Streak Challenges
-              </h4>
-              <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
-                Build consecutive habits together
-              </p>
-            </div>
-            
-            <div className="p-4 bg-[var(--color-surface-primary)] rounded-xl border border-[var(--color-border-primary)]/30 hover:border-[var(--color-brand-400)]/50 transition-all duration-200">
-              <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <PersonIcon className="w-5 h-5 text-green-600" />
-              </div>
-              <h4 className="text-sm font-semibold text-[var(--color-text-primary)] mb-1 font-dmSerif">
-                Team Goals
-              </h4>
-              <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
-                Achieve collective milestones
-              </p>
-            </div>
-            
-            <div className="p-4 bg-[var(--color-surface-primary)] rounded-xl border border-[var(--color-border-primary)]/30 hover:border-[var(--color-brand-400)]/50 transition-all duration-200">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <StarIcon className="w-5 h-5 text-purple-600" />
-              </div>
-              <h4 className="text-sm font-semibold text-[var(--color-text-primary)] mb-1 font-dmSerif">
-                Achievements
-              </h4>
-              <p className="text-xs text-[var(--color-text-secondary)] font-outfit">
-                Unlock rewards and badges
-              </p>
-            </div>
-          </div>
-          
-          {/* CTA Button */}
-          <Button 
-            variant="soft" 
-            color="brand" 
-            size="3"
-            onClick={() => setIsCreateModalOpen(true)}
-            className="shadow-sm"
-          >
-            <RocketIcon />
-            Create First Challenge
-          </Button>
-          
-          {/* Helper Text */}
-          <p className="text-xs text-[var(--color-text-tertiary)] mt-4 font-outfit">
-            Start with a simple streak challenge or team goal
+          <p className="text-sm text-[var(--color-text-secondary)] font-spartan max-w-sm mx-auto">
+            Create a streak, cumulative, or team challenge to motivate your group.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {challenges.map(challenge => (
-            <div key={challenge.id} className="p-4 border border-[var(--color-border-primary)] rounded-lg bg-[var(--color-surface-elevated)] hover:shadow-md transition-shadow">
-              {/* Challenge content would go here */}
-              <div className="text-center py-4">
-                <Text size="2">{challenge.title}</Text>
-              </div>
-            </div>
-          ))}
-        </div>
+        <ul className="space-y-3">
+          {challenges.map((c) => {
+            const meta = TYPE_META[c.type] || { icon: "🏆", label: c.type };
+            const joined = isParticipant(c);
+            const pct = progressPercent(c);
+
+            return (
+              <li
+                key={c._id}
+                className="p-4 rounded-2xl border bg-[var(--color-surface-elevated)] border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40 transition-colors"
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-xl flex-shrink-0 mt-0.5">{meta.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] truncate">
+                        {c.name}
+                      </p>
+                      <span className={`text-[10px] font-spartan font-medium px-2 py-0.5 rounded-md ${STATUS_COLORS[c.status] || ""}`}>
+                        {c.status}
+                      </span>
+                    </div>
+                    {c.description && (
+                      <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mt-0.5 line-clamp-1">
+                        {c.description}
+                      </p>
+                    )}
+
+                    {/* progress bar */}
+                    {(c.status === "active" || c.status === "completed") && joined && (
+                      <div className="mt-2">
+                        <div className="flex items-center justify-between text-[10px] font-spartan text-[var(--color-text-tertiary)] mb-1">
+                          <span>{pct}%</span>
+                          <span>
+                            {c.rules?.targetValue} {c.rules?.targetUnit}
+                          </span>
+                        </div>
+                        <div className="h-1.5 bg-[var(--color-surface-hover)] rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-[var(--color-brand-600)] rounded-full transition-all"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* meta row */}
+                    <div className="flex items-center gap-3 mt-2 text-[10px] text-[var(--color-text-tertiary)] font-spartan">
+                      <span className="flex items-center gap-1">
+                        <PersonIcon className="w-3 h-3" />
+                        {c.stats?.participantCount || c.participants?.length || 0}
+                      </span>
+                      {c.daysRemaining != null && c.status === "active" && (
+                        <span>{c.daysRemaining}d left</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* action */}
+                  <div className="flex-shrink-0">
+                    {c.status === "active" || c.status === "upcoming" ? (
+                      joined ? (
+                        <button
+                          onClick={() => handleLeave(c._id)}
+                          disabled={actionLoading === c._id}
+                          className="text-xs font-spartan font-medium px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors disabled:opacity-50"
+                        >
+                          Leave
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleJoin(c._id)}
+                          disabled={actionLoading === c._id}
+                          className="text-xs font-spartan font-medium px-3 py-1.5 rounded-lg bg-[var(--color-brand-600)]/10 text-[var(--color-brand-600)] hover:bg-[var(--color-brand-600)]/20 transition-colors disabled:opacity-50"
+                        >
+                          Join
+                        </button>
+                      )
+                    ) : null}
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       )}
 
-      {/* Challenge create modal */}
-      {isCreateModalOpen && (
-        <ChallengeCreateModal
-          workspaceId={workspaceId}
-          onClose={() => setIsCreateModalOpen(false)}
-          onSuccess={handleChallengeCreated}
-        />
-      )}
+      <ChallengeCreateModal
+        isOpen={isCreateModalOpen}
+        workspaceId={workspaceId}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={handleCreated}
+      />
     </div>
   );
 };

@@ -27,7 +27,11 @@ const activitySchema = new mongoose.Schema({
       'member_left',
       'habit_created',
       'habit_deleted',
+      'challenge_started',
+      'challenge_joined',
       'challenge_completed',
+      'challenge_milestone',
+      'kudos',
       'badge_earned'
     ],
     required: true
@@ -43,6 +47,15 @@ const activitySchema = new mongoose.Schema({
     // For streak_milestone
     milestoneType: String, // '7_day', '30_day', '100_day', etc.
     
+    // For challenges
+    challengeId: mongoose.Schema.Types.ObjectId,
+    challengeName: String,
+    challengeType: String,
+
+    // For kudos
+    targetUserId: mongoose.Schema.Types.ObjectId,
+    targetUserName: String,
+
     // For goal_achieved
     goalType: String,
     goalValue: Number,

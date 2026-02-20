@@ -662,6 +662,89 @@ export const groupsAPI = {
       body: JSON.stringify(data),
     });
   },
+
+  // ── Challenge API ──
+
+  // List challenges for a workspace
+  getChallenges: async (workspaceId, status = null) => {
+    const params = status ? `?status=${status}` : '';
+    return apiRequest(`/api/workspaces/${workspaceId}/challenges${params}`);
+  },
+
+  // Create a challenge
+  createChallenge: async (workspaceId, challengeData) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/challenges`, {
+      method: 'POST',
+      body: JSON.stringify(challengeData),
+    });
+  },
+
+  // Get challenge details
+  getChallenge: async (challengeId) => {
+    return apiRequest(`/api/challenges/${challengeId}`);
+  },
+
+  // Update challenge (before start only)
+  updateChallenge: async (challengeId, updateData) => {
+    return apiRequest(`/api/challenges/${challengeId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updateData),
+    });
+  },
+
+  // Cancel challenge
+  cancelChallenge: async (challengeId) => {
+    return apiRequest(`/api/challenges/${challengeId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Join challenge
+  joinChallenge: async (challengeId, linkedHabitId = null) => {
+    return apiRequest(`/api/challenges/${challengeId}/join`, {
+      method: 'POST',
+      body: JSON.stringify({ linkedHabitId }),
+    });
+  },
+
+  // Leave challenge
+  leaveChallenge: async (challengeId) => {
+    return apiRequest(`/api/challenges/${challengeId}/leave`, {
+      method: 'POST',
+    });
+  },
+
+  // Get challenge leaderboard
+  getChallengeLeaderboard: async (challengeId) => {
+    return apiRequest(`/api/challenges/${challengeId}/leaderboard`);
+  },
+
+  // ── Feed reactions ──
+
+  // Add reaction to a feed event
+  addReaction: async (eventId, type) => {
+    return apiRequest(`/api/feed/${eventId}/reactions`, {
+      method: 'POST',
+      body: JSON.stringify({ type }),
+    });
+  },
+
+  // Remove reaction from a feed event
+  removeReaction: async (eventId) => {
+    return apiRequest(`/api/feed/${eventId}/reactions`, {
+      method: 'DELETE',
+    });
+  },
+
+  // ── Kudos ──
+
+  // Send kudos to a workspace member
+  sendKudos: async (workspaceId, targetUserId, message = null) => {
+    return apiRequest(`/api/workspaces/${workspaceId}/kudos`, {
+      method: 'POST',
+      body: JSON.stringify({ targetUserId, message }),
+    });
+  },
 };
 
 // Encouragement API

@@ -321,8 +321,8 @@ router.post('/:id/check', [validateObjectId('id'), validateHabitEntry], async (r
 
     // Process challenge progress if this is a completion
     let challengeResult = null;
-    if (completed && habit.workspaceId) {
-      challengeResult = await processChallengeProgress(req.user._id, habit.workspaceId, habit._id);
+    if (completed) {
+      challengeResult = await processChallengeProgress(req.user._id, habit._id);
     }
 
     // Calculate weekly progress for weekly habits

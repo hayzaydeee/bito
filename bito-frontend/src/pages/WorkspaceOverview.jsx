@@ -19,6 +19,7 @@ import GroupInviteModal from "../components/ui/GroupInviteModal";
 import EncouragementModal from "../components/shared/EncouragementModal";
 import GroupHabitModal from "../components/ui/GroupHabitModal";
 import HabitAdoptModal from "../components/ui/HabitAdoptModal";
+import ChallengeWidget from "../components/widgets/ChallengeWidget";
 
 /* ================================================================
    Tab IDs
@@ -249,12 +250,20 @@ const WorkspaceOverview = () => {
 
   /* ── inline reaction handler ──────────── */
 
-  const toggleReaction = (activityId, emoji) => {
+  const toggleReaction = async (activityId, emoji) => {
+    // Optimistic update
     setReactions((prev) => {
       const act = { ...(prev[activityId] || {}) };
       act[emoji] = (act[emoji] || 0) + 1;
       return { ...prev, [activityId]: act };
     });
+    // Map emoji to reaction type for backend
+    const emojiToType = { "👏": "clap", "🔥": "fire", "💪": "celebrate", "❤️": "heart", "🎉": "celebrate" };
+    try {
+      await groupsAPI.addReaction(activityId, emojiToType[emoji] || "like");
+    } catch {
+      // Reaction failed — leave optimistic update in place
+    }
   };
 
   /* ── encouragement ────────────────────── */
@@ -446,7 +455,9 @@ const WorkspaceOverview = () => {
           />
         )}
 
-        {activeTab === "challenges" && <ChallengesTab />}
+        {activeTab === "challenges" && (
+          <ChallengeWidget workspaceId={groupId} />
+        )}
       </div>
 
       {/* ── modals ──────────────────────── */}
@@ -578,6 +589,14 @@ function ActivityTab({ activities, reactions, onReact }) {
         return `${name} created ${a.data?.habitName || "a group habit"}`;
       case "habit_deleted":
         return `${name} removed ${a.data?.habitName || "a group habit"}`;
+      case "challenge_started":
+        return `${name} started challenge "${a.data?.challengeName || "a challenge"}"`;
+      case "challenge_joined":
+        return `${name} joined "${a.data?.challengeName || "a challenge"}"`;
+      case "challenge_milestone":
+        return `${name} hit a milestone in "${a.data?.challengeName || "a challenge"}"`;
+      case "kudos":
+        return `${name} sent kudos to ${a.data?.targetUserName || "a teammate"}`;
       default:
         return a.data?.message || a.description || `${name} did something`;
     }
@@ -591,6 +610,10 @@ function ActivityTab({ activities, reactions, onReact }) {
       member_joined: "👋",
       habit_created: "🎯",
       habit_deleted: "🗑️",
+      challenge_started: "🏆",
+      challenge_joined: "🤝",
+      challenge_milestone: "⭐",
+      kudos: "💛",
     };
     return map[type] || "📌";
   };
@@ -863,19 +886,6 @@ function MembersTab({
 /* ================================================================
    Tab: Challenges (placeholder — no API endpoints yet)
    ================================================================ */
-function ChallengesTab() {
-  return (
-    <div className="text-center py-20">
-      <p className="text-4xl mb-4">🏆</p>
-      <h3 className="text-lg font-garamond font-bold text-[var(--color-text-primary)] mb-1">
-        Challenges coming soon
-      </h3>
-      <p className="text-sm text-[var(--color-text-secondary)] font-spartan max-w-sm mx-auto">
-        Group challenges will let you set streak targets, collective goals, and
-        compete with your team. Stay tuned.
-      </p>
-    </div>
-  );
-}
+/* ChallengesTab is now handled by <ChallengeWidget /> above */
 
 export default WorkspaceOverview;
