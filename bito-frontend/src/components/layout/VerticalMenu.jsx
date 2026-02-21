@@ -127,6 +127,14 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
       color: "from-purple-500 to-purple-600",
       path: "/app/journal",
     },
+    {
+      id: "transformers",
+      label: "Transformers",
+      icon: LightningBoltIcon,
+      description: "AI habit systems",
+      color: "from-emerald-500 to-emerald-600",
+      path: "/app/transformers",
+    },
   ];
 
   const bottomItems = [

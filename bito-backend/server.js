@@ -27,6 +27,7 @@ const templateRoutes = require('./routes/templates');
 const insightsRoutes = require('./routes/insights');
 const notificationRoutes = require('./routes/notifications');
 const challengeRoutes = require('./routes/challenges');
+const transformerRoutes = require('./routes/transformers');
 const testRoutes = require('./routes/test');
 
 // Import services
@@ -190,6 +191,7 @@ app.use('/api/templates', templateRoutes);
 app.use('/api/insights', insightsRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api', challengeRoutes);
+app.use('/api/transformers', transformerRoutes);
 // API documentation endpoint
 app.get('/api', (req, res) => {
   res.json({

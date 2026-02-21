@@ -9,6 +9,7 @@ import {
   GearIcon,
   ExitIcon,
   Pencil1Icon,
+  LightningBoltIcon,
 } from "@radix-ui/react-icons";
 import { useAuth } from "../../contexts/AuthContext";
 import ThemeSwitcher from "../ui/ThemeSwitcher";
@@ -133,6 +134,24 @@ const BottomTabBar = ({ onAddHabit }) => {
               >
                 <Pencil1Icon className="w-5 h-5" style={{ color: "var(--color-text-secondary)" }} />
                 <span className="text-sm font-medium font-spartan">Journal</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowMore(false);
+                  navigate("/app/transformers");
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors"
+                style={{ color: "var(--color-text-primary)" }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor = "var(--color-surface-hover)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = "transparent")
+                }
+              >
+                <LightningBoltIcon className="w-5 h-5" style={{ color: "var(--color-text-secondary)" }} />
+                <span className="text-sm font-medium font-spartan">Transformers</span>
               </button>
 
               <div className="px-4 py-3 flex items-center justify-between">

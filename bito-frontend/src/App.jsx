@@ -16,6 +16,7 @@ import WorkspaceOverview from "./pages/WorkspaceOverview";
 import WorkspaceSettings from "./pages/WorkspaceSettings";
 import MemberDashboardView from "./pages/MemberDashboardView";
 import ChallengeDetailPage from "./pages/ChallengeDetailPage";
+import TransformersPage from "./pages/TransformersPage";
 import GroupSelection from "./pages/GroupSelection";
 import OnboardingPage from "./pages/OnboardingPage";
 import ProfileSetupPage from "./pages/ProfileSetupPage";
@@ -80,6 +81,7 @@ const ThemedApp = () => {
               {/* <Route path="habits" element={<HabitsPage />} /> */}
               <Route path="analytics" element={<AnalyticsPage />} />
               <Route path="journal" element={<JournalPageV2 />} />
+              <Route path="transformers" element={<TransformersPage />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="settings/habit-privacy/:habitId" element={<SettingsPage section="habit-privacy" />} />
               <Route path="settings/personality" element={<SettingsPage section="personality" />} />

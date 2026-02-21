@@ -1012,4 +1012,48 @@ const api = {
   })
 };
 
+// ── Transformers API ──
+export const transformersAPI = {
+  // Generate a transformer from goal text
+  generate: async (goalText) => {
+    return apiRequest('/api/transformers/generate', {
+      method: 'POST',
+      body: JSON.stringify({ goalText }),
+    });
+  },
+
+  // List user's transformers
+  list: async (status = null) => {
+    const params = status ? `?status=${status}` : '';
+    return apiRequest(`/api/transformers${params}`);
+  },
+
+  // Get transformer details
+  get: async (id) => {
+    return apiRequest(`/api/transformers/${id}`);
+  },
+
+  // Update transformer (edit preview before applying)
+  update: async (id, system) => {
+    return apiRequest(`/api/transformers/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ system }),
+    });
+  },
+
+  // Apply transformer — creates real habits
+  apply: async (id) => {
+    return apiRequest(`/api/transformers/${id}/apply`, {
+      method: 'POST',
+    });
+  },
+
+  // Archive (soft delete) a transformer
+  archive: async (id) => {
+    return apiRequest(`/api/transformers/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
 export default api;
