@@ -46,13 +46,19 @@ router.post('/generate', async (req, res) => {
     const now = new Date();
     const resetAt = usage.generationsResetAt ? new Date(usage.generationsResetAt) : null;
     if (!resetAt || resetAt < now) {
-      user.subscription = user.subscription || {};
-      user.subscription.usage = user.subscription.usage || {};
-      user.subscription.usage.generationsThisMonth = 0;
-      // Next reset: first of next month
+      // Use atomic update instead of save() to avoid user validation side effects
       const nextReset = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-      user.subscription.usage.generationsResetAt = nextReset;
-      await user.save();
+      await User.findByIdAndUpdate(userId, {
+        $set: {
+          'subscription.usage.generationsThisMonth': 0,
+          'subscription.usage.generationsResetAt': nextReset,
+        },
+      });
+      // Refresh the user object for the current count check
+      const refreshedUser = await User.findById(userId);
+      if (refreshedUser) {
+        Object.assign(user, { subscription: refreshedUser.subscription });
+      }
     }
 
     const currentCount = user.subscription?.usage?.generationsThisMonth || 0;
@@ -97,7 +103,16 @@ router.post('/generate', async (req, res) => {
       transformer: transformer.toObject({ virtuals: true }),
     });
   } catch (error) {
-    console.error('Transformer generation error:', error);
+    console.error('Transformer generation error:', error.message, error.stack);
+
+    // Mongoose validation error — likely an LLM output that slipped through sanitization
+    if (error.name === 'ValidationError') {
+      console.error('Transformer validation details:', JSON.stringify(error.errors, null, 2));
+      return res.status(502).json({
+        success: false,
+        error: 'AI generated an unexpected response. Please try again with a simpler goal.',
+      });
+    }
 
     // User-friendly error for known LLM issues
     if (error.message?.includes('AI returned') || error.message?.includes('AI generation')) {

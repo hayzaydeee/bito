@@ -216,10 +216,14 @@ async function generate(goalText, userId) {
     h.isRequired = h.isRequired !== false;
   }
 
-  // 6. Return preview + metadata
+  // 6. Sanitize all LLM output to match Mongoose enums
+  const safeParsed = sanitizeParsed(parsed);
+  const safeSystem = sanitizeSystem(system);
+
+  // 7. Return preview + metadata
   return {
-    goal: { text: goalText, parsed },
-    system,
+    goal: { text: goalText, parsed: safeParsed },
+    system: safeSystem,
     generation: {
       model: MODEL,
       generatedAt: new Date(),
@@ -229,6 +233,80 @@ async function generate(goalText, userId) {
       },
     },
   };
+}
+
+// ── Enum sanitizers (match Mongoose schema enums) ──
+const VALID_INTENTS = new Set([
+  'fitness', 'health_wellness', 'learning_skill', 'productivity',
+  'finance', 'event_prep', 'career', 'relationships', 'creative', 'custom',
+]);
+const VALID_SYSTEM_CATEGORIES = VALID_INTENTS; // same set
+const VALID_HABIT_CATEGORIES = new Set([
+  'health', 'productivity', 'learning', 'fitness', 'mindfulness', 'social', 'creative', 'other',
+]);
+const VALID_METHODOLOGIES = new Set(['boolean', 'numeric', 'duration', 'rating']);
+const VALID_DIFFICULTIES = new Set(['easy', 'medium', 'hard']);
+const VALID_FREQ_TYPES = new Set(['daily', 'weekly', 'specific_days', 'custom']);
+
+/**
+ * Sanitize parsed goal data so values pass Mongoose enum validation.
+ */
+function sanitizeParsed(parsed) {
+  if (!parsed || typeof parsed !== 'object') {
+    return { intent: 'custom', targetDate: null, constraints: [], keywords: [] };
+  }
+
+  // Intent must be in the enum
+  if (!VALID_INTENTS.has(parsed.intent)) {
+    parsed.intent = 'custom';
+  }
+
+  // targetDate must be a valid Date or null
+  if (parsed.targetDate) {
+    const d = new Date(parsed.targetDate);
+    parsed.targetDate = isNaN(d.getTime()) ? null : d;
+  } else {
+    parsed.targetDate = null;
+  }
+
+  // constraints and keywords must be arrays of strings
+  parsed.constraints = Array.isArray(parsed.constraints) ? parsed.constraints.map(String) : [];
+  parsed.keywords = Array.isArray(parsed.keywords) ? parsed.keywords.map(String) : [];
+
+  return parsed;
+}
+
+/**
+ * Sanitize the generated system so all enum fields pass Mongoose validation.
+ */
+function sanitizeSystem(system) {
+  if (!VALID_SYSTEM_CATEGORIES.has(system.category)) {
+    system.category = 'custom';
+  }
+  if (system.estimatedDuration) {
+    const validUnits = new Set(['days', 'weeks', 'months']);
+    if (!validUnits.has(system.estimatedDuration.unit)) {
+      system.estimatedDuration.unit = 'weeks';
+    }
+    if (typeof system.estimatedDuration.value !== 'number' || system.estimatedDuration.value <= 0) {
+      system.estimatedDuration.value = 4;
+    }
+  }
+  for (const h of system.habits) {
+    if (!VALID_METHODOLOGIES.has(h.methodology)) h.methodology = 'boolean';
+    if (!VALID_HABIT_CATEGORIES.has(h.category)) h.category = 'other';
+    if (!VALID_DIFFICULTIES.has(h.difficulty)) h.difficulty = 'medium';
+    if (h.frequency && !VALID_FREQ_TYPES.has(h.frequency.type)) h.frequency.type = 'daily';
+    // Ensure name exists
+    if (!h.name || typeof h.name !== 'string') h.name = 'Untitled Habit';
+    // Clamp string lengths to match schema
+    if (h.name.length > 100) h.name = h.name.slice(0, 100);
+    if (h.description && h.description.length > 300) h.description = h.description.slice(0, 300);
+  }
+  // Clamp system string lengths
+  if (system.name && system.name.length > 120) system.name = system.name.slice(0, 120);
+  if (system.description && system.description.length > 500) system.description = system.description.slice(0, 500);
+  return system;
 }
 
 module.exports = { generate, parseGoal, isAvailable };
