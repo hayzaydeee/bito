@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   PlusIcon,
   PersonIcon,
@@ -27,6 +28,7 @@ const STATUS_COLORS = {
 
 const ChallengeWidget = ({ workspaceId, className = "" }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const currentUserId = user?._id || user?.id;
   const [challenges, setChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -162,7 +164,8 @@ const ChallengeWidget = ({ workspaceId, className = "" }) => {
             return (
               <li
                 key={c._id}
-                className="p-4 rounded-2xl border bg-[var(--color-surface-elevated)] border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40 transition-colors"
+                onClick={() => navigate(`/app/groups/${workspaceId}/challenges/${c._id}`)}
+                className="p-4 rounded-2xl border bg-[var(--color-surface-elevated)] border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40 transition-colors cursor-pointer"
               >
                 <div className="flex items-start gap-3">
                   <span className="text-xl flex-shrink-0 mt-0.5">{meta.icon}</span>
@@ -216,7 +219,7 @@ const ChallengeWidget = ({ workspaceId, className = "" }) => {
                     {c.status === "active" || c.status === "upcoming" ? (
                       joined ? (
                         <button
-                          onClick={() => handleLeave(c._id)}
+                          onClick={(e) => { e.stopPropagation(); handleLeave(c._id); }}
                           disabled={actionLoading === c._id}
                           className="text-xs font-spartan font-medium px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors disabled:opacity-50"
                         >
@@ -224,7 +227,7 @@ const ChallengeWidget = ({ workspaceId, className = "" }) => {
                         </button>
                       ) : (
                         <button
-                          onClick={() => handleJoin(c)}
+                          onClick={(e) => { e.stopPropagation(); handleJoin(c); }}
                           disabled={actionLoading === c._id}
                           className="text-xs font-spartan font-medium px-3 py-1.5 rounded-lg bg-[var(--color-brand-600)]/10 text-[var(--color-brand-600)] hover:bg-[var(--color-brand-600)]/20 transition-colors disabled:opacity-50"
                         >

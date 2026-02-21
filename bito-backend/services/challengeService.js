@@ -141,7 +141,7 @@ class ChallengeService {
       icon: '/android-chrome-192x192.png',
       badge: '/favicon-32x32.png',
       tag: tag || `challenge-${challenge._id}`,
-      data: { url: `/app/groups/${challenge.workspaceId}`, challengeId: challenge._id.toString() },
+      data: { url: `/app/groups/${challenge.workspaceId}/challenges/${challenge._id}`, challengeId: challenge._id.toString() },
     });
 
     for (const sub of subs) {

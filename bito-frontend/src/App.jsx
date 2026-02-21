@@ -15,6 +15,7 @@ import WorkspaceOverview from "./pages/WorkspaceOverview";
 
 import WorkspaceSettings from "./pages/WorkspaceSettings";
 import MemberDashboardView from "./pages/MemberDashboardView";
+import ChallengeDetailPage from "./pages/ChallengeDetailPage";
 import GroupSelection from "./pages/GroupSelection";
 import OnboardingPage from "./pages/OnboardingPage";
 import ProfileSetupPage from "./pages/ProfileSetupPage";
@@ -84,6 +85,7 @@ const ThemedApp = () => {
               <Route path="settings/personality" element={<SettingsPage section="personality" />} />
               <Route path="groups" element={<GroupSelection />} />
               <Route path="groups/:groupId" element={<WorkspaceOverview />} />
+              <Route path="groups/:groupId/challenges/:challengeId" element={<ChallengeDetailPage />} />
               <Route path="groups/:groupId/members/:memberId/dashboard" element={<MemberDashboardView />} />
               <Route path="groups/:groupId/settings" element={<WorkspaceSettings />} />
               <Route path="invitations" element={<InvitationPage />} />

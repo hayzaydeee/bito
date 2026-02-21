@@ -2,6 +2,51 @@ const Challenge = require('../models/Challenge');
 const Activity = require('../models/Activity');
 const HabitEntry = require('../models/HabitEntry');
 const Habit = require('../models/Habit');
+const webPush = require('web-push');
+const PushSubscription = require('../models/PushSubscription');
+
+// VAPID config (reused from notifications/challengeService)
+const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY;
+const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY;
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:hello@bfrnd.io';
+if (VAPID_PUBLIC && VAPID_PRIVATE) {
+  try { webPush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE); } catch {}
+}
+
+/**
+ * Send a push notification to all participants of a challenge (except sender).
+ */
+async function notifyParticipants(challenge, senderId, { title, body, tag }) {
+  if (!VAPID_PUBLIC || !VAPID_PRIVATE) return;
+  try {
+    const recipientIds = challenge.participants
+      .filter((p) => p.status !== 'dropped' && !p.userId?.equals?.(senderId))
+      .map((p) => p.userId?._id || p.userId);
+    if (!recipientIds.length) return;
+
+    const subs = await PushSubscription.find({ userId: { $in: recipientIds }, isActive: true });
+    const payload = JSON.stringify({
+      title,
+      body,
+      icon: '/android-chrome-192x192.png',
+      badge: '/favicon-32x32.png',
+      tag: tag || `challenge-${challenge._id}`,
+      data: { url: `/app/groups/${challenge.workspaceId}/challenges/${challenge._id}`, challengeId: challenge._id.toString() },
+    });
+
+    for (const sub of subs) {
+      try {
+        await webPush.sendNotification(sub.subscription, payload);
+      } catch (err) {
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          await PushSubscription.deleteOne({ _id: sub._id });
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[Challenge] Push notification failed:', err.message);
+  }
+}
 
 // ── Check-in cache ──
 // Maps userId (string) → Set of habitId strings that are linked to active challenges.
@@ -106,7 +151,7 @@ const processChallengeProgress = async (userId, habitId) => {
 
       await challenge.save();
 
-      // Generate milestone feed events
+      // Generate milestone feed events + push
       for (const milestone of newMilestones) {
         await Activity.create({
           workspaceId: challenge.workspaceId,
@@ -120,9 +165,15 @@ const processChallengeProgress = async (userId, habitId) => {
           },
           visibility: 'workspace',
         });
+
+        await notifyParticipants(challenge, userId, {
+          title: '🏅 Milestone Reached!',
+          body: `Someone hit "${milestone.label}" in "${challenge.title}"!`,
+          tag: `challenge-milestone-${challenge._id}-${milestone.value}`,
+        });
       }
 
-      // If participant just completed, generate feed event
+      // If participant just completed, generate feed event + push notification
       if (updated.status === 'completed') {
         await Activity.create({
           workspaceId: challenge.workspaceId,
@@ -135,6 +186,13 @@ const processChallengeProgress = async (userId, habitId) => {
             message: `completed challenge: ${challenge.title}`,
           },
           visibility: 'workspace',
+        });
+
+        // Push to other participants
+        await notifyParticipants(challenge, userId, {
+          title: '🎉 Challenge Completed!',
+          body: `Someone just completed "${challenge.title}"!`,
+          tag: `challenge-participant-completed-${challenge._id}-${userId}`,
         });
       }
 
