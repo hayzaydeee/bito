@@ -256,14 +256,15 @@ const userSchema = new mongoose.Schema({  // Basic user information
 
     // Cached limits (computed from plan via PLAN_LIMITS constant).
     // Services read this instead of computing from the plan string.
+    // NOTE: Limits raised to unblock testing — restore before launch.
     limits: {
-      maxHabits: { type: Number, default: 10 },
-      maxActiveTransformers: { type: Number, default: 1 },
-      maxGenerationsPerMonth: { type: Number, default: 3 },
-      maxWorkspacesJoined: { type: Number, default: 2 },
-      maxWorkspacesCreated: { type: Number, default: 0 },
-      maxWorkspaceMembers: { type: Number, default: 0 },
-      historyRetentionDays: { type: Number, default: 90 }
+      maxHabits: { type: Number, default: 999 },
+      maxActiveTransformers: { type: Number, default: 999 },
+      maxGenerationsPerMonth: { type: Number, default: 999 },
+      maxWorkspacesJoined: { type: Number, default: 999 },
+      maxWorkspacesCreated: { type: Number, default: 999 },
+      maxWorkspaceMembers: { type: Number, default: 999 },
+      historyRetentionDays: { type: Number, default: 36500 }
     },
 
     // Usage counters (reset monthly)

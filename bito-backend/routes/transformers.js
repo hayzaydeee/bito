@@ -38,39 +38,11 @@ router.post('/generate', async (req, res) => {
       return res.status(404).json({ success: false, error: 'User not found' });
     }
 
-    const limits = user.subscription?.limits || {};
-    const usage = user.subscription?.usage || {};
-    const maxGen = limits.maxGenerationsPerMonth || 3;
-
-    // Reset monthly counter if needed (lazy reset)
-    const now = new Date();
-    const resetAt = usage.generationsResetAt ? new Date(usage.generationsResetAt) : null;
-    if (!resetAt || resetAt < now) {
-      // Use atomic update instead of save() to avoid user validation side effects
-      const nextReset = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-      await User.findByIdAndUpdate(userId, {
-        $set: {
-          'subscription.usage.generationsThisMonth': 0,
-          'subscription.usage.generationsResetAt': nextReset,
-        },
-      });
-      // Refresh the user object for the current count check
-      const refreshedUser = await User.findById(userId);
-      if (refreshedUser) {
-        Object.assign(user, { subscription: refreshedUser.subscription });
-      }
-    }
-
-    const currentCount = user.subscription?.usage?.generationsThisMonth || 0;
-    if (currentCount >= maxGen) {
-      return res.status(429).json({
-        success: false,
-        error: `You've reached your limit of ${maxGen} generations this month. Upgrade to Premium for unlimited generations.`,
-        limit: maxGen,
-        current: currentCount,
-        resetsAt: user.subscription?.usage?.generationsResetAt,
-      });
-    }
+    // NOTE: Generation limit check bypassed to unblock testing — restore before launch.
+    // const limits = user.subscription?.limits || {};
+    // const usage = user.subscription?.usage || {};
+    // const maxGen = limits.maxGenerationsPerMonth || 3;
+    // ... (monthly counter reset & limit enforcement skipped)
 
     // ── Check LLM availability ──
     if (!transformerEngine.isAvailable()) {
@@ -261,18 +233,11 @@ router.post('/:id/apply', async (req, res) => {
       });
     }
 
-    // ── Check active transformer limit ──
-    const user = await User.findById(userId);
-    const maxActive = user?.subscription?.limits?.maxActiveTransformers || 1;
-    const activeCount = await Transformer.countDocuments({ userId, status: 'active' });
-    if (activeCount >= maxActive) {
-      return res.status(429).json({
-        success: false,
-        error: `You can have at most ${maxActive} active transformer${maxActive > 1 ? 's' : ''}. Archive an existing one first, or upgrade to Premium.`,
-        limit: maxActive,
-        current: activeCount,
-      });
-    }
+    // NOTE: Active transformer limit check bypassed to unblock testing — restore before launch.
+    // const user = await User.findById(userId);
+    // const maxActive = user?.subscription?.limits?.maxActiveTransformers || 1;
+    // const activeCount = await Transformer.countDocuments({ userId, status: 'active' });
+    // if (activeCount >= maxActive) { ... }
 
     // ── Create real Habit documents ──
     const DAY_MAP = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
