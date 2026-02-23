@@ -51,6 +51,12 @@ const getSteps = () => [
     position: 'bottom',
   },
   {
+    target: '[data-tour="journal-view-toggle"]',
+    title: 'Switch views',
+    body: "Toggle between Day View for writing and List View for browsing past entries. You can set your preferred default in Settings → Preferences.",
+    position: 'bottom',
+  },
+  {
     target: null,
     title: "Your journal is ready",
     body: "That's everything. Start by logging your mood and capturing a quick thought — even one sentence counts. You can replay this tour from Settings → About.",

@@ -5,9 +5,10 @@ import BlockNoteEditor from '../journal/BlockNoteEditor';
 import JournalWeekStrip from './JournalWeekStrip';
 import JournalDayFeed from './JournalDayFeed';
 import JournalArchiveView from './JournalArchiveView';
+import JournalEntryList from './JournalEntryList';
 import JournalPrivacySettings, { AIOptInNudge } from './JournalPrivacy';
 import JournalTour from './JournalTour';
-import { ArchiveIcon, MagnifyingGlassIcon, Cross2Icon, LockClosedIcon, LockOpen1Icon } from '@radix-ui/react-icons';
+import { ArchiveIcon, MagnifyingGlassIcon, Cross2Icon, LockClosedIcon, LockOpen1Icon, ListBulletIcon, FileTextIcon } from '@radix-ui/react-icons';
 import { journalV2Service } from '../../services/journalV2Service';
 import { userAPI } from '../../services/api';
 
@@ -29,6 +30,9 @@ const JournalPageV2 = () => {
   const [searchResults, setSearchResults] = useState(null);
   const [searchLoading, setSearchLoading] = useState(false);
   const [forceJournalTour, setForceJournalTour] = useState(false);
+  const [activeView, setActiveView] = useState(
+    user?.preferences?.journalDefaultView || 'day'
+  );
 
   // AI privacy state from user profile
   const journalAI = user?.preferences?.journalAI || {};
@@ -174,6 +178,38 @@ const JournalPageV2 = () => {
               Intelligence
             </button>
 
+            {/* View toggle: Day / List */}
+            <div
+              className="flex items-center rounded-lg border p-0.5"
+              style={{ borderColor: 'var(--color-border-primary)' }}
+              data-tour="journal-view-toggle"
+            >
+              <button
+                onClick={() => setActiveView('day')}
+                className="p-1.5 rounded-md transition-colors"
+                style={{
+                  backgroundColor: activeView === 'day' ? 'var(--color-surface-elevated)' : 'transparent',
+                  color: activeView === 'day' ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
+                }}
+                aria-label="Day view"
+                title="Day view"
+              >
+                <FileTextIcon className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setActiveView('list')}
+                className="p-1.5 rounded-md transition-colors"
+                style={{
+                  backgroundColor: activeView === 'list' ? 'var(--color-surface-elevated)' : 'transparent',
+                  color: activeView === 'list' ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
+                }}
+                aria-label="List view"
+                title="List view"
+              >
+                <ListBulletIcon className="w-4 h-4" />
+              </button>
+            </div>
+
             {/* Search toggle */}
             <button
               onClick={() => showSearch ? clearSearch() : setShowSearch(true)}
@@ -278,12 +314,14 @@ const JournalPageV2 = () => {
           </div>
         )}
 
-        {/* Week strip navigation */}
-        <JournalWeekStrip
-          selectedDate={journal.selectedDate}
-          onSelect={journal.selectDate}
-          indicators={journal.indicators}
-        />
+        {/* Week strip navigation — only in day view */}
+        {activeView === 'day' && (
+          <JournalWeekStrip
+            selectedDate={journal.selectedDate}
+            onSelect={journal.selectDate}
+            indicators={journal.indicators}
+          />
+        )}
       </div>
 
       {/* ── AI opt-in nudge ─────────────────────────────────── */}
@@ -298,7 +336,15 @@ const JournalPageV2 = () => {
 
       {/* ── Day feed (main content) ─────────────────────────── */}
       <div className="flex-1 overflow-hidden">
-        <JournalDayFeed
+        {activeView === 'list' ? (
+          <JournalEntryList
+            onSelectDate={(dateStr) => {
+              journal.selectDate(dateStr);
+              setActiveView('day');
+            }}
+          />
+        ) : (
+          <JournalDayFeed
           selectedDate={journal.selectedDate}
           longform={journal.longform}
           micros={journal.micros}
@@ -326,6 +372,7 @@ const JournalPageV2 = () => {
             />
           }
         />
+        )}
       </div>
 
       {/* ── Privacy settings modal ──────────────────────────── */}

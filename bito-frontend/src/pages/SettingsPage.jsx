@@ -103,6 +103,7 @@ const SettingsPage = ({ section }) => {
           scale: u.preferences?.scale ?? "medium",
           aiDashboard: u.preferences?.aiDashboard ?? true,
           aiAnalytics: u.preferences?.aiAnalytics ?? true,
+          journalDefaultView: u.preferences?.journalDefaultView ?? "day",
         }));
       } catch {
         console.error("Failed to load profile");
@@ -223,7 +224,7 @@ const SettingsPage = ({ section }) => {
       return;
     }
 
-    const supported = ["emailNotifications", "timezone", "weekStartsOn", "aiDashboard", "aiAnalytics"];
+    const supported = ["emailNotifications", "timezone", "weekStartsOn", "aiDashboard", "aiAnalytics", "journalDefaultView"];
     if (!supported.includes(key)) return;
 
     try {
@@ -241,6 +242,7 @@ const SettingsPage = ({ section }) => {
         weekStartsOn: "Week start day",
         aiDashboard: "Dashboard AI insights",
         aiAnalytics: "Analytics AI insights",
+        journalDefaultView: "Journal default view",
       };
       showToast(`${names[key]} updated`);
     } catch {
@@ -918,6 +920,20 @@ const SettingsPage = ({ section }) => {
               value={settings.weekStartsOn}
               options={weekDays}
               onChange={(v) => saveSetting("weekStartsOn", Number(v))}
+              disabled={saving}
+            />
+          </SettingRow>
+          <SettingRow
+            label="Journal Default View"
+            description="Which view opens when you visit your journal"
+          >
+            <SelectInput
+              value={settings.journalDefaultView}
+              options={[
+                { value: 'day', label: 'Day view' },
+                { value: 'list', label: 'Entry list' },
+              ]}
+              onChange={(v) => saveSetting("journalDefaultView", v)}
               disabled={saving}
             />
           </SettingRow>

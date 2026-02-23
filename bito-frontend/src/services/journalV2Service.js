@@ -87,6 +87,15 @@ export const journalV2Service = {
     return api.get(`${BASE}/stats`);
   },
 
+  /* ── Entry list (V2 longform, paginated) ─────────────────────── */
+
+  async getEntries(opts = {}) {
+    const params = new URLSearchParams();
+    if (opts.page) params.append('page', opts.page);
+    if (opts.limit) params.append('limit', opts.limit);
+    return api.get(`${BASE}/entries?${params.toString()}`);
+  },
+
   /* ── Archive (legacy entries) ────────────────────────────────── */
 
   async getArchive(opts = {}) {

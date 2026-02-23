@@ -412,6 +412,54 @@ router.get('/stats', authenticateJWT, async (req, res) => {
   }
 });
 
+// ── GET /api/journal-v2/entries — Paginated list of V2 longform entries ──
+
+router.get('/entries', authenticateJWT, [
+  query('page').optional().isInt({ min: 1 }).toInt(),
+  query('limit').optional().isInt({ min: 1, max: 50 }).toInt(),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+    const page = req.query.page || 1;
+    const limit = req.query.limit || 10;
+    const skip = (page - 1) * limit;
+
+    const filter = {
+      userId: req.user.id,
+      type: 'longform',
+      isDeleted: false,
+    };
+
+    const entries = await JournalEntryV2.find(filter)
+      .select('date plainTextContent wordCount mood energy tags lastEditedAt')
+      .sort({ date: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await JournalEntryV2.countDocuments(filter);
+
+    // Truncate plainTextContent to 200 chars for preview
+    const previews = entries.map(e => {
+      const obj = e.toObject();
+      obj.preview = obj.plainTextContent
+        ? (obj.plainTextContent.length > 200 ? obj.plainTextContent.slice(0, 200) + '…' : obj.plainTextContent)
+        : '';
+      delete obj.plainTextContent;
+      return obj;
+    });
+
+    res.json({
+      entries: previews,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    });
+  } catch (error) {
+    console.error('Error fetching entries list:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // ── GET /api/journal-v2/archive — Read-only legacy entries ─────
 
 router.get('/archive', authenticateJWT, [

@@ -157,6 +157,11 @@ const userSchema = new mongoose.Schema({  // Basic user information
       max: 6,
       default: 1 // Monday
     },
+    journalDefaultView: {
+      type: String,
+      enum: ['day', 'list', 'feed'],
+      default: 'day'
+    },
     scale: {
       type: String,
       enum: ['small', 'medium', 'large'],
