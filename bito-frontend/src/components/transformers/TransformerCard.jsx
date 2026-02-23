@@ -83,38 +83,42 @@ const TransformerCard = ({ transformer, index = 0, onOpen, onArchive, archiveLoa
         {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Bottom row: progress ring, habit chips, category, date */}
-        <div className="flex items-center gap-3 pt-3 border-t border-[var(--color-border-primary)]/10">
+        {/* Bottom strip: progress ring, habit chips, category */}
+        <div
+          className="flex items-center gap-3.5 px-5 py-3 -mx-5 -mb-5 mt-3 rounded-b-2xl border-t border-[var(--color-border-primary)]/10"
+          style={{ backgroundColor: `${catMeta.accent}06` }}
+        >
           {/* Progress ring */}
           <ProgressRing
             value={progressPct}
-            size={32}
-            stroke={3}
+            size={40}
+            stroke={3.5}
             color={catMeta.ring}
           />
 
           {/* Habit preview chips */}
-          <div className="flex-1 flex items-center gap-1.5 min-w-0 overflow-hidden">
+          <div className="flex-1 flex items-center gap-2 min-w-0 overflow-hidden">
             {sys.habits?.slice(0, 3).map((h, i) => (
               <span
                 key={i}
-                className="inline-flex items-center gap-1 text-[10px] font-spartan text-[var(--color-text-secondary)] bg-[var(--color-surface-hover)] px-2 py-0.5 rounded-md truncate max-w-[100px]"
+                className="inline-flex items-center gap-1 text-xs font-spartan text-[var(--color-text-secondary)] bg-[var(--color-surface-hover)] px-2.5 py-1 rounded-lg truncate max-w-[130px]"
                 title={h.name}
               >
-                <span className="text-xs">{h.icon}</span>
+                <span className="text-sm">{h.icon}</span>
                 <span className="truncate">{h.name}</span>
               </span>
             ))}
             {habitCount > 3 && (
-              <span className="text-[10px] font-spartan text-[var(--color-text-tertiary)]">
+              <span className="text-xs font-spartan font-medium text-[var(--color-text-tertiary)] bg-[var(--color-surface-hover)] px-2 py-1 rounded-lg">
                 +{habitCount - 3}
               </span>
             )}
           </div>
 
           {/* Category label */}
-          <span className="text-[10px] font-spartan text-[var(--color-text-tertiary)] flex-shrink-0 hidden sm:inline">
-            {catMeta.icon} {catMeta.label}
+          <span className="text-xs font-spartan text-[var(--color-text-tertiary)] flex-shrink-0 flex items-center gap-1">
+            <span className="text-sm">{catMeta.icon}</span>
+            <span className="hidden sm:inline">{catMeta.label}</span>
           </span>
         </div>
       </div>
