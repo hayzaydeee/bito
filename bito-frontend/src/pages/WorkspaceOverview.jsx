@@ -673,9 +673,23 @@ function ActivityTab({ activities, reactions, onReact }) {
             key={id}
             className="flex items-start gap-3 p-3 rounded-xl hover:bg-[var(--color-surface-elevated)] transition-colors group/item"
           >
-            <span className="text-lg mt-0.5 flex-shrink-0">
-              {iconFor(a.type)}
-            </span>
+            {/* User avatar + activity type badge */}
+            <div className="relative flex-shrink-0 mt-0.5">
+              {a.userId?.avatar ? (
+                <img
+                  src={a.userId.avatar}
+                  alt={a.userId.name || ""}
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center text-white text-xs font-spartan font-bold">
+                  {(a.userId?.name || a.user?.name || "?").charAt(0).toUpperCase()}
+                </div>
+              )}
+              <span className="absolute -bottom-1 -right-1 text-xs leading-none">
+                {iconFor(a.type)}
+              </span>
+            </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm text-[var(--color-text-primary)] font-spartan">
                 {descriptionFor(a)}
@@ -863,9 +877,17 @@ function MembersTab({
               className="flex items-center gap-3 p-4 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40 transition-colors group/member"
             >
               {/* avatar */}
-              <div className="w-9 h-9 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center text-white text-sm font-spartan font-bold flex-shrink-0">
-                {name.charAt(0).toUpperCase()}
-              </div>
+              {info.avatar ? (
+                <img
+                  src={info.avatar}
+                  alt={name}
+                  className="w-9 h-9 rounded-full object-cover flex-shrink-0"
+                />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center text-white text-sm font-spartan font-bold flex-shrink-0">
+                  {name.charAt(0).toUpperCase()}
+                </div>
+              )}
 
               {/* info */}
               <div className="flex-1 min-w-0">
