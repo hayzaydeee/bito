@@ -196,7 +196,9 @@ workspaceSchema.statics.findByUserId = function(userId) {
   return this.find({
     'members.userId': userId,
     'members.status': 'active'
-  }).populate('ownerId', 'name email avatar');
+  })
+  .populate('ownerId', 'name email avatar')
+  .populate('members.userId', 'name email avatar');
 };
 
 workspaceSchema.statics.getPublicWorkspaces = function(limit = 20) {

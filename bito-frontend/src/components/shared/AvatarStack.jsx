@@ -27,11 +27,12 @@ const AvatarStack = ({ members = [], max = 4, size = "md" }) => {
     <div className="flex items-center">
       {visible.map((member, i) => {
         const name =
+          member?.userId?.name ||
           member?.user?.name ||
           member?.name ||
           member?.email ||
           "?";
-        const avatar = member?.user?.avatar || member?.avatar;
+        const avatar = member?.userId?.avatar || member?.user?.avatar || member?.avatar;
         const colorClass = AVATAR_COLORS[i % AVATAR_COLORS.length];
 
         return (
