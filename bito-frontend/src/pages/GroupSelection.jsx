@@ -241,29 +241,25 @@ const GroupSelection = () => {
                     {/* Spacer */}
                     <div className="flex-1" />
 
-                    {/* Bottom strip: avatar stack + stats + chevron */}
-                    <div
-                      className="flex items-center gap-3.5 px-5 py-3.5 -mx-5 -mb-5 mt-3 rounded-b-2xl border-t border-[var(--color-border-primary)]/10"
-                      style={{ backgroundColor: `${color}06` }}
-                    >
+                    {/* Bottom row: avatar stack + stats + chevron */}
+                    <div className="flex items-center gap-3 pt-3 border-t border-[var(--color-border-primary)]/10">
                       {/* Avatar stack */}
-                      <AvatarStack
-                        members={group.members || []}
-                        max={4}
-                        size="md"
-                      />
+                      {memberCount > 0 && (
+                        <AvatarStack
+                          members={group.members || []}
+                          max={4}
+                          size="sm"
+                        />
+                      )}
 
                       {/* Stats */}
-                      <div className="flex-1 flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)] font-spartan">
-                        <span className="font-medium text-[var(--color-text-primary)]">{memberCount}</span>
-                        <span>member{memberCount !== 1 && "s"}</span>
-                        <span className="text-[var(--color-text-tertiary)] mx-1">·</span>
-                        <span className="font-medium text-[var(--color-text-primary)]">{group.habitCount ?? 0}</span>
-                        <span>habit{(group.habitCount ?? 0) !== 1 && "s"}</span>
+                      <div className="flex-1 flex items-center gap-4 text-xs text-[var(--color-text-tertiary)] font-spartan">
+                        <span>{memberCount} member{memberCount !== 1 && "s"}</span>
+                        <span>{group.habitCount ?? 0} habit{(group.habitCount ?? 0) !== 1 && "s"}</span>
                       </div>
 
                       {/* Chevron */}
-                      <ChevronRightIcon className="w-5 h-5 text-[var(--color-text-tertiary)] group-hover:text-[var(--color-text-secondary)] group-hover:translate-x-0.5 flex-shrink-0 transition-all" />
+                      <ChevronRightIcon className="w-4 h-4 text-[var(--color-text-tertiary)] group-hover:text-[var(--color-text-secondary)] flex-shrink-0 transition-colors" />
                     </div>
                   </div>
                 </button>
