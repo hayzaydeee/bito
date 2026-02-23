@@ -1,39 +1,5 @@
 import React, { memo } from "react";
-
-/* ─── SVG progress ring ─── */
-const ProgressRing = ({ value = 0, size = 52, stroke = 4 }) => {
-  const radius = (size - stroke) / 2;
-  const circ = 2 * Math.PI * radius;
-  const pct = Math.min(Math.max(value, 0), 100);
-  const offset = circ - (pct / 100) * circ;
-
-  return (
-    <svg width={size} height={size} className="flex-shrink-0 -rotate-90">
-      {/* Track */}
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        fill="none"
-        strokeWidth={stroke}
-        stroke="var(--color-surface-hover)"
-      />
-      {/* Fill */}
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        fill="none"
-        strokeWidth={stroke}
-        stroke="var(--color-brand-500)"
-        strokeLinecap="round"
-        strokeDasharray={circ}
-        strokeDashoffset={offset}
-        className="transition-all duration-700 ease-out"
-      />
-    </svg>
-  );
-};
+import ProgressRing from "../shared/ProgressRing";
 
 /* ─── Stat Pills row ─── */
 const StatPills = memo(({ completed, total, streak, weeklyProgress }) => {

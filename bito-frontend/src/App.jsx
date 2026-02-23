@@ -16,7 +16,7 @@ import WorkspaceOverview from "./pages/WorkspaceOverview";
 import WorkspaceSettings from "./pages/WorkspaceSettings";
 import MemberDashboardView from "./pages/MemberDashboardView";
 import ChallengeDetailPage from "./pages/ChallengeDetailPage";
-import TransformersPage from "./pages/TransformersPage";
+import TransformersPage from "./components/transformers/TransformersPage";
 import GroupSelection from "./pages/GroupSelection";
 import OnboardingPage from "./pages/OnboardingPage";
 import ProfileSetupPage from "./pages/ProfileSetupPage";

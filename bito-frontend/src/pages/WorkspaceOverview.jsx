@@ -15,6 +15,7 @@ import {
 import { groupsAPI } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { useAppNotifications } from "../hooks/useAppNotifications";
+import AvatarStack from "../components/shared/AvatarStack";
 import GroupInviteModal from "../components/ui/GroupInviteModal";
 import EncouragementModal from "../components/shared/EncouragementModal";
 import GroupHabitModal from "../components/ui/GroupHabitModal";
@@ -302,9 +303,9 @@ const WorkspaceOverview = () => {
   if (loading) {
     return (
       <div className="min-h-screen page-container px-4 sm:px-6 py-10">
-        <div className="max-w-3xl mx-auto space-y-4">
-          <div className="h-8 w-48 rounded-lg bg-[var(--color-surface-elevated)] animate-pulse" />
-          <div className="h-5 w-72 rounded bg-[var(--color-surface-elevated)] animate-pulse" />
+        <div className="max-w-5xl mx-auto space-y-4">
+          <div className="h-[180px] rounded-2xl bg-[var(--color-surface-elevated)] animate-pulse" />
+          <div className="h-12 rounded-xl bg-[var(--color-surface-elevated)] animate-pulse" />
           <div className="mt-6 flex gap-2">
             {[...Array(4)].map((_, i) => (
               <div
@@ -329,7 +330,7 @@ const WorkspaceOverview = () => {
   if (!group) {
     return (
       <div className="min-h-screen page-container px-4 sm:px-6 py-10">
-        <div className="max-w-3xl mx-auto text-center py-20">
+        <div className="max-w-5xl mx-auto text-center py-20">
           <h1 className="text-2xl font-garamond font-bold text-[var(--color-text-primary)] mb-3">
             Group not found
           </h1>
@@ -359,47 +360,76 @@ const WorkspaceOverview = () => {
   /* ================================================================
      RENDER
      ================================================================ */
+  const groupColor = group.color || "#4f46e5";
+
   return (
     <div className="min-h-screen page-container px-4 sm:px-6 py-10">
-      <div className="max-w-3xl mx-auto">
-        {/* ── header ──────────────────── */}
-        <div className="flex items-center gap-4 mb-8">
-          <button
-            onClick={() => navigate("/app/groups")}
-            className="w-10 h-10 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 flex items-center justify-center hover:bg-[var(--color-surface-hover)] transition-colors"
-          >
-            <ArrowLeftIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
-          </button>
+      <div className="max-w-5xl mx-auto">
+        {/* ── hero header ─────────────── */}
+        <div
+          className="relative overflow-hidden rounded-2xl border border-[var(--color-border-primary)]/20 p-6 sm:p-8 mb-8"
+          style={{
+            background: `linear-gradient(135deg, ${groupColor}15 0%, ${groupColor}05 50%, transparent 100%)`,
+          }}
+        >
+          {/* Decorative circle */}
+          <div
+            className="absolute -top-12 -right-12 w-40 h-40 rounded-full opacity-[0.06]"
+            style={{ background: groupColor }}
+          />
 
-          <span
-            className="w-12 h-12 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
-            style={{
-              backgroundColor: `${group.color || "#4f46e5"}18`,
-            }}
-          >
-            {typeEmoji[group.type] || "💼"}
-          </span>
+          {/* Back + settings row */}
+          <div className="flex items-center justify-between mb-5 relative">
+            <button
+              onClick={() => navigate("/app/groups")}
+              className="flex items-center gap-2 text-sm font-spartan text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+            >
+              <ArrowLeftIcon className="w-4 h-4" /> Back to groups
+            </button>
 
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold font-garamond text-[var(--color-text-primary)] truncate">
-              {group.name}
-            </h1>
-            <p className="text-sm text-[var(--color-text-secondary)] font-spartan truncate">
-              {group.description ||
-                `${members.length} member${members.length !== 1 ? "s" : ""}`}
-            </p>
+            <button
+              onClick={() => navigate(`/app/groups/${groupId}/settings`)}
+              className="w-10 h-10 rounded-xl bg-[var(--color-surface-elevated)]/50 border border-[var(--color-border-primary)]/20 flex items-center justify-center hover:bg-[var(--color-surface-hover)] transition-colors flex-shrink-0"
+            >
+              <GearIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
+            </button>
           </div>
 
-          <button
-            onClick={() => navigate(`/app/groups/${groupId}/settings`)}
-            className="w-10 h-10 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 flex items-center justify-center hover:bg-[var(--color-surface-hover)] transition-colors flex-shrink-0"
-          >
-            <GearIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
-          </button>
+          {/* Main hero content */}
+          <div className="relative flex items-start gap-4 sm:gap-5">
+            <span
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl flex-shrink-0"
+              style={{ backgroundColor: `${groupColor}18` }}
+            >
+              {typeEmoji[group.type] || "💼"}
+            </span>
+
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold font-garamond text-[var(--color-text-primary)] mb-1">
+                {group.name}
+              </h1>
+              {group.description && (
+                <p className="text-sm sm:text-base text-[var(--color-text-secondary)] font-spartan mb-3">
+                  {group.description}
+                </p>
+              )}
+
+              {/* Stats row with avatar stack */}
+              <div className="flex items-center gap-4 flex-wrap">
+                {members.length > 0 && (
+                  <AvatarStack members={members} max={5} size="sm" />
+                )}
+                <div className="flex items-center gap-4 text-sm text-[var(--color-text-tertiary)] font-spartan">
+                  <span>{members.length} member{members.length !== 1 && "s"}</span>
+                  <span>{groupHabits.length} habit{groupHabits.length !== 1 && "s"}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* ── tab bar ─────────────────── */}
-        <div className="flex gap-1 mb-8 bg-[var(--color-surface-elevated)] p-1 rounded-xl border border-[var(--color-border-primary)]/20">
+        <div className="flex gap-1 mb-8 bg-[var(--color-surface-elevated)] p-1.5 rounded-xl border border-[var(--color-border-primary)]/20">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
@@ -407,14 +437,14 @@ const WorkspaceOverview = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-spartan font-medium transition-colors ${
+                className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-spartan font-medium transition-colors ${
                   active
                     ? "bg-[var(--color-brand-600)] text-white"
                     : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]"
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{tab.label}</span>
+                <Icon className="w-4 h-4" />
+                {tab.label}
               </button>
             );
           })}
@@ -719,7 +749,7 @@ function HabitsTab({ habits, canManage, isAdopted, onAdd, onEdit, onAdopt }) {
           </p>
         </div>
       ) : (
-        <ul className="space-y-2">
+        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {habits.map((h) => {
             const adopted = isAdopted(h);
             return (
@@ -813,7 +843,7 @@ function MembersTab({
         )}
       </div>
 
-      <ul className="space-y-1">
+      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {members.map((m, idx) => {
           const info = m.userId || m.user || m;
           const name = info.name || info.email || "Unknown";
@@ -830,7 +860,7 @@ function MembersTab({
           return (
             <li
               key={memberId || idx}
-              className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--color-surface-elevated)] transition-colors group/member"
+              className="flex items-center gap-3 p-4 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40 transition-colors group/member"
             >
               {/* avatar */}
               <div className="w-9 h-9 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center text-white text-sm font-spartan font-bold flex-shrink-0">

@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   PlusIcon,
-  PersonIcon,
   ChevronRightIcon,
 } from "@radix-ui/react-icons";
 import { groupsAPI } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import WorkspaceCreationModal from "../components/ui/WorkspaceCreationModal";
+import AvatarStack from "../components/shared/AvatarStack";
 
 const GroupSelection = () => {
   const navigate = useNavigate();
@@ -116,19 +116,26 @@ const GroupSelection = () => {
     0
   );
 
+  /* ── recently active check — glass treatment for groups updated in last 24h ── */
+  const isRecentlyActive = (group) => {
+    if (!group.updatedAt) return false;
+    const elapsed = Date.now() - new Date(group.updatedAt).getTime();
+    return elapsed < 24 * 60 * 60 * 1000;
+  };
+
   /* ── loading skeleton ───────────────── */
 
   if (isLoading) {
     return (
       <div className="min-h-screen page-container px-4 sm:px-6 py-10">
-        <div className="max-w-3xl mx-auto space-y-4">
-          <div className="h-10 w-40 rounded-lg bg-[var(--color-surface-elevated)] animate-pulse" />
-          <div className="h-5 w-64 rounded bg-[var(--color-surface-elevated)] animate-pulse" />
-          <div className="mt-8 space-y-3">
+        <div className="max-w-5xl mx-auto space-y-4">
+          <div className="h-10 w-48 rounded-lg bg-[var(--color-surface-elevated)] animate-pulse" />
+          <div className="h-5 w-72 rounded bg-[var(--color-surface-elevated)] animate-pulse" />
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[...Array(4)].map((_, i) => (
               <div
                 key={i}
-                className="h-20 rounded-2xl bg-[var(--color-surface-elevated)] animate-pulse"
+                className="h-[180px] rounded-2xl bg-[var(--color-surface-elevated)] animate-pulse"
               />
             ))}
           </div>
@@ -141,14 +148,14 @@ const GroupSelection = () => {
 
   return (
     <div className="min-h-screen page-container px-4 sm:px-6 py-10">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         {/* header */}
         <div className="flex items-start justify-between mb-10">
           <div>
             <h1 className="text-3xl font-bold font-garamond text-[var(--color-text-primary)] mb-1">
               Groups
             </h1>
-            <p className="text-sm text-[var(--color-text-secondary)] font-spartan">
+            <p className="text-base text-[var(--color-text-secondary)] font-spartan">
               {groups.length} group{groups.length !== 1 && "s"} · {totalMembers}{" "}
               member{totalMembers !== 1 && "s"} · {totalHabits} shared habit
               {totalHabits !== 1 && "s"}
@@ -164,69 +171,101 @@ const GroupSelection = () => {
           </button>
         </div>
 
-        {/* list */}
+        {/* empty state */}
         {groups.length === 0 ? (
-          <div className="text-center py-24">
-            <p className="text-5xl mb-6">👥</p>
-            <h2 className="text-xl font-garamond font-bold text-[var(--color-text-primary)] mb-2">
+          <div className="glass-card-minimal rounded-2xl p-12 text-center max-w-lg mx-auto">
+            <p className="text-6xl mb-6">👥</p>
+            <h2 className="text-2xl font-garamond font-bold text-[var(--color-text-primary)] mb-2">
               No groups yet
             </h2>
-            <p className="text-sm text-[var(--color-text-secondary)] font-spartan max-w-sm mx-auto mb-8">
+            <p className="text-base text-[var(--color-text-secondary)] font-spartan max-w-sm mx-auto mb-8">
               Create your first group to start tracking habits with your team,
               family, or community.
             </p>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="h-10 px-6 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white rounded-xl text-sm font-spartan font-medium transition-colors"
+              className="h-12 px-6 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white rounded-xl text-sm font-spartan font-medium transition-colors"
             >
               Create a Group
             </button>
           </div>
         ) : (
-          <ul className="space-y-2">
-            {groups.map((group) => (
-              <li key={group._id}>
+          /* grid cards */
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {groups.map((group, i) => {
+              const color = group.color || "#4f46e5";
+              const memberCount = group.members?.length || 0;
+              const featured = isRecentlyActive(group);
+
+              return (
                 <button
+                  key={group._id}
                   onClick={() => navigate(`/app/groups/${group._id}`)}
-                  className="w-full flex items-center gap-4 p-4 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40 transition-colors text-left group"
+                  className={`relative overflow-hidden rounded-2xl border text-left transition-all duration-200 min-h-[160px] flex flex-col group stagger-fade-in ${
+                    featured
+                      ? "glass-card-minimal hover:shadow-lg hover:shadow-[var(--color-brand-500)]/5"
+                      : "bg-[var(--color-surface-elevated)] border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40 hover:shadow-md"
+                  }`}
+                  style={{ animationDelay: `${i * 60}ms` }}
                 >
-                  {/* icon */}
-                  <span
-                    className="w-11 h-11 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
+                  {/* Color gradient stripe */}
+                  <div
+                    className="h-1.5 w-full"
                     style={{
-                      backgroundColor: `${group.color || "#4f46e5"}18`,
+                      background: `linear-gradient(to right, ${color}40, ${color}10)`,
                     }}
-                  >
-                    {typeEmoji[group.type] || "💼"}
-                  </span>
+                  />
 
-                  {/* info */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-base font-garamond font-semibold text-[var(--color-text-primary)] truncate">
-                      {group.name}
-                    </p>
-                    {group.description && (
-                      <p className="text-xs text-[var(--color-text-tertiary)] font-spartan truncate mt-0.5">
-                        {group.description}
-                      </p>
-                    )}
+                  {/* Main content */}
+                  <div className="flex-1 p-5 flex flex-col">
+                    {/* Top: icon + name */}
+                    <div className="flex items-start gap-4 mb-3">
+                      <span
+                        className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
+                        style={{ backgroundColor: `${color}18` }}
+                      >
+                        {typeEmoji[group.type] || "💼"}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-garamond font-bold text-[var(--color-text-primary)] truncate">
+                          {group.name}
+                        </h3>
+                        {group.description && (
+                          <p className="text-sm text-[var(--color-text-secondary)] font-spartan mt-0.5 line-clamp-2">
+                            {group.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Spacer */}
+                    <div className="flex-1" />
+
+                    {/* Bottom row: avatar stack + stats + chevron */}
+                    <div className="flex items-center gap-3 pt-3 border-t border-[var(--color-border-primary)]/10">
+                      {/* Avatar stack */}
+                      {memberCount > 0 && (
+                        <AvatarStack
+                          members={group.members || []}
+                          max={4}
+                          size="sm"
+                        />
+                      )}
+
+                      {/* Stats */}
+                      <div className="flex-1 flex items-center gap-4 text-xs text-[var(--color-text-tertiary)] font-spartan">
+                        <span>{memberCount} member{memberCount !== 1 && "s"}</span>
+                        <span>{group.habitCount ?? 0} habit{(group.habitCount ?? 0) !== 1 && "s"}</span>
+                      </div>
+
+                      {/* Chevron */}
+                      <ChevronRightIcon className="w-4 h-4 text-[var(--color-text-tertiary)] group-hover:text-[var(--color-text-secondary)] flex-shrink-0 transition-colors" />
+                    </div>
                   </div>
-
-                  {/* stats */}
-                  <div className="hidden sm:flex items-center gap-5 text-xs text-[var(--color-text-secondary)] font-spartan flex-shrink-0">
-                    <span className="flex items-center gap-1">
-                      <PersonIcon className="w-3.5 h-3.5" />
-                      {group.members?.length || 0}
-                    </span>
-                    <span>{group.habitCount ?? 0} habits</span>
-                  </div>
-
-                  {/* chevron */}
-                  <ChevronRightIcon className="w-4 h-4 text-[var(--color-text-tertiary)] group-hover:text-[var(--color-text-secondary)] flex-shrink-0 transition-colors" />
                 </button>
-              </li>
-            ))}
-          </ul>
+              );
+            })}
+          </div>
         )}
       </div>
 
