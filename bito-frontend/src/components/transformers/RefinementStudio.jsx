@@ -77,7 +77,7 @@ const RefinementStudio = ({
   ) || (sys.habits?.length || 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[var(--color-surface-primary)] animate-fade-in">
+    <div className="fixed inset-0 z-50 flex flex-col bg-[var(--color-bg-primary)] animate-fade-in">
       {/* ── Top bar ── */}
       <header className="flex items-center justify-between px-4 sm:px-6 h-14 border-b border-[var(--color-border-primary)]/20 flex-shrink-0">
         <div className="flex items-center gap-3">
@@ -140,11 +140,11 @@ const RefinementStudio = ({
 
       {/* ── Split pane ── */}
       <div className="flex-1 flex overflow-hidden min-h-0">
-        {/* Chat panel */}
+        {/* Chat panel — fixed height, input pinned to bottom */}
         <div
           className={`${
             showPreview ? "hidden sm:flex" : "flex"
-          } flex-col w-full sm:w-[380px] lg:w-[420px] flex-shrink-0 border-r border-[var(--color-border-primary)]/20`}
+          } flex-col w-full sm:w-[380px] lg:w-[420px] flex-shrink-0 border-r border-[var(--color-border-primary)]/20 overflow-hidden`}
         >
           <RefinementChat
             refinements={transformer.refinements || []}
@@ -154,7 +154,7 @@ const RefinementStudio = ({
           />
         </div>
 
-        {/* Preview panel — live updating */}
+        {/* Preview panel — scrollable */}
         <div
           className={`${
             showPreview ? "flex" : "hidden sm:flex"

@@ -235,8 +235,7 @@ async function generate(goalText, userId) {
   // 4. Parse and validate
   let system;
   try {
-    const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
-    system = JSON.parse(cleaned);
+    system = extractJSON(raw);
   } catch (err) {
     console.error('[TransformerEngine] Failed to parse LLM response:', raw);
     throw new Error('AI returned an invalid response. Please try again.');
@@ -322,6 +321,32 @@ function normalizeToPhased(system) {
 }
 
 /**
+ * Robustly extract JSON from an LLM response that may contain
+ * markdown fences, preamble text, or trailing explanation.
+ */
+function extractJSON(raw) {
+  // 1. Strip markdown fences
+  let cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+
+  // 2. Try direct parse first
+  try {
+    return JSON.parse(cleaned);
+  } catch { /* continue */ }
+
+  // 3. Find the first { and last } — extract the JSON object
+  const firstBrace = cleaned.indexOf('{');
+  const lastBrace = cleaned.lastIndexOf('}');
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    try {
+      return JSON.parse(cleaned.slice(firstBrace, lastBrace + 1));
+    } catch { /* continue */ }
+  }
+
+  // 4. Nothing worked
+  throw new Error('Could not extract JSON from response');
+}
+
+/**
  * Refine an existing transformer based on user feedback.
  * Returns patches + assistant message (not saved to DB — caller saves).
  */
@@ -331,11 +356,21 @@ async function refine(transformer, userMessage) {
     throw new Error('AI refinement is not available. Please try again later.');
   }
 
-  // Build conversation history for context
-  const history = (transformer.refinements || []).map((r) => ({
-    role: r.role,
-    content: r.message,
-  }));
+  // Build conversation history as inline context (NOT as separate chat messages,
+  // because the assistant's previous replies are friendly text, not JSON —
+  // spreading them as assistant turns confuses the model into outputting prose).
+  const refinements = transformer.refinements || [];
+  let historyBlock = '';
+  if (refinements.length > 0) {
+    const turns = [];
+    for (let i = 0; i < refinements.length; i += 2) {
+      const userTurn = refinements[i];
+      const asstTurn = refinements[i + 1];
+      if (userTurn) turns.push(`User: ${userTurn.message}`);
+      if (asstTurn) turns.push(`Assistant: ${asstTurn.message}`);
+    }
+    historyBlock = `\n\nPrevious refinement conversation:\n${turns.join('\n')}\n`;
+  }
 
   // Build the current system state summary
   const systemState = {
@@ -366,12 +401,13 @@ async function refine(transformer, userMessage) {
 
 Current system state:
 ${JSON.stringify(systemState, null, 2)}
+${historyBlock}
+User's NEW change request: "${userMessage}"
 
-User's change request: "${userMessage}"`;
+Remember: Output ONLY valid JSON with "patches" and "assistantMessage" fields. No markdown, no explanation.`;
 
   const messages = [
     { role: 'system', content: REFINE_SYSTEM_PROMPT },
-    ...history,
     { role: 'user', content: userPrompt },
   ];
 
@@ -389,8 +425,7 @@ User's change request: "${userMessage}"`;
 
   let result;
   try {
-    const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
-    result = JSON.parse(cleaned);
+    result = extractJSON(raw);
   } catch {
     console.error('[TransformerEngine] Failed to parse refine response:', raw);
     throw new Error('AI returned an invalid response. Please try again.');

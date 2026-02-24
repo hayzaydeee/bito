@@ -54,8 +54,8 @@ const RefinementChat = ({
   ];
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Messages area */}
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Messages area — scrollable */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
         {/* Welcome message if no messages */}
         {messages.length === 0 && (
@@ -139,8 +139,8 @@ const RefinementChat = ({
         <div ref={bottomRef} />
       </div>
 
-      {/* Input bar */}
-      <div className="p-3 border-t border-[var(--color-border-primary)]/20">
+      {/* Input bar — fixed at bottom */}
+      <div className="flex-shrink-0 p-3 border-t border-[var(--color-border-primary)]/20 bg-[var(--color-bg-primary)]">
         {turnsRemaining <= 0 ? (
           <p className="text-xs font-spartan text-[var(--color-text-tertiary)] text-center py-2">
             No refinement turns remaining. Apply the plan or regenerate.
