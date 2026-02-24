@@ -641,7 +641,8 @@ async function generateSingle(goalText, userId, parsed, dossier, dossierBlock, c
   const userPrompt = promptParts.join('\n');
 
   // Generate via LLM — with web search tool for grounding when available
-  const useWebSearch = process.env.TRANSFORMER_WEB_SEARCH !== 'false';
+  // Skip web search for suite group generation to avoid rate limiting with parallel calls
+  const useWebSearch = process.env.TRANSFORMER_WEB_SEARCH !== 'false' && !suiteContext;
   const createParams = {
     model: MODEL,
     temperature: 0.7,
@@ -662,8 +663,8 @@ async function generateSingle(goalText, userId, parsed, dossier, dossierBlock, c
     response = await client.chat.completions.create(createParams);
   } catch (wsErr) {
     // If web search tool fails (model doesn't support it), retry without
-    if (useWebSearch && wsErr.message?.includes('tool')) {
-      console.warn('[TransformerEngine] Web search not supported, retrying without:', wsErr.message);
+    if (useWebSearch) {
+      console.warn('[TransformerEngine] LLM call with web search failed, retrying without:', wsErr.message);
       delete createParams.tools;
       response = await client.chat.completions.create(createParams);
     } else {
@@ -786,7 +787,7 @@ async function generateSuite(goalText, userId, parsed, dossier, dossierBlock, cl
           preview.goal.parsed.subGoals = parsed.subGoals;
           return preview;
         } catch (err) {
-          console.warn(`[TransformerEngine] Suite group "${task.group.name}" failed:`, err.message);
+          console.error(`[TransformerEngine] Suite group "${task.group.name}" (${task.gi + 1}/${tasks.length}) failed:`, err.message, err.stack?.split('\n')[1]?.trim());
           return null; // Skip failed groups instead of failing entire suite
         }
       })
@@ -795,7 +796,7 @@ async function generateSuite(goalText, userId, parsed, dossier, dossierBlock, cl
   }
 
   if (results.length === 0) {
-    throw new Error('Failed to generate any transformers from the compound goal.');
+    throw new Error('Failed to generate transformers — all groups encountered errors. Try simplifying your goals or reducing the number of goals.');
   }
 
   let totalTokensIn = 0;

@@ -92,7 +92,7 @@ const transformerSchema = new mongoose.Schema(
         type: String,
         required: [true, 'Goal text is required'],
         trim: true,
-        maxlength: [1000, 'Goal text cannot exceed 1000 characters'],
+        maxlength: [3000, 'Goal text cannot exceed 3000 characters'],
       },
       parsed: {
         intent: {

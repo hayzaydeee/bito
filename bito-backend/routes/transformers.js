@@ -153,9 +153,22 @@ router.post('/generate', async (req, res) => {
       });
     }
 
-    // User-friendly error for known LLM issues
-    if (error.message?.includes('AI returned') || error.message?.includes('AI generat')) {
+    // User-friendly error for known LLM/generation issues
+    if (
+      error.message?.includes('AI returned') ||
+      error.message?.includes('AI generat') ||
+      error.message?.includes('Failed to generate')
+    ) {
       return res.status(502).json({ success: false, error: error.message });
+    }
+
+    // OpenAI API errors (rate limit, model errors, etc.)
+    if (error.status || error.code || error.type) {
+      console.error('OpenAI API error:', error.status, error.code, error.message);
+      return res.status(502).json({
+        success: false,
+        error: 'AI service encountered an error. Please try again in a moment.',
+      });
     }
 
     res.status(500).json({

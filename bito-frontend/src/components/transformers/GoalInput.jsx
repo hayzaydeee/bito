@@ -143,12 +143,12 @@ const GoalInput = ({
               onChange={(e) => setGoalText(e.target.value)}
               placeholder="e.g., I want to run a 5K in 8 weeks..."
               className="w-full h-40 p-5 rounded-xl bg-transparent text-base font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none resize-none"
-              maxLength={1000}
+              maxLength={3000}
               autoFocus
             />
             <div className="flex justify-between items-center px-4 pb-3">
               <p className="text-xs text-[var(--color-text-tertiary)] font-spartan">
-                {goalText.length}/1000
+                {goalText.length}/3000
               </p>
             </div>
           </div>
