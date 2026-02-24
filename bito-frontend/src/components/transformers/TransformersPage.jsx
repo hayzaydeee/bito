@@ -171,8 +171,14 @@ const TransformersPage = () => {
     try {
       const res = await transformersAPI.get(t._id);
       if (res.success) {
-        setActiveTransformer(res.transformer);
-        setView(res.transformer.status === "preview" ? "preview" : "detail");
+        const tr = res.transformer;
+        // Preview transformers with refinements go straight to studio
+        if (tr.status === "preview" && tr.refinements?.length > 0) {
+          setStudioTransformer(tr);
+          return;
+        }
+        setActiveTransformer(tr);
+        setView(tr.status === "preview" ? "preview" : "detail");
       }
     } catch {
       setError("Failed to load transformer");
