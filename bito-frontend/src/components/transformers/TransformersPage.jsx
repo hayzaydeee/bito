@@ -171,14 +171,8 @@ const TransformersPage = () => {
     try {
       const res = await transformersAPI.get(t._id);
       if (res.success) {
-        const tr = res.transformer;
-        // Preview transformers with refinements go straight to studio
-        if (tr.status === "preview" && tr.refinements?.length > 0) {
-          setStudioTransformer(tr);
-          return;
-        }
-        setActiveTransformer(tr);
-        setView(tr.status === "preview" ? "preview" : "detail");
+        setActiveTransformer(res.transformer);
+        setView(res.transformer.status === "preview" ? "preview" : "detail");
       }
     } catch {
       setError("Failed to load transformer");
@@ -251,8 +245,8 @@ const TransformersPage = () => {
       );
     }
     return (
-      <div className="min-h-screen page-container px-4 sm:px-6 py-10">
-        <div className="max-w-5xl mx-auto">
+      <div className="h-[calc(100dvh-3.5rem)] page-container overflow-hidden">
+        <div className="max-w-5xl mx-auto h-full">
           <TransformerDetail
             transformer={activeTransformer}
             onBack={() => {

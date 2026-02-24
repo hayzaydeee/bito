@@ -62,7 +62,9 @@ const TransformerDetail = ({
   const turnsRemaining = maxTurns - turnsUsed;
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="flex flex-col h-full animate-fade-in">
+      {/* Scrollable content */}
+      <div className="flex-1 min-h-0 overflow-y-auto space-y-6 px-4 sm:px-6 pt-10 pb-6">
       {/* Back */}
       <button
         onClick={onBack}
@@ -227,48 +229,6 @@ const TransformerDetail = ({
         </div>
       )}
 
-      {/* Action bar */}
-      {isPreview && (
-        <div className="flex items-center gap-3 p-5 rounded-2xl glass-card-minimal">
-          {/* Refine button */}
-          {onOpenStudio && turnsRemaining > 0 && (
-            <button
-              onClick={() => onOpenStudio(t)}
-              className="h-12 px-5 rounded-xl text-sm font-spartan font-medium border border-[var(--color-border-primary)]/30 text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-all flex items-center gap-2"
-            >
-              <ChatBubbleIcon className="w-4 h-4" />
-              Refine
-              <span className="text-xs text-[var(--color-text-tertiary)]">
-                ({turnsRemaining} left)
-              </span>
-            </button>
-          )}
-
-          <button
-            onClick={onApply}
-            disabled={applyLoading}
-            className="flex-1 h-12 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white rounded-xl text-sm font-spartan font-medium transition-all disabled:opacity-50 flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-[var(--color-brand-600)]/20"
-          >
-            {applyLoading ? (
-              <>
-                <ReloadIcon className="w-4 h-4 animate-spin" /> Applying...
-              </>
-            ) : (
-              <>
-                <CheckCircledIcon className="w-4 h-4" /> Apply — Create{" "}
-                {totalHabits} Habits
-              </>
-            )}
-          </button>
-          <button
-            onClick={() => onArchive(t._id)}
-            className="h-12 px-6 rounded-xl text-sm font-spartan text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
-          >
-            Discard
-          </button>
-        </div>
-      )}
-
       {/* Generation metadata */}
       {t.generation?.model && (
         <p className="text-xs text-[var(--color-text-tertiary)] font-spartan text-center pb-4">
@@ -280,6 +240,51 @@ const TransformerDetail = ({
             } tokens`}
           {turnsUsed > 0 && ` · ${turnsUsed} refinement${turnsUsed > 1 ? "s" : ""}`}
         </p>
+      )}
+      </div>{/* end scrollable content */}
+
+      {/* Pinned action bar — always visible */}
+      {isPreview && (
+        <div className="flex-shrink-0 border-t border-[var(--color-border-primary)]/40 px-4 sm:px-6 py-4 bg-[var(--color-bg-primary)]">
+          <div className="flex items-center gap-3">
+            {/* Refine button */}
+            {onOpenStudio && turnsRemaining > 0 && (
+              <button
+                onClick={() => onOpenStudio(t)}
+                className="h-12 px-5 rounded-xl text-sm font-spartan font-medium border border-[var(--color-border-primary)]/40 text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-all flex items-center gap-2"
+              >
+                <ChatBubbleIcon className="w-4 h-4" />
+                Refine
+                <span className="text-xs text-[var(--color-text-tertiary)]">
+                  ({turnsRemaining} left)
+                </span>
+              </button>
+            )}
+
+            <button
+              onClick={onApply}
+              disabled={applyLoading}
+              className="flex-1 h-12 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white rounded-xl text-sm font-spartan font-medium transition-all disabled:opacity-50 flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-[var(--color-brand-600)]/20"
+            >
+              {applyLoading ? (
+                <>
+                  <ReloadIcon className="w-4 h-4 animate-spin" /> Applying...
+                </>
+              ) : (
+                <>
+                  <CheckCircledIcon className="w-4 h-4" /> Apply — Create{" "}
+                  {totalHabits} Habits
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => onArchive(t._id)}
+              className="h-12 px-6 rounded-xl text-sm font-spartan text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+            >
+              Discard
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
