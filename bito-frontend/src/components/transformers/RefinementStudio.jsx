@@ -123,7 +123,7 @@ const RefinementStudio = ({
       <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Chat pane — always visible, expands/shrinks */}
         <div
-          className={`flex flex-col overflow-hidden transition-all duration-200 ease-in-out ${
+          className={`flex flex-col h-full min-h-0 overflow-hidden transition-all duration-200 ease-in-out ${
             showArtifact ? "w-1/2 sm:w-[55%] border-r border-[var(--color-border-primary)]/20" : "w-full"
           }`}
         >
