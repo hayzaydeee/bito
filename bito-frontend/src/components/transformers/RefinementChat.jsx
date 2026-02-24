@@ -89,7 +89,7 @@ const RefinementChat = ({
                     setInput(s);
                     inputRef.current?.focus();
                   }}
-                  className="px-4 py-2 rounded-full text-sm font-spartan text-[var(--color-text-primary)] bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/30 transition-colors"
+                  className="px-4 py-2 rounded-full text-sm font-spartan text-[var(--color-text-primary)] bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/50 transition-colors"
                 >
                   {s}
                 </button>
@@ -116,14 +116,14 @@ const RefinementChat = ({
                 className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm font-spartan leading-relaxed ${
                   msg.role === "user"
                     ? "bg-[var(--color-brand-600)] text-white rounded-br-md"
-                    : "bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] rounded-bl-md border border-[var(--color-border-primary)]/15"
+                    : "bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] rounded-bl-md border border-[var(--color-border-primary)]/30"
                 }`}
               >
                 {msg.content}
               </div>
 
               {msg.role === "user" && (
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 flex items-center justify-center mt-0.5 overflow-hidden">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/40 flex items-center justify-center mt-0.5 overflow-hidden">
                   {userAvatar ? (
                     <img src={userAvatar} alt="" className="w-full h-full object-cover" />
                   ) : (
@@ -141,7 +141,7 @@ const RefinementChat = ({
                   className={`w-full max-w-[300px] flex items-center gap-3 px-4 py-3 rounded-xl border transition-all text-left group ${
                     isArtifactOpen
                       ? "border-[var(--color-brand-500)]/40 bg-[var(--color-brand-500)]/10"
-                      : "border-[var(--color-border-primary)]/30 bg-[var(--color-surface-elevated)] hover:border-[var(--color-brand-500)]/30 hover:bg-[var(--color-brand-500)]/5"
+                      : "border-[var(--color-border-primary)]/50 bg-[var(--color-surface-elevated)] hover:border-[var(--color-brand-500)]/40 hover:bg-[var(--color-brand-500)]/5"
                   }`}
                 >
                   <div className="w-9 h-9 rounded-lg bg-[var(--color-brand-500)]/15 flex items-center justify-center flex-shrink-0">
@@ -184,7 +184,7 @@ const RefinementChat = ({
       </div>
 
       {/* Input bar — fixed at bottom */}
-      <div className="flex-shrink-0 px-4 py-3 border-t border-[var(--color-border-primary)]/30 bg-[var(--color-surface-elevated)]/50">
+      <div className="flex-shrink-0 px-4 py-3 border-t border-[var(--color-border-primary)]/50 bg-[var(--color-surface-elevated)]/50">
         {turnsRemaining <= 0 ? (
           <p className="text-sm font-spartan text-[var(--color-text-secondary)] text-center py-2">
             No refinement turns remaining. Apply the plan or regenerate.
@@ -198,7 +198,7 @@ const RefinementChat = ({
               onChange={(e) => setInput(e.target.value)}
               disabled={isSending}
               placeholder="Describe what to change..."
-              className="flex-1 h-11 px-4 rounded-xl bg-[var(--color-bg-primary)] border border-[var(--color-border-primary)]/30 text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] outline-none focus:border-[var(--color-brand-500)]/50 focus:ring-1 focus:ring-[var(--color-brand-500)]/20 transition-all disabled:opacity-50"
+              className="flex-1 h-11 px-4 rounded-xl bg-[var(--color-bg-primary)] border border-[var(--color-border-primary)]/50 text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] outline-none focus:border-[var(--color-brand-500)]/50 focus:ring-1 focus:ring-[var(--color-brand-500)]/20 transition-all disabled:opacity-50"
             />
             <button
               type="submit"

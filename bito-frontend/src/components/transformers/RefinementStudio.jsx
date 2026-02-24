@@ -79,7 +79,7 @@ const RefinementStudio = ({
   return (
     <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-[var(--color-bg-primary)] animate-fade-in">
       {/* ── Top bar ── */}
-      <header className="flex items-center justify-between px-4 sm:px-6 h-14 border-b border-[var(--color-border-primary)]/20 flex-shrink-0">
+      <header className="flex items-center justify-between px-4 sm:px-6 h-14 border-b border-[var(--color-border-primary)]/40 flex-shrink-0">
         <div className="flex items-center gap-3">
           <button
             onClick={onClose}
@@ -125,7 +125,7 @@ const RefinementStudio = ({
         {/* Chat pane — always visible, expands/shrinks */}
         <div
           className={`flex flex-col h-full overflow-hidden transition-all duration-200 ease-in-out ${
-            showArtifact ? "w-1/2 sm:w-[55%] border-r border-[var(--color-border-primary)]/20" : "w-full"
+            showArtifact ? "w-1/2 sm:w-[55%] border-r border-[var(--color-border-primary)]/40" : "w-full"
           }`}
         >
             <RefinementChat
