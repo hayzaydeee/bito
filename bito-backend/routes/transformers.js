@@ -48,7 +48,7 @@ router.post('/clarify', async (req, res) => {
 router.post('/generate', async (req, res) => {
   try {
     const userId = req.user._id;
-    const { goalText, clarificationAnswers } = req.body;
+    const { goalText, clarificationAnswers, parsedGoal } = req.body;
 
     if (!goalText || typeof goalText !== 'string' || goalText.trim().length < 5) {
       return res.status(400).json({
@@ -57,10 +57,10 @@ router.post('/generate', async (req, res) => {
       });
     }
 
-    if (goalText.length > 1000) {
+    if (goalText.length > 3000) {
       return res.status(400).json({
         success: false,
-        error: 'Goal text cannot exceed 1000 characters.',
+        error: 'Goal text cannot exceed 3000 characters.',
       });
     }
 
@@ -85,7 +85,7 @@ router.post('/generate', async (req, res) => {
     }
 
     // ── Generate ──
-    const result = await transformerEngine.generate(goalText.trim(), userId, clarificationAnswers);
+    const result = await transformerEngine.generate(goalText.trim(), userId, clarificationAnswers, parsedGoal || undefined);
 
     if (result.goalType === 'multi' && Array.isArray(result.previews)) {
       // ── Suite: create multiple linked transformers ──
@@ -154,7 +154,7 @@ router.post('/generate', async (req, res) => {
     }
 
     // User-friendly error for known LLM issues
-    if (error.message?.includes('AI returned') || error.message?.includes('AI generation')) {
+    if (error.message?.includes('AI returned') || error.message?.includes('AI generat')) {
       return res.status(502).json({ success: false, error: error.message });
     }
 

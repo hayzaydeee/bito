@@ -427,7 +427,7 @@ async function parseGoal(goalText) {
     const response = await client.chat.completions.create({
       model: MODEL,
       temperature: 0.3,
-      max_tokens: 800,
+      max_tokens: 2500,
       messages: [
         {
           role: 'system',
@@ -478,7 +478,9 @@ For MULTIPLE goals:
 
 suiteGroups clusters related sub-goals that should become one transformer together.
 Goals that are independent get their own group. Strongly related goals (e.g., "lose weight" and "eat healthy") should share a group.
-Each sub-goal index must appear in exactly one group.`,
+Each sub-goal index must appear in exactly one group.
+
+IMPORTANT: Create at most 5 suiteGroups. If there are many goals, aggressively group related ones together. For example, group all fitness goals, all creative goals, all financial goals, etc. Never create more than 5 groups.`,
         },
         { role: 'user', content: goalText },
       ],
@@ -527,6 +529,17 @@ Each sub-goal index must appear in exactly one group.`,
         } else {
           // No grouping provided — each goal is its own group
           parsed.suiteGroups = parsed.subGoals.map((sg, i) => ({ name: sg.label, goalIndices: [i] }));
+        }
+
+        // Hard cap: merge smallest groups until we have at most 5
+        const MAX_SUITE_GROUPS = 5;
+        while (parsed.suiteGroups.length > MAX_SUITE_GROUPS) {
+          // Find the two smallest groups and merge them
+          parsed.suiteGroups.sort((a, b) => a.goalIndices.length - b.goalIndices.length);
+          const smallest = parsed.suiteGroups.shift();
+          // Merge into the next smallest (or a group with the closest intent)
+          parsed.suiteGroups[0].goalIndices.push(...smallest.goalIndices);
+          parsed.suiteGroups[0].name = `${parsed.suiteGroups[0].name} & more`;
         }
       }
     }
@@ -713,14 +726,10 @@ async function generateSuite(goalText, userId, parsed, dossier, dossierBlock, cl
   const suiteId = crypto.randomUUID();
   const suiteName = `${goalText.slice(0, 80)}${goalText.length > 80 ? '…' : ''}`;
 
-  const previews = [];
-  let totalTokensIn = 0;
-  let totalTokensOut = 0;
-
-  for (let gi = 0; gi < parsed.suiteGroups.length; gi++) {
-    const group = parsed.suiteGroups[gi];
+  // Build generation tasks for each suite group
+  const tasks = parsed.suiteGroups.map((group, gi) => {
     const groupGoals = group.goalIndices.map(i => parsed.subGoals[i]).filter(Boolean);
-    if (groupGoals.length === 0) continue;
+    if (groupGoals.length === 0) return null;
 
     // Build a focused goal text for this group
     const groupGoalText = groupGoals.length === 1
@@ -747,40 +756,60 @@ async function generateSuite(goalText, userId, parsed, dossier, dossierBlock, cl
       synergies: parsed.synergies || [],
     };
 
-    const result = await generateSingle(
-      groupGoalText,
-      userId,
-      groupParsed,
-      dossier,
-      dossierBlock,
-      clarificationAnswers,
-      suiteContext
+    return { gi, group, groupGoalText, groupParsed, suiteContext };
+  }).filter(Boolean);
+
+  // Run generation tasks in parallel (concurrency-limited to 3)
+  const CONCURRENCY = 3;
+  const results = [];
+  for (let batch = 0; batch < tasks.length; batch += CONCURRENCY) {
+    const chunk = tasks.slice(batch, batch + CONCURRENCY);
+    const batchResults = await Promise.all(
+      chunk.map(async (task) => {
+        try {
+          const result = await generateSingle(
+            task.groupGoalText,
+            userId,
+            task.groupParsed,
+            dossier,
+            dossierBlock,
+            clarificationAnswers,
+            task.suiteContext
+          );
+
+          // Tag with suite metadata and full parsed context
+          const preview = result.preview;
+          preview.suiteId = suiteId;
+          preview.suiteIndex = task.gi;
+          preview.suiteName = task.group.name || suiteName;
+          preview.goal.parsed.goalType = 'multi';
+          preview.goal.parsed.subGoals = parsed.subGoals;
+          return preview;
+        } catch (err) {
+          console.warn(`[TransformerEngine] Suite group "${task.group.name}" failed:`, err.message);
+          return null; // Skip failed groups instead of failing entire suite
+        }
+      })
     );
-
-    // Tag with suite metadata and full parsed context
-    const preview = result.preview;
-    preview.suiteId = suiteId;
-    preview.suiteIndex = gi;
-    preview.suiteName = group.name || suiteName;
-    // Attach multi-goal parsed data so the Transformer model preserves it
-    preview.goal.parsed.goalType = 'multi';
-    preview.goal.parsed.subGoals = parsed.subGoals;
-
-    totalTokensIn += preview.generation.tokenUsage.input;
-    totalTokensOut += preview.generation.tokenUsage.output;
-
-    previews.push(preview);
+    results.push(...batchResults.filter(Boolean));
   }
 
-  if (previews.length === 0) {
+  if (results.length === 0) {
     throw new Error('Failed to generate any transformers from the compound goal.');
+  }
+
+  let totalTokensIn = 0;
+  let totalTokensOut = 0;
+  for (const preview of results) {
+    totalTokensIn += preview.generation.tokenUsage.input;
+    totalTokensOut += preview.generation.tokenUsage.output;
   }
 
   return {
     goalType: 'multi',
     suiteId,
     suiteName,
-    previews,
+    previews: results,
     totalTokenUsage: { input: totalTokensIn, output: totalTokensOut },
   };
 }

@@ -78,6 +78,7 @@ const TransformersPage = () => {
             questions: res.questions,
             reasoning: res.reasoning,
             goalAnalysis: res.goalAnalysis || null,
+            parsedGoal: res._parsed || null,
             answers: res.questions.map(() => ""),
           });
           setClarifyLoading(false);
@@ -119,7 +120,8 @@ const TransformersPage = () => {
 
       const res = await transformersAPI.generate(
         goalText.trim(),
-        clarificationAnswers?.length > 0 ? clarificationAnswers : null
+        clarificationAnswers?.length > 0 ? clarificationAnswers : null,
+        clarification?.parsedGoal || null
       );
       clearInterval(stepTimer);
 

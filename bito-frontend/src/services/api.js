@@ -1024,9 +1024,10 @@ export const transformersAPI = {
 
   // Generate a transformer from goal text (optionally with clarification answers)
   // Returns { success, goalType, transformer? (single), transformers? (multi), suiteId?, suiteName? }
-  generate: async (goalText, clarificationAnswers = null) => {
+  generate: async (goalText, clarificationAnswers = null, parsedGoal = null) => {
     const body = { goalText };
     if (clarificationAnswers) body.clarificationAnswers = clarificationAnswers;
+    if (parsedGoal) body.parsedGoal = parsedGoal;
     return apiRequest('/api/transformers/generate', {
       method: 'POST',
       body: JSON.stringify(body),
