@@ -110,7 +110,7 @@ class EmailService {
     });
 
     const mailOptions = {
-      from: process.env.EMAIL_FROM || '"Bito Team" <noreply@bito.app>',
+      from: process.env.EMAIL_FROM || '"Divine Eze" <noreply@bito.app>',
       to: user.email,
       subject: 'Your Bito sign-in link',
       html,
@@ -138,7 +138,7 @@ class EmailService {
     const inviteUrl = `${baseUrl}/invite/${invitation.token}`;
     
     const mailOptions = {
-      from: process.env.EMAIL_FROM || '"Bito Team" <noreply@bito.app>',
+      from: process.env.EMAIL_FROM || '"Divine Eze" <noreply@bito.app>',
       to: invitation.email,
       subject: `You're invited to join "${workspace.name}" on Bito`,
       html: this.generateInvitationHTML(invitation, workspace, invitedBy, inviteUrl)
