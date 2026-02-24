@@ -230,40 +230,38 @@ const TransformersPage = () => {
     );
   }
 
-  // ── Refinement Studio (full-page overlay) ──
-  const studioOverlay = studioTransformer ? (
-    <RefinementStudio
-      transformer={studioTransformer}
-      onClose={handleStudioClose}
-      onApply={handleStudioApply}
-      onUpdate={handleStudioUpdate}
-    />
-  ) : null;
-
   // ── Preview / Detail ──
   if ((view === "preview" || view === "detail") && activeTransformer) {
+    // When studio is open, render it exclusively — no page content behind it
+    if (studioTransformer) {
+      return (
+        <RefinementStudio
+          transformer={studioTransformer}
+          onClose={handleStudioClose}
+          onApply={handleStudioApply}
+          onUpdate={handleStudioUpdate}
+        />
+      );
+    }
     return (
-      <>
-        {studioOverlay}
-        <div className="min-h-screen page-container px-4 sm:px-6 py-10">
-          <div className="max-w-5xl mx-auto">
-            <TransformerDetail
-              transformer={activeTransformer}
-              onBack={() => {
-                setView("list");
-                setActiveTransformer(null);
-              }}
-              onApply={handleApply}
-              applyLoading={applyLoading}
-              onArchive={handleArchive}
-              onEditHabit={handleEditHabit}
-              onRemoveHabit={handleRemoveHabit}
-              onOpenStudio={handleOpenStudio}
-              error={error}
-            />
-          </div>
+      <div className="min-h-screen page-container px-4 sm:px-6 py-10">
+        <div className="max-w-5xl mx-auto">
+          <TransformerDetail
+            transformer={activeTransformer}
+            onBack={() => {
+              setView("list");
+              setActiveTransformer(null);
+            }}
+            onApply={handleApply}
+            applyLoading={applyLoading}
+            onArchive={handleArchive}
+            onEditHabit={handleEditHabit}
+            onRemoveHabit={handleRemoveHabit}
+            onOpenStudio={handleOpenStudio}
+            error={error}
+          />
         </div>
-      </>
+      </div>
     );
   }
 

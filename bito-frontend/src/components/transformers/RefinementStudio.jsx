@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import {
   Cross2Icon,
   CheckCircledIcon,
@@ -25,13 +25,6 @@ const RefinementStudio = ({
   const [applyLoading, setApplyLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showArtifact, setShowArtifact] = useState(false);
-
-  // Lock body scroll while studio is open
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
-  }, []);
 
   const sys = transformer.system || {};
   const phases = sys.phases || [];
