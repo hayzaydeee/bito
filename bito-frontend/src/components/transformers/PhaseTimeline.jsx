@@ -21,17 +21,20 @@ const PhaseTimeline = ({ transformer }) => {
       : DEFAULT_PHASES;
 
   // Determine which phase is active
-  const activeIndex = phases.findIndex(
-    (p) => p.status === "active" || p.status === "current"
-  );
-  const effectiveActive =
-    activeIndex >= 0
-      ? activeIndex
+  const progress = transformer.progress || {};
+  const activeIndex = progress.currentPhaseIndex ?? (
+    phases.some((p) => p.status === "active" || p.status === "current")
+      ? phases.findIndex((p) => p.status === "active" || p.status === "current")
       : transformer.status === "active"
       ? 0
       : transformer.status === "completed"
       ? phases.length
-      : -1;
+      : -1
+  );
+  const effectiveActive = activeIndex;
+  const completedSet = new Set(
+    (progress.completedPhases || []).map((cp) => cp.phaseIndex)
+  );
 
   return (
     <div className="p-5 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20">
@@ -42,7 +45,7 @@ const PhaseTimeline = ({ transformer }) => {
       {/* Desktop: horizontal */}
       <div className="hidden sm:flex items-start gap-0">
         {phases.map((phase, i) => {
-          const isCompleted = i < effectiveActive || phase.status === "completed";
+          const isCompleted = completedSet.has(i) || i < effectiveActive;
           const isActive = i === effectiveActive;
           const isFuture = !isCompleted && !isActive;
 
@@ -99,7 +102,12 @@ const PhaseTimeline = ({ transformer }) => {
                   {phase.description}
                 </p>
               )}
-              {phase.duration && (
+              {phase.durationDays && (
+                <p className="mt-0.5 text-[10px] font-spartan text-[var(--color-text-tertiary)]">
+                  {phase.durationDays} days
+                </p>
+              )}
+              {!phase.durationDays && phase.duration && (
                 <p className="mt-0.5 text-[10px] font-spartan text-[var(--color-text-tertiary)]">
                   {phase.duration}
                 </p>
@@ -112,7 +120,7 @@ const PhaseTimeline = ({ transformer }) => {
       {/* Mobile: vertical */}
       <div className="sm:hidden space-y-4">
         {phases.map((phase, i) => {
-          const isCompleted = i < effectiveActive || phase.status === "completed";
+          const isCompleted = completedSet.has(i) || i < effectiveActive;
           const isActive = i === effectiveActive;
 
           return (

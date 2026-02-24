@@ -1,4 +1,4 @@
-import { CrossCircledIcon } from "@radix-ui/react-icons";
+import { CrossCircledIcon, RocketIcon } from "@radix-ui/react-icons";
 import CATEGORY_META, { STATUS_THEME } from "../../data/categoryMeta";
 import ProgressRing from "../shared/ProgressRing";
 
@@ -12,20 +12,35 @@ const TransformerCard = ({ transformer, index = 0, onOpen, onArchive, archiveLoa
   const sys = t.system || {};
   const catMeta = CATEGORY_META[sys.category] || CATEGORY_META.custom;
   const sTheme = STATUS_THEME[t.status] || STATUS_THEME.preview;
-  const habitCount = sys.habits?.length || t.habitCount || 0;
   const isFeatured = t.status === "active" || t.status === "preview";
 
-  // Calculate rough phase progress (if phases exist)
+  // Phase-aware counts and progress
   const phases = sys.phases || [];
-  const completedPhases = phases.filter((p) => p.status === "completed").length;
+  const isPhased = phases.length > 0 && phases.some((p) => p.habits?.length > 0);
+  const progress = t.progress || {};
+  const habitCount = isPhased
+    ? phases.reduce((sum, p) => sum + (p.habits?.length || 0), 0)
+    : sys.habits?.length || t.habitCount || 0;
+
+  // Real progress from progress field, fallback to computed
   const progressPct =
-    phases.length > 0
-      ? Math.round((completedPhases / phases.length) * 100)
+    progress.overallCompletion != null
+      ? progress.overallCompletion
       : t.status === "completed"
       ? 100
+      : t.status === "active" && isPhased
+      ? Math.round(((progress.completedPhases?.length || 0) / phases.length) * 100)
       : t.status === "active"
       ? 33
       : 0;
+
+  // Collect first 3 habits for preview chips (from phases or flat)
+  const previewHabits = isPhased
+    ? phases.flatMap((p) => p.habits || []).slice(0, 3)
+    : (sys.habits || []).slice(0, 3);
+
+  // Current phase info
+  const currentPhase = isPhased ? phases[progress.currentPhaseIndex ?? 0] : null;
 
   return (
     <div
@@ -64,6 +79,15 @@ const TransformerCard = ({ transformer, index = 0, onOpen, onArchive, archiveLoa
                 {sys.description}
               </p>
             )}
+            {/* Current phase badge for active transformers */}
+            {t.status === "active" && currentPhase && (
+              <div className="flex items-center gap-1.5 mt-1.5">
+                <RocketIcon className="w-3 h-3 text-[var(--color-brand-500)]" />
+                <span className="text-[10px] font-spartan font-medium text-[var(--color-brand-500)]">
+                  Phase {(progress.currentPhaseIndex ?? 0) + 1}: {currentPhase.name}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Archive button */}
@@ -83,9 +107,33 @@ const TransformerCard = ({ transformer, index = 0, onOpen, onArchive, archiveLoa
         {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Bottom row: progress ring, habit chips, category, date */}
+        {/* Phase indicator pills (for phased transformers) */}
+        {isPhased && phases.length > 1 && (
+          <div className="flex items-center gap-1 mb-3">
+            {phases.map((_, pi) => {
+              const isDone = progress.completedPhases?.some((cp) => cp.phaseIndex === pi);
+              const isCurr = pi === (progress.currentPhaseIndex ?? 0);
+              return (
+                <div
+                  key={pi}
+                  className={`h-1 flex-1 rounded-full transition-all ${
+                    isDone
+                      ? ""
+                      : isCurr
+                      ? "opacity-60"
+                      : "bg-[var(--color-surface-hover)]"
+                  }`}
+                  style={{
+                    backgroundColor: isDone || isCurr ? catMeta.accent : undefined,
+                  }}
+                />
+              );
+            })}
+          </div>
+        )}
+
+        {/* Bottom row: progress ring, habit chips, category */}
         <div className="flex items-center gap-3 pt-3 border-t border-[var(--color-border-primary)]/10">
-          {/* Progress ring */}
           <ProgressRing
             value={progressPct}
             size={32}
@@ -95,7 +143,7 @@ const TransformerCard = ({ transformer, index = 0, onOpen, onArchive, archiveLoa
 
           {/* Habit preview chips */}
           <div className="flex-1 flex items-center gap-1.5 min-w-0 overflow-hidden">
-            {sys.habits?.slice(0, 3).map((h, i) => (
+            {previewHabits.map((h, i) => (
               <span
                 key={i}
                 className="inline-flex items-center gap-1 text-[10px] font-spartan text-[var(--color-text-secondary)] bg-[var(--color-surface-hover)] px-2 py-0.5 rounded-md truncate max-w-[100px]"

@@ -7,6 +7,7 @@ import TransformerCard from "./TransformerCard";
 import TransformerDetail from "./TransformerDetail";
 import GoalInput from "./GoalInput";
 import GeneratingOverlay from "./GeneratingOverlay";
+import RefinementStudio from "./RefinementStudio";
 
 /**
  * TransformersPage — orchestrator component.
@@ -31,6 +32,9 @@ const TransformersPage = () => {
   const [activeTransformer, setActiveTransformer] = useState(null);
   const [applyLoading, setApplyLoading] = useState(false);
   const [archiveLoading, setArchiveLoading] = useState(null);
+
+  // Refinement studio
+  const [studioTransformer, setStudioTransformer] = useState(null);
 
   // ── Fetch ──
   const fetchTransformers = useCallback(async () => {
@@ -175,6 +179,35 @@ const TransformersPage = () => {
     }
   };
 
+  // ── Open refinement studio ──
+  const handleOpenStudio = (t) => {
+    setStudioTransformer(t);
+  };
+
+  const handleStudioClose = () => {
+    setStudioTransformer(null);
+  };
+
+  const handleStudioUpdate = (updated) => {
+    // Keep active transformer and list in sync
+    setActiveTransformer(updated);
+    setTransformers((prev) =>
+      prev.map((t) => (t._id === updated._id ? updated : t))
+    );
+  };
+
+  const handleStudioApply = async (id) => {
+    const res = await transformersAPI.apply(id);
+    if (res.success) {
+      setStudioTransformer(null);
+      setActiveTransformer(res.transformer);
+      setView("list");
+      fetchTransformers();
+    } else {
+      throw new Error(res.error || "Failed to apply");
+    }
+  };
+
   // ── Derived stats ──
   const activeCount = transformers.filter((t) => t.status === "active").length;
   const totalHabits = transformers.reduce(
@@ -197,26 +230,40 @@ const TransformersPage = () => {
     );
   }
 
+  // ── Refinement Studio (full-page overlay) ──
+  const studioOverlay = studioTransformer ? (
+    <RefinementStudio
+      transformer={studioTransformer}
+      onClose={handleStudioClose}
+      onApply={handleStudioApply}
+      onUpdate={handleStudioUpdate}
+    />
+  ) : null;
+
   // ── Preview / Detail ──
   if ((view === "preview" || view === "detail") && activeTransformer) {
     return (
-      <div className="min-h-screen page-container px-4 sm:px-6 py-10">
-        <div className="max-w-5xl mx-auto">
-          <TransformerDetail
-            transformer={activeTransformer}
-            onBack={() => {
-              setView("list");
-              setActiveTransformer(null);
-            }}
-            onApply={handleApply}
-            applyLoading={applyLoading}
-            onArchive={handleArchive}
-            onEditHabit={handleEditHabit}
-            onRemoveHabit={handleRemoveHabit}
-            error={error}
-          />
+      <>
+        {studioOverlay}
+        <div className="min-h-screen page-container px-4 sm:px-6 py-10">
+          <div className="max-w-5xl mx-auto">
+            <TransformerDetail
+              transformer={activeTransformer}
+              onBack={() => {
+                setView("list");
+                setActiveTransformer(null);
+              }}
+              onApply={handleApply}
+              applyLoading={applyLoading}
+              onArchive={handleArchive}
+              onEditHabit={handleEditHabit}
+              onRemoveHabit={handleRemoveHabit}
+              onOpenStudio={handleOpenStudio}
+              error={error}
+            />
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 

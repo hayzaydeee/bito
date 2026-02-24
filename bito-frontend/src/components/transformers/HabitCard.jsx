@@ -9,11 +9,13 @@ import { DIFFICULTY_COLORS, METHODOLOGY_LABELS } from "../../data/categoryMeta";
 const HabitCard = ({
   habit,
   index,
+  phaseIndex,
   isPreview = false,
   canRemove = true,
   onEdit,
   onRemove,
   accentColor,
+  compact = false,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({});
@@ -119,17 +121,21 @@ const HabitCard = ({
   // ── View mode ──
   return (
     <div
-      className="p-5 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40 transition-all group stagger-fade-in"
+      className={`rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40 transition-all group stagger-fade-in ${
+        compact ? "p-3" : "p-5"
+      }`}
       style={{ animationDelay: `${index * 60}ms` }}
     >
       <div className="flex items-start gap-3">
         {/* Icon */}
-        <span className="text-xl flex-shrink-0 mt-0.5">{h.icon}</span>
+        <span className={`flex-shrink-0 mt-0.5 ${compact ? "text-base" : "text-xl"}`}>
+          {h.icon}
+        </span>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)]">
+            <p className={`font-spartan font-semibold text-[var(--color-text-primary)] ${compact ? "text-xs" : "text-sm"}`}>
               {h.name}
             </p>
             <span
@@ -143,12 +149,12 @@ const HabitCard = ({
               </span>
             )}
           </div>
-          {h.description && (
+          {h.description && !compact && (
             <p className="text-sm text-[var(--color-text-tertiary)] font-spartan mt-1">
               {h.description}
             </p>
           )}
-          <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-[var(--color-text-tertiary)] font-spartan">
+          <div className={`flex flex-wrap items-center gap-3 text-xs text-[var(--color-text-tertiary)] font-spartan ${compact ? "mt-1" : "mt-2"}`}>
             <span>{METHODOLOGY_LABELS[h.methodology] || h.methodology}</span>
             <span>
               {h.frequency?.type === "daily" && "Daily"}

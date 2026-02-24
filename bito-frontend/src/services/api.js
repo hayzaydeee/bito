@@ -1048,6 +1048,26 @@ export const transformersAPI = {
     });
   },
 
+  // Advance to next phase
+  advancePhase: async (id) => {
+    return apiRequest(`/api/transformers/${id}/advance-phase`, {
+      method: 'POST',
+    });
+  },
+
+  // Get progress data (per-phase completion)
+  progress: async (id) => {
+    return apiRequest(`/api/transformers/${id}/progress`);
+  },
+
+  // Send a refinement message — returns patches + assistant reply
+  refine: async (id, message) => {
+    return apiRequest(`/api/transformers/${id}/refine`, {
+      method: 'POST',
+      body: JSON.stringify({ message }),
+    });
+  },
+
   // Archive (soft delete) a transformer
   archive: async (id) => {
     return apiRequest(`/api/transformers/${id}`, {
