@@ -65,7 +65,7 @@ const PhaseTimeline = ({ transformer }) => {
 
               {/* Circle */}
               <div
-                className={`relative z-10 w-7 h-7 rounded-full flex items-center justify-center text-xs font-spartan font-bold transition-all ${
+                className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center text-sm font-spartan font-bold transition-all ${
                   isCompleted
                     ? "text-white"
                     : isActive
@@ -87,28 +87,28 @@ const PhaseTimeline = ({ transformer }) => {
 
               {/* Label */}
               <p
-                className={`mt-2 text-xs font-spartan font-semibold text-center ${
+                className={`mt-2 text-sm font-spartan font-semibold text-center ${
                   isActive
                     ? "text-[var(--color-text-primary)]"
                     : isCompleted
                     ? "text-[var(--color-text-secondary)]"
-                    : "text-[var(--color-text-tertiary)]"
+                    : "text-[var(--color-text-secondary)]"
                 }`}
               >
                 {phase.name}
               </p>
               {phase.description && (
-                <p className="mt-0.5 text-[10px] font-spartan text-[var(--color-text-tertiary)] text-center max-w-[120px]">
+                <p className="mt-1 text-xs font-spartan text-[var(--color-text-secondary)] text-center max-w-[160px]">
                   {phase.description}
                 </p>
               )}
               {phase.durationDays && (
-                <p className="mt-0.5 text-[10px] font-spartan text-[var(--color-text-tertiary)]">
+                <p className="mt-1 text-xs font-spartan text-[var(--color-text-secondary)] font-medium">
                   {phase.durationDays} days
                 </p>
               )}
               {!phase.durationDays && phase.duration && (
-                <p className="mt-0.5 text-[10px] font-spartan text-[var(--color-text-tertiary)]">
+                <p className="mt-1 text-xs font-spartan text-[var(--color-text-secondary)] font-medium">
                   {phase.duration}
                 </p>
               )}
@@ -165,7 +165,7 @@ const PhaseTimeline = ({ transformer }) => {
                   {phase.name}
                 </p>
                 {phase.description && (
-                  <p className="text-xs font-spartan text-[var(--color-text-tertiary)] mt-0.5">
+                  <p className="text-xs font-spartan text-[var(--color-text-secondary)] mt-0.5">
                     {phase.description}
                   </p>
                 )}
