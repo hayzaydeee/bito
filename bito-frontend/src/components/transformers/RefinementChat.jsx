@@ -22,6 +22,7 @@ const RefinementChat = ({
   planIcon = "🎯",
   onToggleArtifact,
   isArtifactOpen = false,
+  userAvatar,
 }) => {
   const [input, setInput] = useState("");
   const bottomRef = useRef(null);
@@ -122,8 +123,12 @@ const RefinementChat = ({
               </div>
 
               {msg.role === "user" && (
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 flex items-center justify-center mt-0.5">
-                  <PersonIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 flex items-center justify-center mt-0.5 overflow-hidden">
+                  {userAvatar ? (
+                    <img src={userAvatar} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <PersonIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
+                  )}
                 </div>
               )}
             </div>

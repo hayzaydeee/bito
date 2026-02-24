@@ -19,6 +19,7 @@ const RefinementStudio = ({
   onClose,
   onApply,
   onUpdate,
+  userAvatar,
 }) => {
   const [transformer, setTransformer] = useState(initialTransformer);
   const [isSending, setIsSending] = useState(false);
@@ -136,6 +137,7 @@ const RefinementStudio = ({
               planIcon={sys.icon || "🎯"}
               onToggleArtifact={toggleArtifact}
               isArtifactOpen={showArtifact}
+              userAvatar={userAvatar}
             />
           </div>
 

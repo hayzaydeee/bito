@@ -240,6 +240,7 @@ const TransformersPage = () => {
           onClose={handleStudioClose}
           onApply={handleStudioApply}
           onUpdate={handleStudioUpdate}
+          userAvatar={user?.avatar}
         />
       );
     }
