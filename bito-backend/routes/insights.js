@@ -216,11 +216,22 @@ router.get('/analytics', async (req, res) => {
     const HabitEntry = mongoose.model('HabitEntry');
     const JournalEntry = mongoose.model('JournalEntry');
 
-    const [habits, entries, journalEntries] = await Promise.all([
+    const [habits, allEntries, journalEntries] = await Promise.all([
       Habit.find({ userId: req.user._id, isActive: true }).lean(),
       HabitEntry.find({ userId: req.user._id, date: { $gte: startDate } }).lean(),
       JournalEntry.find({ userId: req.user._id, date: { $gte: startDate } }).lean(),
     ]);
+
+    // Scope entries to active habits only, respecting activatedAt for transformer habits
+    const activeHabitIds = new Set(habits.map(h => String(h._id)));
+    const activatedAtMap = new Map(habits.map(h => [String(h._id), h.activatedAt]));
+    const entries = allEntries.filter(e => {
+      const hid = String(e.habitId);
+      if (!activeHabitIds.has(hid)) return false;
+      const activatedAt = activatedAtMap.get(hid);
+      if (activatedAt && new Date(e.date) < new Date(activatedAt)) return false;
+      return true;
+    });
 
     // Layer 1: rule-based insights (reuse engine)
     const ruleInsights = await generateInsights(req.user._id);

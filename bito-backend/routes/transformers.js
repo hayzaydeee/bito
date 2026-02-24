@@ -271,6 +271,8 @@ router.post('/:id/apply', async (req, res) => {
 
       const targetUnit = unitMap[h.target?.unit?.toLowerCase()] || 'times';
 
+      const isFirstPhase = phaseIndex === 0;
+
       return {
         userId,
         name: h.name,
@@ -283,7 +285,8 @@ router.post('/:id/apply', async (req, res) => {
         methodology: h.methodology || 'boolean',
         frequency,
         weeklyTarget,
-        isActive: phaseIndex === 0, // Only Phase 1 habits start active
+        isActive: isFirstPhase, // Only Phase 1 habits start active
+        activatedAt: isFirstPhase ? new Date() : null, // Analytics scoping: only count entries from activation onwards
         target: {
           value: h.target?.value || 1,
           unit: targetUnit,
@@ -384,12 +387,12 @@ router.post('/:id/advance-phase', async (req, res) => {
 
     await transformer.save();
 
-    // Activate next phase's habits
+    // Activate next phase's habits and stamp activatedAt for analytics scoping
     const nextPhase = phases[nextIdx];
     if (nextPhase?._id) {
       await Habit.updateMany(
         { userId, transformerId: transformer._id, transformerPhaseId: nextPhase._id },
-        { $set: { isActive: true } }
+        { $set: { isActive: true, activatedAt: new Date() } }
       );
     }
 

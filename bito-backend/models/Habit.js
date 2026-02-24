@@ -158,6 +158,15 @@ const habitSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+
+  // When this habit became analytically active.
+  // For transformer habits, Phase 1 gets activatedAt = now on apply;
+  // later phases get null until advancePhase sets it.
+  // Analytics should only count entries on or after this date.
+  activatedAt: {
+    type: Date,
+    default: null
+  },
   
   // Metadata
   createdAt: {

@@ -627,11 +627,22 @@ async function generateInsights(userId) {
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
   // Fetch data in parallel
-  const [habits, entries, journalEntries] = await Promise.all([
+  const [habits, allEntries, journalEntries] = await Promise.all([
     Habit.find({ userId, isActive: true }).lean(),
     HabitEntry.find({ userId, date: { $gte: thirtyDaysAgo } }).lean(),
     JournalEntry.find({ userId, date: { $gte: thirtyDaysAgo } }).lean(),
   ]);
+
+  // Scope entries to active habits only, respecting activatedAt for transformer habits
+  const activeHabitIds = new Set(habits.map(h => String(h._id)));
+  const activatedAtMap = new Map(habits.map(h => [String(h._id), h.activatedAt]));
+  const entries = allEntries.filter(e => {
+    const hid = String(e.habitId);
+    if (!activeHabitIds.has(hid)) return false;
+    const activatedAt = activatedAtMap.get(hid);
+    if (activatedAt && new Date(e.date) < new Date(activatedAt)) return false;
+    return true;
+  });
 
   // Run all detectors
   const raw = [

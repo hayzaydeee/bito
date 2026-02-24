@@ -187,7 +187,7 @@ export const HabitProvider = ({ children }) => {
     dispatch({ type: actionTypes.FETCH_HABITS_START });
 
     try {
-      const response = await habitsAPI.getHabits();
+      const response = await habitsAPI.getHabits({ active: true });
       dispatch({
         type: actionTypes.FETCH_HABITS_SUCCESS,
         payload: response.data.habits,
