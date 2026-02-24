@@ -222,6 +222,14 @@ const transformerSchema = new mongoose.Schema(
       },
     ],
 
+    // ── User personalization (overrides AI-generated values) ──
+    personalization: {
+      icon: { type: String, default: null, trim: true, maxlength: 10 },   // custom emoji override
+      color: { type: String, default: null, trim: true, maxlength: 20 },  // accent color hex or name
+      notes: { type: String, default: null, trim: true, maxlength: 500 }, // user's private notes
+      isPinned: { type: Boolean, default: false },
+    },
+
     // ── AI generation metadata ──
     generation: {
       model: { type: String, default: null },
@@ -237,7 +245,7 @@ const transformerSchema = new mongoose.Schema(
 );
 
 // ── Constants ──
-transformerSchema.statics.MAX_REFINEMENTS = 5; // 5 user turns = 10 messages total
+transformerSchema.statics.MAX_REFINEMENTS = 20; // 20 user turns = 40 messages total (living plan)
 
 // ── Indexes ──
 transformerSchema.index({ userId: 1, status: 1 });

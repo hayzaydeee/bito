@@ -23,6 +23,8 @@ const RefinementChat = ({
   onToggleArtifact,
   isArtifactOpen = false,
   userAvatar,
+  mutations = [],
+  isActive = false,
 }) => {
   const [input, setInput] = useState("");
   const bottomRef = useRef(null);
@@ -54,12 +56,25 @@ const RefinementChat = ({
     timestamp: r.timestamp,
   }));
 
-  const suggestions = [
-    "Make Phase 1 easier",
-    "Add a meditation habit",
-    "Reduce to 2 phases",
-    "Swap a habit for something more social",
-  ];
+  const suggestions = isActive
+    ? [
+        "This feels too ambitious right now",
+        "Add a new habit to my routine",
+        "One of my habits isn't working",
+        "Adjust my schedule for this week",
+      ]
+    : [
+        "Make Phase 1 easier",
+        "Add a meditation habit",
+        "Reduce to 2 phases",
+        "Swap a habit for something more social",
+      ];
+
+  const mutationLabels = {
+    modifyHabit: '✏️ Updated',
+    addHabit: '✨ Created',
+    removeHabit: '🗂️ Archived',
+  };
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -165,6 +180,24 @@ const RefinementChat = ({
             )}
           </div>
         ))}
+
+        {/* Habit mutation feedback — shown after active-mode refinements */}
+        {mutations.length > 0 && !isSending && (
+          <div className="ml-10 space-y-1.5 animate-in fade-in slide-in-from-bottom-2">
+            <p className="text-xs font-spartan font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider">
+              Habits updated
+            </p>
+            {mutations.map((m, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/20 text-sm font-spartan text-green-300"
+              >
+                <span>{mutationLabels[m.action] || '•'}</span>
+                <span className="text-[var(--color-text-primary)]">{m.habitName || m.name || 'Habit'}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Typing indicator */}
         {isSending && (

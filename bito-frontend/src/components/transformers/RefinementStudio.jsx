@@ -26,11 +26,13 @@ const RefinementStudio = ({
   const [applyLoading, setApplyLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showArtifact, setShowArtifact] = useState(false);
+  const [lastMutations, setLastMutations] = useState([]);
 
   const sys = transformer.system || {};
   const phases = sys.phases || [];
+  const isActive = transformer.status === 'active';
   const turnsUsed = Math.floor((transformer.refinements?.length || 0) / 2);
-  const turnsRemaining = 5 - turnsUsed;
+  const turnsRemaining = 20 - turnsUsed;
 
   // Flatten all habits for count
   const totalHabits =
@@ -42,11 +44,16 @@ const RefinementStudio = ({
     async (message) => {
       setIsSending(true);
       setError(null);
+      setLastMutations([]);
       try {
         const res = await transformersAPI.refine(transformer._id, message);
         if (res.success && res.transformer) {
           setTransformer(res.transformer);
           onUpdate?.(res.transformer);
+          // Track habit mutations for active mode
+          if (res.habitMutations?.length > 0) {
+            setLastMutations(res.habitMutations);
+          }
         } else {
           setError(res.error || "Refinement failed");
         }
@@ -92,17 +99,25 @@ const RefinementStudio = ({
               {sys.icon} {sys.name || "Untitled Plan"}
             </h2>
             <p className="text-xs font-spartan text-[var(--color-text-secondary)]">
-              Refinement Studio · {turnsRemaining} turns left
+              {isActive ? "Living Plan" : "Refinement Studio"} · {turnsRemaining} turns left
             </p>
           </div>
         </div>
 
         <button
           onClick={handleApply}
-          disabled={applyLoading}
-          className="h-9 px-4 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white rounded-lg text-xs font-spartan font-medium transition-all disabled:opacity-50 flex items-center gap-1.5"
+          disabled={applyLoading || isActive}
+          className={`h-9 px-4 rounded-lg text-xs font-spartan font-medium transition-all disabled:opacity-50 flex items-center gap-1.5 ${
+            isActive
+              ? 'bg-green-500/15 text-green-400 cursor-default'
+              : 'bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white'
+          }`}
         >
-          {applyLoading ? (
+          {isActive ? (
+            <>
+              <CheckCircledIcon className="w-3.5 h-3.5" /> Applied
+            </>
+          ) : applyLoading ? (
             <>
               <ReloadIcon className="w-3.5 h-3.5 animate-spin" /> Applying...
             </>
@@ -138,6 +153,8 @@ const RefinementStudio = ({
               onToggleArtifact={toggleArtifact}
               isArtifactOpen={showArtifact}
               userAvatar={userAvatar}
+              mutations={lastMutations}
+              isActive={isActive}
             />
           </div>
 

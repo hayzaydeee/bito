@@ -112,6 +112,14 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
       path: "/app/dashboard",
     },
     {
+      id: "habits",
+      label: "Habits",
+      icon: TargetIcon,
+      description: "All your habits",
+      color: "from-teal-500 to-teal-600",
+      path: "/app/habits",
+    },
+    {
       id: "analytics",
       label: "Analytics",
       icon: BarChartIcon,

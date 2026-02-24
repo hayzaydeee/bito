@@ -9,6 +9,7 @@ import GoalInput from "./GoalInput";
 import GeneratingOverlay from "./GeneratingOverlay";
 import RefinementStudio from "./RefinementStudio";
 import SuitePreview from "./SuitePreview";
+import DiscardModal from "./DiscardModal";
 
 /**
  * TransformersPage — orchestrator component.
@@ -39,6 +40,10 @@ const TransformersPage = () => {
 
   // Refinement studio
   const [studioTransformer, setStudioTransformer] = useState(null);
+
+  // Discard modal
+  const [discardTarget, setDiscardTarget] = useState(null); // transformer to discard
+  const [discardLoading, setDiscardLoading] = useState(false);
 
   // ── Fetch ──
   const fetchTransformers = useCallback(async () => {
@@ -229,8 +234,15 @@ const TransformersPage = () => {
     }
   };
 
-  // ── Archive ──
+  // ── Archive / Discard ──
   const handleArchive = async (id) => {
+    // For active transformers with habits, show the discard modal
+    const t = transformers.find((t) => t._id === id) || activeTransformer;
+    if (t?.status === 'active' && t?.appliedResources?.habitIds?.length > 0) {
+      setDiscardTarget(t);
+      return;
+    }
+    // For non-active (preview/draft), simple archive
     try {
       setArchiveLoading(id);
       const res = await transformersAPI.archive(id);
@@ -245,6 +257,28 @@ const TransformersPage = () => {
       setError("Failed to archive");
     } finally {
       setArchiveLoading(null);
+    }
+  };
+
+  const handleDiscard = async (mode) => {
+    if (!discardTarget) return;
+    try {
+      setDiscardLoading(true);
+      const res = await transformersAPI.discard(discardTarget._id, mode);
+      if (res.success) {
+        setDiscardTarget(null);
+        fetchTransformers();
+        if (activeTransformer?._id === discardTarget._id) {
+          setView("list");
+          setActiveTransformer(null);
+        }
+      } else {
+        setError(res.error || "Failed to discard");
+      }
+    } catch {
+      setError("Failed to discard");
+    } finally {
+      setDiscardLoading(false);
     }
   };
 
@@ -290,6 +324,22 @@ const TransformersPage = () => {
     }
   };
 
+  // ── Personalize transformer ──
+  const handlePersonalize = async (fields) => {
+    if (!activeTransformer) return;
+    try {
+      const res = await transformersAPI.personalize(activeTransformer._id, fields);
+      if (res.success && res.transformer) {
+        setActiveTransformer(res.transformer);
+        setTransformers((prev) =>
+          prev.map((t) => (t._id === res.transformer._id ? res.transformer : t))
+        );
+      }
+    } catch {
+      // Silently fail — personalization is non-critical
+    }
+  };
+
   // ── Derived stats ──
   const activeCount = transformers.filter((t) => t.status === "active").length;
   const totalHabits = transformers.reduce(
@@ -328,18 +378,39 @@ const TransformersPage = () => {
     return { suiteGroups: suiteList, standaloneTransformers: standalone };
   })();
 
+  // Sort: pinned first, then by date
+  const sortedStandalone = [...standaloneTransformers].sort((a, b) => {
+    const aPinned = a.personalization?.isPinned ? 1 : 0;
+    const bPinned = b.personalization?.isPinned ? 1 : 0;
+    if (bPinned !== aPinned) return bPinned - aPinned;
+    return 0; // preserve existing order
+  });
+
   /* ═══════════════════════════════════════════
      RENDER
      ═══════════════════════════════════════════ */
 
+  // Discard modal — renders as overlay on top of any view
+  const discardModalEl = discardTarget ? (
+    <DiscardModal
+      transformer={discardTarget}
+      onConfirm={handleDiscard}
+      onCancel={() => setDiscardTarget(null)}
+      isLoading={discardLoading}
+    />
+  ) : null;
+
   // ── Generating overlay ──
   if (generating) {
     return (
-      <div className="min-h-screen page-container px-4 sm:px-6 py-10">
-        <div className="max-w-5xl mx-auto">
-          <GeneratingOverlay step={generatingStep} />
+      <>
+        {discardModalEl}
+        <div className="min-h-screen page-container px-4 sm:px-6 py-10">
+          <div className="max-w-5xl mx-auto">
+            <GeneratingOverlay step={generatingStep} />
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -348,7 +419,9 @@ const TransformersPage = () => {
     // Suite preview
     if (activeSuite && !activeTransformer) {
       return (
-        <div className="min-h-screen page-container px-4 sm:px-6 py-10">
+        <>
+          {discardModalEl}
+          <div className="min-h-screen page-container px-4 sm:px-6 py-10">
           <div className="max-w-5xl mx-auto">
             <SuitePreview
               suite={activeSuite}
@@ -380,22 +453,28 @@ const TransformersPage = () => {
             />
           </div>
         </div>
+        </>
       );
     }
     // When studio is open, render it exclusively — no page content behind it
     if (studioTransformer) {
       return (
-        <RefinementStudio
+        <>
+          {discardModalEl}
+          <RefinementStudio
           transformer={studioTransformer}
           onClose={handleStudioClose}
           onApply={handleStudioApply}
           onUpdate={handleStudioUpdate}
           userAvatar={user?.avatar}
         />
+        </>
       );
     }
     return (
-      <div className="h-[calc(100dvh-3.5rem)] page-container overflow-hidden">
+      <>
+        {discardModalEl}
+        <div className="h-[calc(100dvh-3.5rem)] page-container overflow-hidden">
         <div className="max-w-5xl mx-auto h-full">
           <TransformerDetail
             transformer={activeTransformer}
@@ -414,10 +493,12 @@ const TransformersPage = () => {
             onEditHabit={handleEditHabit}
             onRemoveHabit={handleRemoveHabit}
             onOpenStudio={handleOpenStudio}
+            onPersonalize={handlePersonalize}
             error={error}
           />
         </div>
       </div>
+      </>
     );
   }
 
@@ -449,7 +530,9 @@ const TransformersPage = () => {
 
   // ── List (default) ──
   return (
-    <div className="min-h-screen page-container px-4 sm:px-6 py-10">
+    <>
+      {discardModalEl}
+      <div className="min-h-screen page-container px-4 sm:px-6 py-10">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="flex items-start justify-between mb-10">
@@ -549,9 +632,9 @@ const TransformersPage = () => {
             ))}
 
             {/* Standalone transformers */}
-            {standaloneTransformers.length > 0 && (
+            {sortedStandalone.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {standaloneTransformers.map((t, i) => (
+                {sortedStandalone.map((t, i) => (
                   <TransformerCard
                     key={t._id}
                     transformer={t}
@@ -567,6 +650,7 @@ const TransformersPage = () => {
         )}
       </div>
     </div>
+    </>
   );
 };
 

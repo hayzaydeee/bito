@@ -1085,6 +1085,23 @@ export const transformersAPI = {
       method: 'DELETE',
     });
   },
+
+  // Clean discard with cascade options
+  // mode: 'keep_habits' | 'cascade' | 'delete_habits'
+  discard: async (id, mode = 'keep_habits') => {
+    return apiRequest(`/api/transformers/${id}/discard`, {
+      method: 'POST',
+      body: JSON.stringify({ mode }),
+    });
+  },
+
+  // Update personalization (icon, color, notes, isPinned)
+  personalize: async (id, fields) => {
+    return apiRequest(`/api/transformers/${id}/personalize`, {
+      method: 'PATCH',
+      body: JSON.stringify(fields),
+    });
+  },
 };
 
 export default api;

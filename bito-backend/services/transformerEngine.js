@@ -355,10 +355,20 @@ You will receive:
 3. User context dossier (habits, analytics, personality)
 4. The conversation history (user and assistant messages)
 5. A new user message with requested changes
+6. The REFINEMENT MODE: "blueprint" (pre-apply) or "active" (post-apply, living plan)
 
 Your job: Output valid JSON with two fields:
 - "patches": array of operations to modify the existing system
 - "assistantMessage": a natural, conversational reply. Reference user data where relevant. Feel like a knowledgeable coach, not a tool. 1-3 sentences.
+
+IMPORTANT — REFINEMENT MODE:
+- In "blueprint" mode: patches modify the plan before it's applied. Standard behavior.
+- In "active" mode: this transformer has real habits created from it. Your patches will modify LIVE habits.
+  - Be more cautious — acknowledge that changes affect habits the user is already tracking.
+  - addHabit creates a new real habit. removeHabit archives it (data is preserved).
+  - modifyHabit updates the real habit (name, frequency, target, etc.).
+  - Let the user know what concrete changes will happen: "This will update your 'Morning Run' habit to 3x/week."
+  - You CAN still add/remove/restructure phases and habits — the system is meant to evolve!
 
 Patch operations:
 - { "op": "modifyHabit", "phase": phaseIndex, "habitIndex": habitIndex, "fields": { ...fieldsToUpdate } }
@@ -383,6 +393,7 @@ Rules:
 - Keep assistantMessage conversational and informed. Reference their data or habits when relevant.
 - If the user asks something vague, make a reasonable interpretation and explain what you did.
 - Ensure habit fields match valid enums: methodology (boolean|numeric|duration|rating), difficulty (easy|medium|hard), frequency.type (daily|weekly|specific_days).
+- In active mode, be more descriptive in assistantMessage about what real changes will happen.
 
 Output schema:
 {
@@ -851,8 +862,12 @@ function extractJSON(raw) {
 /**
  * Refine an existing transformer based on user feedback.
  * Returns patches + assistant message (not saved to DB — caller saves).
+ *
+ * @param {Object} transformer - Mongoose transformer document
+ * @param {string} userMessage - User's refinement request
+ * @param {string} [refinementMode='blueprint'] - 'blueprint' (pre-apply) or 'active' (post-apply, living plan)
  */
-async function refine(transformer, userMessage) {
+async function refine(transformer, userMessage, refinementMode = 'blueprint') {
   const client = getClient();
   if (!client) {
     throw new Error('AI refinement is not available. Please try again later.');
@@ -905,6 +920,8 @@ async function refine(transformer, userMessage) {
 
   const userPrompt = `Original goal: "${transformer.goal.text}"
 
+REFINEMENT MODE: ${refinementMode}
+${refinementMode === 'active' ? 'This transformer is ACTIVE — habits are live. Patches will modify real habits the user is tracking. Be descriptive about concrete changes.\n' : ''}
 Current system state:
 ${JSON.stringify(systemState, null, 2)}
 

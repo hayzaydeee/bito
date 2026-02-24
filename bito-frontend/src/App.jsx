@@ -6,7 +6,7 @@ import AuthPage from "./pages/AuthPage";
 import MagicLinkVerify from "./pages/MagicLinkVerify";
 import OAuthCallback from "./pages/OAuthCallback";
 import Dashboard from "./pages/Dashboard";
-// import HabitsPage from "./pages/HabitsPage";
+import HabitsPage from "./pages/HabitsPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import JournalPageV2 from "./components/journal-v2/JournalPageV2";
 import './components/journal-v2/journal-v2.css';
@@ -78,7 +78,7 @@ const ThemedApp = () => {
             <Route path="/app" element={<Layout />}>
               <Route index element={<Dashboard />} />
               <Route path="dashboard" element={<Dashboard />} />
-              {/* <Route path="habits" element={<HabitsPage />} /> */}
+              <Route path="habits" element={<HabitsPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />
               <Route path="journal" element={<JournalPageV2 />} />
               <Route path="transformers" element={<TransformersPage />} />

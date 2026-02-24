@@ -1,4 +1,4 @@
-import { CrossCircledIcon, RocketIcon } from "@radix-ui/react-icons";
+import { CrossCircledIcon, RocketIcon, DrawingPinFilledIcon } from "@radix-ui/react-icons";
 import CATEGORY_META, { STATUS_THEME } from "../../data/categoryMeta";
 import ProgressRing from "../shared/ProgressRing";
 
@@ -13,6 +13,9 @@ const TransformerCard = ({ transformer, index = 0, onOpen, onArchive, archiveLoa
   const catMeta = CATEGORY_META[sys.category] || CATEGORY_META.custom;
   const sTheme = STATUS_THEME[t.status] || STATUS_THEME.preview;
   const isFeatured = t.status === "active" || t.status === "preview";
+  const pers = t.personalization || {};
+  const displayIcon = pers.icon || sys.icon || "🎯";
+  const accentColor = pers.color || catMeta.accent;
 
   // Phase-aware counts and progress
   const phases = sys.phases || [];
@@ -55,16 +58,19 @@ const TransformerCard = ({ transformer, index = 0, onOpen, onArchive, archiveLoa
       {/* Category gradient stripe */}
       <div
         className={`h-1.5 w-full bg-gradient-to-r ${catMeta.gradient}`}
-        style={{ background: `linear-gradient(to right, ${catMeta.accent}25, ${catMeta.accent}08)` }}
+        style={{ background: `linear-gradient(to right, ${accentColor}25, ${accentColor}08)` }}
       />
 
       {/* Main content */}
       <div className="flex-1 p-5 flex flex-col">
         {/* Top row: icon + name + status */}
         <div className="flex items-start gap-3 mb-3">
-          <span className="text-2xl flex-shrink-0 mt-0.5">{sys.icon || "🎯"}</span>
+          <span className="text-2xl flex-shrink-0 mt-0.5">{displayIcon}</span>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
+              {pers.isPinned && (
+                <DrawingPinFilledIcon className="w-3.5 h-3.5 text-[var(--color-brand-500)] flex-shrink-0" />
+              )}
               <h3 className="text-base font-garamond font-bold text-[var(--color-text-primary)] truncate">
                 {sys.name || "Untitled"}
               </h3>

@@ -556,12 +556,16 @@ router.post('/:id/refine', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Transformer not found' });
     }
 
-    if (transformer.status !== 'preview' && transformer.status !== 'draft') {
+    // Allow refinement on preview, draft, and active transformers
+    if (transformer.status === 'archived' || transformer.status === 'completed') {
       return res.status(400).json({
         success: false,
-        error: 'Can only refine transformers in preview or draft status.',
+        error: 'Cannot refine archived or completed transformers.',
       });
     }
+
+    const isActive = transformer.status === 'active';
+    const refinementMode = isActive ? 'active' : 'blueprint';
 
     // Check refinement limit (each turn = 1 user + 1 assistant message)
     const turnsUsed = Math.floor((transformer.refinements?.length || 0) / 2);
@@ -569,7 +573,7 @@ router.post('/:id/refine', async (req, res) => {
     if (turnsRemaining <= 0) {
       return res.status(400).json({
         success: false,
-        error: 'Maximum refinement turns reached. Please apply or regenerate.',
+        error: 'Maximum refinement turns reached.',
       });
     }
 
@@ -591,11 +595,140 @@ router.post('/:id/refine', async (req, res) => {
     // Snapshot current state before refinement
     const phasesSnapshot = JSON.parse(JSON.stringify(transformer.system.phases || []));
 
-    // Call refine engine
-    const result = await transformerEngine.refine(transformer, message.trim());
+    // Call refine engine with mode context
+    const result = await transformerEngine.refine(transformer, message.trim(), refinementMode);
 
-    // Apply patches to system in place
+    // Apply patches to the transformer's system blueprint in place
     const changed = transformerEngine.applyPatches(transformer.system, result.patches);
+
+    // ── Active mode: propagate patches to real Habit documents ──
+    const habitMutations = [];
+    if (isActive && result.patches?.length > 0) {
+      const DAY_MAP = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
+      const unitMap = {
+        minutes: 'minutes', hours: 'hours', pages: 'pages', miles: 'miles',
+        calories: 'calories', glasses: 'glasses', reps: 'custom', items: 'custom',
+      };
+
+      for (const patch of result.patches) {
+        try {
+          if (patch.op === 'modifyHabit') {
+            // Find the real Habit doc linked to this transformer + phase
+            const phase = transformer.system.phases?.[patch.phase];
+            if (!phase) continue;
+            const habitDef = phase.habits?.[patch.habitIndex];
+            if (!habitDef) continue;
+
+            // Find matching Habit document by transformerId + phase + name
+            const realHabit = await Habit.findOne({
+              userId,
+              transformerId: transformer._id,
+              transformerPhaseId: phase._id,
+              name: phasesSnapshot[patch.phase]?.habits?.[patch.habitIndex]?.name,
+            });
+
+            if (realHabit) {
+              const updates = {};
+              const f = patch.fields || {};
+              if (f.name) updates.name = f.name;
+              if (f.description !== undefined) updates.description = f.description;
+              if (f.icon) updates.icon = f.icon;
+              if (f.category) updates.category = f.category;
+              if (f.methodology) updates.methodology = f.methodology;
+              if (f.target) {
+                updates['target.value'] = f.target.value || 1;
+                updates['target.unit'] = unitMap[f.target?.unit?.toLowerCase()] || 'times';
+              }
+              if (f.frequency) {
+                if (f.frequency.type === 'daily') {
+                  updates.frequency = 'daily';
+                  updates.weeklyTarget = 7;
+                } else if (f.frequency.type === 'weekly') {
+                  updates.frequency = 'weekly';
+                  updates.weeklyTarget = f.frequency.timesPerWeek || 3;
+                } else if (f.frequency.type === 'specific_days') {
+                  updates.frequency = 'weekly';
+                  const days = (f.frequency.days || []).map(d => DAY_MAP[d?.toLowerCase()]).filter(n => n !== undefined);
+                  updates.weeklyTarget = days.length;
+                  updates['schedule.days'] = days;
+                }
+              }
+
+              if (Object.keys(updates).length > 0) {
+                await Habit.findByIdAndUpdate(realHabit._id, { $set: updates });
+                habitMutations.push({ op: 'modified', habitId: realHabit._id, name: realHabit.name, updates: Object.keys(updates) });
+              }
+            }
+          } else if (patch.op === 'addHabit') {
+            const phase = transformer.system.phases?.[patch.phase];
+            if (!phase || !patch.habit) continue;
+            const currentPhaseIdx = transformer.progress?.currentPhaseIndex ?? 0;
+            const isCurrentOrCompleted = patch.phase <= currentPhaseIdx;
+
+            // Build and create a real Habit
+            let frequency = 'daily';
+            let weeklyTarget = 7;
+            const scheduleDays = [];
+            const hFreq = patch.habit.frequency;
+            if (hFreq?.type === 'weekly') {
+              frequency = 'weekly';
+              weeklyTarget = hFreq.timesPerWeek || 3;
+            } else if (hFreq?.type === 'specific_days') {
+              frequency = 'weekly';
+              const days = (hFreq.days || []).map(d => DAY_MAP[d?.toLowerCase()]).filter(n => n !== undefined);
+              weeklyTarget = days.length;
+              scheduleDays.push(...days);
+            }
+
+            const newHabit = new Habit({
+              userId,
+              name: patch.habit.name,
+              description: patch.habit.description || '',
+              source: 'transformer',
+              transformerId: transformer._id,
+              transformerPhaseId: phase._id,
+              category: patch.habit.category || 'other',
+              icon: patch.habit.icon || '🎯',
+              methodology: patch.habit.methodology || 'boolean',
+              frequency,
+              weeklyTarget,
+              isActive: isCurrentOrCompleted,
+              activatedAt: isCurrentOrCompleted ? new Date() : null,
+              target: {
+                value: patch.habit.target?.value || 1,
+                unit: unitMap[patch.habit.target?.unit?.toLowerCase()] || 'times',
+              },
+              schedule: { days: scheduleDays },
+            });
+            await newHabit.save();
+            transformer.appliedResources.habitIds.push(newHabit._id);
+            habitMutations.push({ op: 'created', habitId: newHabit._id, name: newHabit.name });
+
+          } else if (patch.op === 'removeHabit') {
+            const phase = phasesSnapshot[patch.phase];
+            if (!phase) continue;
+            const habitDef = phase.habits?.[patch.habitIndex];
+            if (!habitDef) continue;
+
+            // Archive the real habit (don't delete — preserve data)
+            const realHabit = await Habit.findOne({
+              userId,
+              transformerId: transformer._id,
+              transformerPhaseId: transformer.system.phases?.[patch.phase]?._id,
+              name: habitDef.name,
+            });
+            if (realHabit) {
+              realHabit.isActive = false;
+              realHabit.isArchived = true;
+              await realHabit.save();
+              habitMutations.push({ op: 'archived', habitId: realHabit._id, name: realHabit.name });
+            }
+          }
+        } catch (mutErr) {
+          console.warn('[Refine] Habit mutation failed:', patch.op, mutErr.message);
+        }
+      }
+    }
 
     // Record refinement messages
     transformer.refinements.push(
@@ -609,13 +742,16 @@ router.post('/:id/refine', async (req, res) => {
 
     transformer.markModified('system');
     transformer.markModified('refinements');
+    if (isActive) transformer.markModified('appliedResources');
     await transformer.save();
 
     res.json({
       success: true,
+      refinementMode,
       assistantMessage: result.assistantMessage,
       patches: result.patches,
       changed,
+      habitMutations: isActive ? habitMutations : [],
       turnsRemaining: Transformer.MAX_REFINEMENTS - Math.floor(transformer.refinements.length / 2),
       transformer: transformer.toObject({ virtuals: true }),
     });
@@ -631,8 +767,117 @@ router.post('/:id/refine', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────
+// PATCH /api/transformers/:id/personalize
+// Update user personalization fields (icon, color, notes, pin).
+router.patch('/:id/personalize', async (req, res) => {
+  try {
+    const transformer = await Transformer.findOne({ _id: req.params.id, userId: req.user._id });
+    if (!transformer) {
+      return res.status(404).json({ success: false, error: 'Transformer not found' });
+    }
+
+    const allowed = ['icon', 'color', 'notes', 'isPinned'];
+    const updates = {};
+    for (const key of allowed) {
+      if (req.body[key] !== undefined) {
+        updates[`personalization.${key}`] = req.body[key];
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ success: false, error: 'No valid fields to update' });
+    }
+
+    const updated = await Transformer.findByIdAndUpdate(
+      transformer._id,
+      { $set: updates },
+      { new: true, runValidators: true }
+    ).populate('appliedResources.habitIds', 'name icon isActive isArchived');
+
+    res.json({ success: true, transformer: updated });
+  } catch (error) {
+    console.error('Error personalizing transformer:', error);
+    res.status(500).json({ success: false, error: 'Failed to update personalization' });
+  }
+});
+
+// POST /api/transformers/:id/discard
+// Clean discard with cascade options for active transformers.
+//   mode: "keep_habits" — archive transformer, leave habits untouched
+//         "cascade"     — archive transformer + archive all linked habits
+//         "delete_habits" — archive transformer + permanently delete linked habits & entries
+// Falls back to simple archive for non-active transformers.
+// ─────────────────────────────────────────────────────────
+router.post('/:id/discard', async (req, res) => {
+  try {
+    const { mode = 'keep_habits' } = req.body;
+
+    const transformer = await Transformer.findOne({
+      _id: req.params.id,
+      userId: req.user._id,
+    });
+
+    if (!transformer) {
+      return res.status(404).json({ success: false, error: 'Transformer not found' });
+    }
+
+    if (transformer.status === 'archived') {
+      return res.status(400).json({ success: false, error: 'Transformer is already archived.' });
+    }
+
+    const result = { habitsArchived: 0, habitsDeleted: 0, habitNames: [] };
+
+    // For active transformers with linked habits, handle cascade
+    if (transformer.status === 'active' && transformer.appliedResources?.habitIds?.length > 0) {
+      const habitIds = transformer.appliedResources.habitIds.map(
+        (h) => (typeof h === 'object' && h._id ? h._id : h)
+      );
+
+      if (mode === 'cascade') {
+        // Archive all linked habits
+        const habits = await Habit.find({ _id: { $in: habitIds }, userId: req.user._id });
+        for (const habit of habits) {
+          if (!habit.isArchived) {
+            habit.isArchived = true;
+            habit.isActive = false;
+            await habit.save();
+            result.habitsArchived++;
+            result.habitNames.push(habit.name);
+          }
+        }
+      } else if (mode === 'delete_habits') {
+        // Permanently delete habits and their entries
+        const habits = await Habit.find({ _id: { $in: habitIds }, userId: req.user._id });
+        const HabitEntry = require('../models/HabitEntry');
+        for (const habit of habits) {
+          await HabitEntry.deleteMany({ habitId: habit._id });
+          await Habit.deleteOne({ _id: habit._id });
+          result.habitsDeleted++;
+          result.habitNames.push(habit.name);
+        }
+      }
+      // mode === 'keep_habits' — do nothing to habits
+    }
+
+    // Archive the transformer itself
+    transformer.archive();
+    await transformer.save();
+
+    res.json({
+      success: true,
+      message: `Transformer discarded.${result.habitsArchived ? ` ${result.habitsArchived} habits archived.` : ''}${result.habitsDeleted ? ` ${result.habitsDeleted} habits deleted.` : ''}`,
+      mode,
+      ...result,
+    });
+  } catch (error) {
+    console.error('Error discarding transformer:', error);
+    res.status(500).json({ success: false, error: 'Failed to discard transformer' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────
 // DELETE /api/transformers/:id
-// Archive (soft delete) a transformer
+// Archive (soft delete) a transformer — simple version (kept for backward compat)
 // ─────────────────────────────────────────────────────────
 router.delete('/:id', async (req, res) => {
   try {

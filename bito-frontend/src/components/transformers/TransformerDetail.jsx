@@ -26,6 +26,7 @@ const TransformerDetail = ({
   onEditHabit,
   onRemoveHabit,
   onOpenStudio,
+  onPersonalize,
   error,
 }) => {
   const t = transformer;
@@ -58,8 +59,10 @@ const TransformerDetail = ({
 
   // Refinement turns info
   const turnsUsed = Math.floor((t.refinements?.length || 0) / 2);
-  const maxTurns = 5;
+  const maxTurns = 20;
   const turnsRemaining = maxTurns - turnsUsed;
+  const isActive = t.status === 'active';
+  const canRefine = (isPreview || isActive) && turnsRemaining > 0;
 
   return (
     <div className="flex flex-col h-full animate-fade-in">
@@ -74,7 +77,7 @@ const TransformerDetail = ({
       </button>
 
       {/* Category hero banner */}
-      <CategoryBanner transformer={t} />
+      <CategoryBanner transformer={t} onPersonalize={onPersonalize} />
 
       {/* Phase timeline */}
       <PhaseTimeline transformer={t} />
@@ -243,12 +246,12 @@ const TransformerDetail = ({
       )}
       </div>{/* end scrollable content */}
 
-      {/* Pinned action bar — always visible */}
+      {/* Pinned action bar — preview mode */}
       {isPreview && (
         <div className="flex-shrink-0 border-t border-[var(--color-border-primary)]/40 px-4 sm:px-6 py-4 bg-[var(--color-bg-primary)]">
           <div className="flex items-center gap-3">
             {/* Refine button */}
-            {onOpenStudio && turnsRemaining > 0 && (
+            {canRefine && onOpenStudio && (
               <button
                 onClick={() => onOpenStudio(t)}
                 className="h-12 px-5 rounded-xl text-sm font-spartan font-medium border border-[var(--color-border-primary)]/40 text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-all flex items-center gap-2"
@@ -282,6 +285,24 @@ const TransformerDetail = ({
               className="h-12 px-6 rounded-xl text-sm font-spartan text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
             >
               Discard
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Pinned action bar — active mode (living plan) */}
+      {isActive && canRefine && (
+        <div className="flex-shrink-0 border-t border-[var(--color-border-primary)]/40 px-4 sm:px-6 py-4 bg-[var(--color-bg-primary)]">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => onOpenStudio?.(t)}
+              className="flex-1 h-12 rounded-xl text-sm font-spartan font-medium border border-[var(--color-brand-500)]/30 text-[var(--color-text-primary)] hover:bg-[var(--color-brand-500)]/5 transition-all flex items-center justify-center gap-2"
+            >
+              <ChatBubbleIcon className="w-4 h-4 text-[var(--color-brand-500)]" />
+              Refine Living Plan
+              <span className="text-xs text-[var(--color-text-tertiary)]">
+                ({turnsRemaining} left)
+              </span>
             </button>
           </div>
         </div>
