@@ -76,7 +76,7 @@ const RefinementStudio = ({
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[var(--color-bg-primary)] animate-fade-in">
+    <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-[var(--color-bg-primary)] animate-fade-in">
       {/* ── Top bar ── */}
       <header className="flex items-center justify-between px-4 sm:px-6 h-14 border-b border-[var(--color-border-primary)]/20 flex-shrink-0">
         <div className="flex items-center gap-3">
@@ -120,14 +120,13 @@ const RefinementStudio = ({
       )}
 
       {/* ── Main area: chat + artifact panel ── */}
-      <div className="relative flex-1 min-h-0">
-        <div className="absolute inset-0 flex overflow-hidden">
-          {/* Chat pane — always visible, expands/shrinks */}
-          <div
-            className={`relative flex flex-col overflow-hidden transition-all duration-200 ease-in-out ${
-              showArtifact ? "w-1/2 sm:w-[55%] border-r border-[var(--color-border-primary)]/20" : "w-full"
-            }`}
-          >
+      <div className="h-[calc(100dvh-3.5rem)] flex overflow-hidden">
+        {/* Chat pane — always visible, expands/shrinks */}
+        <div
+          className={`flex flex-col h-full overflow-hidden transition-all duration-200 ease-in-out ${
+            showArtifact ? "w-1/2 sm:w-[55%] border-r border-[var(--color-border-primary)]/20" : "w-full"
+          }`}
+        >
             <RefinementChat
               refinements={transformer.refinements || []}
               turnsRemaining={turnsRemaining}
@@ -140,21 +139,20 @@ const RefinementStudio = ({
             />
           </div>
 
-          {/* Artifact panel — slides in from right */}
-          <div
-            className={`flex flex-col bg-[var(--color-bg-primary)] transition-all duration-200 ease-in-out overflow-hidden ${
-              showArtifact
-                ? "w-1/2 sm:w-[45%] opacity-100"
-                : "w-0 opacity-0"
-            }`}
-          >
-            {showArtifact && (
-              <PlanArtifact
-                transformer={transformer}
-                onClose={toggleArtifact}
-              />
-            )}
-          </div>
+        {/* Artifact panel — slides in from right */}
+        <div
+          className={`flex flex-col h-full bg-[var(--color-bg-primary)] transition-all duration-200 ease-in-out overflow-hidden ${
+            showArtifact
+              ? "w-1/2 sm:w-[45%] opacity-100"
+              : "w-0 opacity-0"
+          }`}
+        >
+          {showArtifact && (
+            <PlanArtifact
+              transformer={transformer}
+              onClose={toggleArtifact}
+            />
+          )}
         </div>
 
         {/* Mobile artifact overlay */}
