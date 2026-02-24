@@ -4,17 +4,24 @@ import {
   ReloadIcon,
   PersonIcon,
   MagicWandIcon,
+  FileTextIcon,
+  ChevronRightIcon,
 } from "@radix-ui/react-icons";
 
 /**
  * RefinementChat — chat panel for the conversational refinement studio.
- * Shows message history + input bar. Calls onSend(message) when user submits.
+ * Shows message history + inline artifact cards after AI replies.
+ * Calls onSend(message) when user submits, onToggleArtifact() to open/close plan panel.
  */
 const RefinementChat = ({
   refinements = [],
   turnsRemaining = 5,
   onSend,
   isSending = false,
+  planName = "Plan",
+  planIcon = "🎯",
+  onToggleArtifact,
+  isArtifactOpen = false,
 }) => {
   const [input, setInput] = useState("");
   const bottomRef = useRef(null);
@@ -91,32 +98,64 @@ const RefinementChat = ({
         )}
 
         {/* Messages */}
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex gap-2.5 ${
-              msg.role === "user" ? "justify-end" : "justify-start"
-            }`}
-          >
-            {msg.role === "assistant" && (
-              <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[var(--color-brand-500)]/10 flex items-center justify-center mt-0.5">
-                <MagicWandIcon className="w-3.5 h-3.5 text-[var(--color-brand-500)]" />
-              </div>
-            )}
-
+        {messages.map((msg, idx) => (
+          <div key={msg.id}>
             <div
-              className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm font-spartan ${
-                msg.role === "user"
-                  ? "bg-[var(--color-brand-600)] text-white rounded-br-md"
-                  : "bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] rounded-bl-md"
+              className={`flex gap-2.5 ${
+                msg.role === "user" ? "justify-end" : "justify-start"
               }`}
             >
-              {msg.content}
+              {msg.role === "assistant" && (
+                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[var(--color-brand-500)]/10 flex items-center justify-center mt-0.5">
+                  <MagicWandIcon className="w-3.5 h-3.5 text-[var(--color-brand-500)]" />
+                </div>
+              )}
+
+              <div
+                className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm font-spartan ${
+                  msg.role === "user"
+                    ? "bg-[var(--color-brand-600)] text-white rounded-br-md"
+                    : "bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] rounded-bl-md"
+                }`}
+              >
+                {msg.content}
+              </div>
+
+              {msg.role === "user" && (
+                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[var(--color-surface-hover)] flex items-center justify-center mt-0.5">
+                  <PersonIcon className="w-3.5 h-3.5 text-[var(--color-text-secondary)]" />
+                </div>
+              )}
             </div>
 
-            {msg.role === "user" && (
-              <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[var(--color-surface-hover)] flex items-center justify-center mt-0.5">
-                <PersonIcon className="w-3.5 h-3.5 text-[var(--color-text-secondary)]" />
+            {/* Inline artifact card — after assistant messages */}
+            {msg.role === "assistant" && (
+              <div className="ml-9 mt-2">
+                <button
+                  onClick={onToggleArtifact}
+                  className={`w-full max-w-[280px] flex items-center gap-3 px-3.5 py-2.5 rounded-xl border transition-all text-left group ${
+                    isArtifactOpen
+                      ? "border-[var(--color-brand-500)]/40 bg-[var(--color-brand-500)]/5"
+                      : "border-[var(--color-border-primary)]/30 bg-[var(--color-surface-elevated)] hover:border-[var(--color-brand-500)]/30 hover:bg-[var(--color-surface-hover)]"
+                  }`}
+                >
+                  <div className="w-8 h-8 rounded-lg bg-[var(--color-brand-500)]/10 flex items-center justify-center flex-shrink-0">
+                    <FileTextIcon className="w-4 h-4 text-[var(--color-brand-500)]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-spartan font-semibold text-[var(--color-text-primary)] truncate">
+                      {planIcon} {planName}
+                    </p>
+                    <p className="text-[10px] font-spartan text-[var(--color-text-tertiary)]">
+                      Plan · Updated
+                    </p>
+                  </div>
+                  <ChevronRightIcon
+                    className={`w-3.5 h-3.5 text-[var(--color-text-tertiary)] transition-transform ${
+                      isArtifactOpen ? "rotate-180" : "group-hover:translate-x-0.5"
+                    }`}
+                  />
+                </button>
               </div>
             )}
           </div>
