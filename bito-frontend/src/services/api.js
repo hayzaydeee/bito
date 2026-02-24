@@ -1014,11 +1014,22 @@ const api = {
 
 // ── Transformers API ──
 export const transformersAPI = {
-  // Generate a transformer from goal text
-  generate: async (goalText) => {
-    return apiRequest('/api/transformers/generate', {
+  // Clarify — assess if AI needs more context before generating
+  clarify: async (goalText) => {
+    return apiRequest('/api/transformers/clarify', {
       method: 'POST',
       body: JSON.stringify({ goalText }),
+    });
+  },
+
+  // Generate a transformer from goal text (optionally with clarification answers)
+  // Returns { success, goalType, transformer? (single), transformers? (multi), suiteId?, suiteName? }
+  generate: async (goalText, clarificationAnswers = null) => {
+    const body = { goalText };
+    if (clarificationAnswers) body.clarificationAnswers = clarificationAnswers;
+    return apiRequest('/api/transformers/generate', {
+      method: 'POST',
+      body: JSON.stringify(body),
     });
   },
 

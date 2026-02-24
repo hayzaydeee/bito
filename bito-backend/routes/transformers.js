@@ -10,13 +10,45 @@ const transformerEngine = require('../services/transformerEngine');
 router.use(authenticateJWT);
 
 // ─────────────────────────────────────────────────────────
+// POST /api/transformers/clarify
+// Assess if clarifying questions are needed before generation
+// ─────────────────────────────────────────────────────────
+router.post('/clarify', async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { goalText } = req.body;
+
+    if (!goalText || typeof goalText !== 'string' || goalText.trim().length < 5) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please provide a goal with at least 5 characters.',
+      });
+    }
+
+    if (!transformerEngine.isAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'AI is temporarily unavailable. Please try again later.',
+      });
+    }
+
+    const result = await transformerEngine.clarify(goalText.trim(), userId);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('Clarification error:', error.message);
+    // Non-fatal — frontend can skip clarification and go straight to generate
+    res.json({ success: true, needsClarification: false, reasoning: 'Assessment unavailable.', goalAnalysis: null });
+  }
+});
+
+// ─────────────────────────────────────────────────────────
 // POST /api/transformers/generate
 // Generate a transformer from goal text, return preview
 // ─────────────────────────────────────────────────────────
 router.post('/generate', async (req, res) => {
   try {
     const userId = req.user._id;
-    const { goalText } = req.body;
+    const { goalText, clarificationAnswers } = req.body;
 
     if (!goalText || typeof goalText !== 'string' || goalText.trim().length < 5) {
       return res.status(400).json({
@@ -53,27 +85,62 @@ router.post('/generate', async (req, res) => {
     }
 
     // ── Generate ──
-    const preview = await transformerEngine.generate(goalText.trim(), userId);
+    const result = await transformerEngine.generate(goalText.trim(), userId, clarificationAnswers);
 
-    // ── Save as preview transformer ──
-    const transformer = new Transformer({
-      userId,
-      goal: preview.goal,
-      system: preview.system,
-      status: 'preview',
-      generation: preview.generation,
-    });
-    await transformer.save();
+    if (result.goalType === 'multi' && Array.isArray(result.previews)) {
+      // ── Suite: create multiple linked transformers ──
+      const savedTransformers = [];
+      for (const preview of result.previews) {
+        const transformer = new Transformer({
+          userId,
+          goal: preview.goal,
+          system: preview.system,
+          status: 'preview',
+          generation: preview.generation,
+          suiteId: preview.suiteId || result.suiteId,
+          suiteIndex: preview.suiteIndex,
+          suiteName: preview.suiteName,
+        });
+        await transformer.save();
+        savedTransformers.push(transformer.toObject({ virtuals: true }));
+      }
 
-    // ── Increment usage counter ──
-    await User.findByIdAndUpdate(userId, {
-      $inc: { 'subscription.usage.generationsThisMonth': 1 },
-    });
+      // ── Increment usage counter (counts as 1 generation even for suites) ──
+      await User.findByIdAndUpdate(userId, {
+        $inc: { 'subscription.usage.generationsThisMonth': 1 },
+      });
 
-    res.status(201).json({
-      success: true,
-      transformer: transformer.toObject({ virtuals: true }),
-    });
+      res.status(201).json({
+        success: true,
+        goalType: 'multi',
+        suiteId: result.suiteId,
+        suiteName: result.suiteName,
+        transformers: savedTransformers,
+      });
+    } else {
+      // ── Single goal: backward-compatible path ──
+      const preview = result.preview || result; // support both new and legacy shapes
+
+      const transformer = new Transformer({
+        userId,
+        goal: preview.goal,
+        system: preview.system,
+        status: 'preview',
+        generation: preview.generation,
+      });
+      await transformer.save();
+
+      // ── Increment usage counter ──
+      await User.findByIdAndUpdate(userId, {
+        $inc: { 'subscription.usage.generationsThisMonth': 1 },
+      });
+
+      res.status(201).json({
+        success: true,
+        goalType: 'single',
+        transformer: transformer.toObject({ virtuals: true }),
+      });
+    }
   } catch (error) {
     console.error('Transformer generation error:', error.message, error.stack);
 
@@ -117,7 +184,7 @@ router.get('/', async (req, res) => {
     }
 
     const transformers = await Transformer.find(filter)
-      .sort({ createdAt: -1 })
+      .sort({ suiteId: 1, suiteIndex: 1, createdAt: -1 })
       .lean({ virtuals: true });
 
     res.json({ success: true, transformers });

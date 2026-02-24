@@ -8,6 +8,7 @@ import TransformerDetail from "./TransformerDetail";
 import GoalInput from "./GoalInput";
 import GeneratingOverlay from "./GeneratingOverlay";
 import RefinementStudio from "./RefinementStudio";
+import SuitePreview from "./SuitePreview";
 
 /**
  * TransformersPage — orchestrator component.
@@ -27,9 +28,12 @@ const TransformersPage = () => {
   const [goalText, setGoalText] = useState("");
   const [generating, setGenerating] = useState(false);
   const [generatingStep, setGeneratingStep] = useState(0);
+  const [clarification, setClarification] = useState(null); // { questions, reasoning, goalAnalysis }
+  const [clarifyLoading, setClarifyLoading] = useState(false);
 
   // Preview / detail
   const [activeTransformer, setActiveTransformer] = useState(null);
+  const [activeSuite, setActiveSuite] = useState(null); // { suiteId, suiteName, transformers[] }
   const [applyLoading, setApplyLoading] = useState(false);
   const [archiveLoading, setArchiveLoading] = useState(null);
 
@@ -53,9 +57,43 @@ const TransformersPage = () => {
     fetchTransformers();
   }, [fetchTransformers]);
 
-  // ── Generate ──
+  // ── Generate (two-step: clarify → generate) ──
   const handleGenerate = async () => {
     if (!goalText.trim() || goalText.trim().length < 5) return;
+
+    // If already have clarification answers pending, go straight to generation
+    // Otherwise, try the clarification round first
+    if (!clarification) {
+      try {
+        setClarifyLoading(true);
+        setError(null);
+        const res = await transformersAPI.clarify(goalText.trim());
+        if (res.success && res.needsClarification && res.questions?.length > 0) {
+          setClarification({
+            questions: res.questions,
+            reasoning: res.reasoning,
+            goalAnalysis: res.goalAnalysis || null,
+            answers: res.questions.map(() => ""),
+          });
+          setClarifyLoading(false);
+          return; // Stop here — show clarification UI
+        }
+        // Even if no questions needed, store goalAnalysis for display
+        if (res.goalAnalysis) {
+          setClarification((prev) => prev ? { ...prev, goalAnalysis: res.goalAnalysis } : null);
+        }
+      } catch {
+        // Clarification failed — proceed to generate anyway
+      } finally {
+        setClarifyLoading(false);
+      }
+    }
+
+    // Proceed with generation (optionally with clarification answers)
+    await doGenerate();
+  };
+
+  const doGenerate = async (answers = null) => {
     try {
       setGenerating(true);
       setError(null);
@@ -65,13 +103,39 @@ const TransformersPage = () => {
         setGeneratingStep((s) => Math.min(s + 1, 3));
       }, 1500);
 
-      const res = await transformersAPI.generate(goalText.trim());
+      // Build clarification answers if provided
+      let clarificationAnswers = null;
+      const answersSource = answers || clarification?.answers;
+      if (clarification?.questions && answersSource) {
+        clarificationAnswers = clarification.questions
+          .map((q, i) => ({ question: q.question, answer: answersSource[i] }))
+          .filter((qa) => qa.answer?.trim());
+      }
+
+      const res = await transformersAPI.generate(
+        goalText.trim(),
+        clarificationAnswers?.length > 0 ? clarificationAnswers : null
+      );
       clearInterval(stepTimer);
 
       if (res.success) {
-        setActiveTransformer(res.transformer);
-        setView("preview");
+        if (res.goalType === "multi" && Array.isArray(res.transformers)) {
+          // Suite — show suite preview
+          setActiveSuite({
+            suiteId: res.suiteId,
+            suiteName: res.suiteName,
+            transformers: res.transformers,
+          });
+          setActiveTransformer(null);
+          setView("preview");
+        } else {
+          // Single — existing flow
+          setActiveTransformer(res.transformer);
+          setActiveSuite(null);
+          setView("preview");
+        }
         setGoalText("");
+        setClarification(null);
         fetchTransformers();
       } else {
         setError(res.error || "Generation failed");
@@ -84,6 +148,24 @@ const TransformersPage = () => {
       setGenerating(false);
       setGeneratingStep(0);
     }
+  };
+
+  const handleClarificationSubmit = async () => {
+    await doGenerate();
+  };
+
+  const handleSkipClarification = async () => {
+    setClarification(null);
+    await doGenerate([]);
+  };
+
+  const updateClarificationAnswer = (index, value) => {
+    setClarification((prev) => {
+      if (!prev) return prev;
+      const newAnswers = [...prev.answers];
+      newAnswers[index] = value;
+      return { ...prev, answers: newAnswers };
+    });
   };
 
   // ── Apply ──
@@ -215,6 +297,37 @@ const TransformersPage = () => {
     0
   );
 
+  // ── Group transformers: suite members together, standalone separate ──
+  const { suiteGroups, standaloneTransformers } = (() => {
+    const suites = {};
+    const standalone = [];
+    for (const t of transformers) {
+      if (t.suiteId) {
+        if (!suites[t.suiteId]) {
+          suites[t.suiteId] = {
+            suiteId: t.suiteId,
+            suiteName: t.suiteName || "Goal Suite",
+            transformers: [],
+          };
+        }
+        suites[t.suiteId].transformers.push(t);
+      } else {
+        standalone.push(t);
+      }
+    }
+    // Sort suites by newest first (by first transformer's createdAt)
+    const suiteList = Object.values(suites).sort(
+      (a, b) =>
+        new Date(b.transformers[0]?.createdAt) -
+        new Date(a.transformers[0]?.createdAt)
+    );
+    // Sort members within each suite by suiteIndex
+    suiteList.forEach((s) =>
+      s.transformers.sort((a, b) => (a.suiteIndex ?? 0) - (b.suiteIndex ?? 0))
+    );
+    return { suiteGroups: suiteList, standaloneTransformers: standalone };
+  })();
+
   /* ═══════════════════════════════════════════
      RENDER
      ═══════════════════════════════════════════ */
@@ -231,7 +344,44 @@ const TransformersPage = () => {
   }
 
   // ── Preview / Detail ──
-  if ((view === "preview" || view === "detail") && activeTransformer) {
+  if ((view === "preview" || view === "detail") && (activeTransformer || activeSuite)) {
+    // Suite preview
+    if (activeSuite && !activeTransformer) {
+      return (
+        <div className="min-h-screen page-container px-4 sm:px-6 py-10">
+          <div className="max-w-5xl mx-auto">
+            <SuitePreview
+              suite={activeSuite}
+              onBack={() => {
+                setView("list");
+                setActiveSuite(null);
+              }}
+              onOpenTransformer={(t) => {
+                setActiveTransformer(t);
+              }}
+              onApplyAll={async () => {
+                try {
+                  setApplyLoading(true);
+                  for (const t of activeSuite.transformers) {
+                    await transformersAPI.apply(t._id);
+                  }
+                  setActiveSuite(null);
+                  setView("list");
+                  fetchTransformers();
+                } catch (err) {
+                  setError(err.message || "Failed to apply suite");
+                } finally {
+                  setApplyLoading(false);
+                }
+              }}
+              applyLoading={applyLoading}
+              onArchive={handleArchive}
+              error={error}
+            />
+          </div>
+        </div>
+      );
+    }
     // When studio is open, render it exclusively — no page content behind it
     if (studioTransformer) {
       return (
@@ -250,8 +400,13 @@ const TransformersPage = () => {
           <TransformerDetail
             transformer={activeTransformer}
             onBack={() => {
-              setView("list");
-              setActiveTransformer(null);
+              if (activeSuite) {
+                // Return to suite preview
+                setActiveTransformer(null);
+              } else {
+                setView("list");
+                setActiveTransformer(null);
+              }
             }}
             onApply={handleApply}
             applyLoading={applyLoading}
@@ -275,8 +430,17 @@ const TransformersPage = () => {
             goalText={goalText}
             setGoalText={setGoalText}
             onGenerate={handleGenerate}
-            onBack={() => setView("list")}
+            onBack={() => {
+              setView("list");
+              setClarification(null);
+            }}
             error={error}
+            clarification={clarification}
+            clarifyLoading={clarifyLoading}
+            onClarificationSubmit={handleClarificationSubmit}
+            onSkipClarification={handleSkipClarification}
+            onUpdateAnswer={updateClarificationAnswer}
+            goalAnalysis={clarification?.goalAnalysis}
           />
         </div>
       </div>
@@ -353,17 +517,52 @@ const TransformersPage = () => {
 
         {/* Transformer grid */}
         {!loading && transformers.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {transformers.map((t, i) => (
-              <TransformerCard
-                key={t._id}
-                transformer={t}
-                index={i}
-                onOpen={openDetail}
-                onArchive={handleArchive}
-                archiveLoading={archiveLoading}
-              />
+          <div className="space-y-6">
+            {/* Suite groups */}
+            {suiteGroups.map((suite) => (
+              <div key={suite.suiteId} className="space-y-2">
+                <div className="flex items-center gap-2 px-1">
+                  <span className="text-xs font-spartan font-semibold text-purple-400 uppercase tracking-wider">
+                    Suite
+                  </span>
+                  <span className="text-xs font-spartan text-[var(--color-text-tertiary)]">
+                    · {suite.suiteName}
+                  </span>
+                  <div className="flex-1 h-px bg-purple-500/10" />
+                  <span className="text-[10px] font-spartan text-[var(--color-text-tertiary)]">
+                    {suite.transformers.length} linked
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pl-3 border-l-2 border-purple-500/20">
+                  {suite.transformers.map((t, i) => (
+                    <TransformerCard
+                      key={t._id}
+                      transformer={t}
+                      index={i}
+                      onOpen={openDetail}
+                      onArchive={handleArchive}
+                      archiveLoading={archiveLoading}
+                    />
+                  ))}
+                </div>
+              </div>
             ))}
+
+            {/* Standalone transformers */}
+            {standaloneTransformers.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {standaloneTransformers.map((t, i) => (
+                  <TransformerCard
+                    key={t._id}
+                    transformer={t}
+                    index={i}
+                    onOpen={openDetail}
+                    onArchive={handleArchive}
+                    archiveLoading={archiveLoading}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

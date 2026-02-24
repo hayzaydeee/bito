@@ -69,6 +69,23 @@ const transformerSchema = new mongoose.Schema(
       default: null, // null = personal transformer
     },
 
+    // ── Suite linking (multi-goal support) ──
+    suiteId: {
+      type: String,
+      default: null, // non-null = part of a suite; all suite members share this ID
+      index: true,
+    },
+    suiteIndex: {
+      type: Number,
+      default: null, // order within the suite (0-based)
+    },
+    suiteName: {
+      type: String,
+      default: null, // human-readable suite group name
+      trim: true,
+      maxlength: 200,
+    },
+
     // ── Input ──
     goal: {
       text: {
@@ -97,6 +114,20 @@ const transformerSchema = new mongoose.Schema(
         targetDate: { type: Date, default: null },
         constraints: [{ type: String }],
         keywords: [{ type: String }],
+        // Multi-goal: if this transformer was generated from a compound goal,
+        // subGoals records the full decomposition for context
+        goalType: {
+          type: String,
+          enum: ['single', 'multi'],
+          default: 'single',
+        },
+        subGoals: [
+          {
+            label: { type: String, trim: true, maxlength: 200 },
+            intent: { type: String, default: 'custom' },
+            keywords: [{ type: String }],
+          },
+        ],
       },
     },
 
@@ -211,6 +242,7 @@ transformerSchema.statics.MAX_REFINEMENTS = 5; // 5 user turns = 10 messages tot
 // ── Indexes ──
 transformerSchema.index({ userId: 1, status: 1 });
 transformerSchema.index({ userId: 1, createdAt: -1 });
+transformerSchema.index({ suiteId: 1 }, { sparse: true });
 
 // ── Virtuals ──
 
