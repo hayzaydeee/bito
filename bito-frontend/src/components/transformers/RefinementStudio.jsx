@@ -120,39 +120,41 @@ const RefinementStudio = ({
       )}
 
       {/* ── Main area: chat + artifact panel ── */}
-      <div className="flex-1 flex overflow-hidden min-h-0">
-        {/* Chat pane — always visible, expands/shrinks */}
-        <div
-          className={`flex flex-col h-full min-h-0 overflow-hidden transition-all duration-200 ease-in-out ${
-            showArtifact ? "w-1/2 sm:w-[55%] border-r border-[var(--color-border-primary)]/20" : "w-full"
-          }`}
-        >
-          <RefinementChat
-            refinements={transformer.refinements || []}
-            turnsRemaining={turnsRemaining}
-            onSend={handleSend}
-            isSending={isSending}
-            planName={sys.name || "Untitled Plan"}
-            planIcon={sys.icon || "🎯"}
-            onToggleArtifact={toggleArtifact}
-            isArtifactOpen={showArtifact}
-          />
-        </div>
-
-        {/* Artifact panel — slides in from right */}
-        <div
-          className={`flex flex-col bg-[var(--color-bg-primary)] transition-all duration-200 ease-in-out overflow-hidden ${
-            showArtifact
-              ? "w-1/2 sm:w-[45%] opacity-100"
-              : "w-0 opacity-0"
-          }`}
-        >
-          {showArtifact && (
-            <PlanArtifact
-              transformer={transformer}
-              onClose={toggleArtifact}
+      <div className="relative flex-1 min-h-0">
+        <div className="absolute inset-0 flex overflow-hidden">
+          {/* Chat pane — always visible, expands/shrinks */}
+          <div
+            className={`relative flex flex-col overflow-hidden transition-all duration-200 ease-in-out ${
+              showArtifact ? "w-1/2 sm:w-[55%] border-r border-[var(--color-border-primary)]/20" : "w-full"
+            }`}
+          >
+            <RefinementChat
+              refinements={transformer.refinements || []}
+              turnsRemaining={turnsRemaining}
+              onSend={handleSend}
+              isSending={isSending}
+              planName={sys.name || "Untitled Plan"}
+              planIcon={sys.icon || "🎯"}
+              onToggleArtifact={toggleArtifact}
+              isArtifactOpen={showArtifact}
             />
-          )}
+          </div>
+
+          {/* Artifact panel — slides in from right */}
+          <div
+            className={`flex flex-col bg-[var(--color-bg-primary)] transition-all duration-200 ease-in-out overflow-hidden ${
+              showArtifact
+                ? "w-1/2 sm:w-[45%] opacity-100"
+                : "w-0 opacity-0"
+            }`}
+          >
+            {showArtifact && (
+              <PlanArtifact
+                transformer={transformer}
+                onClose={toggleArtifact}
+              />
+            )}
+          </div>
         </div>
 
         {/* Mobile artifact overlay */}
