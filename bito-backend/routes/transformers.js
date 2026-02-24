@@ -493,8 +493,9 @@ router.post('/:id/refine', async (req, res) => {
       });
     }
 
-    // Check refinement limit
-    const turnsRemaining = Transformer.MAX_REFINEMENTS - (transformer.refinements?.length || 0);
+    // Check refinement limit (each turn = 1 user + 1 assistant message)
+    const turnsUsed = Math.floor((transformer.refinements?.length || 0) / 2);
+    const turnsRemaining = Transformer.MAX_REFINEMENTS - turnsUsed;
     if (turnsRemaining <= 0) {
       return res.status(400).json({
         success: false,
