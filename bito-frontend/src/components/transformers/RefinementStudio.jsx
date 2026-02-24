@@ -87,10 +87,10 @@ const RefinementStudio = ({
             <Cross2Icon className="w-4 h-4 text-[var(--color-text-secondary)]" />
           </button>
           <div>
-            <h2 className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] truncate max-w-[200px] sm:max-w-none">
+            <h2 className="text-sm font-spartan font-bold text-[var(--color-text-primary)] truncate max-w-[200px] sm:max-w-none">
               {sys.icon} {sys.name || "Untitled Plan"}
             </h2>
-            <p className="text-[10px] font-spartan text-[var(--color-text-tertiary)]">
+            <p className="text-xs font-spartan text-[var(--color-text-secondary)]">
               Refinement Studio · {turnsRemaining} turns left
             </p>
           </div>

@@ -66,21 +66,21 @@ const RefinementChat = ({
       <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
         {/* Welcome message if no messages */}
         {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
-            <div className="w-12 h-12 rounded-full bg-[var(--color-brand-500)]/10 flex items-center justify-center">
-              <MagicWandIcon className="w-6 h-6 text-[var(--color-brand-500)]" />
+          <div className="flex flex-col items-center justify-center h-full text-center space-y-5">
+            <div className="w-14 h-14 rounded-full bg-[var(--color-brand-500)]/15 flex items-center justify-center">
+              <MagicWandIcon className="w-7 h-7 text-[var(--color-brand-500)]" />
             </div>
             <div>
-              <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)]">
+              <p className="text-base font-spartan font-bold text-[var(--color-text-primary)]">
                 Refine Your Plan
               </p>
-              <p className="text-xs font-spartan text-[var(--color-text-tertiary)] mt-1 max-w-[240px]">
+              <p className="text-sm font-spartan text-[var(--color-text-secondary)] mt-1.5 max-w-[280px]">
                 Tell me what to change — add habits, adjust difficulty, restructure phases, or anything else.
               </p>
             </div>
 
             {/* Suggestion chips */}
-            <div className="flex flex-wrap justify-center gap-2 max-w-[300px]">
+            <div className="flex flex-wrap justify-center gap-2.5 max-w-[380px]">
               {suggestions.map((s) => (
                 <button
                   key={s}
@@ -88,7 +88,7 @@ const RefinementChat = ({
                     setInput(s);
                     inputRef.current?.focus();
                   }}
-                  className="px-3 py-1.5 rounded-full text-xs font-spartan text-[var(--color-text-secondary)] bg-[var(--color-surface-hover)] hover:bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 transition-colors"
+                  className="px-4 py-2 rounded-full text-sm font-spartan text-[var(--color-text-primary)] bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/30 transition-colors"
                 >
                   {s}
                 </button>
@@ -106,52 +106,52 @@ const RefinementChat = ({
               }`}
             >
               {msg.role === "assistant" && (
-                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[var(--color-brand-500)]/10 flex items-center justify-center mt-0.5">
-                  <MagicWandIcon className="w-3.5 h-3.5 text-[var(--color-brand-500)]" />
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--color-brand-500)]/15 flex items-center justify-center mt-0.5">
+                  <MagicWandIcon className="w-4 h-4 text-[var(--color-brand-500)]" />
                 </div>
               )}
 
               <div
-                className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm font-spartan ${
+                className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm font-spartan leading-relaxed ${
                   msg.role === "user"
                     ? "bg-[var(--color-brand-600)] text-white rounded-br-md"
-                    : "bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] rounded-bl-md"
+                    : "bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] rounded-bl-md border border-[var(--color-border-primary)]/15"
                 }`}
               >
                 {msg.content}
               </div>
 
               {msg.role === "user" && (
-                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[var(--color-surface-hover)] flex items-center justify-center mt-0.5">
-                  <PersonIcon className="w-3.5 h-3.5 text-[var(--color-text-secondary)]" />
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 flex items-center justify-center mt-0.5">
+                  <PersonIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
                 </div>
               )}
             </div>
 
             {/* Inline artifact card — after assistant messages */}
             {msg.role === "assistant" && (
-              <div className="ml-9 mt-2">
+              <div className="ml-10 mt-2.5">
                 <button
                   onClick={onToggleArtifact}
-                  className={`w-full max-w-[280px] flex items-center gap-3 px-3.5 py-2.5 rounded-xl border transition-all text-left group ${
+                  className={`w-full max-w-[300px] flex items-center gap-3 px-4 py-3 rounded-xl border transition-all text-left group ${
                     isArtifactOpen
-                      ? "border-[var(--color-brand-500)]/40 bg-[var(--color-brand-500)]/5"
-                      : "border-[var(--color-border-primary)]/30 bg-[var(--color-surface-elevated)] hover:border-[var(--color-brand-500)]/30 hover:bg-[var(--color-surface-hover)]"
+                      ? "border-[var(--color-brand-500)]/40 bg-[var(--color-brand-500)]/10"
+                      : "border-[var(--color-border-primary)]/30 bg-[var(--color-surface-elevated)] hover:border-[var(--color-brand-500)]/30 hover:bg-[var(--color-brand-500)]/5"
                   }`}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-[var(--color-brand-500)]/10 flex items-center justify-center flex-shrink-0">
-                    <FileTextIcon className="w-4 h-4 text-[var(--color-brand-500)]" />
+                  <div className="w-9 h-9 rounded-lg bg-[var(--color-brand-500)]/15 flex items-center justify-center flex-shrink-0">
+                    <FileTextIcon className="w-4.5 h-4.5 text-[var(--color-brand-500)]" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-spartan font-semibold text-[var(--color-text-primary)] truncate">
+                    <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] truncate">
                       {planIcon} {planName}
                     </p>
-                    <p className="text-[10px] font-spartan text-[var(--color-text-tertiary)]">
+                    <p className="text-xs font-spartan text-[var(--color-text-secondary)]">
                       Plan · Updated
                     </p>
                   </div>
                   <ChevronRightIcon
-                    className={`w-3.5 h-3.5 text-[var(--color-text-tertiary)] transition-transform ${
+                    className={`w-4 h-4 text-[var(--color-text-secondary)] transition-transform ${
                       isArtifactOpen ? "rotate-180" : "group-hover:translate-x-0.5"
                     }`}
                   />
@@ -164,8 +164,8 @@ const RefinementChat = ({
         {/* Typing indicator */}
         {isSending && (
           <div className="flex gap-2.5 justify-start">
-            <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[var(--color-brand-500)]/10 flex items-center justify-center">
-              <MagicWandIcon className="w-3.5 h-3.5 text-[var(--color-brand-500)]" />
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--color-brand-500)]/15 flex items-center justify-center">
+              <MagicWandIcon className="w-4 h-4 text-[var(--color-brand-500)]" />
             </div>
             <div className="bg-[var(--color-surface-hover)] rounded-2xl rounded-bl-md px-4 py-3 flex gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-tertiary)] animate-bounce" style={{ animationDelay: "0ms" }} />
@@ -179,13 +179,13 @@ const RefinementChat = ({
       </div>
 
       {/* Input bar — fixed at bottom */}
-      <div className="flex-shrink-0 p-3 border-t border-[var(--color-border-primary)]/20 bg-[var(--color-bg-primary)]">
+      <div className="flex-shrink-0 px-4 py-3 border-t border-[var(--color-border-primary)]/30 bg-[var(--color-surface-elevated)]/50">
         {turnsRemaining <= 0 ? (
-          <p className="text-xs font-spartan text-[var(--color-text-tertiary)] text-center py-2">
+          <p className="text-sm font-spartan text-[var(--color-text-secondary)] text-center py-2">
             No refinement turns remaining. Apply the plan or regenerate.
           </p>
         ) : (
-          <form onSubmit={handleSubmit} className="flex items-center gap-2">
+          <form onSubmit={handleSubmit} className="flex items-center gap-2.5">
             <input
               ref={inputRef}
               type="text"
@@ -193,12 +193,12 @@ const RefinementChat = ({
               onChange={(e) => setInput(e.target.value)}
               disabled={isSending}
               placeholder="Describe what to change..."
-              className="flex-1 h-10 px-4 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] outline-none focus:border-[var(--color-brand-500)]/50 transition-colors disabled:opacity-50"
+              className="flex-1 h-11 px-4 rounded-xl bg-[var(--color-bg-primary)] border border-[var(--color-border-primary)]/30 text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] outline-none focus:border-[var(--color-brand-500)]/50 focus:ring-1 focus:ring-[var(--color-brand-500)]/20 transition-all disabled:opacity-50"
             />
             <button
               type="submit"
               disabled={!input.trim() || isSending}
-              className="h-10 w-10 rounded-xl bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white flex items-center justify-center transition-all disabled:opacity-30"
+              className="h-11 w-11 rounded-xl bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white flex items-center justify-center transition-all disabled:opacity-30 hover:shadow-md hover:shadow-[var(--color-brand-600)]/20"
             >
               {isSending ? (
                 <ReloadIcon className="w-4 h-4 animate-spin" />
@@ -208,7 +208,7 @@ const RefinementChat = ({
             </button>
           </form>
         )}
-        <p className="text-[10px] font-spartan text-[var(--color-text-tertiary)] text-center mt-1.5">
+        <p className="text-xs font-spartan text-[var(--color-text-tertiary)] text-center mt-2">
           {turnsRemaining} refinement{turnsRemaining !== 1 ? "s" : ""} remaining
         </p>
       </div>
