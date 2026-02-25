@@ -1,365 +1,183 @@
-# Bito - Smart Collaborative Habit Tracking 🎯
+# Bito
 
-[![Web App](https://img.shields.io/badge/Web%20App-bito.works-blue?style=for-the-badge)](https://bito.works)
-[![Frontend](https://img.shields.io/badge/Frontend-React%2019-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)
-[![Backend](https://img.shields.io/badge/Backend-Node.js-339933?style=for-the-badge&logo=node.js)](https://nodejs.org/)
-[![Database](https://img.shields.io/badge/Database-MongoDB-47A248?style=for-the-badge&logo=mongodb)](https://mongodb.com/)
+[![Web App](https://img.shields.io/badge/Web_App-bito.works-7c3aed?style=for-the-badge)](https://bito.works)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
+[![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=for-the-badge&logo=node.js)](https://nodejs.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb)](https://mongodb.com/)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
-> **Transform habit formation from a solo struggle into a shared journey of growth and accountability.**
+> AI-powered habit tracking with collaborative workspaces, rich journaling, and a Transformers system that converts natural-language goals into personalized habit plans.
 
-Bito is a next-generation habit tracking platform that combines the power of customizable dashboards, real-time collaboration, to make building positive habits more effective and enjoyable than ever before.
+**[bito.works](https://bito.works)**
 
-## 🌟 What Makes Bito Special
+---
 
-**🎨 Fully Customizable Dashboards**  
-Create your perfect tracking experience with drag-and-drop widgets, resizable components, and personalized layouts that adapt to your workflow.
+## Features
 
-**👥 Real-Time Collaboration**  
-Build habits together with friends, family, or teams through shared workspaces, live updates, and social accountability features.
+### AI Transformers
+Describe a goal in plain language and Bito generates a complete habit system — structured phases, daily habits, and milestones. Refine iteratively with AI, advance through phases as you progress, and apply the plan to create trackable habits automatically.
 
+### Habit Tracking
+Create habits with categories, schedules, and targets. Track daily or weekly with streaks, completion stats, mood, and notes. Archive habits you've outgrown.
 
-**📊 Rich Analytics & Insights**  
-Beautiful visualizations including streak charts, completion heatmaps, progress analytics, and performance leaderboards.
+### Journaling
+Rich-text journaling powered by BlockNote with micro and longform entry types, inline image uploads via Cloudinary, habit threading, full-text search, and reusable templates.
 
-**🔗 Smart Integrations**  
-Seamlessly import data from existing systems with our LLM-powered CSV analyzer that understands any data structure.
+### Collaborative Workspaces
+Create shared spaces for teams, families, or friends. Role-based access (owner / admin / member / viewer), token-based invitations, activity feeds, member dashboards, and workspace-scoped habits that members can adopt.
 
-## 🚀 Web App
+### Challenges & Encouragements
+Launch challenges within a workspace — members join, track progress, and compete on leaderboards. Send peer-to-peer encouragements and kudos to keep each other accountable.
 
-**Visit [bito.works](https://bito.works)** to experience Bito in action!
+### AI Insights & Reports
+A three-tier insight maturity system (seedling → sprouting → growing) enriched by the LLM. Sectioned analytics reports with completion charts, streak graphs, and an activity heatmap. AI-written weekly report emails delivered via Resend.
 
-## ✨ Core Features
+### AI Personality System
+Four-axis personality model (tone, focus, verbosity, accountability) shaped during onboarding or through a settings quiz. All AI-generated content — insights, reports, reminders — adapts to the user's chosen voice through a composable prompt architecture.
 
-### 🎛️ Dynamic Dashboard System
-- **Drag & Drop Interface**: Intuitive React Grid Layout with smooth interactions
-- **Widget Ecosystem**: Modular components for habits, charts, quick actions, and analytics
-- **Responsive Design**: Seamless experience across desktop, tablet, and mobile devices
-- **Persistent Layouts**: Your customizations are saved and synced across devices
+### Notifications & Reminders
+Web push notifications via VAPID, email reminders via Resend, and cron-scheduled delivery. Users control notification preferences per channel.
 
-### 📈 Advanced Analytics Engine
-- **Streak Visualization**: Track consistency patterns and celebrate milestones
-- **Completion Heatmaps**: GitHub-style activity calendars showing daily progress
-- **Performance Charts**: Line and bar charts for trend analysis and goal tracking
-- **Top Performers**: Leaderboards for most active habits and best completion rates
-- **Insights Panel**: Smart recommendations based on your habit patterns
+### Authentication
+Passwordless magic-link login and Google OAuth. JWT access tokens with refresh rotation.
 
-### 🤝 Collaborative Workspaces
-- **Team Dashboards**: Shared spaces for families, friends, or colleagues
-- **Real-Time Updates**: Live synchronization of habit completions and progress
-- **Member Management**: Invite others with role-based permissions
-- **Group Challenges**: Collective goals and friendly competition
-- **Activity Feeds**: Stay connected with team progress and achievements
+---
 
-### 🔐 Robust Authentication
-- **Multiple Login Methods**: Email/password, Google OAuth, GitHub OAuth
-- **JWT Security**: Secure token-based authentication with refresh rotation
-- **Session Management**: Persistent login with automatic token refresh
-- **Password Recovery**: Secure reset flows with email verification
+## Tech Stack
 
-## 🏗️ Technical Architecture
+| Layer | Technologies |
+|---|---|
+| **Frontend** | React 19, Vite, TailwindCSS 4, Radix UI Themes, React Router 6, Recharts, BlockNote, Mantine, dnd-kit |
+| **Backend** | Node.js, Express, Mongoose 8, Passport (JWT + Google OAuth), OpenAI SDK, Resend, web-push, Cloudinary, node-cron, express-validator |
+| **Database** | MongoDB Atlas |
+| **Infrastructure** | Vercel (frontend), Railway (backend) |
+| **Domain** | [bito.works](https://bito.works) |
 
-### Frontend Stack
-```
-React 19              # Latest React with concurrent features
-JavaScript           # Habit logging logic & analytics
-Vite                 # Ultra-fast build tooling and HMR
-TailwindCSS 4        # Utility-first styling with custom design system
-Radix UI Themes      # Accessible component primitives
-React Grid Layout    # Drag-and-drop dashboard system
-React Router 6       # Client-side routing and navigation
-Recharts            # Beautiful, responsive data visualizations
-dnd-kit             # Modern drag-and-drop interactions
-```
+---
 
-### Backend Stack
-```
-Node.js + Express    # RESTful API server
-MongoDB + Mongoose   # Document database with ODM
-JWT + Passport       # Authentication and authorization
-bcrypt              # Secure password hashing
-Helmet + CORS       # Security middleware
-Rate Limiting       # API protection and abuse prevention
-Session Management  # Secure session handling
-```
-
-### Infrastructure & Deployment
-```
-Frontend: Vercel      # Global CDN with automatic deployments
-Backend: Railway      # Cloud platform with database hosting
-Database: MongoDB Atlas  # Managed MongoDB in the cloud
-Domain: bito.works    # Custom domain
-CI/CD: Git-based     # Automatic deployments on push
-```
-
-## 🎯 Key User Flows (MVP)
-
-### 1. **Onboarding Experience**
-- Create account with email & password
-
-### 2. **Daily Habit Tracking**
-- Quick-access widget for rapid habit logging
-- Visual progress indicators and streak counters
-
-### 3. **Team Collaboration**
-- Create or join workspaces with invitation links
-- Set up shared habits and team challenges
-- Real-time activity feed showing team progress
-- Celebrate milestones and achievements together
-
-### 4. **Analytics & Insights**
-- Comprehensive analytics dashboard with multiple chart types
-- Customizable time ranges and filtering options
-
-## 🎨 Design Philosophy
-
-Bito follows a clean, modern design language that prioritizes usability and visual hierarchy:
-
-## **Dark Indigo Theme**
-
-### **CSS**
-/* Example of our comprehensive color system */
---color-brand-500: #6366f1;     /* Primary indigo */
---color-bg-primary: #0f0f23;    /* Deep space background */
---color-surface-elevated: #2a2a5c; /* Elevated card surfaces */
---color-text-primary: #f8fafc;  /* High contrast text */
-
-### **Brand Colors**
-
-Indigo Brand Scale: #6366f1 (primary) to #1e1b4b (darkest)
-Dark Theme Backgrounds: Deep space blues (#0f0f23 to #2d2d66)
-Surface Elevations: Layered indigo surfaces (#1e1e42 to #303066)
-Status Colors: Success #10b981, Warning #f59e0b, Error #ef4444, Info #3b82f6
-
-### **Typography**
-
-Headings: DM Serif Text (elegant, readable serif)
-Body: Outfit (clean, modern sans-serif)
-UI Elements: Optimized for clarity and accessibility
-
-## 🛠️ Development Setup
+## Getting Started
 
 ### Prerequisites
-- Node.js 16+ 
-- npm or yarn
-- MongoDB (local or Atlas)
-- Git
 
-### Quick Start
+- Node.js 18+
+- npm
+- MongoDB (local instance or [Atlas](https://www.mongodb.com/atlas))
 
-1. **Clone the repository**
+### Clone
+
 ```bash
 git clone https://github.com/yourusername/bito.git
 cd bito
 ```
 
-2. **Frontend Setup**
-```bash
-cd bito-frontend
-npm install
-cp .env.example .env.local
-# Configure environment variables
-npm run dev
-```
+### Backend
 
-3. **Backend Setup**
 ```bash
 cd bito-backend
 npm install
-cp .env.example .env
-# Configure environment variables (MongoDB, JWT secret, OAuth keys)
-npm run dev
 ```
 
-4. **Environment Configuration**
+Create a `.env` file:
 
-**Frontend (.env.local):**
-```env
-VITE_API_URL=http://localhost:5000
-VITE_NODE_ENV=development
-```
-
-**Backend (.env):**
 ```env
 NODE_ENV=development
 PORT=5000
 MONGODB_URI=mongodb://localhost:27017/bito-dev
-JWT_SECRET=your-super-secret-jwt-key
-GOOGLE_CLIENT_ID=your-google-oauth-id
-GOOGLE_CLIENT_SECRET=your-google-oauth-secret
+JWT_SECRET=your-jwt-secret
+SESSION_SECRET=your-session-secret
+FRONTEND_URL=http://localhost:5173
 OPENAI_API_KEY=your-openai-api-key
 ```
 
-### Available Scripts
+Optional variables for full functionality:
 
-**Frontend:**
-- `npm run dev` - Start development server with HMR
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build locally
-- `npm run lint` - Run ESLint for code quality
+| Variable | Purpose |
+|---|---|
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth |
+| `RESEND_API_KEY` | Email delivery (magic links, weekly reports) |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | Web push notifications |
+| `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` | Image uploads |
 
-**Backend:**
-- `npm run dev` - Start development server with nodemon
-- `npm start` - Start production server
-- `npm test` - Run test suite
-- `npm run seed` - Populate database with sample data
-
-## 📁 Project Structure
-
-```
-bito/
-├── bito-frontend/                 # React application
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── analytics/         # Data visualization components
-│   │   │   ├── dashboard/         # Main dashboard interface
-│   │   │   ├── layout/           # App layout and navigation
-│   │   │   ├── shared/           # Reusable UI components
-│   │   │   ├── ui/               # Base UI components
-│   │   │   └── widgets/          # Dashboard widget system
-│   │   ├── contexts/             # React Context providers
-│   │   ├── hooks/                # Custom React hooks
-│   │   ├── pages/                # Route components
-│   │   ├── services/             # API and external services
-│   │   └── utils/                # Helper functions
-│   ├── public/                   # Static assets
-│   └── package.json
-│
-├── bito-backend/                  # Node.js API server
-│   ├── config/                   # App configuration
-│   ├── controllers/              # Route controllers
-│   ├── middleware/               # Express middleware
-│   ├── models/                   # MongoDB schemas
-│   ├── routes/                   # API route definitions
-│   ├── services/                 # Business logic services
-│   ├── scripts/                  # Database scripts
-│   └── server.js                 # Application entry point
-│
-└── README.md                     # This file
+```bash
+npm run dev          # Starts on :5000 with nodemon
 ```
 
-## 🔌 API Documentation
+### Frontend
 
-### Authentication Endpoints
-```http
-POST /api/auth/register          # Create new account
-POST /api/auth/login             # Email/password login
-GET  /api/auth/google            # Google OAuth flow
-GET  /api/auth/github            # GitHub OAuth flow
-POST /api/auth/refresh           # Refresh access token
-POST /api/auth/logout            # End user session
+```bash
+cd bito-frontend
+npm install
 ```
 
-### Habit Management
-```http
-GET    /api/habits               # Get user habits
-POST   /api/habits               # Create new habit
-PUT    /api/habits/:id           # Update habit
-DELETE /api/habits/:id           # Delete habit
-POST   /api/habits/:id/toggle    # Toggle completion
-GET    /api/habits/stats         # Get analytics data
+Create a `.env.local` file:
+
+```env
+VITE_API_URL=http://localhost:5000
 ```
 
-### Workspace Collaboration
-```http
-GET    /api/workspaces           # Get user workspaces
-POST   /api/workspaces           # Create workspace
-GET    /api/workspaces/:id       # Get workspace details
-PUT    /api/workspaces/:id       # Update workspace
-POST   /api/workspaces/:id/invite # Invite members
+```bash
+npm run dev          # Starts on :5173 with Vite HMR
 ```
 
-## 🌈 Advanced Features
+### Scripts
 
-### 🎛️ Widget System Architecture
-```javascript
-// Custom widget development
-const CustomWidget = ({ title, data, onUpdate }) => {
-  return (
-    <WidgetContainer title={title}>
-      <YourCustomVisualization data={data} />
-    </WidgetContainer>
-  );
-};
-
-// Register in widget system
-registerWidget('custom-analytics', CustomWidget);
-```
-
-### 🔄 Real-Time Collaboration
-```javascript
-// WebSocket integration for live updates
-socket.on('habit-completed', (data) => {
-  updateWorkspaceActivity(data);
-  showNotification(`${data.user} completed ${data.habit}!`);
-});
-```
-
-## 🎯 Usage Examples
-
-### Individual Habit Tracking
-Perfect for personal productivity, fitness goals, learning new skills, or building any positive routine.
-
-### Team Accountability
-Ideal for remote teams building work habits, families tracking household responsibilities, or study groups maintaining academic discipline.
-
-### Health & Wellness
-Great for fitness challenges, mindfulness practices, dietary goals, or recovery programs with professional guidance.
-
-### Educational Settings
-Useful for student habit formation, classroom behavior tracking, or institutional wellness programs.
-
-## 🚀 Deployment
-
-Bito is deployed with modern cloud infrastructure for reliability and performance:
-
-### Production Environment
-- **Frontend**: Vercel with global CDN
-- **Backend**: Railway cloud platform
-- **Database**: MongoDB Atlas cluster
-
-### Environment Variables (Production)
-All sensitive configuration is managed through environment variables with proper secret management and rotation policies.
-
-## 🤝 Contributing
-
-We welcome contributions to make Bito even better! Here's how you can help:
-
-### Development Guidelines
-1. Fork the repository and create a feature branch
-2. Follow the existing code style and conventions
-3. Write tests for new functionality
-4. Update documentation for significant changes
-5. Submit a pull request with a clear description
-
-### Areas for Contribution
-- 🧩 New widget types for different tracking needs
-- 🎨 UI/UX improvements and accessibility enhancements
-- 🤖 AI feature expansions and smarter insights
-- 🔗 Additional third-party integrations
-- 📊 Advanced analytics and visualization options
-- 📱 Mobile app development (React Native)
-
-## 📄 License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **Design Inspiration**: Modern productivity apps and collaborative tools
-- **Technical Foundation**: React, Node.js, and MongoDB ecosystems
-- **UI Components**: Radix UI for accessible design primitives
-- **Deployment**: Vercel and Railway for seamless hosting
-
-## 📞 Support & Community
-
-- 🌐 **Website**: [bito.works](https://bito.works)
-- 📧 **Email**: hayzayd33@gmail.com
-- 🐛 **Issues**: GitHub Issues for bug reports
-- 💡 **Feature Requests**: GitHub Discussions
-- 📚 **Documentation**: Built-in help system and tooltips
+| Directory | Command | Description |
+|---|---|---|
+| Frontend | `npm run dev` | Dev server with HMR |
+| Frontend | `npm run build` | Production build |
+| Frontend | `npm run lint` | ESLint |
+| Backend | `npm run dev` | Dev server with nodemon |
+| Backend | `npm start` | Production server |
+| Backend | `npm test` | Jest + Supertest suite |
 
 ---
 
-**Built with ❤️ by developers who believe that building better habits should be a shared journey of growth, accountability, and celebration.**
+## Project Structure
 
-*Ready to transform your habits? [Get started at bito.works](https://bito.works)*
+```
+bito/
+├── bito-frontend/
+│   └── src/
+│       ├── components/           # Shared UI components
+│       ├── contexts/             # Auth, Habit, Theme, Notification, Scale
+│       ├── features/             # Feature modules (analytics, dashboard, etc.)
+│       ├── hooks/                # Custom React hooks
+│       ├── pages/                # Route-level pages
+│       ├── services/             # API service layer
+│       └── utils/                # Helpers
+│
+├── bito-backend/
+│   ├── config/                   # Cloudinary, Passport config
+│   ├── controllers/              # Route controllers
+│   ├── middleware/                # Auth, validation, error handling
+│   ├── models/                   # Mongoose schemas (15 models)
+│   ├── prompts/                  # AI prompt architecture (base + directives)
+│   ├── routes/                   # Express route definitions (13 route files)
+│   ├── services/                 # Business logic & AI services
+│   └── server.js                 # Entry point, cron jobs, middleware
+│
+└── docs/                         # Specs, plans, and architecture docs
+```
+
+---
+
+## Design
+
+Bito uses a deep purple/blue color palette with **EB Garamond** for headings and **League Spartan** for body text. The UI is built on Radix UI Themes with TailwindCSS utility classes, optimized for both light and dark modes.
+
+---
+
+## Testing
+
+```bash
+cd bito-backend
+npm test
+```
+
+Uses **Jest** and **Supertest** for API testing. A separate prompt regression testing suite lives in `bito-backend/prompts/testing/` for verifying AI output quality across personality and scenario combinations.
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).
