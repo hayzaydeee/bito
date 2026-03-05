@@ -270,13 +270,13 @@ const LandingPage = () => {
         <div className="relative z-10 max-w-4xl mx-auto text-center hero-text-reveal">
           <div className="inline-flex items-center gap-2 trust-badge mb-8">
             <RocketIcon className="w-3.5 h-3.5" style={{ color: "var(--color-brand-400)" }} />
-            <span>Built around how you actually live</span>
+            <span>v2.0 is live!</span>
           </div>
           <h1 className="font-garamond font-bold mb-6 px-2" style={{ fontSize: "clamp(2.5rem, 6vw, 4.5rem)", lineHeight: 1.08, letterSpacing: "-0.03em", color: "var(--color-text-primary)" }}>
             The habit app that builds<br />the plan <span className="gradient-text">with you.</span>
           </h1>
           <p className="text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-spartan px-4" style={{ color: "var(--color-text-secondary)" }}>
-            Tell bito what you want to change. It looks at how you already live — your streaks, your patterns, your routines — and designs a path forward you'll actually follow.
+            An AI-powered habit tracker that helps you build the life you want. Track your habits, see patterns in your behavior, and architect personalized plans for achieving specific goals.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6 font-spartan px-4">
             <button onClick={() => navigate("/login")} className="btn-gradient group inline-flex items-center justify-center">
