@@ -250,7 +250,6 @@ compassSchema.statics.MAX_REFINEMENTS = 20; // 20 user turns = 40 messages total
 // ── Indexes ──
 compassSchema.index({ userId: 1, status: 1 });
 compassSchema.index({ userId: 1, createdAt: -1 });
-compassSchema.index({ suiteId: 1 }, { sparse: true });
 
 // ── Virtuals ──
 
