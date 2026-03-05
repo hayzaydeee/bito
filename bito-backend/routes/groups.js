@@ -100,7 +100,7 @@ router.post('/', [
     }
     
     // Create Group
-    const Group = new Group({
+    const group = new Group({
       name,
       description,
       type: type || 'personal',
@@ -131,32 +131,32 @@ router.post('/', [
       }
     });
     
-    await Group.save();
+    await group.save();
     
     console.log('Group created successfully:', {
-      groupId: Group._id,
-      ownerId: Group.ownerId,
-      members: Group.members.map(m => ({ userId: m.userId, role: m.role, status: m.status }))
+      groupId: group._id,
+      ownerId: group.ownerId,
+      members: group.members.map(m => ({ userId: m.userId, role: m.role, status: m.status }))
     });
     
     // Create activity for Group creation
     await Activity.createMemberActivity(
-      Group._id,
+      group._id,
       req.user.id,
       {
         memberName: req.user.name,
         memberRole: 'owner',
-        message: `Created the ${Group.name} Group`
+        message: `Created the ${group.name} Group`
       },
       'member_joined'
     );
     
     // Populate owner info
-    await Group.populate('ownerId', 'name email avatar');
+    await group.populate('ownerId', 'name email avatar');
     
     res.status(201).json({
       success: true,
-      Group
+      group
     });
   } catch (error) {
     console.error('Error creating Group:', error);
@@ -194,23 +194,23 @@ router.get('/:id', authenticateJWT, async (req, res) => {
     }
     
     // Now get the full Group with populated data for the response
-    const Group = await Group.findById(req.params.id)
+    const group = await Group.findById(req.params.id)
       .populate('ownerId', 'name email avatar')
       .populate('members.userId', 'name email avatar');
     
     // Get user's role in Group
     const userId = req.user._id || req.user.id;
-    const userRole = Group.getMemberRole(userId);
+    const userRole = group.getMemberRole(userId);
     
     // Get Group habits (filtered by visibility)
     const groupHabits = await GroupHabit.findByGroup(
-      Group._id,
+      group._id,
       userRole
     );
     
     // Get Group stats (from adopted Habits, not legacy MemberHabit)
     const stats = await Habit.aggregate([
-      { $match: { source: 'Group', groupId: Group._id, isActive: true } },
+      { $match: { source: 'Group', groupId: group._id, isActive: true } },
       { $group: {
         _id: '$groupId',
         totalHabits: { $sum: 1 },
@@ -228,8 +228,8 @@ router.get('/:id', authenticateJWT, async (req, res) => {
     
     res.json({
       success: true,
-      Group: {
-        ...Group.toObject(),
+      group: {
+        ...group.toObject(),
         userRole,
         habits: groupHabits,
         stats: stats[0] || { totalHabits: 0, totalCompletions: 0, activeMemberCount: 0 }
@@ -249,10 +249,10 @@ router.get('/:id', authenticateJWT, async (req, res) => {
 // @access  Private
 router.get('/:id/overview', authenticateJWT, async (req, res) => {
   try {
-    const Group = await Group.findById(req.params.id);
+    const group = await Group.findById(req.params.id);
     const userId = req.user._id || req.user.id;
     
-    if (!Group || !Group.isMember(userId)) {
+    if (!Group || !group.isMember(userId)) {
       return res.status(404).json({
         success: false,
         error: 'Group not found or access denied'
@@ -262,7 +262,7 @@ router.get('/:id/overview', authenticateJWT, async (req, res) => {
     // Get leaderboard data (from adopted Habits)
     const leaderboard = await Habit.find({
       source: 'Group',
-      groupId: Group._id,
+      groupId: group._id,
       isActive: true,
       'groupSettings.shareProgress': { $ne: 'private' }
     })
@@ -280,7 +280,7 @@ router.get('/:id/overview', authenticateJWT, async (req, res) => {
       {
         $match: {
           source: 'Group',
-          groupId: Group._id,
+          groupId: group._id,
           isActive: true,
           'groupSettings.shareProgress': { $ne: 'private' }
         }
@@ -325,14 +325,14 @@ router.get('/:id/overview', authenticateJWT, async (req, res) => {
     ]);
     
     // Get Group activity for the overview
-    const recentActivity = await Activity.getGroupFeed(Group._id, {
+    const recentActivity = await Activity.getGroupFeed(group._id, {
       limit: 10,
       types: ['habit_completed', 'streak_milestone', 'goal_achieved']
     });
     
     // Calculate team stats
     const teamStats = {
-      totalMembers: Group.memberCount,
+      totalMembers: group.memberCount,
       activeHabits: leaderboard.length,
       totalCompletions: memberProgress.reduce(
         (sum, member) => sum + member.totalCompletions, 0
@@ -353,10 +353,10 @@ router.get('/:id/overview', authenticateJWT, async (req, res) => {
         leaderboard,
         memberProgress,
         recentActivity,
-        Group: {
-          _id: Group._id,
-          name: Group.name,
-          type: Group.type
+        group: {
+          _id: group._id,
+          name: group.name,
+          type: group.type
         }
       }
     });
@@ -375,10 +375,10 @@ router.get('/:id/overview', authenticateJWT, async (req, res) => {
 router.get('/:id/activity', authenticateJWT, async (req, res) => {
   try {
     const { page = 1, limit = 20, types } = req.query;
-    const Group = await Group.findById(req.params.id);
+    const group = await Group.findById(req.params.id);
     const userId = req.user._id || req.user.id;
     
-    if (!Group || !Group.isMember(userId)) {
+    if (!Group || !group.isMember(userId)) {
       return res.status(404).json({
         success: false,
         error: 'Group not found or access denied'
@@ -386,7 +386,7 @@ router.get('/:id/activity', authenticateJWT, async (req, res) => {
     }
     
     const activityTypes = types ? types.split(',') : null;
-    const activities = await Activity.getGroupFeed(Group._id, {
+    const activities = await Activity.getGroupFeed(group._id, {
       page: parseInt(page),
       limit: parseInt(limit),
       types: activityTypes
@@ -449,7 +449,7 @@ router.post('/:id/members/invite', [
     
     console.log(`📧 Invitation request: ${email} to join Group ${req.params.id} with role ${role}`);
     
-    const Group = await Group.findById(req.params.id)
+    const group = await Group.findById(req.params.id)
       .populate('ownerId', 'name email');
     
     if (!Group) {
@@ -459,13 +459,13 @@ router.post('/:id/members/invite', [
       });
     }
     
-    console.log(`📧 Group found: ${Group.name}, checking permissions for user ${req.user._id || req.user.id}`);
+    console.log(`📧 Group found: ${group.name}, checking permissions for user ${req.user._id || req.user.id}`);
     
     const userId = req.user._id || req.user.id;
     
     // Check if user can invite members
-    if (!Group.canUserAccess(userId, 'invite')) {
-      console.log(`❌ Permission denied: User ${userId} cannot invite members to Group ${Group._id}`);
+    if (!group.canUserAccess(userId, 'invite')) {
+      console.log(`❌ Permission denied: User ${userId} cannot invite members to Group ${group._id}`);
       return res.status(403).json({
         success: false,
         error: 'You do not have permission to invite members'
@@ -479,20 +479,20 @@ router.post('/:id/members/invite', [
     if (existingUser) {
       console.log(`📧 Found existing user for email ${email}: ${existingUser._id}`);
       console.log(`📧 Checking if user ${existingUser._id} is already a member...`);
-      console.log(`📧 Group members:`, Group.members.map(m => ({ 
+      console.log(`📧 Group members:`, group.members.map(m => ({ 
         userId: m.userId.toString(), 
         status: m.status,
         role: m.role 
       })));
       
-      const existingMember = Group.members.find(
+      const existingMember = group.members.find(
         member => member.userId.toString() === existingUser._id.toString()
       );
       
       console.log(`📧 Existing member check result:`, existingMember ? 'FOUND' : 'NOT FOUND');
       
       if (existingMember) {
-        console.log(`❌ User ${existingUser._id} is already a member of Group ${Group._id}`);
+        console.log(`❌ User ${existingUser._id} is already a member of Group ${group._id}`);
         return res.status(400).json({
           success: false,
           error: 'User is already a member of this Group'
@@ -504,7 +504,7 @@ router.post('/:id/members/invite', [
     
     // Check if there's already a pending invitation
     const existingInvitation = await Invitation.findOne({
-      groupId: Group._id,
+      groupId: group._id,
       email: email,
       status: 'pending'
     });
@@ -522,14 +522,14 @@ router.post('/:id/members/invite', [
       
       // Send invitation email
       try {
-        const emailResult = await emailService.sendInvitationEmail(existingInvitation, Group, req.user);
+        const emailResult = await emailService.sendInvitationEmail(existingInvitation, group, req.user);
         console.log(`📧 Invitation email resent to ${email}`, emailResult.previewUrl ? `Preview: ${emailResult.previewUrl}` : '');
       } catch (emailError) {
         console.error('❌ Failed to send invitation email:', emailError);
         // Don't fail the invitation creation if email fails
       }
       
-      console.log(`✅ Invitation updated and resent for ${email} to join ${Group.name} (ID: ${existingInvitation._id})`);
+      console.log(`✅ Invitation updated and resent for ${email} to join ${group.name} (ID: ${existingInvitation._id})`);
       
       return res.json({
         success: true,
@@ -538,7 +538,7 @@ router.post('/:id/members/invite', [
           id: existingInvitation._id,
           email: existingInvitation.email,
           role: existingInvitation.role,
-          Group: Group.name,
+          group: group.name,
           expiresAt: existingInvitation.expiresAt,
           status: existingInvitation.status
         }
@@ -549,7 +549,7 @@ router.post('/:id/members/invite', [
     console.log('📝 Creating new invitation for', email);
     
     const invitation = new Invitation({
-      groupId: Group._id,
+      groupId: group._id,
       invitedBy: userId,
       email: email,
       invitedUserId: existingUser ? existingUser._id : null,
@@ -567,14 +567,14 @@ router.post('/:id/members/invite', [
     
     // Send invitation email
     try {
-      const emailResult = await emailService.sendInvitationEmail(invitation, Group, req.user);
+      const emailResult = await emailService.sendInvitationEmail(invitation, group, req.user);
       console.log(`📧 Invitation email sent to ${email}`, emailResult.previewUrl ? `Preview: ${emailResult.previewUrl}` : '');
     } catch (emailError) {
       console.error('❌ Failed to send invitation email:', emailError);
       // Don't fail the invitation creation if email fails
     }
 
-    console.log(`✅ Invitation successfully created for ${email} to join ${Group.name} (ID: ${invitation._id})`);
+    console.log(`✅ Invitation successfully created for ${email} to join ${group.name} (ID: ${invitation._id})`);
     
     res.json({
       success: true,
@@ -583,7 +583,7 @@ router.post('/:id/members/invite', [
         id: invitation._id,
         email: invitation.email,
         role: invitation.role,
-        Group: Group.name,
+        group: group.name,
         expiresAt: invitation.expiresAt,
         status: invitation.status
       }
@@ -617,7 +617,7 @@ router.post('/:id/members/invite', [
 // @access  Private
 router.get('/:id/invitations', authenticateJWT, async (req, res) => {
   try {
-    const Group = await Group.findById(req.params.id);
+    const group = await Group.findById(req.params.id);
     
     if (!Group) {
       return res.status(404).json({
@@ -628,7 +628,7 @@ router.get('/:id/invitations', authenticateJWT, async (req, res) => {
     
     // Check if user can view invitations (owners and admins)
     const userId = req.user._id || req.user.id;
-    const userRole = Group.getMemberRole(userId);
+    const userRole = group.getMemberRole(userId);
     if (!userRole || !['owner', 'admin'].includes(userRole)) {
       return res.status(403).json({
         success: false,
@@ -638,7 +638,7 @@ router.get('/:id/invitations', authenticateJWT, async (req, res) => {
     
     // Get invitations with optional status filter
     const { status } = req.query;
-    const invitations = await Invitation.findByGroup(Group._id, {
+    const invitations = await Invitation.findByGroup(group._id, {
       status: status,
       includeExpired: true
     });
@@ -691,7 +691,7 @@ router.get('/invitations/:token', async (req, res) => {
         email: invitation.email,
         role: invitation.role,
         message: invitation.message,
-        Group: {
+        group: {
           id: invitation.groupId._id,
           name: invitation.groupId.name,
           description: invitation.groupId.description,
@@ -744,10 +744,10 @@ router.post('/invitations/:token/accept', authenticateJWT, async (req, res) => {
       });
     }
     
-    const Group = invitation.groupId;
+    const group = invitation.groupId;
     
     // Check if user is already a member
-    const existingMember = Group.members.find(
+    const existingMember = group.members.find(
       member => member.userId.toString() === userId.toString()
     );
     
@@ -766,7 +766,7 @@ router.post('/invitations/:token/accept', authenticateJWT, async (req, res) => {
       role: invitation.role,
       status: 'active',
       joinedAt: new Date(),
-      permissions: Group.getDefaultPermissions(invitation.role)
+      permissions: group.getDefaultPermissions(invitation.role)
     };
     
     console.log(`👤 Adding member entry:`, {
@@ -775,40 +775,40 @@ router.post('/invitations/:token/accept', authenticateJWT, async (req, res) => {
       status: memberEntry.status
     });
     
-    Group.members.push(memberEntry);
+    group.members.push(memberEntry);
     
     // Update Group stats
-    Group.stats.totalMembers = Group.members.length;
-    Group.stats.activeMembers = Group.members.filter(m => m.status === 'active').length;
+    group.stats.totalMembers = group.members.length;
+    group.stats.activeMembers = group.members.filter(m => m.status === 'active').length;
     
-    await Group.save();
+    await group.save();
     
     // Accept the invitation
     await invitation.accept(userId);
     
     // Create activity entry
     const activity = new Activity({
-      groupId: Group._id,
+      groupId: group._id,
       userId: userId,
       type: 'member_joined',
       data: {
-        groupName: Group.name,
+        groupName: group.name,
         memberName: req.user.name || req.user.email,
         role: invitation.role
       },
-      visibility: 'Group'
+      visibility: 'group'
     });
     await activity.save();
     
-    console.log(`✅ User ${userId} successfully joined Group ${Group._id} with role ${invitation.role}`);
+    console.log(`✅ User ${userId} successfully joined Group ${group._id} with role ${invitation.role}`);
     
     res.json({
       success: true,
       message: 'Successfully joined the Group!',
-      Group: {
-        id: Group._id,
-        name: Group.name,
-        type: Group.type,
+      group: {
+        id: group._id,
+        name: group.name,
+        type: group.type,
         role: invitation.role
       }
     });
@@ -860,7 +860,7 @@ router.post('/invitations/:token/decline', async (req, res) => {
 // @access  Private
 router.delete('/:id/invitations/:invitationId', authenticateJWT, async (req, res) => {
   try {
-    const Group = await Group.findById(req.params.id);
+    const group = await Group.findById(req.params.id);
     
     if (!Group) {
       return res.status(404).json({
@@ -870,7 +870,7 @@ router.delete('/:id/invitations/:invitationId', authenticateJWT, async (req, res
     }
     
     // Check if user can cancel invitations
-    if (!Group.canUserAccess(req.user.id, 'invite')) {
+    if (!group.canUserAccess(req.user.id, 'invite')) {
       return res.status(403).json({
         success: false,
         error: 'You do not have permission to cancel invitations'
@@ -879,7 +879,7 @@ router.delete('/:id/invitations/:invitationId', authenticateJWT, async (req, res
     
     const invitation = await Invitation.findOne({
       _id: req.params.invitationId,
-      groupId: Group._id
+      groupId: group._id
     });
     
     if (!invitation) {
@@ -923,7 +923,7 @@ router.put('/:id/members/:userId', [
       });
     }
     
-    const Group = await Group.findById(req.params.id);
+    const group = await Group.findById(req.params.id);
     
     if (!Group) {
       return res.status(404).json({
@@ -933,7 +933,7 @@ router.put('/:id/members/:userId', [
     }
     
     // Check if user can manage members (owner or admin)
-    const userRole = Group.getMemberRole(req.user.id);
+    const userRole = group.getMemberRole(req.user.id);
     if (!userRole || !['owner', 'admin'].includes(userRole)) {
       return res.status(403).json({
         success: false,
@@ -942,7 +942,7 @@ router.put('/:id/members/:userId', [
     }
     
     // Can't change owner role
-    if (Group.ownerId.toString() === req.params.userId) {
+    if (group.ownerId.toString() === req.params.userId) {
       return res.status(400).json({
         success: false,
         error: 'Cannot change Group owner role'
@@ -950,7 +950,7 @@ router.put('/:id/members/:userId', [
     }
     
     // Find and update member
-    const member = Group.members.find(
+    const member = group.members.find(
       m => m.userId.toString() === req.params.userId
     );
     
@@ -962,9 +962,9 @@ router.put('/:id/members/:userId', [
     }
     
     member.role = req.body.role;
-    member.permissions = Group.getDefaultPermissions(req.body.role);
+    member.permissions = group.getDefaultPermissions(req.body.role);
     
-    await Group.save();
+    await group.save();
     
     res.json({
       success: true,
@@ -989,7 +989,7 @@ router.put('/:id/members/:userId', [
 // @access  Private
 router.delete('/:id/members/:userId', authenticateJWT, async (req, res) => {
   try {
-    const Group = await Group.findById(req.params.id);
+    const group = await Group.findById(req.params.id);
     
     if (!Group) {
       return res.status(404).json({
@@ -999,7 +999,7 @@ router.delete('/:id/members/:userId', authenticateJWT, async (req, res) => {
     }
     
     // Check permissions
-    const userRole = Group.getMemberRole(req.user.id);
+    const userRole = group.getMemberRole(req.user.id);
     const isRemovingSelf = req.params.userId === req.user.id;
     
     if (!isRemovingSelf && (!userRole || !['owner', 'admin'].includes(userRole))) {
@@ -1010,7 +1010,7 @@ router.delete('/:id/members/:userId', authenticateJWT, async (req, res) => {
     }
     
     // Can't remove owner unless they're removing themselves
-    if (Group.ownerId.toString() === req.params.userId && !isRemovingSelf) {
+    if (group.ownerId.toString() === req.params.userId && !isRemovingSelf) {
       return res.status(400).json({
         success: false,
         error: 'Cannot remove Group owner. Only the owner can leave/delete the Group.'
@@ -1018,11 +1018,11 @@ router.delete('/:id/members/:userId', authenticateJWT, async (req, res) => {
     }
 
     // If owner is removing themselves, delete the entire Group
-    if (Group.ownerId.toString() === req.params.userId && isRemovingSelf) {
+    if (group.ownerId.toString() === req.params.userId && isRemovingSelf) {
       console.log(`🗑️ Owner leaving Group, initiating Group deletion...`);
       
       // Delete all related data (same as in the DELETE /:id endpoint)
-      const groupHabits = await GroupHabit.find({ groupId: Group._id });
+      const groupHabits = await GroupHabit.find({ groupId: group._id });
       const groupHabitIds = groupHabits.map(h => h._id);
       
       await HabitEntry.deleteMany({
@@ -1030,14 +1030,14 @@ router.delete('/:id/members/:userId', authenticateJWT, async (req, res) => {
       });
 
       // Clean up adopted Habits and their entries
-      const adoptedHabits = await Habit.find({ source: 'Group', groupId: Group._id }).select('_id');
+      const adoptedHabits = await Habit.find({ source: 'Group', groupId: group._id }).select('_id');
       const adoptedHabitIds = adoptedHabits.map(h => h._id);
       await HabitEntry.deleteMany({ habitId: { $in: adoptedHabitIds } });
-      await Habit.deleteMany({ source: 'Group', groupId: Group._id });
-      await GroupHabit.deleteMany({ groupId: Group._id });
-      await Activity.deleteMany({ groupId: Group._id });
-      await Invitation.deleteMany({ groupId: Group._id });
-      await Group.findByIdAndDelete(Group._id);
+      await Habit.deleteMany({ source: 'Group', groupId: group._id });
+      await GroupHabit.deleteMany({ groupId: group._id });
+      await Activity.deleteMany({ groupId: group._id });
+      await Invitation.deleteMany({ groupId: group._id });
+      await Group.findByIdAndDelete(group._id);
 
       return res.json({
         success: true,
@@ -1046,19 +1046,19 @@ router.delete('/:id/members/:userId', authenticateJWT, async (req, res) => {
     }
     
     // Remove member
-    Group.members = Group.members.filter(
+    group.members = group.members.filter(
       m => m.userId.toString() !== req.params.userId
     );
     
     // Update stats
-    Group.stats.totalMembers = Group.members.length;
-    Group.stats.activeMembers = Group.members.filter(m => m.status === 'active').length;
+    group.stats.totalMembers = group.members.length;
+    group.stats.activeMembers = group.members.filter(m => m.status === 'active').length;
     
-    await Group.save();
+    await group.save();
     
     // Deactivate member's adopted habits from this Group
     await Habit.updateMany(
-      { source: 'Group', groupId: Group._id, userId: req.params.userId },
+      { source: 'Group', groupId: group._id, userId: req.params.userId },
       { isActive: false }
     );
     
@@ -1089,17 +1089,17 @@ router.post('/:id/leave', authenticateJWT, async (req, res) => {
     });
 
     // Find the Group
-    const Group = await Group.findById(groupId);
+    const group = await Group.findById(groupId);
     
     if (!Group) {
       return res.status(404).json({ message: 'Group not found' });
     }
 
     // Check if user is a member
-    if (!Group.isMember(userId)) {
+    if (!group.isMember(userId)) {
       console.log('User not a member check:', {
         userId: userId.toString(),
-        members: Group.members.map(m => ({ 
+        members: group.members.map(m => ({ 
           userId: m.userId.toString(), 
           status: m.status,
           role: m.role 
@@ -1109,8 +1109,8 @@ router.post('/:id/leave', authenticateJWT, async (req, res) => {
     }
 
     // Cannot leave if you're the only owner
-    const isOwner = Group.getMemberRole(userId) === 'owner';
-    const ownerCount = Group.members.filter(m => m.role === 'owner').length;
+    const isOwner = group.getMemberRole(userId) === 'owner';
+    const ownerCount = group.members.filter(m => m.role === 'owner').length;
 
     if (isOwner && ownerCount <= 1) {
       return res.status(403).json({ 
@@ -1120,22 +1120,22 @@ router.post('/:id/leave', authenticateJWT, async (req, res) => {
 
     // Create an activity record
     const activity = new Activity({
-      groupId: Group._id,
+      groupId: group._id,
       userId: userId,
       type: 'member_left',
       data: {
-        groupName: Group.name,
-        userRole: Group.getMemberRole(userId)
+        groupName: group.name,
+        userRole: group.getMemberRole(userId)
       }
     });
     await activity.save();
 
     // Remove the user from Group members
-    Group.members = Group.members.filter(member => 
+    group.members = group.members.filter(member => 
       member.userId.toString() !== userId.toString()
     );
     
-    await Group.save();
+    await group.save();
 
     // Deactivate adopted habits for this user in this Group
     await Habit.updateMany(
@@ -1145,7 +1145,7 @@ router.post('/:id/leave', authenticateJWT, async (req, res) => {
 
     return res.status(200).json({ 
       message: 'Successfully left the Group',
-      groupId: Group._id
+      groupId: group._id
     });
   } catch (error) {
     console.error('Error leaving Group:', error);
@@ -1162,7 +1162,7 @@ router.get('/:groupId/member-habits', authenticateJWT, async (req, res) => {
     const userId = req.user.id;
 
     // Verify user has access to Group
-    const Group = await Group.findById(groupId);
+    const group = await Group.findById(groupId);
     if (!Group) {
       return res.status(404).json({
         success: false,
@@ -1170,7 +1170,7 @@ router.get('/:groupId/member-habits', authenticateJWT, async (req, res) => {
       });
     }
 
-    const isMember = Group.members.some(member => 
+    const isMember = group.members.some(member => 
       member.userId.toString() === userId
     );
 
@@ -1223,7 +1223,7 @@ router.get('/:groupId/group-trackers', authenticateJWT, async (req, res) => {
     });
 
     // Verify Group exists and user has access
-    const Group = await Group.findById(groupId);
+    const group = await Group.findById(groupId);
     if (!Group) {
       return res.status(404).json({
         success: false,
@@ -1231,7 +1231,7 @@ router.get('/:groupId/group-trackers', authenticateJWT, async (req, res) => {
       });
     }
 
-    const isMember = Group.members.some(member => 
+    const isMember = group.members.some(member => 
       member.userId.toString() === userId
     );
 
@@ -1255,7 +1255,7 @@ router.get('/:groupId/group-trackers', authenticateJWT, async (req, res) => {
     }
 
     // Get all Group members' user IDs
-    const memberUserIds = Group.members.map(member => member.userId);
+    const memberUserIds = group.members.map(member => member.userId);
 
     // Get all Group habits adopted by members
     const groupHabits = await Habit.find({
@@ -1378,7 +1378,7 @@ router.get('/:groupId/members/:memberId/dashboard', authenticateJWT, async (req,
     });
 
     // Verify Group exists and requesting user has access
-    const Group = await Group.findById(groupId);
+    const group = await Group.findById(groupId);
     if (!Group) {
       return res.status(404).json({
         success: false,
@@ -1386,7 +1386,7 @@ router.get('/:groupId/members/:memberId/dashboard', authenticateJWT, async (req,
       });
     }
 
-    const isRequestingUserMember = Group.members.some(member => 
+    const isRequestingUserMember = group.members.some(member => 
       member.userId.toString() === requestingUserId
     );
 
@@ -1398,7 +1398,7 @@ router.get('/:groupId/members/:memberId/dashboard', authenticateJWT, async (req,
     }
 
     // Verify target member is in the Group
-    const targetMember = Group.members.find(member => 
+    const targetMember = group.members.find(member => 
       member.userId.toString() === memberId
     );
 
@@ -1592,7 +1592,7 @@ router.post('/:groupId/habits/:habitId/adopt', [
     const { personalSettings } = req.body;
 
     // Verify Group exists and user has access
-    const Group = await Group.findById(groupId);
+    const group = await Group.findById(groupId);
     if (!Group) {
       return res.status(404).json({
         success: false,
@@ -1600,7 +1600,7 @@ router.post('/:groupId/habits/:habitId/adopt', [
       });
     }
 
-    const isMember = Group.members.some(member => 
+    const isMember = group.members.some(member => 
       member.userId.toString() === userId
     );
 
@@ -1612,8 +1612,8 @@ router.post('/:groupId/habits/:habitId/adopt', [
     }
 
     // Verify Group habit exists
-    const GroupHabit = await GroupHabit.findById(habitId);
-    if (!GroupHabit || GroupHabit.groupId.toString() !== groupId) {
+    const groupHabit = await GroupHabit.findById(habitId);
+    if (!groupHabit || groupHabit.groupId.toString() !== groupId) {
       return res.status(404).json({
         success: false,
         error: 'Group habit not found'
@@ -1639,20 +1639,20 @@ router.post('/:groupId/habits/:habitId/adopt', [
     // Create unified habit with Group context
     const habit = new Habit({
       // Basic habit info from Group template
-      name: GroupHabit.name,
-      description: GroupHabit.description,
+      name: groupHabit.name,
+      description: groupHabit.description,
       userId: userId,
-      category: GroupHabit.category,
-      color: GroupHabit.color,
-      icon: GroupHabit.icon,
+      category: groupHabit.category,
+      color: groupHabit.color,
+      icon: groupHabit.icon,
       
       // Personal settings (can override defaults)
-      frequency: GroupHabit.defaultSettings?.frequency || 'daily',
-      weeklyTarget: personalSettings?.weeklyTarget || GroupHabit.defaultSettings?.weeklyTarget || 3,
-      target: personalSettings?.target || GroupHabit.defaultSettings?.target || { value: 1, unit: 'times' },
+      frequency: groupHabit.defaultSettings?.frequency || 'daily',
+      weeklyTarget: personalSettings?.weeklyTarget || groupHabit.defaultSettings?.weeklyTarget || 3,
+      target: personalSettings?.target || groupHabit.defaultSettings?.target || { value: 1, unit: 'times' },
       schedule: {
-        days: GroupHabit.defaultSettings?.schedule?.days || [0,1,2,3,4,5,6],
-        reminderTime: personalSettings?.reminderTime || GroupHabit.defaultSettings?.schedule?.reminderTime || '09:00',
+        days: groupHabit.defaultSettings?.schedule?.days || [0,1,2,3,4,5,6],
+        reminderTime: personalSettings?.reminderTime || groupHabit.defaultSettings?.schedule?.reminderTime || '09:00',
         reminderEnabled: personalSettings?.reminderEnabled || false
       },
       
@@ -1680,11 +1680,11 @@ router.post('/:groupId/habits/:habitId/adopt', [
       userId: userId,
       type: 'habit_adopted',
       data: {
-        habitName: GroupHabit.name,
+        habitName: groupHabit.name,
         habitId: habit._id,
         groupHabitId: habitId
       },
-      visibility: 'Group'
+      visibility: 'group'
     });
     await activity.save();
 
@@ -1828,7 +1828,7 @@ router.delete('/:groupId/member-habits/:memberHabitId', authenticateJWT, async (
         habitName: habit.groupHabitId?.name || habit.name || 'Unknown habit',
         habitId: habit.groupHabitId?._id
       },
-      visibility: 'Group'
+      visibility: 'group'
     });
     await activity.save();
 
@@ -1863,7 +1863,7 @@ router.get('/:groupId/habits', authenticateJWT, async (req, res) => {
     }
 
     // Check if user is a member of the Group
-    const Group = await Group.findById(groupId);
+    const group = await Group.findById(groupId);
     if (!Group) {
       return res.status(404).json({
         success: false,
@@ -1871,7 +1871,7 @@ router.get('/:groupId/habits', authenticateJWT, async (req, res) => {
       });
     }
 
-    const isMember = Group.members.some(member => 
+    const isMember = group.members.some(member => 
       member.userId.toString() === req.user.id && member.status === 'active'
     );
 
@@ -1972,7 +1972,7 @@ router.post('/:groupId/habits', [
     }
 
     // Check if user is a member of the Group
-    const Group = await Group.findById(groupId);
+    const group = await Group.findById(groupId);
     if (!Group) {
       return res.status(404).json({
         success: false,
@@ -1980,7 +1980,7 @@ router.post('/:groupId/habits', [
       });
     }
 
-    const isMember = Group.members.some(member => 
+    const isMember = group.members.some(member => 
       member.userId.toString() === req.user.id && member.status === 'active'
     );
 
@@ -1992,7 +1992,7 @@ router.post('/:groupId/habits', [
     }
 
     // Create the Group habit
-    const GroupHabit = new GroupHabit({
+    const groupHabit = new GroupHabit({
       groupId,
       name,
       description,
@@ -2002,10 +2002,10 @@ router.post('/:groupId/habits', [
       icon: icon || '🎯'
     });
 
-    await GroupHabit.save();
+    await groupHabit.save();
 
     // Populate the created habit with creator info
-    await GroupHabit.populate('createdBy', 'email name');
+    await groupHabit.populate('createdBy', 'email name');
 
     // Log activity
     try {
@@ -2014,10 +2014,10 @@ router.post('/:groupId/habits', [
         userId: req.user.id,
         groupId,
         data: {
-          habitId: GroupHabit._id,
+          habitId: groupHabit._id,
           habitName: name
         },
-        visibility: 'Group'
+        visibility: 'group'
       });
       await activity.save();
     } catch (activityError) {
@@ -2028,7 +2028,7 @@ router.post('/:groupId/habits', [
     res.status(201).json({
       success: true,
       habit: {
-        ...GroupHabit.toObject(),
+        ...groupHabit.toObject(),
         adoptionCount: 0,
         isAdoptedByUser: false
       }
@@ -2044,16 +2044,16 @@ router.post('/:groupId/habits', [
   }
 });
 
-// @route   GET /api/groups/Group-habits/:id
+// @route   GET /api/groups/group-habits/:id
 // @desc    Get Group habit details
 // @access  Private
-router.get('/Group-habits/:id', authenticateJWT, async (req, res) => {
+router.get('/group-habits/:id', authenticateJWT, async (req, res) => {
   try {
-    const GroupHabit = await GroupHabit.findById(req.params.id)
+    const groupHabit = await GroupHabit.findById(req.params.id)
       .populate('createdBy', 'name email')
       .populate('groupId', 'name');
 
-    if (!GroupHabit) {
+    if (!groupHabit) {
       return res.status(404).json({
         success: false,
         error: 'Group habit not found'
@@ -2061,8 +2061,8 @@ router.get('/Group-habits/:id', authenticateJWT, async (req, res) => {
     }
 
     // Check if user is a member of the Group
-    const Group = await Group.findById(GroupHabit.groupId);
-    const isMember = Group.members.some(member => 
+    const group = await Group.findById(groupHabit.groupId);
+    const isMember = group.members.some(member => 
       member.userId.toString() === req.user.id && member.status === 'active'
     );
 
@@ -2075,13 +2075,13 @@ router.get('/Group-habits/:id', authenticateJWT, async (req, res) => {
 
     // Get adoption stats (from unified Habit model)
     const adoptionCount = await Habit.countDocuments({
-      groupHabitId: GroupHabit._id,
+      groupHabitId: groupHabit._id,
       source: 'Group',
       isActive: true
     });
 
     const isAdoptedByUser = await Habit.exists({
-      groupHabitId: GroupHabit._id,
+      groupHabitId: groupHabit._id,
       userId: req.user.id,
       source: 'Group',
       isActive: true
@@ -2090,7 +2090,7 @@ router.get('/Group-habits/:id', authenticateJWT, async (req, res) => {
     res.json({
       success: true,
       habit: {
-        ...GroupHabit.toObject(),
+        ...groupHabit.toObject(),
         adoptionCount,
         isAdoptedByUser: !!isAdoptedByUser
       }
@@ -2106,10 +2106,10 @@ router.get('/Group-habits/:id', authenticateJWT, async (req, res) => {
   }
 });
 
-// @route   PUT /api/groups/Group-habits/:id
-// @desc    Update Group habit
+// @route   PUT /api/groups/group-habits/:id
+// @desc    Update group habit
 // @access  Private
-router.put('/Group-habits/:id', [
+router.put('/group-habits/:id', [
   authenticateJWT,
   body('name')
     .optional()
@@ -2156,9 +2156,9 @@ router.put('/Group-habits/:id', [
       });
     }
 
-    const GroupHabit = await GroupHabit.findById(req.params.id);
+    const groupHabit = await GroupHabit.findById(req.params.id);
 
-    if (!GroupHabit) {
+    if (!groupHabit) {
       return res.status(404).json({
         success: false,
         error: 'Group habit not found'
@@ -2166,8 +2166,8 @@ router.put('/Group-habits/:id', [
     }
 
     // Check permissions
-    const Group = await Group.findById(GroupHabit.groupId);
-    const userMember = Group.members.find(member => 
+    const group = await Group.findById(groupHabit.groupId);
+    const userMember = group.members.find(member => 
       member.userId.toString() === req.user.id && member.status === 'active'
     );
 
@@ -2179,7 +2179,7 @@ router.put('/Group-habits/:id', [
     }
 
     // Check if user can edit (creator, admin, or owner)
-    const canEdit = GroupHabit.createdBy.toString() === req.user.id ||
+    const canEdit = groupHabit.createdBy.toString() === req.user.id ||
                    userMember.role === 'admin' ||
                    userMember.role === 'owner';
 
@@ -2193,30 +2193,30 @@ router.put('/Group-habits/:id', [
     const { name, description, category, isRequired, settings, icon, color, schedule } = req.body;
 
     // Update habit
-    if (name !== undefined) GroupHabit.name = name;
-    if (description !== undefined) GroupHabit.description = description;
-    if (category !== undefined) GroupHabit.category = category;
-    if (isRequired !== undefined) GroupHabit.isRequired = isRequired;
-    if (icon !== undefined) GroupHabit.icon = icon;
-    if (color !== undefined) GroupHabit.color = color;
+    if (name !== undefined) groupHabit.name = name;
+    if (description !== undefined) groupHabit.description = description;
+    if (category !== undefined) groupHabit.category = category;
+    if (isRequired !== undefined) groupHabit.isRequired = isRequired;
+    if (icon !== undefined) groupHabit.icon = icon;
+    if (color !== undefined) groupHabit.color = color;
     
     if (settings) {
-      if (!GroupHabit.settings) GroupHabit.settings = {};
-      if (settings.visibility !== undefined) GroupHabit.settings.visibility = settings.visibility;
-      if (settings.allowCustomization !== undefined) GroupHabit.settings.allowCustomization = settings.allowCustomization;
+      if (!groupHabit.settings) groupHabit.settings = {};
+      if (settings.visibility !== undefined) groupHabit.settings.visibility = settings.visibility;
+      if (settings.allowCustomization !== undefined) groupHabit.settings.allowCustomization = settings.allowCustomization;
       if (settings.defaultTarget) {
-        GroupHabit.settings.defaultTarget = settings.defaultTarget;
+        groupHabit.settings.defaultTarget = settings.defaultTarget;
       }
       if (schedule) {
-        GroupHabit.settings.schedule = schedule;
+        groupHabit.settings.schedule = schedule;
       }
     }
 
-    await GroupHabit.save();
+    await groupHabit.save();
 
     res.json({
       success: true,
-      habit: GroupHabit
+      habit: groupHabit
     });
 
   } catch (error) {
@@ -2229,14 +2229,14 @@ router.put('/Group-habits/:id', [
   }
 });
 
-// @route   DELETE /api/groups/Group-habits/:id
-// @desc    Delete Group habit
+// @route   DELETE /api/groups/group-habits/:id
+// @desc    Delete group habit
 // @access  Private
-router.delete('/Group-habits/:id', authenticateJWT, async (req, res) => {
+router.delete('/group-habits/:id', authenticateJWT, async (req, res) => {
   try {
-    const GroupHabit = await GroupHabit.findById(req.params.id);
+    const groupHabit = await GroupHabit.findById(req.params.id);
 
-    if (!GroupHabit) {
+    if (!groupHabit) {
       return res.status(404).json({
         success: false,
         error: 'Group habit not found'
@@ -2244,8 +2244,8 @@ router.delete('/Group-habits/:id', authenticateJWT, async (req, res) => {
     }
 
     // Check permissions
-    const Group = await Group.findById(GroupHabit.groupId);
-    const userMember = Group.members.find(member => 
+    const group = await Group.findById(groupHabit.groupId);
+    const userMember = group.members.find(member => 
       member.userId.toString() === req.user.id && member.status === 'active'
     );
 
@@ -2257,7 +2257,7 @@ router.delete('/Group-habits/:id', authenticateJWT, async (req, res) => {
     }
 
     // Check if user can delete (creator, admin, or owner)
-    const canDelete = GroupHabit.createdBy.toString() === req.user.id ||
+    const canDelete = groupHabit.createdBy.toString() === req.user.id ||
                      userMember.role === 'admin' ||
                      userMember.role === 'owner';
 
@@ -2270,7 +2270,7 @@ router.delete('/Group-habits/:id', authenticateJWT, async (req, res) => {
 
     // Check if habit is adopted by any members
     const adoptionCount = await Habit.countDocuments({
-      groupHabitId: GroupHabit._id,
+      groupHabitId: groupHabit._id,
       source: 'Group',
       isActive: true
     });
@@ -2288,14 +2288,14 @@ router.delete('/Group-habits/:id', authenticateJWT, async (req, res) => {
     // Log activity
     try {
       const activity = new Activity({
-        groupId: GroupHabit.groupId,
+        groupId: groupHabit.groupId,
         userId: req.user.id,
         type: 'habit_deleted',
         data: {
-          habitId: GroupHabit._id,
-          habitName: GroupHabit.name
+          habitId: groupHabit._id,
+          habitName: groupHabit.name
         },
-        visibility: 'Group'
+        visibility: 'group'
       });
       await activity.save();
     } catch (activityError) {
@@ -2327,10 +2327,10 @@ router.put('/:id', authenticateJWT, async (req, res) => {
     const userId = req.user._id || req.user.id;
     const { name, description, type, settings } = req.body;
 
-    console.log(`🔧 UPDATE Group REQUEST: Group ${groupId}, User ${userId}`);
+    console.log(`🔧 UPDATE Group REQUEST: group ${groupId}, User ${userId}`);
 
     // Find the Group
-    const Group = await Group.findById(groupId);
+    const group = await Group.findById(groupId);
     if (!Group) {
       return res.status(404).json({
         success: false,
@@ -2339,7 +2339,7 @@ router.put('/:id', authenticateJWT, async (req, res) => {
     }
 
     // Check permissions - only owners and admins can update settings
-    const userRole = Group.getMemberRole(userId);
+    const userRole = group.getMemberRole(userId);
     if (!userRole || !['owner', 'admin'].includes(userRole)) {
       return res.status(403).json({
         success: false,
@@ -2357,7 +2357,7 @@ router.put('/:id', authenticateJWT, async (req, res) => {
           error: 'Group name must be 1-100 characters'
         });
       }
-      Group.name = name.trim();
+      group.name = name.trim();
     }
 
     if (description !== undefined) {
@@ -2367,7 +2367,7 @@ router.put('/:id', authenticateJWT, async (req, res) => {
           error: 'Description cannot exceed 500 characters'
         });
       }
-      Group.description = description.trim();
+      group.description = description.trim();
     }
 
     if (type !== undefined) {
@@ -2378,21 +2378,21 @@ router.put('/:id', authenticateJWT, async (req, res) => {
           error: 'Invalid Group type'
         });
       }
-      Group.type = type;
+      group.type = type;
     }
 
     // Update settings object
     if (settings) {
       if (settings.isPublic !== undefined) {
-        Group.settings.isPublic = Boolean(settings.isPublic);
+        group.settings.isPublic = Boolean(settings.isPublic);
       }
       
       if (settings.allowInvites !== undefined) {
-        Group.settings.allowInvites = Boolean(settings.allowInvites);
+        group.settings.allowInvites = Boolean(settings.allowInvites);
       }
       
       if (settings.requireApproval !== undefined) {
-        Group.settings.requireApproval = Boolean(settings.requireApproval);
+        group.settings.requireApproval = Boolean(settings.requireApproval);
       }
       
       if (settings.privacyLevel !== undefined) {
@@ -2403,11 +2403,11 @@ router.put('/:id', authenticateJWT, async (req, res) => {
             error: 'Invalid privacy level'
           });
         }
-        Group.settings.privacyLevel = settings.privacyLevel;
+        group.settings.privacyLevel = settings.privacyLevel;
       }
 
       if (settings.allowMemberHabitCreation !== undefined) {
-        Group.settings.allowMemberHabitCreation = Boolean(settings.allowMemberHabitCreation);
+        group.settings.allowMemberHabitCreation = Boolean(settings.allowMemberHabitCreation);
       }
 
       if (settings.defaultHabitVisibility !== undefined) {
@@ -2418,13 +2418,13 @@ router.put('/:id', authenticateJWT, async (req, res) => {
             error: 'Invalid default habit visibility'
           });
         }
-        Group.settings.defaultHabitVisibility = settings.defaultHabitVisibility;
+        group.settings.defaultHabitVisibility = settings.defaultHabitVisibility;
       }
     }
 
     // Save the updated Group
-    Group.updatedAt = new Date();
-    await Group.save();
+    group.updatedAt = new Date();
+    await group.save();
 
     console.log(`🔧 Group updated successfully`);
 
@@ -2436,7 +2436,7 @@ router.put('/:id', authenticateJWT, async (req, res) => {
     res.json({
       success: true,
       message: 'Group settings updated successfully',
-      Group: updatedGroup
+      group: updatedGroup
     });
 
   } catch (error) {
@@ -2458,10 +2458,10 @@ router.delete('/:id', authenticateJWT, async (req, res) => {
     const groupId = req.params.id;
     const userId = req.user._id || req.user.id;
 
-    console.log(`🗑️ DELETE Group REQUEST: Group ${groupId}, User ${userId}`);
+    console.log(`🗑️ DELETE Group REQUEST: group ${groupId}, User ${userId}`);
 
     // Get the Group and verify ownership
-    const Group = await Group.findById(groupId);
+    const group = await Group.findById(groupId);
     if (!Group) {
       return res.status(404).json({
         success: false,
@@ -2470,7 +2470,7 @@ router.delete('/:id', authenticateJWT, async (req, res) => {
     }
 
     // Check if user is the owner
-    const member = Group.members.find(
+    const member = group.members.find(
       (m) => m.userId.toString() === userId.toString()
     );
 
@@ -2544,7 +2544,7 @@ router.get('/:id/dashboard-permissions', authenticateJWT, async (req, res) => {
     const userId = req.user._id || req.user.id;
 
     // Find the Group to verify membership
-    const Group = await Group.findById(groupId);
+    const group = await Group.findById(groupId);
     if (!Group) {
       return res.status(404).json({
         success: false,
@@ -2553,7 +2553,7 @@ router.get('/:id/dashboard-permissions', authenticateJWT, async (req, res) => {
     }
 
     // Check if user is a member
-    const isMember = Group.members.some(member => 
+    const isMember = group.members.some(member => 
       member.userId.toString() === userId.toString()
     );
 
@@ -2597,7 +2597,7 @@ router.put('/:id/dashboard-permissions', authenticateJWT, async (req, res) => {
     const { isPublicToGroup, allowedMembers } = req.body;
 
     // Find the Group to verify membership
-    const Group = await Group.findById(groupId);
+    const group = await Group.findById(groupId);
     if (!Group) {
       return res.status(404).json({
         success: false,
@@ -2606,7 +2606,7 @@ router.put('/:id/dashboard-permissions', authenticateJWT, async (req, res) => {
     }
 
     // Check if user is a member
-    const isMember = Group.members.some(member => 
+    const isMember = group.members.some(member => 
       member.userId.toString() === userId.toString()
     );
 

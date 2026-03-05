@@ -241,7 +241,7 @@ const compassSchema = new mongoose.Schema(
       userEditsBeforeApply: { type: Number, default: 0 },
     },
   },
-  { timestamps: true }
+  { timestamps: true, collection: 'compass' }
 );
 
 // ── Constants ──
