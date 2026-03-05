@@ -88,8 +88,8 @@ const LandingPage = () => {
   const features = [
     {
       tab: "Track",
-      title: "Small actions, measured daily",
-      desc: "One-click habit logging, smart streaks, and a clean daily view that keeps you focused on what matters. No clutter, no friction.",
+      title: "Log in seconds. See progress in real time.",
+      desc: "One tap to complete a habit. Your streaks, progress rings, and weekly view update instantly. No friction between the intention and the action.",
       bullets: ["One-click daily check-ins", "Streak tracking with milestone celebrations", "Flexible schedules — daily, weekly, or custom"],
       visual: "track",
     },
@@ -112,7 +112,7 @@ const LandingPage = () => {
   const steps = [
     { num: "01", title: "Add your habits", desc: "Pick from smart templates or create your own. Set frequency, reminders, and goals in under a minute." },
     { num: "02", title: "Check in daily", desc: "Open bito, tap to complete. Streaks, progress rings, and weekly overview update in real time." },
-    { num: "03", title: "Grow with insights", desc: "As data accumulates, bito surfaces patterns and suggestions. The longer you use it, the smarter it gets." },
+    { num: "03", title: "Grow with insights", desc: "As data accumulates, bito surfaces patterns and suggestions. The longer you use bito, the more it understands you." },
   ];
 
   const testimonials = [
@@ -127,7 +127,7 @@ const LandingPage = () => {
     { feature: "AI-powered insights", bito: true, others: false },
     { feature: "Beautiful analytics", bito: true, others: "Basic" },
     { feature: "Journal integration", bito: true, others: false },
-    { feature: "Free to use", bito: true, others: "Freemium" },
+    { feature: "Generous free tier", bito: true, others: "Limited" },
   ];
 
   const feat = features[activeFeature];
@@ -270,13 +270,13 @@ const LandingPage = () => {
         <div className="relative z-10 max-w-4xl mx-auto text-center hero-text-reveal">
           <div className="inline-flex items-center gap-2 trust-badge mb-8">
             <RocketIcon className="w-3.5 h-3.5" style={{ color: "var(--color-brand-400)" }} />
-            <span>AI-powered habit tracking</span>
+            <span>Built around how you actually live</span>
           </div>
           <h1 className="font-garamond font-bold mb-6 px-2" style={{ fontSize: "clamp(2.5rem, 6vw, 4.5rem)", lineHeight: 1.08, letterSpacing: "-0.03em", color: "var(--color-text-primary)" }}>
-            Build habits that<br /><span className="gradient-text">actually stick</span>
+            The habit app that builds<br />the plan <span className="gradient-text">with you.</span>
           </h1>
           <p className="text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-spartan px-4" style={{ color: "var(--color-text-secondary)" }}>
-            Track, understand, and grow — alone or with your team. Bito turns daily routines into lasting change with beautiful insights and gentle intelligence.
+            Tell bito what you want to change. It looks at how you already live — your streaks, your patterns, your routines — and designs a path forward you'll actually follow.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6 font-spartan px-4">
             <button onClick={() => navigate("/login")} className="btn-gradient group inline-flex items-center justify-center">
@@ -295,8 +295,8 @@ const LandingPage = () => {
         <Reveal className="landing-reveal">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="heading-lg font-garamond mb-4" style={{ color: "var(--color-text-primary)" }}>Everything you need to grow</h2>
-              <p className="text-base font-spartan max-w-xl mx-auto" style={{ color: "var(--color-text-secondary)" }}>A complete system for building, tracking, and understanding your habits.</p>
+              <h2 className="heading-lg font-garamond mb-4" style={{ color: "var(--color-text-primary)" }}>A system that works like you do.</h2>
+              <p className="text-base font-spartan max-w-xl mx-auto" style={{ color: "var(--color-text-secondary)" }}>Track your habits. Understand your patterns. Build alongside people who keep you accountable.</p>
             </div>
             <div className="flex justify-center gap-1 mb-12 flex-wrap" style={{ borderBottom: "1px solid var(--color-border-primary)" }}>
               {features.map((f, i) => (
@@ -325,15 +325,15 @@ const LandingPage = () => {
 
       <hr className="section-divider" />
 
-      {/* ─── Transformers — Dedicated Section ─── */}
+      {/* ─── Compass — Dedicated Section ─── */}
       <section className="py-24 md:py-32 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: "var(--color-bg-secondary)" }}>
         <div className="max-w-6xl mx-auto">
           <Reveal className="landing-reveal">
             <div className="text-center mb-6">
-              <span className="text-xs font-spartan font-semibold uppercase tracking-widest mb-3 inline-block" style={{ color: "var(--color-brand-400)" }}>Transformers</span>
+              <span className="text-xs font-spartan font-semibold uppercase tracking-widest mb-3 inline-block" style={{ color: "var(--color-brand-400)" }}>Compass</span>
               <h2 className="font-garamond font-bold mb-4" style={{ fontSize: "clamp(1.75rem, 4vw, 2.5rem)", color: "var(--color-text-primary)", letterSpacing: "-0.02em" }}>Tell us your goal.{" "}<span className="gradient-text">We'll build the plan.</span></h2>
               <p className="text-base md:text-lg font-spartan max-w-2xl mx-auto leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
-                Type a goal in your own words. Bito's AI designs a step-by-step habit plan tailored to you — then lets you refine it until it feels right.
+                Type what you want to become. Compass reads your existing habits, your streaks, your patterns — and builds a plan around how you actually live. Not a generic template. A plan that fits you.
               </p>
             </div>
           </Reveal>
@@ -341,9 +341,9 @@ const LandingPage = () => {
             <Reveal className="landing-reveal-left">
               <div className="space-y-6">
                 {[
-                  { icon: "🧠", title: "Knows your routine", desc: "It looks at what you're already doing — your habits, streaks, and patterns — so the plan actually fits your life." },
-                  { icon: "💬", title: "Refine with conversation", desc: "Not perfect? Just tell it what to change. Swap a habit, shift the schedule, make it harder — the AI adjusts instantly." },
-                  { icon: "📐", title: "Starts easy, builds up", desc: "Plans begin with simple wins and gradually escalate. You move to the next phase when you're ready." },
+                  { icon: "🧠", title: "Knows your routine", desc: "It looks at what you're already doing so the plan doesn't fight your life — it fits it." },
+                  { icon: "💬", title: "Refine with conversation", desc: "Not quite right? Tell it what to change. Swap a habit, shift the schedule, make it harder — it adjusts instantly." },
+                  { icon: "📐", title: "Starts easy, builds up", desc: "Plans begin with simple wins and escalate when you're ready — not before." },
                 ].map((item, i) => (
                   <div key={i} className="flex gap-4">
                     <span className="text-2xl flex-shrink-0 mt-0.5">{item.icon}</span>
@@ -402,9 +402,9 @@ const LandingPage = () => {
           <Reveal className="landing-reveal">
             <div className="text-center mb-6">
               <span className="text-xs font-spartan font-semibold uppercase tracking-widest mb-3 inline-block" style={{ color: "var(--color-secondary-400)" }}>Rich Journaling</span>
-              <h2 className="font-garamond font-bold mb-4" style={{ fontSize: "clamp(1.75rem, 4vw, 2.5rem)", color: "var(--color-text-primary)", letterSpacing: "-0.02em" }}>Think deeper.{" "}<span className="gradient-text">Write freely.</span></h2>
+              <h2 className="font-garamond font-bold mb-4" style={{ fontSize: "clamp(1.75rem, 4vw, 2.5rem)", color: "var(--color-text-primary)", letterSpacing: "-0.02em" }}>Your habits tell part of the story.{" "}<span className="gradient-text">Your journal tells the rest.</span></h2>
               <p className="text-base md:text-lg font-spartan max-w-2xl mx-auto leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
-                A beautiful writing space for quick notes and deep reflections — right alongside your habits.
+                A writing space that lives alongside your habits — and an AI that connects what you write to how you actually perform. Quick notes or deep reflections. Both in one place.
               </p>
             </div>
           </Reveal>
@@ -512,7 +512,7 @@ const LandingPage = () => {
         <Reveal className="landing-reveal">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="heading-lg font-garamond mb-4" style={{ color: "var(--color-text-primary)" }}>Loved by people who ship</h2>
+              <h2 className="heading-lg font-garamond mb-4" style={{ color: "var(--color-text-primary)" }}>From the people using it every day.</h2>
             </div>
             <div className="grid md:grid-cols-3 gap-6">
               {testimonials.map((t, i) => (
@@ -568,13 +568,13 @@ const LandingPage = () => {
         <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 60% 50% at 50% 50%, var(--color-brand-950) 0%, transparent 70%)", opacity: 0.4 }} />
         <Reveal className="landing-reveal-scale">
           <div className="relative z-10 max-w-3xl mx-auto text-center">
-            <h2 className="font-garamond font-bold mb-6" style={{ fontSize: "clamp(2rem, 5vw, 3.75rem)", lineHeight: 1.1, letterSpacing: "-0.02em", color: "var(--color-text-primary)" }}>Ready to begin?</h2>
-            <p className="text-lg font-spartan mb-10 max-w-xl mx-auto" style={{ color: "var(--color-text-secondary)" }}>Start building the life you want — one small habit at a time.</p>
+            <h2 className="font-garamond font-bold mb-6" style={{ fontSize: "clamp(2rem, 5vw, 3.75rem)", lineHeight: 1.1, letterSpacing: "-0.02em", color: "var(--color-text-primary)" }}>Ready to actually stick to something?</h2>
+            <p className="text-lg font-spartan mb-10 max-w-xl mx-auto" style={{ color: "var(--color-text-secondary)" }}>Free to start. No credit card. Two minutes to set up.</p>
             <button onClick={() => navigate("/login")} className="btn-gradient group inline-flex items-center justify-center">
-              Start for free <ArrowRightIcon className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+              Get started free <ArrowRightIcon className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </button>
             <p className="mt-6 text-sm font-spartan flex items-center justify-center gap-2" style={{ color: "var(--color-text-tertiary)" }}>
-              <CheckCircledIcon className="w-4 h-4" style={{ color: "var(--color-success)" }} /> No credit card required — 2-minute setup
+              <CheckCircledIcon className="w-4 h-4" style={{ color: "var(--color-success)" }} /> No credit card required
             </p>
           </div>
         </Reveal>
