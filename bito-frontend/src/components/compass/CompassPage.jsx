@@ -540,7 +540,7 @@ const CompassPage = () => {
         <div className="flex items-start justify-between mb-10">
           <div>
             <h1 className="text-3xl font-bold font-garamond text-[var(--color-text-primary)] mb-1">
-              compasses
+              Compasses
             </h1>
             <p className="text-sm text-[var(--color-text-secondary)] font-spartan">
               AI-powered habit systems from your goals
