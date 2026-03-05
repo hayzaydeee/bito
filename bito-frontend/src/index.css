@@ -1932,7 +1932,7 @@ body.onboarding-active [data-tour]:hover {
 
 /* ── Nav glass bar ── */
 .nav-glass {
-  background: var(--glass-bg) !important;
+  background: var(--color-bg-primary) !important;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
