@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BellIcon, CheckCircledIcon, StarIcon, PersonIcon, TargetIcon, PlusIcon } from '@radix-ui/react-icons';
 import { useAuth } from '../../contexts/AuthContext';
-import { workspacesAPI } from '../../services/api';
+import { groupsAPI } from '../../services/api';
 
 // Map activity types to icons
 const iconMap = {
@@ -54,17 +54,17 @@ const NotificationsPanel = ({ show, onClose }) => {
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-      const res = await workspacesAPI.getWorkspaces();
+      const res = await groupsAPI.getGroups();
       if (res.success) {
-        const workspaces = res.workspaces;
-        const promises = workspaces.map((w) =>
-          workspacesAPI.getWorkspaceActivity(w._id, { limit: 5 })
+        const groups = res.groups;
+        const promises = groups.map((w) =>
+          groupsAPI.getGroupActivity(w._id, { limit: 5 })
         );
         const results = await Promise.all(promises);
         const all = [];
         results.forEach((r, i) => {
           if (r.success && r.activities) {
-            r.activities.forEach((act) => all.push({ ...act, workspaceId: workspaces[i]._id }));
+            r.activities.forEach((act) => all.push({ ...act, groupId: groups[i]._id }));
           }
         });
         all.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -79,7 +79,7 @@ const NotificationsPanel = ({ show, onClose }) => {
 
   const handleClick = (notif) => {
     onClose();
-    navigate(`/app/groups/${notif.workspaceId}`);
+    navigate(`/app/groups/${notif.groupId}`);
   };
 
   if (!show) return null;

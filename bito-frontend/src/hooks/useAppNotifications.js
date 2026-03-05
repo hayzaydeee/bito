@@ -20,22 +20,22 @@ export const useAppNotifications = () => {
     error: (action, error) => showError(`Failed to ${action} habit: ${error}`),
   };
 
-  // Workspace-related notifications
-  const workspace = {
-    created: (workspaceName) => showSuccess(`🏢 "${workspaceName}" workspace created!`),
-    updated: (workspaceName) => showSuccess(`📝 "${workspaceName}" workspace updated!`),
-    deleted: (workspaceName) => showSuccess(`🗑️ "${workspaceName}" workspace deleted`),
-    joined: (workspaceName) => showSuccess(`🎉 Welcome to "${workspaceName}"!`),
-    left: (workspaceName) => showInfo(`👋 Left "${workspaceName}" workspace`),
+  // Group-related notifications
+  const group = {
+    created: (groupName) => showSuccess(`🏢 "${groupName}" group created!`),
+    updated: (groupName) => showSuccess(`📝 "${groupName}" group updated!`),
+    deleted: (groupName) => showSuccess(`🗑️ "${groupName}" group deleted`),
+    joined: (groupName) => showSuccess(`🎉 Welcome to "${groupName}"!`),
+    left: (groupName) => showInfo(`👋 Left "${groupName}" group`),
     inviteSent: (email) => showSuccess(`📧 Invitation sent to ${email}`),
-    inviteAccepted: (memberName) => showSuccess(`🎉 ${memberName} joined your workspace!`),
-    error: (action, error) => showError(`Failed to ${action} workspace: ${error}`),
+    inviteAccepted: (memberName) => showSuccess(`🎉 ${memberName} joined your group!`),
+    error: (action, error) => showError(`Failed to ${action} group: ${error}`),
   };
 
   // Member-related notifications
   const member = {
     roleUpdated: (memberName, newRole) => showSuccess(`👤 ${memberName} is now a ${newRole}`),
-    removed: (memberName) => showInfo(`👋 ${memberName} removed from workspace`),
+    removed: (memberName) => showInfo(`👋 ${memberName} removed from group`),
     encouraged: (memberName) => showSuccess(`💪 Encouragement sent to ${memberName}!`),
     error: (action, error) => showError(`Failed to ${action}: ${error}`),
   };
@@ -70,7 +70,7 @@ export const useAppNotifications = () => {
     
     // Categorized convenience methods
     habit,
-    workspace,
+    group,
     member,
     auth,
     app,

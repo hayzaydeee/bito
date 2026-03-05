@@ -212,18 +212,18 @@ const userSchema = new mongoose.Schema({  // Basic user information
     default: null // null = never read; treat all notifications as unread
   },
 
-  // Workspace dashboard sharing permissions
+  // Group dashboard sharing permissions
   dashboardSharingPermissions: [{
-    workspaceId: {
+    groupId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Workspace',
+      ref: 'Group',
       required: true
     },
     allowedMembers: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
     }],
-    isPublicToWorkspace: {
+    isPublicToGroup: {
       type: Boolean,
       default: false
     },
@@ -264,11 +264,11 @@ const userSchema = new mongoose.Schema({  // Basic user information
     // NOTE: Limits raised to unblock testing — restore before launch.
     limits: {
       maxHabits: { type: Number, default: 999 },
-      maxActiveTransformers: { type: Number, default: 999 },
+      maxActiveCompass: { type: Number, default: 999 },
       maxGenerationsPerMonth: { type: Number, default: 999 },
-      maxWorkspacesJoined: { type: Number, default: 999 },
-      maxWorkspacesCreated: { type: Number, default: 999 },
-      maxWorkspaceMembers: { type: Number, default: 999 },
+      maxGroupsJoined: { type: Number, default: 999 },
+      maxGroupsCreated: { type: Number, default: 999 },
+      maxGroupMembers: { type: Number, default: 999 },
       historyRetentionDays: { type: Number, default: 36500 }
     },
 

@@ -282,7 +282,7 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
           {!suggesting && allHabits.length === 0 && (
             <div className="text-center py-6">
               <p className="text-sm text-[var(--color-text-tertiary)] font-spartan">
-                You don't have any habits in this workspace yet. Create a habit first, then join the challenge.
+                You don't have any habits in this group yet. Create a habit first, then join the challenge.
               </p>
             </div>
           )}

@@ -108,7 +108,7 @@ const HowItWorksSection = forwardRef((props, ref) => {
       title: 'Build Together',
       description: 'Share your journey with friends, family, or teammates. Collaborative habits create accountability and motivation.',
       features: [
-        'Shared workspaces for teams and groups',
+        'Shared groups for teams and accountability partners',
         'Friendly accountability and encouragement',
         'Group challenges and competitions',
         'Privacy controls for personal habits'
@@ -116,9 +116,9 @@ const HowItWorksSection = forwardRef((props, ref) => {
       icon: <PersonIcon className="w-6 h-6" />,
       color: 'from-orange-500 to-red-500',
       screenshot: {
-        type: 'workspace',
-        description: 'Collaborative workspace showing team habit tracking and group activities',
-        placeholder: 'collaborative-workspace'
+        type: 'group',
+        description: 'Collaborative group showing team habit tracking and group activities',
+        placeholder: 'collaborative-group'
       }
     }
   ];
@@ -136,7 +136,7 @@ const HowItWorksSection = forwardRef((props, ref) => {
     },
     {
       persona: 'Team Leader',
-      journey: 'Create Workspace → Invite Team → Set Goals → Track Together',
+      journey: 'Create Group → Invite Team → Set Goals → Track Together',
       timeToValue: '< 5 minutes'
     }
   ];
@@ -340,7 +340,7 @@ const HowItWorksSection = forwardRef((props, ref) => {
                                     </div>
                                   ))}
                                 </div>
-                                <div className="text-xs text-[var(--color-text-tertiary)]">Team Workspace</div>
+                                <div className="text-xs text-[var(--color-text-tertiary)]">Team Group</div>
                               </div>
                             )}
                           </div>

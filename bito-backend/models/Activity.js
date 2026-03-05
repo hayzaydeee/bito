@@ -2,9 +2,9 @@ const mongoose = require('mongoose');
 
 const activitySchema = new mongoose.Schema({
   // References
-  workspaceId: {
+  groupId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Workspace',
+    ref: 'Group',
     required: true,
     index: true
   },
@@ -72,8 +72,8 @@ const activitySchema = new mongoose.Schema({
   // Visibility and engagement
   visibility: {
     type: String,
-    enum: ['public', 'workspace', 'private'],
-    default: 'workspace'
+    enum: ['public', 'group', 'private'],
+    default: 'group'
   },
   reactions: [{
     userId: {
@@ -125,13 +125,13 @@ const activitySchema = new mongoose.Schema({
 });
 
 // Indexes
-activitySchema.index({ workspaceId: 1, createdAt: -1 });
+activitySchema.index({ groupId: 1, createdAt: -1 });
 activitySchema.index({ userId: 1, createdAt: -1 });
 activitySchema.index({ type: 1, createdAt: -1 });
 
-// Compound index for workspace activity feed
+// Compound index for group activity feed
 activitySchema.index({ 
-  workspaceId: 1, 
+  groupId: 1, 
   visibility: 1, 
   createdAt: -1 
 });
@@ -186,16 +186,16 @@ activitySchema.methods.canUserSee = function(userId, userRole = 'member') {
     return this.userId.toString() === userId.toString();
   }
   
-  // Public activities visible to all workspace members
-  if (this.visibility === 'public' || this.visibility === 'workspace') {
-    return true; // Assuming this method is called within workspace context
+  // Public activities visible to all group members
+  if (this.visibility === 'public' || this.visibility === 'group') {
+    return true; // Assuming this method is called within group context
   }
   
   return false;
 };
 
 // Static methods
-activitySchema.statics.getWorkspaceFeed = function(workspaceId, options = {}) {
+activitySchema.statics.getGroupFeed = function(groupId, options = {}) {
   const {
     page = 1,
     limit = 20,
@@ -204,8 +204,8 @@ activitySchema.statics.getWorkspaceFeed = function(workspaceId, options = {}) {
   } = options;
   
   const query = {
-    workspaceId,
-    visibility: { $in: ['public', 'workspace'] }
+    groupId,
+    visibility: { $in: ['public', 'group'] }
   };
   
   // Filter by user if specified
@@ -227,9 +227,9 @@ activitySchema.statics.getWorkspaceFeed = function(workspaceId, options = {}) {
     .skip((page - 1) * limit);
 };
 
-activitySchema.statics.createHabitActivity = function(workspaceId, userId, habitData, type = 'habit_completed') {
+activitySchema.statics.createHabitActivity = function(groupId, userId, habitData, type = 'habit_completed') {
   return this.create({
-    workspaceId,
+    groupId,
     userId,
     type,
     data: {
@@ -238,13 +238,13 @@ activitySchema.statics.createHabitActivity = function(workspaceId, userId, habit
       streakCount: habitData.streakCount,
       message: habitData.message
     },
-    visibility: 'workspace'
+    visibility: 'group'
   });
 };
 
-activitySchema.statics.createMilestoneActivity = function(workspaceId, userId, milestoneData) {
+activitySchema.statics.createMilestoneActivity = function(groupId, userId, milestoneData) {
   return this.create({
-    workspaceId,
+    groupId,
     userId,
     type: 'streak_milestone',
     data: {
@@ -254,13 +254,13 @@ activitySchema.statics.createMilestoneActivity = function(workspaceId, userId, m
       streakCount: milestoneData.streakCount,
       message: `🔥 ${milestoneData.streakCount} day streak on ${milestoneData.habitName}!`
     },
-    visibility: 'workspace'
+    visibility: 'group'
   });
 };
 
-activitySchema.statics.createMemberActivity = function(workspaceId, userId, memberData, type) {
+activitySchema.statics.createMemberActivity = function(groupId, userId, memberData, type) {
   return this.create({
-    workspaceId,
+    groupId,
     userId,
     type,
     data: {
@@ -268,11 +268,11 @@ activitySchema.statics.createMemberActivity = function(workspaceId, userId, memb
       memberRole: memberData.memberRole,
       message: memberData.message
     },
-    visibility: 'workspace'
+    visibility: 'group'
   });
 };
 
-activitySchema.statics.getActivityStats = function(workspaceId, timeRange = 'week') {
+activitySchema.statics.getActivityStats = function(groupId, timeRange = 'week') {
   const now = new Date();
   let startDate;
   
@@ -293,7 +293,7 @@ activitySchema.statics.getActivityStats = function(workspaceId, timeRange = 'wee
   return this.aggregate([
     {
       $match: {
-        workspaceId: mongoose.Types.ObjectId(workspaceId),
+        groupId: mongoose.Types.ObjectId(groupId),
         createdAt: { $gte: startDate }
       }
     },

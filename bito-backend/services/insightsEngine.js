@@ -633,7 +633,7 @@ async function generateInsights(userId) {
     JournalEntry.find({ userId, date: { $gte: thirtyDaysAgo } }).lean(),
   ]);
 
-  // Scope entries to active habits only, respecting activatedAt for transformer habits
+  // Scope entries to active habits only, respecting activatedAt for compass habits
   const activeHabitIds = new Set(habits.map(h => String(h._id)));
   const activatedAtMap = new Map(habits.map(h => [String(h._id), h.activatedAt]));
   const entries = allEntries.filter(e => {

@@ -1,5 +1,5 @@
 /**
- * Shared category metadata — single source of truth for Transformer categories.
+ * Shared category metadata — single source of truth for Compass categories.
  * Colors are Tailwind-class-compatible fragments: use with `bg-${color}`, `text-${color}`, etc.
  */
 

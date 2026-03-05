@@ -5,10 +5,10 @@ describe('Backend API', () => {
     expect(true).toBe(true);
   });
 
-  test('should be able to require workspace routes', () => {
+  test('should be able to require group routes', () => {
     // Test that the routes file can be required without syntax errors
     expect(() => {
-      require('../routes/workspaces');
+      require('../routes/groups');
     }).not.toThrow();
   });
 });

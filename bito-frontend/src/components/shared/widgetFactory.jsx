@@ -440,12 +440,12 @@ const WidgetRenderer = ({
         </Suspense>
       );
 
-    // Workspace collaboration widgets (placeholders)
-    case 'workspace-overview':
+    // Group collaboration widgets (placeholders)
+    case 'group-overview':
       return (
         <div className="w-full h-full flex flex-col items-center justify-center text-[var(--color-text-secondary)] bg-[var(--color-surface-elevated] rounded-xl border-2 border-dashed border-[var(--color-border-primary)]/30">
           <div className="text-4xl mb-4">🏢</div>
-          <div className="text-lg font-semibold mb-2">Workspace Overview</div>
+          <div className="text-lg font-semibold mb-2">Group Overview</div>
           <div className="text-sm text-center">Coming soon - Team progress and insights</div>
         </div>
       );
@@ -459,11 +459,11 @@ const WidgetRenderer = ({
         </div>
       );
 
-    case 'workspace-members':
+    case 'group-members':
       return (
         <div className="w-full h-full flex flex-col items-center justify-center text-[var(--color-text-secondary)] bg-[var(--color-surface-elevated] rounded-xl border-2 border-dashed border-[var(--color-border-primary)]/30">
           <div className="text-4xl mb-4">👨‍👩‍👧‍👦</div>
-          <div className="text-lg font-semibold mb-2">Workspace Members</div>
+          <div className="text-lg font-semibold mb-2">Group Members</div>
           <div className="text-sm text-center">Coming soon - Member management and stats</div>
         </div>
       );
@@ -473,7 +473,7 @@ const WidgetRenderer = ({
       return (
         <Suspense fallback={<WidgetSkeleton title="Group Overview" />}>
           <GroupOverviewWidget 
-            workspaceData={dependencies.workspaceData}
+            groupData={dependencies.groupData}
             {...commonProps}
           />
         </Suspense>

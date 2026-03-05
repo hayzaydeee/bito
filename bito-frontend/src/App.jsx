@@ -11,12 +11,12 @@ import AnalyticsPage from "./pages/AnalyticsPage";
 import JournalPageV2 from "./components/journal-v2/JournalPageV2";
 import './components/journal-v2/journal-v2.css';
 import SettingsPage from "./pages/SettingsPage";
-import WorkspaceOverview from "./pages/WorkspaceOverview";
+import GroupOverview from "./pages/GroupOverview";
 
-import WorkspaceSettings from "./pages/WorkspaceSettings";
+import GroupSettings from "./pages/GroupSettings";
 import MemberDashboardView from "./pages/MemberDashboardView";
 import ChallengeDetailPage from "./pages/ChallengeDetailPage";
-import TransformersPage from "./components/transformers/TransformersPage";
+import CompassPage from "./components/compass/CompassPage";
 import GroupSelection from "./pages/GroupSelection";
 import OnboardingPage from "./pages/OnboardingPage";
 import ProfileSetupPage from "./pages/ProfileSetupPage";
@@ -81,15 +81,15 @@ const ThemedApp = () => {
               <Route path="habits" element={<HabitsPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />
               <Route path="journal" element={<JournalPageV2 />} />
-              <Route path="transformers" element={<TransformersPage />} />
+              <Route path="compass" element={<CompassPage />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="settings/habit-privacy/:habitId" element={<SettingsPage section="habit-privacy" />} />
               <Route path="settings/personality" element={<SettingsPage section="personality" />} />
               <Route path="groups" element={<GroupSelection />} />
-              <Route path="groups/:groupId" element={<WorkspaceOverview />} />
+              <Route path="groups/:groupId" element={<GroupOverview />} />
               <Route path="groups/:groupId/challenges/:challengeId" element={<ChallengeDetailPage />} />
               <Route path="groups/:groupId/members/:memberId/dashboard" element={<MemberDashboardView />} />
-              <Route path="groups/:groupId/settings" element={<WorkspaceSettings />} />
+              <Route path="groups/:groupId/settings" element={<GroupSettings />} />
               <Route path="invitations" element={<InvitationPage />} />
             </Route>
           </Routes>

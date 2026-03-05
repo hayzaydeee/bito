@@ -372,15 +372,15 @@ export const HabitProvider = ({ children }) => {
     dispatch({ type: actionTypes.CLEAR_ERROR });
   };
 
-  // Helper functions for workspace habits
-  const isWorkspaceHabit = (habit) => habit.source === 'workspace';
+  // Helper functions for group habits
+  const isGroupHabit = (habit) => habit.source === 'group';
   
   const getPersonalHabits = () => state.habits.filter(habit => habit.source === 'personal' || !habit.source);
   
-  const getWorkspaceHabits = () => state.habits.filter(habit => habit.source === 'workspace');
+  const getGroupHabits = () => state.habits.filter(habit => habit.source === 'group');
   
-  const getHabitsByWorkspace = (workspaceId) => 
-    state.habits.filter(habit => habit.workspaceId === workspaceId);
+  const getHabitsByGroup = (groupId) => 
+    state.habits.filter(habit => habit.groupId === groupId);
 
   const value = {
     ...state,
@@ -393,11 +393,11 @@ export const HabitProvider = ({ children }) => {
     fetchStats,
     archiveHabit,
     clearError,
-    // Workspace-specific helpers
-    isWorkspaceHabit,
+    // Group-specific helpers
+    isGroupHabit,
     getPersonalHabits,
-    getWorkspaceHabits,
-    getHabitsByWorkspace,
+    getGroupHabits,
+    getHabitsByGroup,
   };
 
   return (

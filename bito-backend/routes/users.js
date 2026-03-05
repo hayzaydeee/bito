@@ -2,7 +2,7 @@ const express = require('express');
 const User = require('../models/User');
 const Habit = require('../models/Habit');
 const HabitEntry = require('../models/HabitEntry');
-const Workspace = require('../models/Workspace');
+const Group = require('../models/Group');
 const Activity = require('../models/Activity');
 const { authenticateJWT } = require('../middleware/auth');
 const { validateUserUpdate, validateProfileSetup } = require('../middleware/validation');
@@ -506,23 +506,23 @@ router.post('/export-data', async (req, res) => {
 });
 
 // @route   GET /api/users/notifications
-// @desc    Get user notifications (activities across all workspaces)
+// @desc    Get user notifications (activities across all groups)
 // @access  Private
 router.get('/notifications', async (req, res) => {
   try {
     const userId = req.user._id;
     const { limit = 20, offset = 0, types } = req.query;
 
-    // Get all workspaces the user belongs to
-    const workspaces = await Workspace.find({
+    // Get all groups the user belongs to
+    const groups = await Group.find({
       'members.userId': userId
     }).select('_id name');
 
-    const workspaceIds = workspaces.map(w => w._id);
+    const groupIds = groups.map(w => w._id);
 
     // Build activity query
     const query = {
-      workspaceId: { $in: workspaceIds },
+      groupId: { $in: groupIds },
       userId: { $ne: userId } // Don't include user's own activities
     };
 
@@ -532,10 +532,10 @@ router.get('/notifications', async (req, res) => {
       query.type = { $in: typeArray };
     }
 
-    // Get activities from all user's workspaces
+    // Get activities from all user's groups
     const activities = await Activity.find(query)
       .populate('userId', 'name email')
-      .populate('workspaceId', 'name')
+      .populate('groupId', 'name')
       .sort({ createdAt: -1 })
       .limit(parseInt(limit))
       .skip(parseInt(offset))
@@ -545,11 +545,11 @@ router.get('/notifications', async (req, res) => {
     const user = await User.findById(userId).select('lastReadNotificationsAt').lean();
     const readCutoff = user?.lastReadNotificationsAt;
 
-    // Add workspace name and isRead flag to each activity
-    const activitiesWithWorkspace = activities.map(activity => ({
+    // Add group name and isRead flag to each activity
+    const activitiesWithGroup = activities.map(activity => ({
       ...activity,
-      workspaceId: activity.workspaceId?._id?.toString() || activity.workspaceId?.toString(),
-      workspaceName: activity.workspaceId?.name,
+      groupId: activity.groupId?._id?.toString() || activity.groupId?.toString(),
+      groupName: activity.groupId?.name,
       userName: activity.userId?.name,
       isRead: readCutoff ? activity.createdAt <= readCutoff : false
     }));
@@ -557,7 +557,7 @@ router.get('/notifications', async (req, res) => {
     res.json({
       success: true,
       data: {
-        notifications: activitiesWithWorkspace,
+        notifications: activitiesWithGroup,
         hasMore: activities.length === parseInt(limit)
       }
     });
@@ -577,12 +577,12 @@ router.get('/notifications/unread-count', async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // Get all workspaces the user belongs to
-    const workspaces = await Workspace.find({
+    // Get all groups the user belongs to
+    const groups = await Group.find({
       'members.userId': userId
     }).select('_id');
 
-    const workspaceIds = workspaces.map(w => w._id);
+    const groupIds = groups.map(w => w._id);
 
     // Get user's last-read timestamp
     const user = await User.findById(userId).select('lastReadNotificationsAt').lean();
@@ -594,7 +594,7 @@ router.get('/notifications/unread-count', async (req, res) => {
     const since = readCutoff || fallback;
 
     const count = await Activity.countDocuments({
-      workspaceId: { $in: workspaceIds },
+      groupId: { $in: groupIds },
       userId: { $ne: userId },
       createdAt: { $gt: since },
       type: { 

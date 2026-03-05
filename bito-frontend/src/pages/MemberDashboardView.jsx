@@ -73,8 +73,8 @@ const MemberDashboardView = () => {
           ...h,
           _id: h._id || h.id,
           name: h.name || "Unnamed habit",
-          source: h.source || (h.workspaceId ? "workspace" : "personal"),
-          isGroupHabit: h.source === "workspace" || !!h.workspaceId,
+          source: h.source || (h.groupId ? "group" : "personal"),
+          isGroupHabit: h.source === "group" || !!h.groupId,
         }));
 
       setMemberData({ member: res.member, habits, entries });

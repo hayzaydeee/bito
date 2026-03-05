@@ -314,7 +314,7 @@ const ChallengeDetailPage = () => {
               <div className="flex justify-between">
                 <dt className="text-[var(--color-text-tertiary)]">Linked habit</dt>
                 <dd className="font-medium text-[var(--color-text-primary)]">
-                  {challenge.habitId?.icon} {challenge.habitId?.name || "Workspace habit"}
+                  {challenge.habitId?.icon} {challenge.habitId?.name || "Group habit"}
                 </dd>
               </div>
             )}

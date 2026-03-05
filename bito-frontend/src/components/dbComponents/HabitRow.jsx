@@ -11,8 +11,8 @@ export const HabitRow = memo(({
   onToggle,
   onEditHabit
 }) => {
-  const { isWorkspaceHabit } = useHabits();
-  const isFromWorkspace = isWorkspaceHabit(habit) || habit.isGroupHabit || habit.source === 'workspace';
+  const { isGroupHabit } = useHabits();
+  const isFromGroup = isGroupHabit(habit) || habit.isGroupHabit || habit.source === 'group';
   const isPersonal = habit.isPersonalHabit || habit.source === 'personal';
 
   return (
@@ -26,7 +26,7 @@ export const HabitRow = memo(({
               <h3 className="font-medium text-[var(--color-text-primary)] truncate">
                 {habit.name}
               </h3>
-              {isFromWorkspace && (
+              {isFromGroup && (
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
                   📊 Group
                 </span>
@@ -39,8 +39,8 @@ export const HabitRow = memo(({
             </div>
             <p className="text-xs text-[var(--color-text-tertiary)]">
               Streak: {getHabitStreak(entries, weekDates)} days
-              {isFromWorkspace && habit.workspaceHabitId && (
-                <span className="ml-2 opacity-75">• From workspace</span>
+              {isFromGroup && habit.groupHabitId && (
+                <span className="ml-2 opacity-75">• From group</span>
               )}
               {isPersonal && (
                 <span className="ml-2 opacity-75">• Private habit</span>

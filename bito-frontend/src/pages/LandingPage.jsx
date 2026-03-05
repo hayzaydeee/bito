@@ -103,8 +103,8 @@ const LandingPage = () => {
     {
       tab: "Together",
       title: "Accountability changes everything",
-      desc: "Invite friends, family, or teammates into shared workspaces. Celebrate wins together, run challenges, and build habits as a group.",
-      bullets: ["Shared workspaces and team habits", "Group challenges and competitions", "Encouragement and activity feeds"],
+      desc: "Invite friends, family, or teammates into shared groups. Celebrate wins together, run challenges, and build habits as a group.",
+      bullets: ["shared groups and team habits", "Group challenges and competitions", "Encouragement and activity feeds"],
       visual: "together",
     },
   ];
@@ -123,7 +123,7 @@ const LandingPage = () => {
 
   const comparisonRows = [
     { feature: "Habit tracking", bito: true, others: true },
-    { feature: "Team workspaces", bito: true, others: false },
+    { feature: "Team groups", bito: true, others: false },
     { feature: "AI-powered insights", bito: true, others: false },
     { feature: "Beautiful analytics", bito: true, others: "Basic" },
     { feature: "Journal integration", bito: true, others: false },

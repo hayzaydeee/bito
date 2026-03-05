@@ -67,9 +67,9 @@ const InvitationPage = () => {
       const response = await groupsAPI.acceptInvitation(token);
       
       if (response.success) {
-        // Redirect to the workspace
-        navigate(`/app/groups/${response.workspace.id}`, {
-          state: { message: `Welcome to ${response.workspace.name}!` }
+        // Redirect to the group
+        navigate(`/app/groups/${response.group.id}`, {
+          state: { message: `Welcome to ${response.group.name}!` }
         });
       } else {
         setError(response.error);
@@ -102,7 +102,7 @@ const InvitationPage = () => {
     }
   };
 
-  const getWorkspaceIcon = (type) => {
+  const getGroupIcon = (type) => {
     const icons = {
       family: HomeIcon,
       team: BackpackIcon,
@@ -113,7 +113,7 @@ const InvitationPage = () => {
     return icons[type] || BackpackIcon;
   };
 
-  const getWorkspaceColor = (type) => {
+  const getGroupColor = (type) => {
     const colors = {
       family: 'var(--color-blue-500), var(--color-blue-600)',
       team: 'var(--color-purple-500), var(--color-purple-600)',
@@ -178,7 +178,7 @@ const InvitationPage = () => {
     );
   }
 
-  const WorkspaceIcon = getWorkspaceIcon(invitation.workspace.type);
+  const GroupIcon = getGroupIcon(invitation.group.type);
 
   return (
     <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center p-4">
@@ -197,33 +197,33 @@ const InvitationPage = () => {
               You're Invited!
             </div>
             <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
-              Join {invitation.workspace.name} and start tracking habits together
+              Join {invitation.group.name} and start tracking habits together
             </p>
           </div>
 
-          {/* Workspace Info Card */}
+          {/* Group Info Card */}
           <div className="mx-6">
             <div className="bg-[var(--color-surface-elevated)] rounded-xl p-4 border border-[var(--color-border-primary)]/50">
               <div className="flex items-center gap-3 mb-3">
                 <div 
                   className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
-                  style={{ background: `linear-gradient(135deg, ${getWorkspaceColor(invitation.workspace.type)})` }}
+                  style={{ background: `linear-gradient(135deg, ${getGroupColor(invitation.group.type)})` }}
                 >
-                  <WorkspaceIcon className="w-6 h-6" />
+                  <GroupIcon className="w-6 h-6" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-[var(--color-text-primary)] font-outfit">
-                    {invitation.workspace.name}
+                    {invitation.group.name}
                   </h3>
                   <p className="text-xs text-[var(--color-text-secondary)] font-outfit capitalize">
-                    {invitation.workspace.type} • {invitation.role}
+                    {invitation.group.type} • {invitation.role}
                   </p>
                 </div>
               </div>
               
-              {invitation.workspace.description && (
+              {invitation.group.description && (
                 <p className="text-sm text-[var(--color-text-secondary)] font-outfit mb-3">
-                  {invitation.workspace.description}
+                  {invitation.group.description}
                 </p>
               )}
 
@@ -233,9 +233,9 @@ const InvitationPage = () => {
                   <span>Invited by {invitation.invitedBy.name}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  {invitation.workspace.type === 'family' && <LockClosedIcon className="w-3 h-3 text-blue-500" />}
-                  {invitation.workspace.type === 'team' && <EyeOpenIcon className="w-3 h-3 text-purple-500" />}
-                  <span className="text-[var(--color-text-tertiary)] capitalize">{invitation.workspace.type}</span>
+                  {invitation.group.type === 'family' && <LockClosedIcon className="w-3 h-3 text-blue-500" />}
+                  {invitation.group.type === 'team' && <EyeOpenIcon className="w-3 h-3 text-purple-500" />}
+                  <span className="text-[var(--color-text-tertiary)] capitalize">{invitation.group.type}</span>
                 </div>
               </div>
             </div>
@@ -264,7 +264,7 @@ const InvitationPage = () => {
                     Sign in to Accept
                   </h3>
                   <p className="text-xs text-[var(--color-text-secondary)] font-outfit mb-3">
-                    Sign in to your Bito account to join the workspace
+                    Sign in to your Bito account to join the group
                   </p>
                   <button
                     onClick={() => navigate('/login')}

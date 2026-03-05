@@ -10,7 +10,7 @@ import {
   MixIcon
 } from '@radix-ui/react-icons';
 
-const GroupLeaderboard = ({ workspaceId }) => {
+const GroupLeaderboard = ({ groupId }) => {
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -18,13 +18,13 @@ const GroupLeaderboard = ({ workspaceId }) => {
 
   useEffect(() => {
     fetchLeaderboardData();
-  }, [workspaceId, activeTab]);
+  }, [groupId, activeTab]);
 
   const fetchLeaderboardData = async () => {
     try {
       setLoading(true);
       // Get group tracker data and calculate leaderboard metrics
-      const response = await groupsAPI.getGroupTrackers(workspaceId);
+      const response = await groupsAPI.getGroupTrackers(groupId);
       const trackerData = response.data || [];
       
       // Calculate different leaderboard metrics

@@ -31,7 +31,7 @@ async function notifyParticipants(challenge, senderId, { title, body, tag }) {
       icon: '/android-chrome-192x192.png',
       badge: '/favicon-32x32.png',
       tag: tag || `challenge-${challenge._id}`,
-      data: { url: `/app/groups/${challenge.workspaceId}/challenges/${challenge._id}`, challengeId: challenge._id.toString() },
+      data: { url: `/app/groups/${challenge.groupId}/challenges/${challenge._id}`, challengeId: challenge._id.toString() },
     });
 
     for (const sub of subs) {
@@ -93,7 +93,7 @@ function invalidateCache(userId) {
  * Process challenge progress after a habit check-in.
  * Called from the habits route after a completed entry is saved.
  *
- * For workspace habits: looks up active challenges in the workspace.
+ * For group habits: looks up active challenges in the group.
  * For personal habits linked to a challenge: updates that challenge.
  */
 const processChallengeProgress = async (userId, habitId) => {
@@ -107,7 +107,7 @@ const processChallengeProgress = async (userId, habitId) => {
       }
     }
 
-    // Find habit to get workspace info
+    // Find habit to get group info
     const habit = await Habit.findById(habitId).lean();
     if (!habit) return { processed: false, message: 'Habit not found' };
 
@@ -115,13 +115,13 @@ const processChallengeProgress = async (userId, habitId) => {
     const challengeQuery = {
       status: 'active',
       $or: [
-        // Challenges tied to a specific workspace habit that this habit adopted
-        ...(habit.workspaceHabitId ? [{ habitId: habit.workspaceHabitId }] : []),
+        // Challenges tied to a specific group habit that this habit adopted
+        ...(habit.groupHabitId ? [{ habitId: habit.groupHabitId }] : []),
         // Challenges where this user linked this habit directly (singular or array)
         { 'participants.userId': userId, 'participants.linkedHabitId': habitId },
         { 'participants.userId': userId, 'participants.linkedHabitIds': habitId },
-        // General workspace challenges (no specific habit, mode=single so any habit counts)
-        ...(habit.workspaceId ? [{ workspaceId: habit.workspaceId, habitId: null, habitMatchMode: 'single' }] : []),
+        // General group challenges (no specific habit, mode=single so any habit counts)
+        ...(habit.groupId ? [{ groupId: habit.groupId, habitId: null, habitMatchMode: 'single' }] : []),
       ],
     };
 
@@ -154,7 +154,7 @@ const processChallengeProgress = async (userId, habitId) => {
       // Generate milestone feed events + push
       for (const milestone of newMilestones) {
         await Activity.create({
-          workspaceId: challenge.workspaceId,
+          groupId: challenge.groupId,
           userId,
           type: 'challenge_milestone',
           data: {
@@ -163,7 +163,7 @@ const processChallengeProgress = async (userId, habitId) => {
             message: `reached milestone "${milestone.label}" in ${challenge.title}`,
             metadata: { milestoneValue: milestone.value, milestoneLabel: milestone.label },
           },
-          visibility: 'workspace',
+          visibility: 'group',
         });
 
         await notifyParticipants(challenge, userId, {
@@ -176,7 +176,7 @@ const processChallengeProgress = async (userId, habitId) => {
       // If participant just completed, generate feed event + push notification
       if (updated.status === 'completed') {
         await Activity.create({
-          workspaceId: challenge.workspaceId,
+          groupId: challenge.groupId,
           userId,
           type: 'challenge_completed',
           data: {
@@ -185,7 +185,7 @@ const processChallengeProgress = async (userId, habitId) => {
             challengeType: challenge.type,
             message: `completed challenge: ${challenge.title}`,
           },
-          visibility: 'workspace',
+          visibility: 'group',
         });
 
         // Push to other participants

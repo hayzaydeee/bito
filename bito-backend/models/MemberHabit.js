@@ -2,9 +2,9 @@ const mongoose = require('mongoose');
 
 const memberHabitSchema = new mongoose.Schema({
   // References
-  workspaceId: {
+  groupId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Workspace',
+    ref: 'Group',
     required: true,
     index: true
   },
@@ -14,29 +14,29 @@ const memberHabitSchema = new mongoose.Schema({
     required: true,
     index: true
   },
-  workspaceHabitId: {
+  groupHabitId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'WorkspaceHabit',
+    ref: 'GroupHabit',
     required: true
   },
   
-  // Personal customizations (overrides workspace defaults)
+  // Personal customizations (overrides group defaults)
   personalSettings: {
-    // Custom name (if different from workspace habit)
+    // Custom name (if different from group habit)
     customName: {
       type: String,
       trim: true,
       maxlength: 100
     },
     
-    // Personal target (overrides workspace default)
+    // Personal target (overrides group default)
     target: {
       value: Number,
       unit: String,
       customUnit: String
     },
 
-    // Personal weekly target (overrides workspace default for weekly habits)
+    // Personal weekly target (overrides group default for weekly habits)
     weeklyTarget: {
       type: Number,
       min: 1,
@@ -61,7 +61,7 @@ const memberHabitSchema = new mongoose.Schema({
     },
     shareInActivity: {
       type: Boolean,
-      default: true // Show completions in workspace activity feed
+      default: true // Show completions in group activity feed
     }
   },
   
@@ -91,7 +91,7 @@ const memberHabitSchema = new mongoose.Schema({
   },
   pausedUntil: Date,
   
-  // Workspace interaction
+  // Group interaction
   adoptedAt: {
     type: Date,
     default: Date.now
@@ -121,13 +121,13 @@ const memberHabitSchema = new mongoose.Schema({
 });
 
 // Compound indexes
-memberHabitSchema.index({ workspaceId: 1, userId: 1 });
+memberHabitSchema.index({ groupId: 1, userId: 1 });
 memberHabitSchema.index({ userId: 1, isActive: 1 });
-memberHabitSchema.index({ workspaceHabitId: 1, isActive: 1 });
+memberHabitSchema.index({ groupHabitId: 1, isActive: 1 });
 
 // Virtual properties
 memberHabitSchema.virtual('effectiveName').get(function() {
-  return this.personalSettings.customName || this.workspaceHabit?.name || 'Unnamed Habit';
+  return this.personalSettings.customName || this.groupHabit?.name || 'Unnamed Habit';
 });
 
 memberHabitSchema.virtual('completionRate').get(function() {
@@ -140,9 +140,9 @@ memberHabitSchema.virtual('completionRate').get(function() {
 memberHabitSchema.methods.getVisibleData = function(viewerRole = 'member') {
   const baseData = {
     _id: this._id,
-    workspaceId: this.workspaceId,
+    groupId: this.groupId,
     userId: this.userId,
-    workspaceHabitId: this.workspaceHabitId,
+    groupHabitId: this.groupHabitId,
     isActive: this.isActive,
     adoptedAt: this.adoptedAt
   };
@@ -201,37 +201,37 @@ memberHabitSchema.methods.updateStreak = function(completed, date = new Date()) 
 };
 
 // Static methods
-memberHabitSchema.statics.findByUserAndWorkspace = function(userId, workspaceId) {
+memberHabitSchema.statics.findByUserAndGroup = function(userId, groupId) {
   return this.find({
     userId,
-    workspaceId,
+    groupId,
     isActive: true
   })
-  .populate('workspaceHabitId')
+  .populate('groupHabitId')
   .sort({ adoptedAt: -1 });
 };
 
-memberHabitSchema.statics.getWorkspaceLeaderboard = function(workspaceId, metric = 'currentStreak', limit = 10) {
+memberHabitSchema.statics.getGroupLeaderboard = function(groupId, metric = 'currentStreak', limit = 10) {
   const sortField = {};
   sortField[metric] = -1;
   
   return this.find({
-    workspaceId,
+    groupId,
     isActive: true,
     'personalSettings.shareProgress': { $ne: 'private' }
   })
   .populate('userId', 'name avatar')
-  .populate('workspaceHabitId', 'name icon')
+  .populate('groupHabitId', 'name icon')
   .sort(sortField)
   .limit(limit);
 };
 
-memberHabitSchema.statics.getWorkspaceStats = function(workspaceId) {
+memberHabitSchema.statics.getGroupStats = function(groupId) {
   return this.aggregate([
-    { $match: { workspaceId: new mongoose.Types.ObjectId(workspaceId), isActive: true } },
+    { $match: { groupId: new mongoose.Types.ObjectId(groupId), isActive: true } },
     {
       $group: {
-        _id: '$workspaceId',
+        _id: '$groupId',
         totalHabits: { $sum: 1 },
         totalCompletions: { $sum: '$totalCompletions' },
         avgStreak: { $avg: '$currentStreak' },

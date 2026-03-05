@@ -13,7 +13,7 @@ const EncouragementModal = ({
   isOpen, 
   onClose, 
   targetUser, 
-  workspaceId, 
+  groupId, 
   habitId = null, 
   onEncouragementSent 
 }) => {
@@ -63,7 +63,7 @@ const EncouragementModal = ({
     try {
       const encouragementData = {
         toUserId: targetUser._id,
-        workspaceId,
+        groupId,
         habitId,
         type,
         message: message.trim(),

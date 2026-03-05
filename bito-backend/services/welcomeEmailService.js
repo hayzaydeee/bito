@@ -82,7 +82,7 @@ async function sendWelcomeEmail(user) {
       { icon: '✨', text: 'Start small — even 1 habit tracked daily builds momentum' },
       { icon: '⏰', text: 'Set reminders so you never forget' },
       { icon: '📊', text: 'Check your analytics to see patterns over time' },
-      { icon: '👥', text: 'Invite friends to a workspace for accountability' },
+      { icon: '👥', text: 'Invite friends to a group for accountability' },
     ];
 
     const tipsHtml = tips.map(t => `

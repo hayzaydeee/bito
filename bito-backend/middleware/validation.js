@@ -174,9 +174,9 @@ const validateEncouragement = [
   body('toUserId')
     .isMongoId()
     .withMessage('To user ID must be a valid MongoDB ObjectId'),
-  body('workspaceId')
+  body('groupId')
     .isMongoId()
-    .withMessage('Workspace ID must be a valid MongoDB ObjectId'),
+    .withMessage('Group ID must be a valid MongoDB ObjectId'),
   body('habitId')
     .optional()
     .isMongoId()

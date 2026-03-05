@@ -15,10 +15,10 @@ const encouragementSchema = new mongoose.Schema({
     required: true
   },
   
-  // Which workspace this encouragement is related to
-  workspace: {
+  // Which group this encouragement is related to
+  group: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Workspace',
+    ref: 'Group',
     required: true
   },
   
@@ -99,13 +99,13 @@ const encouragementSchema = new mongoose.Schema({
 // Indexes for performance
 encouragementSchema.index({ toUser: 1, createdAt: -1 }); // For fetching user's received encouragements
 encouragementSchema.index({ fromUser: 1, createdAt: -1 }); // For fetching user's sent encouragements
-encouragementSchema.index({ workspace: 1, createdAt: -1 }); // For workspace-specific encouragements
+encouragementSchema.index({ group: 1, createdAt: -1 }); // For group-specific encouragements
 encouragementSchema.index({ habit: 1, createdAt: -1 }); // For habit-specific encouragements
 encouragementSchema.index({ isRead: 1, toUser: 1 }); // For unread notifications
 
 // Compound indexes
 encouragementSchema.index({ toUser: 1, isRead: 1, createdAt: -1 }); // For unread notifications timeline
-encouragementSchema.index({ workspace: 1, toUser: 1, createdAt: -1 }); // For workspace member encouragements
+encouragementSchema.index({ group: 1, toUser: 1, createdAt: -1 }); // For group member encouragements
 
 // Virtual for formatted creation time
 encouragementSchema.virtual('timeAgo').get(function() {
@@ -143,8 +143,8 @@ encouragementSchema.pre('save', function(next) {
 encouragementSchema.statics.getReceivedEncouragements = function(userId, options = {}) {
   const query = { toUser: userId };
   
-  if (options.workspaceId) {
-    query.workspace = options.workspaceId;
+  if (options.groupId) {
+    query.group = options.groupId;
   }
   
   if (options.unreadOnly) {
@@ -153,7 +153,7 @@ encouragementSchema.statics.getReceivedEncouragements = function(userId, options
   
   return this.find(query)
     .populate('fromUser', 'name email avatar')
-    .populate('workspace', 'name')
+    .populate('group', 'name')
     .populate('habit', 'name')
     .sort({ createdAt: -1 })
     .limit(options.limit || 50);
@@ -162,20 +162,20 @@ encouragementSchema.statics.getReceivedEncouragements = function(userId, options
 encouragementSchema.statics.getSentEncouragements = function(userId, options = {}) {
   const query = { fromUser: userId };
   
-  if (options.workspaceId) {
-    query.workspace = options.workspaceId;
+  if (options.groupId) {
+    query.group = options.groupId;
   }
   
   return this.find(query)
     .populate('toUser', 'name email avatar')
-    .populate('workspace', 'name')
+    .populate('group', 'name')
     .populate('habit', 'name')
     .sort({ createdAt: -1 })
     .limit(options.limit || 50);
 };
 
-encouragementSchema.statics.getWorkspaceEncouragements = function(workspaceId, options = {}) {
-  const query = { workspace: workspaceId };
+encouragementSchema.statics.getGroupEncouragements = function(groupId, options = {}) {
+  const query = { group: groupId };
   
   return this.find(query)
     .populate('fromUser', 'name email avatar')

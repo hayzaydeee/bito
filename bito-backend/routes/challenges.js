@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const { authenticateJWT } = require('../middleware/auth');
 const { body, validationResult } = require('express-validator');
 const Challenge = require('../models/Challenge');
-const Workspace = require('../models/Workspace');
+const Group = require('../models/Group');
 const Activity = require('../models/Activity');
 const Habit = require('../models/Habit');
 const { invalidateCache } = require('../controllers/challengeController');
@@ -13,23 +13,23 @@ const { invalidateCache } = require('../controllers/challengeController');
 router.use(authenticateJWT);
 
 // ─────────────────────────────────────────────────────────
-// GET /api/workspaces/:workspaceId/challenges
-// List challenges for a workspace
+// GET /api/groups/:groupId/challenges
+// List challenges for a group
 // ─────────────────────────────────────────────────────────
-router.get('/workspaces/:workspaceId/challenges', async (req, res) => {
+router.get('/groups/:groupId/challenges', async (req, res) => {
   try {
-    const { workspaceId } = req.params;
+    const { groupId } = req.params;
     const { status } = req.query; // optional filter: active, upcoming, completed, cancelled
 
-    const workspace = await Workspace.findById(workspaceId);
-    if (!workspace || !workspace.isMember(req.user._id)) {
+    const group = await Group.findById(groupId);
+    if (!group || !group.isMember(req.user._id)) {
       return res.status(403).json({ success: false, error: 'Access denied' });
     }
 
     const options = {};
     if (status) options.status = status.split(',');
 
-    const challenges = await Challenge.findByWorkspace(workspaceId, options);
+    const challenges = await Challenge.findByGroup(groupId, options);
 
     res.json({ success: true, challenges });
   } catch (error) {
@@ -39,10 +39,10 @@ router.get('/workspaces/:workspaceId/challenges', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────
-// POST /api/workspaces/:workspaceId/challenges
+// POST /api/groups/:groupId/challenges
 // Create a challenge
 // ─────────────────────────────────────────────────────────
-router.post('/workspaces/:workspaceId/challenges', [
+router.post('/groups/:groupId/challenges', [
   body('title').trim().isLength({ min: 3, max: 60 }).withMessage('Title must be 3-60 characters'),
   body('type').isIn(['streak', 'cumulative', 'consistency', 'team_goal']).withMessage('Invalid challenge type'),
   body('rules.targetValue').isNumeric({ min: 1 }).withMessage('Target value must be a positive number'),
@@ -69,16 +69,16 @@ router.post('/workspaces/:workspaceId/challenges', [
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
-    const { workspaceId } = req.params;
+    const { groupId } = req.params;
     const userId = req.user._id;
 
-    const workspace = await Workspace.findById(workspaceId);
-    if (!workspace || !workspace.isMember(userId)) {
+    const group = await Group.findById(groupId);
+    if (!group || !group.isMember(userId)) {
       return res.status(403).json({ success: false, error: 'Access denied' });
     }
 
     // Only owner/admin/member can create (not viewer)
-    const role = workspace.getMemberRole(userId);
+    const role = group.getMemberRole(userId);
     if (role === 'viewer') {
       return res.status(403).json({ success: false, error: 'Viewers cannot create challenges' });
     }
@@ -98,7 +98,7 @@ router.post('/workspaces/:workspaceId/challenges', [
     if (start <= now) status = 'active';
 
     const challenge = new Challenge({
-      workspaceId,
+      groupId,
       createdBy: userId,
       title,
       description,
@@ -141,7 +141,7 @@ router.post('/workspaces/:workspaceId/challenges', [
 
     // Generate feed event
     await Activity.create({
-      workspaceId,
+      groupId,
       userId,
       type: 'challenge_started',
       data: {
@@ -150,7 +150,7 @@ router.post('/workspaces/:workspaceId/challenges', [
         challengeType: challenge.type,
         message: `started challenge: ${challenge.title}`,
       },
-      visibility: 'workspace',
+      visibility: 'group',
     });
 
     // Populate for response
@@ -180,8 +180,8 @@ router.get('/challenges/:id', async (req, res) => {
     }
 
     // Verify membership
-    const workspace = await Workspace.findById(challenge.workspaceId);
-    if (!workspace || !workspace.isMember(req.user._id)) {
+    const group = await Group.findById(challenge.groupId);
+    if (!group || !group.isMember(req.user._id)) {
       return res.status(403).json({ success: false, error: 'Access denied' });
     }
 
@@ -222,9 +222,9 @@ router.put('/challenges/:id', [
       return res.status(404).json({ success: false, error: 'Challenge not found' });
     }
 
-    // Only creator or workspace admin/owner can edit
-    const workspace = await Workspace.findById(challenge.workspaceId);
-    const role = workspace?.getMemberRole(req.user._id);
+    // Only creator or group admin/owner can edit
+    const group = await Group.findById(challenge.groupId);
+    const role = group?.getMemberRole(req.user._id);
     const isCreator = challenge.createdBy.equals(req.user._id);
     if (!isCreator && !['owner', 'admin'].includes(role)) {
       return res.status(403).json({ success: false, error: 'Only the creator or admins can edit challenges' });
@@ -269,8 +269,8 @@ router.delete('/challenges/:id', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Challenge not found' });
     }
 
-    const workspace = await Workspace.findById(challenge.workspaceId);
-    const role = workspace?.getMemberRole(req.user._id);
+    const group = await Group.findById(challenge.groupId);
+    const role = group?.getMemberRole(req.user._id);
     const isCreator = challenge.createdBy.equals(req.user._id);
     if (!isCreator && !['owner', 'admin'].includes(role)) {
       return res.status(403).json({ success: false, error: 'Only the creator or admins can cancel challenges' });
@@ -305,8 +305,8 @@ router.post('/challenges/:id/join', [
       return res.status(400).json({ success: false, error: 'Challenge is not open for joining' });
     }
 
-    const workspace = await Workspace.findById(challenge.workspaceId);
-    if (!workspace || !workspace.isMember(req.user._id)) {
+    const group = await Group.findById(challenge.groupId);
+    if (!group || !group.isMember(req.user._id)) {
       return res.status(403).json({ success: false, error: 'Access denied' });
     }
 
@@ -355,7 +355,7 @@ router.post('/challenges/:id/join', [
 
     // Feed event
     await Activity.create({
-      workspaceId: challenge.workspaceId,
+      groupId: challenge.groupId,
       userId: req.user._id,
       type: 'challenge_joined',
       data: {
@@ -363,7 +363,7 @@ router.post('/challenges/:id/join', [
         challengeName: challenge.title,
         message: `joined challenge: ${challenge.title}`,
       },
-      visibility: 'workspace',
+      visibility: 'group',
     });
 
     await challenge.populate('participants.userId', 'name avatar');
@@ -419,15 +419,15 @@ router.post('/challenges/:id/suggest-habits', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Challenge not found' });
     }
 
-    const workspace = await Workspace.findById(challenge.workspaceId);
-    if (!workspace || !workspace.isMember(req.user._id)) {
+    const group = await Group.findById(challenge.groupId);
+    if (!group || !group.isMember(req.user._id)) {
       return res.status(403).json({ success: false, error: 'Access denied' });
     }
 
-    // Get user's personal habits in this workspace
+    // Get user's personal habits in this group
     const userHabits = await Habit.find({
       userId: req.user._id,
-      workspaceId: challenge.workspaceId,
+      groupId: challenge.groupId,
       archived: { $ne: true },
     }).select('name description category methodology target frequency icon').lean();
 
@@ -550,8 +550,8 @@ router.get('/challenges/:id/leaderboard', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Challenge not found' });
     }
 
-    const workspace = await Workspace.findById(challenge.workspaceId);
-    if (!workspace || !workspace.isMember(req.user._id)) {
+    const group = await Group.findById(challenge.groupId);
+    if (!group || !group.isMember(req.user._id)) {
       return res.status(403).json({ success: false, error: 'Access denied' });
     }
 
@@ -586,9 +586,9 @@ router.post('/feed/:eventId/reactions', [
       return res.status(404).json({ success: false, error: 'Feed event not found' });
     }
 
-    // Verify workspace membership
-    const workspace = await Workspace.findById(activity.workspaceId);
-    if (!workspace || !workspace.isMember(req.user._id)) {
+    // Verify group membership
+    const group = await Group.findById(activity.groupId);
+    if (!group || !group.isMember(req.user._id)) {
       return res.status(403).json({ success: false, error: 'Access denied' });
     }
 
@@ -612,8 +612,8 @@ router.delete('/feed/:eventId/reactions', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Feed event not found' });
     }
 
-    const workspace = await Workspace.findById(activity.workspaceId);
-    if (!workspace || !workspace.isMember(req.user._id)) {
+    const group = await Group.findById(activity.groupId);
+    if (!group || !group.isMember(req.user._id)) {
       return res.status(403).json({ success: false, error: 'Access denied' });
     }
 
@@ -627,10 +627,10 @@ router.delete('/feed/:eventId/reactions', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────
-// POST /api/workspaces/:workspaceId/kudos
-// Send kudos to a workspace member
+// POST /api/groups/:groupId/kudos
+// Send kudos to a group member
 // ─────────────────────────────────────────────────────────
-router.post('/workspaces/:workspaceId/kudos', [
+router.post('/groups/:groupId/kudos', [
   body('targetUserId').isMongoId().withMessage('Target user ID is required'),
   body('message').optional().trim().isLength({ max: 280 }).withMessage('Message cannot exceed 280 characters'),
 ], async (req, res) => {
@@ -640,7 +640,7 @@ router.post('/workspaces/:workspaceId/kudos', [
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
-    const { workspaceId } = req.params;
+    const { groupId } = req.params;
     const { targetUserId, message } = req.body;
     const userId = req.user._id;
 
@@ -649,14 +649,14 @@ router.post('/workspaces/:workspaceId/kudos', [
       return res.status(400).json({ success: false, error: 'Cannot send kudos to yourself' });
     }
 
-    const workspace = await Workspace.findById(workspaceId);
-    if (!workspace || !workspace.isMember(userId)) {
+    const group = await Group.findById(groupId);
+    if (!group || !group.isMember(userId)) {
       return res.status(403).json({ success: false, error: 'Access denied' });
     }
 
     // Target must also be a member
-    if (!workspace.isMember(targetUserId)) {
-      return res.status(400).json({ success: false, error: 'Target user is not a workspace member' });
+    if (!group.isMember(targetUserId)) {
+      return res.status(400).json({ success: false, error: 'Target user is not a group member' });
     }
 
     // Get target user name for the feed event
@@ -664,7 +664,7 @@ router.post('/workspaces/:workspaceId/kudos', [
     const targetUser = await User.findById(targetUserId).select('name').lean();
 
     const activity = await Activity.create({
-      workspaceId,
+      groupId,
       userId,
       type: 'kudos',
       data: {
@@ -672,7 +672,7 @@ router.post('/workspaces/:workspaceId/kudos', [
         targetUserName: targetUser?.name || 'a member',
         message: message || null,
       },
-      visibility: 'workspace',
+      visibility: 'group',
     });
 
     await activity.populate('userId', 'name avatar');

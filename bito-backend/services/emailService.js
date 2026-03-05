@@ -4,7 +4,7 @@ const { baseLayout, button, infoCard, BRAND } = require('./emailTemplates');
 class EmailService {
   constructor() {
     // Expose a transporter-like interface so existing code
-    // (reminderService, workspace invites) keeps working.
+    // (reminderService, group invites) keeps working.
     this.transporter = null;
     this.resend = null;
     this.init();
@@ -126,7 +126,7 @@ class EmailService {
     }
   }
 
-  async sendInvitationEmail(invitation, workspace, invitedBy) {
+  async sendInvitationEmail(invitation, group, invitedBy) {
     if (!this.transporter) {
       throw new Error('Email service not initialized');
     }
@@ -140,8 +140,8 @@ class EmailService {
     const mailOptions = {
       from: process.env.EMAIL_FROM || '"Divine Eze" <noreply@bito.app>',
       to: invitation.email,
-      subject: `You're invited to join "${workspace.name}" on Bito`,
-      html: this.generateInvitationHTML(invitation, workspace, invitedBy, inviteUrl)
+      subject: `You're invited to join "${group.name}" on Bito`,
+      html: this.generateInvitationHTML(invitation, group, invitedBy, inviteUrl)
     };
 
     try {
@@ -158,11 +158,11 @@ class EmailService {
     }
   }
 
-  generateInvitationHTML(invitation, workspace, invitedBy, inviteUrl) {
+  generateInvitationHTML(invitation, group, invitedBy, inviteUrl) {
     const features = [
-      { icon: '📊', text: 'Track your personal habits within the team workspace' },
+      { icon: '📊', text: 'Track your personal habits within the group' },
       { icon: '👥', text: 'See team progress and celebrate achievements together' },
-      { icon: '🎯', text: 'Adopt workspace habit templates or create your own' },
+      { icon: '🎯', text: 'Adopt group habit templates or create your own' },
       { icon: '🏆', text: 'Participate in team challenges and leaderboards' },
     ];
 
@@ -189,7 +189,7 @@ class EmailService {
     const body = `
       <p style="font-size:15px;color:${BRAND.colors.textSecondary};margin:0 0 20px 0;line-height:1.7;">
         <strong style="color:${BRAND.colors.text};">${invitedBy.name}</strong> has invited you to join
-        <strong style="color:${BRAND.colors.primary};">${workspace.name}</strong> on Bito, where teams track habits together and support each other's growth.
+        <strong style="color:${BRAND.colors.primary};">${group.name}</strong> on Bito, where teams track habits together and support each other's growth.
       </p>
 
       ${messageCard}
@@ -216,8 +216,8 @@ class EmailService {
     `;
 
     return baseLayout({
-      preheader: `${invitedBy.name} invited you to join "${workspace.name}" — accept to start tracking habits together!`,
-      heading: `You're invited to join ${workspace.name}`,
+      preheader: `${invitedBy.name} invited you to join "${group.name}" — accept to start tracking habits together!`,
+      heading: `You're invited to join ${group.name}`,
       headingEmoji: '🤝',
       body,
       footerNote: 'If you didn\'t expect this invitation, you can safely ignore this email.',

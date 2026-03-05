@@ -22,47 +22,47 @@ const habitSchema = new mongoose.Schema({
     index: true
   },
   
-  // Workspace adoption tracking
+  // Group adoption tracking
   source: {
     type: String,
-    enum: ['personal', 'workspace', 'transformer'],
+    enum: ['personal', 'group', 'compass'],
     default: 'personal'
   },
-  workspaceId: {
+  groupId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Workspace',
+    ref: 'Group',
     required: function() {
-      return this.source === 'workspace';
+      return this.source === 'group';
     }
   },
-  workspaceHabitId: {
+  groupHabitId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'WorkspaceHabit',
+    ref: 'GroupHabit',
     required: function() {
-      return this.source === 'workspace';
+      return this.source === 'group';
     }
   },
   adoptedAt: {
     type: Date,
     required: function() {
-      return this.source === 'workspace';
+      return this.source === 'group';
     }
   },
 
-  // Transformer linkage (v2).
-  // When a transformer generates habits, these link back to it.
-  transformerId: {
+  // Compass linkage (v2).
+  // When a compass generates habits, these link back to it.
+  compassId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Transformer',
+    ref: 'Compass',
     default: null
   },
-  transformerPhaseId: {
+  compassPhaseId: {
     type: mongoose.Schema.Types.ObjectId,
     default: null
   },
   
-  // Workspace privacy settings (only for workspace-sourced habits)
-  workspaceSettings: {
+  // Group privacy settings (only for group-sourced habits)
+  groupSettings: {
     shareProgress: {
       type: String,
       enum: ['full', 'progress-only', 'streaks-only', 'private'],
@@ -74,7 +74,7 @@ const habitSchema = new mongoose.Schema({
     },
     shareInActivity: {
       type: Boolean,
-      default: true // Show completions in workspace activity feed
+      default: true // Show completions in group activity feed
     }
   },
   
@@ -124,7 +124,7 @@ const habitSchema = new mongoose.Schema({
     }
   },
 
-  // How this habit is measured (v2). Transformers set this explicitly.
+  // How this habit is measured (v2). Compasses set this explicitly.
   // v1 inferred it from target.unit; v2 makes it a first-class field.
   methodology: {
     type: String,
@@ -160,7 +160,7 @@ const habitSchema = new mongoose.Schema({
   },
 
   // When this habit became analytically active.
-  // For transformer habits, Phase 1 gets activatedAt = now on apply;
+  // For compass habits, Phase 1 gets activatedAt = now on apply;
   // later phases get null until advancePhase sets it.
   // Analytics should only count entries on or after this date.
   activatedAt: {
@@ -212,10 +212,10 @@ habitSchema.index({ userId: 1, createdAt: -1 });
 habitSchema.index({ userId: 1, isActive: 1 });
 habitSchema.index({ userId: 1, category: 1 });
 habitSchema.index({ userId: 1, isArchived: 1 });
-// Workspace-related indexes
-habitSchema.index({ workspaceId: 1, source: 1 });
-habitSchema.index({ workspaceHabitId: 1 });
-habitSchema.index({ userId: 1, workspaceId: 1, source: 1 });
+// Group-related indexes
+habitSchema.index({ groupId: 1, source: 1 });
+habitSchema.index({ groupHabitId: 1 });
+habitSchema.index({ userId: 1, groupId: 1, source: 1 });
 habitSchema.index({ source: 1, isActive: 1 });
 
 // Virtual for habit entries
@@ -442,13 +442,13 @@ habitSchema.methods._computeWeeklyStats = async function(HabitEntry, today) {
   return { currentStreak, longestStreak, completionRate };
 };
 
-// Workspace-specific methods
-habitSchema.methods.isWorkspaceHabit = function() {
-  return this.source === 'workspace';
+// Group-specific methods
+habitSchema.methods.isGroupHabit = function() {
+  return this.source === 'group';
 };
 
-habitSchema.methods.getVisibleDataForWorkspace = function(viewerRole = 'member', viewerId = null) {
-  // Return data based on privacy settings for workspace viewing
+habitSchema.methods.getVisibleDataForGroup = function(viewerRole = 'member', viewerId = null) {
+  // Return data based on privacy settings for group viewing
   const baseData = {
     _id: this._id,
     name: this.name,
@@ -457,19 +457,19 @@ habitSchema.methods.getVisibleDataForWorkspace = function(viewerRole = 'member',
     color: this.color,
     icon: this.icon,
     userId: this.userId,
-    workspaceId: this.workspaceId,
-    workspaceHabitId: this.workspaceHabitId,
+    groupId: this.groupId,
+    groupHabitId: this.groupHabitId,
     isActive: this.isActive,
     adoptedAt: this.adoptedAt,
     createdAt: this.createdAt
   };
   
-  // If not a workspace habit, return minimal data
-  if (!this.isWorkspaceHabit()) {
+  // If not a group habit, return minimal data
+  if (!this.isGroupHabit()) {
     return baseData;
   }
   
-  const shareLevel = this.workspaceSettings?.shareProgress || 'progress-only';
+  const shareLevel = this.groupSettings?.shareProgress || 'progress-only';
   const isOwner = this.userId.toString() === viewerId?.toString();
   
   // Owner can always see everything
@@ -484,7 +484,7 @@ habitSchema.methods.getVisibleDataForWorkspace = function(viewerRole = 'member',
         target: this.target,
         schedule: this.schedule,
         stats: this.stats,
-        workspaceSettings: this.workspaceSettings
+        groupSettings: this.groupSettings
       };
       
     case 'progress-only':
@@ -522,19 +522,19 @@ habitSchema.methods.canUserInteract = function(userId, userRole = 'member') {
     return true;
   }
   
-  // Check workspace interaction permissions
-  if (this.isWorkspaceHabit() && this.workspaceSettings?.allowInteraction) {
+  // Check group interaction permissions
+  if (this.isGroupHabit() && this.groupSettings?.allowInteraction) {
     return ['owner', 'admin', 'member'].includes(userRole);
   }
   
   return false;
 };
 
-// Static methods for workspace habits
-habitSchema.statics.findWorkspaceHabits = function(workspaceId, options = {}) {
+// Static methods for group habits
+habitSchema.statics.findGroupHabits = function(groupId, options = {}) {
   const query = {
-    workspaceId: workspaceId,
-    source: 'workspace',
+    groupId: groupId,
+    source: 'group',
     isActive: true
   };
   
@@ -544,22 +544,22 @@ habitSchema.statics.findWorkspaceHabits = function(workspaceId, options = {}) {
   
   return this.find(query)
     .populate('userId', 'name email avatar')
-    .populate('workspaceHabitId', 'name description category icon')
+    .populate('groupHabitId', 'name description category icon')
     .sort({ adoptedAt: -1 });
 };
 
-habitSchema.statics.getWorkspaceStats = function(workspaceId) {
+habitSchema.statics.getGroupStats = function(groupId) {
   return this.aggregate([
     { 
       $match: { 
-        workspaceId: new mongoose.Types.ObjectId(workspaceId), 
-        source: 'workspace',
+        groupId: new mongoose.Types.ObjectId(groupId), 
+        source: 'group',
         isActive: true 
       } 
     },
     {
       $group: {
-        _id: '$workspaceId',
+        _id: '$groupId',
         totalAdoptedHabits: { $sum: 1 },
         totalCompletions: { $sum: '$stats.totalChecks' },
         avgCompletionRate: { $avg: '$stats.completionRate' },

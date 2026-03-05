@@ -24,8 +24,8 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
   const navigate = useNavigate();
   const location = useLocation();
   const { logout } = useAuth();
-  const [workspaces, setWorkspaces] = useState([]);
-  const [loadingWorkspaces, setLoadingWorkspaces] = useState(false);
+  const [groups, setGroups] = useState([]);
+  const [loadingGroups, setLoadingGroups] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [groupsCollapsed, setGroupsCollapsed] = useState(false);
   const [newGroup, setNewGroup] = useState({
@@ -35,38 +35,38 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
     isPublic: false,
   });
 
-  // Fetch user's workspaces
+  // Fetch user's groups
   useEffect(() => {
     fetchGroups();
     
-    // Listen for workspace updates from other components
-    const handleWorkspaceUpdate = (event) => {
-      const updatedWorkspace = event.detail.workspace;
-      setWorkspaces(prev => 
+    // Listen for group updates from other components
+    const handleGroupUpdate = (event) => {
+      const updatedGroup = event.detail.group;
+      setGroups(prev => 
         prev.map(ws => 
-          ws._id === updatedWorkspace._id ? { ...ws, ...updatedWorkspace } : ws
+          ws._id === updatedGroup._id ? { ...ws, ...updatedGroup } : ws
         )
       );
     };
 
-    window.addEventListener('workspaceUpdated', handleWorkspaceUpdate);
+    window.addEventListener('groupUpdated', handleGroupUpdate);
     
     return () => {
-      window.removeEventListener('workspaceUpdated', handleWorkspaceUpdate);
+      window.removeEventListener('groupUpdated', handleGroupUpdate);
     };
   }, []);
 
   const fetchGroups = async () => {
     try {
-      setLoadingWorkspaces(true);
+      setLoadingGroups(true);
       const data = await groupsAPI.getGroups();
       if (data.success) {
-        setWorkspaces(data.workspaces || []);
+        setGroups(data.groups || []);
       }
     } catch (error) {
       console.error("Error fetching groups:", error);
     } finally {
-      setLoadingWorkspaces(false);
+      setLoadingGroups(false);
     }
   };
 
@@ -74,7 +74,7 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
     try {
       const response = await groupsAPI.createGroup(newGroup);
       if (response.success) {
-        setWorkspaces((prev) => [...prev, response.workspace]);
+        setGroups((prev) => [...prev, response.group]);
         setShowCreateModal(false);
         setNewGroup({
           name: "",
@@ -83,7 +83,7 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
           isPublic: false,
         });
         // Navigate to the new group
-        handleNavigation(`/app/groups/${response.workspace._id}`);
+        handleNavigation(`/app/groups/${response.group._id}`);
         // Close mobile menu after navigation
         if (isMobile) {
           onMobileMenuClose();
@@ -136,12 +136,12 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
       path: "/app/journal",
     },
     {
-      id: "transformers",
-      label: "Transformers",
+      id: "compass",
+      label: "Compass",
       icon: LightningBoltIcon,
       description: "AI habit systems",
       color: "from-emerald-500 to-emerald-600",
-      path: "/app/transformers",
+      path: "/app/compass",
     },
   ];
 
@@ -301,7 +301,7 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
           {/* Count + Collapse indicator */}
           <div className="flex items-center gap-1.5">
             <span className="text-xs font-spartan font-medium" style={{ color: "var(--color-text-tertiary)" }}>
-              {workspaces.length}
+              {groups.length}
             </span>
             <ChevronDownIcon 
               className={`w-3.5 h-3.5 transition-transform duration-200 ${groupsCollapsed ? 'rotate-180' : ''}`}
@@ -317,24 +317,24 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
         {/* Expandable Groups List */}
         {!groupsCollapsed && (
           <div className="mt-1 ml-8 space-y-0.5">
-            {loadingWorkspaces ? (
+            {loadingGroups ? (
               <div className="flex items-center gap-2 px-3 py-2">
                 <div className="w-4 h-4 rounded bg-[var(--color-surface-elevated)] animate-pulse"></div>
                 <div className="flex-1">
                   <div className="h-3 bg-[var(--color-surface-elevated)] rounded animate-pulse"></div>
                 </div>
               </div>
-            ) : workspaces.length === 0 ? (
+            ) : groups.length === 0 ? (
               <div className="px-3 py-2">
                 <p className="text-xs font-spartan" style={{ color: "var(--color-text-tertiary)" }}>No groups yet</p>
               </div>
             ) : (
-              workspaces.slice(0, 5).map((workspace) => {
-                const wsActive = location.pathname === `/app/groups/${workspace._id}`;
+              groups.slice(0, 5).map((group) => {
+                const wsActive = location.pathname === `/app/groups/${group._id}`;
                 return (
                   <button
-                    key={workspace._id}
-                    onClick={() => handleNavigation(`/app/groups/${workspace._id}`)}
+                    key={group._id}
+                    onClick={() => handleNavigation(`/app/groups/${group._id}`)}
                     className={`w-full px-3 py-2 rounded-lg text-left transition-all duration-200 flex items-center gap-2.5 ${
                       wsActive
                         ? 'bg-[var(--color-surface-hover)]'
@@ -349,20 +349,20 @@ const VerticalMenu = ({ isCollapsed, isMobile = false, onMobileMenuClose = () =>
                       className="text-xs font-medium truncate font-spartan"
                       style={{ color: wsActive ? "var(--color-text-primary)" : "var(--color-text-secondary)" }}
                     >
-                      {workspace.name}
+                      {group.name}
                     </p>
                   </button>
                 );
               })
             )}
             
-            {workspaces.length > 5 && (
+            {groups.length > 5 && (
               <button
                 onClick={() => handleNavigation('/app/groups')}
                 className="w-full px-3 py-1.5 text-left transition-all duration-200 hover:bg-[var(--color-surface-hover)] rounded-lg"
               >
                 <p className="text-xs font-medium font-spartan" style={{ color: "var(--color-text-tertiary)" }}>
-                  View all {workspaces.length} groups →
+                  View all {groups.length} groups →
                 </p>
               </button>
             )}

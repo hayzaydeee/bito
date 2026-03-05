@@ -7,11 +7,11 @@ import {
 } from '@radix-ui/react-icons';
 
 const GroupOverviewWidget = ({ 
-  workspaceData,
+  groupData,
   className = "",
   ...props 
 }) => {
-  if (!workspaceData) {
+  if (!groupData) {
     return (
       <div className={`bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 rounded-2xl p-6 ${className}`}>
         <div className="animate-pulse">
@@ -32,25 +32,25 @@ const GroupOverviewWidget = ({
   const stats = [
     {
       label: "Active Habits",
-      value: workspaceData.totalActiveHabits || 0,
+      value: groupData.totalActiveHabits || 0,
       icon: TargetIcon,
       color: "blue"
     },
     {
       label: "Active Members", 
-      value: workspaceData.activeMembers || 0,
+      value: groupData.activeMembers || 0,
       icon: PersonIcon,
       color: "green"
     },
     {
       label: "Avg Completion",
-      value: `${Math.round(workspaceData.averageCompletionRate || 0)}%`,
+      value: `${Math.round(groupData.averageCompletionRate || 0)}%`,
       icon: BarChartIcon,
       color: "purple"
     },
     {
       label: "Total Entries",
-      value: workspaceData.totalEntries || 0,
+      value: groupData.totalEntries || 0,
       icon: ActivityLogIcon,
       color: "orange"
     }

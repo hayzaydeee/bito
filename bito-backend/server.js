@@ -19,7 +19,7 @@ require('./config/passport');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const habitRoutes = require('./routes/habits');
-const workspaceRoutes = require('./routes/workspaces');
+const groupRoutes = require('./routes/groups');
 const encouragementRoutes = require('./routes/encouragements');
 const journalRoutes = require('./routes/journal');
 const journalV2Routes = require('./routes/journalV2');
@@ -27,7 +27,7 @@ const templateRoutes = require('./routes/templates');
 const insightsRoutes = require('./routes/insights');
 const notificationRoutes = require('./routes/notifications');
 const challengeRoutes = require('./routes/challenges');
-const transformerRoutes = require('./routes/transformers');
+const compassRoutes = require('./routes/compass');
 const testRoutes = require('./routes/test');
 
 // Import services
@@ -183,7 +183,7 @@ app.use('/api/test', testRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/habits', habitRoutes);
-app.use('/api/workspaces', workspaceRoutes);
+app.use('/api/groups', groupRoutes);
 app.use('/api/encouragements', encouragementRoutes);
 app.use('/api/journal', journalRoutes);
 app.use('/api/journal-v2', journalV2Routes);
@@ -191,7 +191,7 @@ app.use('/api/templates', templateRoutes);
 app.use('/api/insights', insightsRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api', challengeRoutes);
-app.use('/api/transformers', transformerRoutes);
+app.use('/api/compass', compassRoutes);
 // API documentation endpoint
 app.get('/api', (req, res) => {
   res.json({

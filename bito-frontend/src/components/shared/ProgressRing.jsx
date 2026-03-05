@@ -1,6 +1,6 @@
 /**
  * ProgressRing — reusable SVG circular progress indicator.
- * Extracted from StatPills for shared use across Transformers, Groups, etc.
+ * Extracted from StatPills for shared use across Compass, Groups, etc.
  */
 const ProgressRing = ({
   value = 0,

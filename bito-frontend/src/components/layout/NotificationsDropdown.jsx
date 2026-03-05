@@ -73,25 +73,25 @@ const NotificationsDropdown = ({ isOpen, onClose, onNotificationCountChange }) =
       case 'streak_milestone':
         return `${userName} reached a ${data?.streakCount || 0}-day streak!`;
       case 'member_joined':
-        return `${userName} joined the workspace`;
+        return `${userName} joined the group`;
       case 'badge_earned':
         return `${userName} earned a new badge!`;
       default:
-        return `${userName} had activity in the workspace`;
+        return `${userName} had activity in the group`;
     }
   };
 
   const handleNotificationClick = async (notification) => {
-    const { workspaceId, type, data, _id } = notification;
+    const { groupId, type, data, _id } = notification;
     
-    // Extract workspaceId as string - handle both object and string cases
-    let workspaceIdStr;
-    if (typeof workspaceId === 'object' && workspaceId?._id) {
-      workspaceIdStr = workspaceId._id.toString();
-    } else if (typeof workspaceId === 'string') {
-      workspaceIdStr = workspaceId;
+    // Extract groupId as string - handle both object and string cases
+    let groupIdStr;
+    if (typeof groupId === 'object' && groupId?._id) {
+      groupIdStr = groupId._id.toString();
+    } else if (typeof groupId === 'string') {
+      groupIdStr = groupId;
     } else {
-      console.error('Invalid workspaceId in notification:', notification);
+      console.error('Invalid groupId in notification:', notification);
       return;
     }
 
@@ -120,20 +120,20 @@ const NotificationsDropdown = ({ isOpen, onClose, onNotificationCountChange }) =
       case 'habit_completed':
       case 'habit_adopted':
       case 'streak_milestone':
-        // Navigate to workspace overview (main group page)
-        navigate(`/app/groups/${workspaceIdStr}`);
+        // Navigate to group overview (main group page)
+        navigate(`/app/groups/${groupIdStr}`);
         break;
       case 'member_joined':
-        // Navigate to workspace overview (main group page)
-        navigate(`/app/groups/${workspaceIdStr}`);
+        // Navigate to group overview (main group page)
+        navigate(`/app/groups/${groupIdStr}`);
         break;
       case 'badge_earned':
         // Navigate to user's analytics
         navigate(`/app/analytics`);
         break;
       default:
-        // Default to workspace overview
-        navigate(`/app/groups/${workspaceIdStr}`);
+        // Default to group overview
+        navigate(`/app/groups/${groupIdStr}`);
     }
     
     onClose();
@@ -208,7 +208,7 @@ const NotificationsDropdown = ({ isOpen, onClose, onNotificationCountChange }) =
                     {getNotificationMessage(notification)}
                   </p>
                   <div className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)]">
-                    <span>{notification.workspaceName || 'Workspace'}</span>
+                    <span>{notification.groupName || 'Group'}</span>
                     <DotFilledIcon className="w-2 h-2" />
                     <span>{formatTimeAgo(notification.createdAt)}</span>
                   </div>

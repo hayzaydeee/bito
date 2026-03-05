@@ -139,7 +139,7 @@ const BottomTabBar = ({ onAddHabit }) => {
               <button
                 onClick={() => {
                   setShowMore(false);
-                  navigate("/app/transformers");
+                  navigate("/app/compass");
                 }}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors"
                 style={{ color: "var(--color-text-primary)" }}
@@ -151,7 +151,7 @@ const BottomTabBar = ({ onAddHabit }) => {
                 }
               >
                 <LightningBoltIcon className="w-5 h-5" style={{ color: "var(--color-text-secondary)" }} />
-                <span className="text-sm font-medium font-spartan">Transformers</span>
+                <span className="text-sm font-medium font-spartan">Compass</span>
               </button>
 
               <div className="px-4 py-3 flex items-center justify-between">

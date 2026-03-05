@@ -36,7 +36,7 @@ import AvatarPicker from "../components/ui/AvatarPicker";
      2. Appearance    — theme preview cards (light / dark / auto)
      3. Preferences   — timezone, week start day
      4. Notifications — email toggle, coming-soon push
-     5. Privacy       — dashboard sharing per workspace
+     5. Privacy       — dashboard sharing per group
      6. Data          — export
      7. About         — version, status
      8. Danger Zone   — delete account (red border)
@@ -74,8 +74,8 @@ const SettingsPage = ({ section }) => {
     shareInActivity: true,
   });
 
-  /* ── privacy / workspace state ────────── */
-  const [workspaces, setWorkspaces] = useState([]);
+  /* ── privacy / group state ────────── */
+  const [groups, setGroups] = useState([]);
   const [dashPerms, setDashPerms] = useState({});
   const [privacyLoading, setPrivacyLoading] = useState(false);
 
@@ -113,7 +113,7 @@ const SettingsPage = ({ section }) => {
     })();
   }, [user]);
 
-  /* ── load workspaces for privacy section */
+  /* ── load groups for privacy section */
   useEffect(() => {
     if (!user) return;
     (async () => {
@@ -121,7 +121,7 @@ const SettingsPage = ({ section }) => {
         setPrivacyLoading(true);
         const token = localStorage.getItem("token");
         const base = import.meta.env.VITE_API_URL || "http://localhost:5000";
-        const res = await fetch(`${base}/api/workspaces`, {
+        const res = await fetch(`${base}/api/groups`, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -129,12 +129,12 @@ const SettingsPage = ({ section }) => {
         });
         if (res.ok) {
           const data = await res.json();
-          setWorkspaces(data.workspaces || []);
+          setGroups(data.groups || []);
           const perms = {};
-          for (const ws of data.workspaces || []) {
+          for (const ws of data.groups || []) {
             try {
               const pr = await fetch(
-                `${base}/api/workspaces/${ws._id}/dashboard-permissions`,
+                `${base}/api/groups/${ws._id}/dashboard-permissions`,
                 {
                   headers: {
                     Authorization: `Bearer ${token}`,
@@ -144,17 +144,17 @@ const SettingsPage = ({ section }) => {
               );
               perms[ws._id] = pr.ok
                 ? (await pr.json()).permissions || {
-                    isPublicToWorkspace: true,
+                    isPublicToGroup: true,
                   }
-                : { isPublicToWorkspace: true };
+                : { isPublicToGroup: true };
             } catch {
-              perms[ws._id] = { isPublicToWorkspace: true };
+              perms[ws._id] = { isPublicToGroup: true };
             }
           }
           setDashPerms(perms);
         }
       } catch {
-        console.error("Failed to load workspaces");
+        console.error("Failed to load groups");
       } finally {
         setPrivacyLoading(false);
       }
@@ -179,15 +179,15 @@ const SettingsPage = ({ section }) => {
         const data = await res.json();
         if (res.ok && data.success && data.data.habit) {
           setHabitData(data.data.habit);
-          if (data.data.habit.workspaceSettings) {
+          if (data.data.habit.groupSettings) {
             setHabitPrivacy({
               shareProgress:
-                data.data.habit.workspaceSettings.shareProgress ||
+                data.data.habit.groupSettings.shareProgress ||
                 "progress-only",
               allowInteraction:
-                data.data.habit.workspaceSettings.allowInteraction ?? true,
+                data.data.habit.groupSettings.allowInteraction ?? true,
               shareInActivity:
-                data.data.habit.workspaceSettings.shareInActivity ?? true,
+                data.data.habit.groupSettings.shareInActivity ?? true,
             });
           }
         }
@@ -253,18 +253,18 @@ const SettingsPage = ({ section }) => {
     }
   };
 
-  /* ── toggle workspace dashboard sharing ─ */
+  /* ── toggle group dashboard sharing ─ */
   const toggleWsPublic = async (wsId, isPublic) => {
     const prev = dashPerms[wsId];
     setDashPerms((p) => ({
       ...p,
-      [wsId]: { ...p[wsId], isPublicToWorkspace: isPublic },
+      [wsId]: { ...p[wsId], isPublicToGroup: isPublic },
     }));
     try {
       const token = localStorage.getItem("token");
       const base = import.meta.env.VITE_API_URL || "http://localhost:5000";
       const res = await fetch(
-        `${base}/api/workspaces/${wsId}/dashboard-permissions`,
+        `${base}/api/groups/${wsId}/dashboard-permissions`,
         {
           method: "PUT",
           headers: {
@@ -273,7 +273,7 @@ const SettingsPage = ({ section }) => {
           },
           body: JSON.stringify({
             ...dashPerms[wsId],
-            isPublicToWorkspace: isPublic,
+            isPublicToGroup: isPublic,
           }),
         }
       );
@@ -346,12 +346,12 @@ const SettingsPage = ({ section }) => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ workspaceSettings: habitPrivacy }),
+        body: JSON.stringify({ groupSettings: habitPrivacy }),
       });
       const result = await res.json();
       if (res.ok && result.success) {
         showToast("Privacy settings saved");
-        navigate(`/app/groups/${habitData.workspaceId}`);
+        navigate(`/app/groups/${habitData.groupId}`);
       } else {
         showToast(result.error || "Failed to save", "error");
       }
@@ -447,7 +447,7 @@ const SettingsPage = ({ section }) => {
           {/* back */}
           <button
             onClick={() =>
-              navigate(`/app/groups/${habitData?.workspaceId || ""}`)
+              navigate(`/app/groups/${habitData?.groupId || ""}`)
             }
             className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] font-spartan mb-6 hover:text-[var(--color-text-primary)] transition-colors"
           >
@@ -491,7 +491,7 @@ const SettingsPage = ({ section }) => {
                   </p>
                   <p className="text-xs text-[var(--color-text-tertiary)] font-spartan">
                     {habitData.category || "No category"} · Adopted from
-                    workspace
+                    group
                   </p>
                 </div>
               </div>
@@ -584,7 +584,7 @@ const SettingsPage = ({ section }) => {
               <div className="flex items-center gap-3 mt-8">
                 <button
                   onClick={() =>
-                    navigate(`/app/groups/${habitData.workspaceId}`)
+                    navigate(`/app/groups/${habitData.groupId}`)
                   }
                   className="flex-1 h-10 rounded-xl border border-[var(--color-border-primary)]/30 text-sm font-spartan font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
                 >
@@ -977,14 +977,14 @@ const SettingsPage = ({ section }) => {
             <div className="flex items-center justify-center py-6">
               <span className="w-5 h-5 border-2 border-[var(--color-brand-500)] border-t-transparent rounded-full animate-spin" />
             </div>
-          ) : workspaces.length === 0 ? (
+          ) : groups.length === 0 ? (
             <p className="text-sm text-[var(--color-text-tertiary)] font-spartan text-center py-4">
-              You're not a member of any workspaces yet.
+              You're not a member of any groups yet.
             </p>
           ) : (
             <div className="space-y-2">
-              {workspaces.map((ws) => {
-                const pub = dashPerms[ws._id]?.isPublicToWorkspace ?? true;
+              {groups.map((ws) => {
+                const pub = dashPerms[ws._id]?.isPublicToGroup ?? true;
                 return (
                   <div
                     key={ws._id}

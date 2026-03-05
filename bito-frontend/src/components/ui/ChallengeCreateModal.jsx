@@ -37,7 +37,7 @@ const inputClass =
 
 /* ── component ── */
 
-const ChallengeCreateModal = ({ isOpen, workspaceId, onClose, onSuccess }) => {
+const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -61,9 +61,9 @@ const ChallengeCreateModal = ({ isOpen, workspaceId, onClose, onSuccess }) => {
   });
 
   useEffect(() => {
-    if (isOpen && workspaceId) {
+    if (isOpen && groupId) {
       groupsAPI
-        .getGroupHabits(workspaceId)
+        .getGroupHabits(groupId)
         .then((r) => setHabits(r.habits || []))
         .catch(() => setHabits([]));
       setStep(1);
@@ -85,7 +85,7 @@ const ChallengeCreateModal = ({ isOpen, workspaceId, onClose, onSuccess }) => {
         showLeaderboard: true,
       });
     }
-  }, [isOpen, workspaceId]);
+  }, [isOpen, groupId]);
 
   if (!isOpen) return null;
 
@@ -128,7 +128,7 @@ const ChallengeCreateModal = ({ isOpen, workspaceId, onClose, onSuccess }) => {
         ...(form.habitMatchMode === 'minimum' ? { habitMatchMinimum: Number(form.habitMatchMinimum) || 2 } : {}),
       };
 
-      const res = await groupsAPI.createChallenge(workspaceId, payload);
+      const res = await groupsAPI.createChallenge(groupId, payload);
       if (res.success) {
         onSuccess?.(res.challenge);
         onClose();

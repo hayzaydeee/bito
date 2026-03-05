@@ -247,69 +247,69 @@ export const habitsAPI = {
   },
 };
 
-// Workspaces API
-export const workspacesAPI = {
-  // Get all workspaces for the current user
-  getUserWorkspaces: async () => {
-    return apiRequest('/api/workspaces');
+// Workspaces API (legacy)
+export const workspacesAPILegacy = {
+  // Get all groups for the current user
+  getUserGroups: async () => {
+    return apiRequest('/api/groups');
   },
   
-  // Get a specific workspace
-  getWorkspace: async (workspaceId) => {
-    return apiRequest(`/api/workspaces/${workspaceId}`);
+  // Get a specific group
+  getGroup: async (groupId) => {
+    return apiRequest(`/api/groups/${groupId}`);
   },
   
-  // Create a new workspace
-  createWorkspace: async (workspaceData) => {
-    return apiRequest('/api/workspaces', {
+  // Create a new group
+  createGroup: async (groupData) => {
+    return apiRequest('/api/groups', {
       method: 'POST',
-      body: JSON.stringify(workspaceData),
+      body: JSON.stringify(groupData),
     });
   },
   
-  // Update a workspace
-  updateWorkspace: async (workspaceId, workspaceData) => {
-    return apiRequest(`/api/workspaces/${workspaceId}`, {
+  // Update a group
+  updateGroup: async (groupId, groupData) => {
+    return apiRequest(`/api/groups/${groupId}`, {
       method: 'PUT',
-      body: JSON.stringify(workspaceData),
+      body: JSON.stringify(groupData),
     });
   },
   
-  // Delete a workspace
-  deleteWorkspace: async (workspaceId) => {
-    return apiRequest(`/api/workspaces/${workspaceId}`, {
+  // Delete a group
+  deleteGroup: async (groupId) => {
+    return apiRequest(`/api/groups/${groupId}`, {
       method: 'DELETE',
     });
   },
   
-  // Get workspace members
-  getWorkspaceMembers: async (workspaceId) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/members`);
+  // Get group members
+  getGroupMembers: async (groupId) => {
+    return apiRequest(`/api/groups/${groupId}/members`);
   },
   
-  // Leave a workspace (self-service member exit)
-  leaveWorkspace: async (workspaceId) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/leave`, {
+  // Leave a group (self-service member exit)
+  leaveGroup: async (groupId) => {
+    return apiRequest(`/api/groups/${groupId}/leave`, {
       method: 'POST',
     });
   },
   
-  // Get workspace habits
-  getWorkspaceHabits: async (workspaceId) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/habits`);
+  // Get group habits
+  getGroupHabits: async (groupId) => {
+    return apiRequest(`/api/groups/${groupId}/habits`);
   },
 };
 
-// Groups API (mapped to workspace endpoints for now)
+// Groups API (mapped to group endpoints for now)
 export const groupsAPI = {
   // Get all user groups
   getGroups: async () => {
-    return apiRequest('/api/workspaces');
+    return apiRequest('/api/groups');
   },
 
   // Create new group
   createGroup: async (groupData) => {
-    return apiRequest('/api/workspaces', {
+    return apiRequest('/api/groups', {
       method: 'POST',
       body: JSON.stringify(groupData),
     });
@@ -317,12 +317,12 @@ export const groupsAPI = {
 
   // Get specific group
   getGroup: async (groupId) => {
-    return apiRequest(`/api/workspaces/${groupId}`);
+    return apiRequest(`/api/groups/${groupId}`);
   },
 
   // Update group
   updateGroup: async (groupId, groupData) => {
-    return apiRequest(`/api/workspaces/${groupId}`, {
+    return apiRequest(`/api/groups/${groupId}`, {
       method: 'PUT',
       body: JSON.stringify(groupData),
     });
@@ -330,35 +330,35 @@ export const groupsAPI = {
 
   // Delete group
   deleteGroup: async (groupId) => {
-    return apiRequest(`/api/workspaces/${groupId}`, {
+    return apiRequest(`/api/groups/${groupId}`, {
       method: 'DELETE',
     });
   },
 
   // Get group overview
   getGroupOverview: async (groupId) => {
-    return apiRequest(`/api/workspaces/${groupId}/overview`);
+    return apiRequest(`/api/groups/${groupId}/overview`);
   },
 
   // Get group habits
   getGroupHabits: async (groupId) => {
     try {
-      // First try the specific workspace habits endpoint
-      return apiRequest(`/api/workspaces/${groupId}/habits`);
+      // First try the specific group habits endpoint
+      return apiRequest(`/api/groups/${groupId}/habits`);
     } catch (error) {
-      console.error(`Error fetching habits via workspace endpoint for ${groupId}:`, error);
+      console.error(`Error fetching habits via group endpoint for ${groupId}:`, error);
       
-      // Fallback approach: Get all habits and filter by workspace
+      // Fallback approach: Get all habits and filter by group
       try {
-        const allHabitsResponse = await apiRequest('/api/habits?includeWorkspaceHabits=true');
+        const allHabitsResponse = await apiRequest('/api/habits?includeGroupHabits=true');
         if (allHabitsResponse.success) {
-          const workspaceHabits = allHabitsResponse.habits.filter(
-            habit => habit.workspaceId === groupId
+          const groupHabits = allHabitsResponse.habits.filter(
+            habit => habit.groupId === groupId
           );
           
           return {
             success: true,
-            habits: workspaceHabits
+            habits: groupHabits
           };
         }
         return { success: false, error: 'Failed to get habits' };
@@ -380,15 +380,15 @@ export const groupsAPI = {
     
     const queryString = searchParams.toString();
     const endpoint = queryString 
-      ? `/api/workspaces/${groupId}/activity?${queryString}` 
-      : `/api/workspaces/${groupId}/activity`;
+      ? `/api/groups/${groupId}/activity?${queryString}` 
+      : `/api/groups/${groupId}/activity`;
     
     return apiRequest(endpoint);
   },
 
   // Invite member to group
   inviteMember: async (groupId, inviteData) => {
-    return apiRequest(`/api/workspaces/${groupId}/members/invite`, {
+    return apiRequest(`/api/groups/${groupId}/members/invite`, {
       method: 'POST',
       body: JSON.stringify(inviteData),
     });
@@ -397,38 +397,38 @@ export const groupsAPI = {
   // Get group invitations
   getInvitations: async (groupId, status) => {
     const params = status ? `?status=${status}` : '';
-    return apiRequest(`/api/workspaces/${groupId}/invitations${params}`);
+    return apiRequest(`/api/groups/${groupId}/invitations${params}`);
   },
 
   // Get invitation details by token
   getInvitationByToken: async (token) => {
-    return apiRequest(`/api/workspaces/invitations/${token}`);
+    return apiRequest(`/api/groups/invitations/${token}`);
   },
 
   // Accept invitation
   acceptInvitation: async (token) => {
-    return apiRequest(`/api/workspaces/invitations/${token}/accept`, {
+    return apiRequest(`/api/groups/invitations/${token}/accept`, {
       method: 'POST',
     });
   },
 
   // Decline invitation
   declineInvitation: async (token) => {
-    return apiRequest(`/api/workspaces/invitations/${token}/decline`, {
+    return apiRequest(`/api/groups/invitations/${token}/decline`, {
       method: 'POST',
     });
   },
 
   // Cancel invitation
   cancelInvitation: async (groupId, invitationId) => {
-    return apiRequest(`/api/workspaces/${groupId}/invitations/${invitationId}`, {
+    return apiRequest(`/api/groups/${groupId}/invitations/${invitationId}`, {
       method: 'DELETE',
     });
   },
 
   // Update member role
   updateMemberRole: async (groupId, userId, roleData) => {
-    return apiRequest(`/api/workspaces/${groupId}/members/${userId}`, {
+    return apiRequest(`/api/groups/${groupId}/members/${userId}`, {
       method: 'PUT',
       body: JSON.stringify(roleData),
     });
@@ -436,7 +436,7 @@ export const groupsAPI = {
 
   // Remove member from group
   removeMember: async (groupId, userId) => {
-    return apiRequest(`/api/workspaces/${groupId}/members/${userId}`, {
+    return apiRequest(`/api/groups/${groupId}/members/${userId}`, {
       method: 'DELETE',
     });
   },
@@ -444,22 +444,22 @@ export const groupsAPI = {
   // Get group habits
   getGroupHabits: async (groupId) => {
     try {
-      // First try the specific workspace habits endpoint
-      return apiRequest(`/api/workspaces/${groupId}/habits`);
+      // First try the specific group habits endpoint
+      return apiRequest(`/api/groups/${groupId}/habits`);
     } catch (error) {
-      console.error(`Error fetching habits via workspace endpoint for ${groupId}:`, error);
+      console.error(`Error fetching habits via group endpoint for ${groupId}:`, error);
       
-      // Fallback approach: Get all habits and filter by workspace
+      // Fallback approach: Get all habits and filter by group
       try {
-        const allHabitsResponse = await apiRequest('/api/habits?includeWorkspaceHabits=true');
+        const allHabitsResponse = await apiRequest('/api/habits?includeGroupHabits=true');
         if (allHabitsResponse.success) {
-          const workspaceHabits = allHabitsResponse.habits.filter(
-            habit => habit.workspaceId === groupId
+          const groupHabits = allHabitsResponse.habits.filter(
+            habit => habit.groupId === groupId
           );
           
           return {
             success: true,
-            habits: workspaceHabits
+            habits: groupHabits
           };
         }
         return { success: false, error: 'Failed to get habits' };
@@ -472,7 +472,7 @@ export const groupsAPI = {
 
   // Create group habit
   createGroupHabit: async (groupId, habitData) => {
-    return apiRequest(`/api/workspaces/${groupId}/habits`, {
+    return apiRequest(`/api/groups/${groupId}/habits`, {
       method: 'POST',
       body: JSON.stringify(habitData),
     });
@@ -480,7 +480,7 @@ export const groupsAPI = {
 
   // Update group habit
   updateGroupHabit: async (groupId, habitId, habitData) => {
-    return apiRequest(`/api/workspaces/workspace-habits/${habitId}`, {
+    return apiRequest(`/api/groups/group-habits/${habitId}`, {
       method: 'PUT',
       body: JSON.stringify(habitData),
     });
@@ -488,66 +488,66 @@ export const groupsAPI = {
 
   // Delete group habit
   deleteGroupHabit: async (groupId, habitId) => {
-    return apiRequest(`/api/workspaces/workspace-habits/${habitId}`, {
+    return apiRequest(`/api/groups/group-habits/${habitId}`, {
       method: 'DELETE',
     });
   },
 
-  // Get member habits (user's adopted habits in workspace)
-  getMemberHabits: async (workspaceId) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/member-habits`);
+  // Get member habits (user's adopted habits in group)
+  getMemberHabits: async (groupId) => {
+    return apiRequest(`/api/groups/${groupId}/member-habits`);
   },
 
-  // Adopt workspace habit to personal dashboard
-  adoptWorkspaceHabit: async (workspaceId, workspaceHabitId, settingsData) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/habits/${workspaceHabitId}/adopt`, {
+  // Adopt group habit to personal dashboard
+  adoptGroupHabit: async (groupId, groupHabitId, settingsData) => {
+    return apiRequest(`/api/groups/${groupId}/habits/${groupHabitId}/adopt`, {
       method: 'POST',
       body: JSON.stringify(settingsData),
     });
   },
 
   // Update member habit settings
-  updateMemberHabit: async (workspaceId, memberHabitId, updateData) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/member-habits/${memberHabitId}`, {
+  updateMemberHabit: async (groupId, memberHabitId, updateData) => {
+    return apiRequest(`/api/groups/${groupId}/member-habits/${memberHabitId}`, {
       method: 'PUT',
       body: JSON.stringify(updateData),
     });
   },
 
   // Remove member habit
-  removeMemberHabit: async (workspaceId, memberHabitId) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/member-habits/${memberHabitId}`, {
+  removeMemberHabit: async (groupId, memberHabitId) => {
+    return apiRequest(`/api/groups/${groupId}/member-habits/${memberHabitId}`, {
       method: 'DELETE',
     });
   },
 
   // Dashboard sharing permissions
-  getDashboardPermissions: async (workspaceId) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/dashboard-permissions`);
+  getDashboardPermissions: async (groupId) => {
+    return apiRequest(`/api/groups/${groupId}/dashboard-permissions`);
   },
 
-  updateDashboardPermissions: async (workspaceId, permissionsData) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/dashboard-permissions`, {
+  updateDashboardPermissions: async (groupId, permissionsData) => {
+    return apiRequest(`/api/groups/${groupId}/dashboard-permissions`, {
       method: 'PUT',
       body: JSON.stringify(permissionsData),
     });
   },
 
   // View member's dashboard (with permission)
-  getMemberDashboard: async (workspaceId, memberId) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/members/${memberId}/dashboard`);
+  getMemberDashboard: async (groupId, memberId) => {
+    return apiRequest(`/api/groups/${groupId}/members/${memberId}/dashboard`);
   },
 
   // Get shared habits (habits tracked by multiple members)
-  getSharedHabits: async (workspaceId) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/shared-habits`);
+  getSharedHabits: async (groupId) => {
+    return apiRequest(`/api/groups/${groupId}/shared-habits`);
   },
 
   // New Group Tracking API endpoints
   
   // Get group tracker data (all members' progress on shared habits)
-  getGroupTrackers: async (workspaceId, dateRange) => {
-    let endpoint = `/api/workspaces/${workspaceId}/group-trackers`;
+  getGroupTrackers: async (groupId, dateRange) => {
+    let endpoint = `/api/groups/${groupId}/group-trackers`;
     
     // Add date range parameters if provided
     if (dateRange) {
@@ -615,25 +615,25 @@ export const groupsAPI = {
   },
 
   // Get specific member's shared habit stats  
-  getMemberStats: async (workspaceId, memberId) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/member-stats/${memberId}`);
+  getMemberStats: async (groupId, memberId) => {
+    return apiRequest(`/api/groups/${groupId}/member-stats/${memberId}`);
   },
 
-  // Get overview stats for shared habits across workspace
-  getSharedHabitsOverview: async (workspaceId) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/shared-habits-overview`);
+  // Get overview stats for shared habits across group
+  getSharedHabitsOverview: async (groupId) => {
+    return apiRequest(`/api/groups/${groupId}/shared-habits-overview`);
   },
 
-  // Get encouragements for a workspace (alias for encouragementAPI.getWorkspaceEncouragements)
-  getEncouragements: async (workspaceId, params = {}) => {
+  // Get encouragements for a group (alias for encouragementAPI.getGroupEncouragements)
+  getEncouragements: async (groupId, params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    return apiRequest(`/api/encouragements/workspace/${workspaceId}${queryString ? `?${queryString}` : ''}`);
+    return apiRequest(`/api/encouragements/group/${groupId}${queryString ? `?${queryString}` : ''}`);
   },
 
-  // Get leaderboard data for a workspace
-  getLeaderboard: async (workspaceId, params = {}) => {
+  // Get leaderboard data for a group
+  getLeaderboard: async (groupId, params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    return apiRequest(`/api/workspaces/${workspaceId}/leaderboard${queryString ? `?${queryString}` : ''}`);
+    return apiRequest(`/api/groups/${groupId}/leaderboard${queryString ? `?${queryString}` : ''}`);
   },
 
 
@@ -641,23 +641,23 @@ export const groupsAPI = {
   // Member interaction endpoints
   
   // Send encouragement to a member about a specific habit
-  sendEncouragement: async (workspaceId, memberId, habitId, data) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/members/${memberId}/habits/${habitId}/encourage`, {
+  sendEncouragement: async (groupId, memberId, habitId, data) => {
+    return apiRequest(`/api/groups/${groupId}/members/${memberId}/habits/${habitId}/encourage`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
   // Celebrate a member's habit progress
-  celebrateHabit: async (workspaceId, memberId, habitId) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/members/${memberId}/habits/${habitId}/celebrate`, {
+  celebrateHabit: async (groupId, memberId, habitId) => {
+    return apiRequest(`/api/groups/${groupId}/members/${memberId}/habits/${habitId}/celebrate`, {
       method: 'POST',
     });
   },
 
   // Report concern or send check-in about a member's habit
-  reportConcern: async (workspaceId, memberId, habitId, data) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/members/${memberId}/habits/${habitId}/check-in`, {
+  reportConcern: async (groupId, memberId, habitId, data) => {
+    return apiRequest(`/api/groups/${groupId}/members/${memberId}/habits/${habitId}/check-in`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -665,15 +665,15 @@ export const groupsAPI = {
 
   // ── Challenge API ──
 
-  // List challenges for a workspace
-  getChallenges: async (workspaceId, status = null) => {
+  // List challenges for a group
+  getChallenges: async (groupId, status = null) => {
     const params = status ? `?status=${status}` : '';
-    return apiRequest(`/api/workspaces/${workspaceId}/challenges${params}`);
+    return apiRequest(`/api/groups/${groupId}/challenges${params}`);
   },
 
   // Create a challenge
-  createChallenge: async (workspaceId, challengeData) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/challenges`, {
+  createChallenge: async (groupId, challengeData) => {
+    return apiRequest(`/api/groups/${groupId}/challenges`, {
       method: 'POST',
       body: JSON.stringify(challengeData),
     });
@@ -752,9 +752,9 @@ export const groupsAPI = {
 
   // ── Kudos ──
 
-  // Send kudos to a workspace member
-  sendKudos: async (workspaceId, targetUserId, message = null) => {
-    return apiRequest(`/api/workspaces/${workspaceId}/kudos`, {
+  // Send kudos to a group member
+  sendKudos: async (groupId, targetUserId, message = null) => {
+    return apiRequest(`/api/groups/${groupId}/kudos`, {
       method: 'POST',
       body: JSON.stringify({ targetUserId, message }),
     });
@@ -783,10 +783,10 @@ export const encouragementAPI = {
     return apiRequest(`/api/encouragements/sent${queryString ? `?${queryString}` : ''}`);
   },
 
-  // Get workspace encouragements (activity feed)
-  getWorkspaceEncouragements: async (workspaceId, params = {}) => {
+  // Get group encouragements (activity feed)
+  getGroupEncouragements: async (groupId, params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    return apiRequest(`/api/encouragements/workspace/${workspaceId}${queryString ? `?${queryString}` : ''}`);
+    return apiRequest(`/api/encouragements/group/${groupId}${queryString ? `?${queryString}` : ''}`);
   },
 
   // Mark encouragement as read
@@ -870,7 +870,7 @@ export const handleAPIError = (error) => {
 
 // Notifications API
 export const notificationsAPI = {
-  // Get notifications for user across all workspaces
+  // Get notifications for user across all groups
   getNotifications: async (params = {}) => {
     const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
@@ -963,28 +963,28 @@ export const pushAPI = {
 
 // Verify habit counts for debug purposes
 export const verifyHabitCounts = async () => {
-  const groupsResponse = await apiRequest('/api/workspaces');
+  const groupsResponse = await apiRequest('/api/groups');
   if (!groupsResponse.success) return { success: false, error: 'Failed to fetch groups' };
   
   const results = [];
   
-  for (const workspace of groupsResponse.workspaces) {
+  for (const group of groupsResponse.groups) {
     try {
-      // Get actual habits for this workspace
-      const habitsResponse = await apiRequest(`/api/workspaces/${workspace._id}/habits`);
+      // Get actual habits for this group
+      const habitsResponse = await apiRequest(`/api/groups/${group._id}/habits`);
       
       results.push({
-        workspaceId: workspace._id,
-        workspaceName: workspace.name,
-        reportedCount: workspace.habitCount || 0,
+        groupId: group._id,
+        groupName: group.name,
+        reportedCount: group.habitCount || 0,
         actualCount: habitsResponse.success ? habitsResponse.habits.length : 'error',
-        match: workspace.habitCount === (habitsResponse.success ? habitsResponse.habits.length : 0)
+        match: group.habitCount === (habitsResponse.success ? habitsResponse.habits.length : 0)
       });
     } catch (err) {
       results.push({
-        workspaceId: workspace._id,
-        workspaceName: workspace.name,
-        reportedCount: workspace.habitCount || 0,
+        groupId: group._id,
+        groupName: group.name,
+        reportedCount: group.habitCount || 0,
         actualCount: 'error',
         error: err.message
       });
@@ -1012,77 +1012,77 @@ const api = {
   })
 };
 
-// ── Transformers API ──
-export const transformersAPI = {
+// ── Compass API ──
+export const compassAPI = {
   // Clarify — assess if AI needs more context before generating
   clarify: async (goalText) => {
-    return apiRequest('/api/transformers/clarify', {
+    return apiRequest('/api/compass/clarify', {
       method: 'POST',
       body: JSON.stringify({ goalText }),
     });
   },
 
-  // Generate a transformer from goal text (optionally with clarification answers)
-  // Returns { success, goalType, transformer? (single), transformers? (multi), suiteId?, suiteName? }
+  // Generate a compass from goal text (optionally with clarification answers)
+  // Returns { success, goalType, compass? (single), compasses? (multi), suiteId?, suiteName? }
   generate: async (goalText, clarificationAnswers = null, parsedGoal = null) => {
     const body = { goalText };
     if (clarificationAnswers) body.clarificationAnswers = clarificationAnswers;
     if (parsedGoal) body.parsedGoal = parsedGoal;
-    return apiRequest('/api/transformers/generate', {
+    return apiRequest('/api/compass/generate', {
       method: 'POST',
       body: JSON.stringify(body),
     });
   },
 
-  // List user's transformers
+  // List user's compass items
   list: async (status = null) => {
     const params = status ? `?status=${status}` : '';
-    return apiRequest(`/api/transformers${params}`);
+    return apiRequest(`/api/compass${params}`);
   },
 
-  // Get transformer details
+  // Get compass details
   get: async (id) => {
-    return apiRequest(`/api/transformers/${id}`);
+    return apiRequest(`/api/compass/${id}`);
   },
 
-  // Update transformer (edit preview before applying)
+  // Update compass (edit preview before applying)
   update: async (id, system) => {
-    return apiRequest(`/api/transformers/${id}`, {
+    return apiRequest(`/api/compass/${id}`, {
       method: 'PUT',
       body: JSON.stringify({ system }),
     });
   },
 
-  // Apply transformer — creates real habits
+  // Apply compass — creates real habits
   apply: async (id) => {
-    return apiRequest(`/api/transformers/${id}/apply`, {
+    return apiRequest(`/api/compass/${id}/apply`, {
       method: 'POST',
     });
   },
 
   // Advance to next phase
   advancePhase: async (id) => {
-    return apiRequest(`/api/transformers/${id}/advance-phase`, {
+    return apiRequest(`/api/compass/${id}/advance-phase`, {
       method: 'POST',
     });
   },
 
   // Get progress data (per-phase completion)
   progress: async (id) => {
-    return apiRequest(`/api/transformers/${id}/progress`);
+    return apiRequest(`/api/compass/${id}/progress`);
   },
 
   // Send a refinement message — returns patches + assistant reply
   refine: async (id, message) => {
-    return apiRequest(`/api/transformers/${id}/refine`, {
+    return apiRequest(`/api/compass/${id}/refine`, {
       method: 'POST',
       body: JSON.stringify({ message }),
     });
   },
 
-  // Archive (soft delete) a transformer
+  // Archive (soft delete) a compass
   archive: async (id) => {
-    return apiRequest(`/api/transformers/${id}`, {
+    return apiRequest(`/api/compass/${id}`, {
       method: 'DELETE',
     });
   },
@@ -1090,7 +1090,7 @@ export const transformersAPI = {
   // Clean discard with cascade options
   // mode: 'keep_habits' | 'cascade' | 'delete_habits'
   discard: async (id, mode = 'keep_habits') => {
-    return apiRequest(`/api/transformers/${id}/discard`, {
+    return apiRequest(`/api/compass/${id}/discard`, {
       method: 'POST',
       body: JSON.stringify({ mode }),
     });
@@ -1098,7 +1098,7 @@ export const transformersAPI = {
 
   // Update personalization (icon, color, notes, isPinned)
   personalize: async (id, fields) => {
-    return apiRequest(`/api/transformers/${id}/personalize`, {
+    return apiRequest(`/api/compass/${id}/personalize`, {
       method: 'PATCH',
       body: JSON.stringify(fields),
     });

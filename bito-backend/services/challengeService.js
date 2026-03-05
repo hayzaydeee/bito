@@ -57,7 +57,7 @@ class ChallengeService {
 
         // Feed event: challenge started
         await Activity.create({
-          workspaceId: challenge.workspaceId,
+          groupId: challenge.groupId,
           userId: challenge.createdBy,
           type: 'challenge_started',
           data: {
@@ -66,7 +66,7 @@ class ChallengeService {
             challengeType: challenge.type,
             message: `Challenge "${challenge.title}" has started!`,
           },
-          visibility: 'workspace',
+          visibility: 'group',
         });
 
         // Push notification
@@ -89,7 +89,7 @@ class ChallengeService {
 
         // Feed event: challenge ended
         await Activity.create({
-          workspaceId: challenge.workspaceId,
+          groupId: challenge.groupId,
           userId: challenge.createdBy,
           type: 'challenge_completed',
           data: {
@@ -103,7 +103,7 @@ class ChallengeService {
               averageProgress: challenge.stats.averageProgress,
             },
           },
-          visibility: 'workspace',
+          visibility: 'group',
         });
 
         // Push notification
@@ -141,7 +141,7 @@ class ChallengeService {
       icon: '/android-chrome-192x192.png',
       badge: '/favicon-32x32.png',
       tag: tag || `challenge-${challenge._id}`,
-      data: { url: `/app/groups/${challenge.workspaceId}/challenges/${challenge._id}`, challengeId: challenge._id.toString() },
+      data: { url: `/app/groups/${challenge.groupId}/challenges/${challenge._id}`, challengeId: challenge._id.toString() },
     });
 
     for (const sub of subs) {

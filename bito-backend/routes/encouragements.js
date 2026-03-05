@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Encouragement = require('../models/Encouragement');
 const User = require('../models/User');
-const Workspace = require('../models/Workspace');
+const Group = require('../models/Group');
 const Habit = require('../models/Habit');
 const { authenticateJWT } = require('../middleware/auth');
 const { validateEncouragement } = require('../middleware/validation');
@@ -14,7 +14,7 @@ router.post('/', authenticateJWT, validateEncouragement, async (req, res) => {
   try {
     const {
       toUserId,
-      workspaceId,
+      groupId,
       habitId,
       type,
       message,
@@ -30,34 +30,34 @@ router.post('/', authenticateJWT, validateEncouragement, async (req, res) => {
       });
     }
 
-    // Verify workspace exists and sender is a member
-    const workspace = await Workspace.findById(workspaceId);
-    if (!workspace) {
+    // Verify group exists and sender is a member
+    const group = await Group.findById(groupId);
+    if (!group) {
       return res.status(404).json({
         success: false,
-        message: 'Workspace not found'
+        message: 'Group not found'
       });
     }
 
-    // Check if sender is a member of the workspace
-    const senderIsMember = workspace.members.some(member => 
+    // Check if sender is a member of the group
+    const senderIsMember = group.members.some(member => 
       member.userId.toString() === req.user.id
     );
     if (!senderIsMember) {
       return res.status(403).json({
         success: false,
-        message: 'You are not a member of this workspace'
+        message: 'You are not a member of this group'
       });
     }
 
-    // Check if recipient is a member of the workspace
-    const recipientIsMember = workspace.members.some(member => 
+    // Check if recipient is a member of the group
+    const recipientIsMember = group.members.some(member => 
       member.userId.toString() === toUserId
     );
     if (!recipientIsMember) {
       return res.status(403).json({
         success: false,
-        message: 'Recipient is not a member of this workspace'
+        message: 'Recipient is not a member of this group'
       });
     }
 
@@ -66,7 +66,7 @@ router.post('/', authenticateJWT, validateEncouragement, async (req, res) => {
       const habit = await Habit.findOne({
         _id: habitId,
         userId: toUserId,
-        workspaceId: workspaceId
+        groupId: groupId
       });
       if (!habit) {
         return res.status(404).json({
@@ -88,7 +88,7 @@ router.post('/', authenticateJWT, validateEncouragement, async (req, res) => {
     const encouragement = new Encouragement({
       fromUser: req.user.id,
       toUser: toUserId,
-      workspace: workspaceId,
+      group: groupId,
       habit: habitId || null,
       type: type || 'general_support',
       message,
@@ -101,7 +101,7 @@ router.post('/', authenticateJWT, validateEncouragement, async (req, res) => {
     await encouragement.populate([
       { path: 'fromUser', select: 'name email avatar' },
       { path: 'toUser', select: 'name email avatar' },
-      { path: 'workspace', select: 'name' },
+      { path: 'group', select: 'name' },
       { path: 'habit', select: 'name' }
     ]);
 
@@ -124,10 +124,10 @@ router.post('/', authenticateJWT, validateEncouragement, async (req, res) => {
 // @access  Private
 router.get('/received', authenticateJWT, async (req, res) => {
   try {
-    const { workspaceId, unreadOnly, limit } = req.query;
+    const { groupId, unreadOnly, limit } = req.query;
     
     const options = {
-      workspaceId: workspaceId || null,
+      groupId: groupId || null,
       unreadOnly: unreadOnly === 'true',
       limit: parseInt(limit) || 50
     };
@@ -156,10 +156,10 @@ router.get('/received', authenticateJWT, async (req, res) => {
 // @access  Private
 router.get('/sent', authenticateJWT, async (req, res) => {
   try {
-    const { workspaceId, limit } = req.query;
+    const { groupId, limit } = req.query;
     
     const options = {
-      workspaceId: workspaceId || null,
+      groupId: groupId || null,
       limit: parseInt(limit) || 50
     };
 
@@ -182,30 +182,30 @@ router.get('/sent', authenticateJWT, async (req, res) => {
   }
 });
 
-// @route   GET /api/encouragements/workspace/:workspaceId
-// @desc    Get all encouragements in a workspace (for feed/activity)
+// @route   GET /api/encouragements/group/:groupId
+// @desc    Get all encouragements in a group (for feed/activity)
 // @access  Private
-router.get('/workspace/:workspaceId', authenticateJWT, async (req, res) => {
+router.get('/group/:groupId', authenticateJWT, async (req, res) => {
   try {
-    const { workspaceId } = req.params;
+    const { groupId } = req.params;
     const { limit } = req.query;
 
-    // Verify user is a member of the workspace
-    const workspace = await Workspace.findById(workspaceId);
-    if (!workspace) {
+    // Verify user is a member of the group
+    const group = await Group.findById(groupId);
+    if (!group) {
       return res.status(404).json({
         success: false,
-        message: 'Workspace not found'
+        message: 'Group not found'
       });
     }
 
-    const isMember = workspace.members.some(member => 
+    const isMember = group.members.some(member => 
       member.userId.toString() === req.user.id
     );
     if (!isMember) {
       return res.status(403).json({
         success: false,
-        message: 'You are not a member of this workspace'
+        message: 'You are not a member of this group'
       });
     }
 
@@ -213,8 +213,8 @@ router.get('/workspace/:workspaceId', authenticateJWT, async (req, res) => {
       limit: parseInt(limit) || 100
     };
 
-    const encouragements = await Encouragement.getWorkspaceEncouragements(
-      workspaceId,
+    const encouragements = await Encouragement.getGroupEncouragements(
+      groupId,
       options
     );
 
@@ -224,10 +224,10 @@ router.get('/workspace/:workspaceId', authenticateJWT, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching workspace encouragements:', error);
+    console.error('Error fetching group encouragements:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch workspace encouragements'
+      message: 'Failed to fetch group encouragements'
     });
   }
 });
@@ -304,7 +304,7 @@ router.put('/:id/respond', authenticateJWT, async (req, res) => {
     await encouragement.populate([
       { path: 'fromUser', select: 'name email avatar' },
       { path: 'toUser', select: 'name email avatar' },
-      { path: 'workspace', select: 'name' },
+      { path: 'group', select: 'name' },
       { path: 'habit', select: 'name' }
     ]);
 
@@ -359,9 +359,9 @@ router.put('/mark-read', authenticateJWT, async (req, res) => {
 // @access  Private
 router.get('/stats', authenticateJWT, async (req, res) => {
   try {
-    const { workspaceId } = req.query;
+    const { groupId } = req.query;
     
-    const baseQuery = workspaceId ? { workspace: workspaceId } : {};
+    const baseQuery = groupId ? { group: groupId } : {};
 
     // Get counts
     const [

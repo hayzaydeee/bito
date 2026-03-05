@@ -2,9 +2,9 @@ const mongoose = require('mongoose');
 
 const challengeSchema = new mongoose.Schema(
   {
-    workspaceId: {
+    groupId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Workspace',
+      ref: 'Group',
       required: true,
     },
     createdBy: {
@@ -40,11 +40,11 @@ const challengeSchema = new mongoose.Schema(
       required: true,
     },
 
-    // The workspace habit this challenge is tied to (optional).
+    // The group habit this challenge is tied to (optional).
     // If null, participants can link their own habit.
     habitId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'WorkspaceHabit',
+      ref: 'GroupHabit',
       default: null,
     },
 
@@ -187,8 +187,8 @@ const challengeSchema = new mongoose.Schema(
 );
 
 // ── Indexes ──
-challengeSchema.index({ workspaceId: 1, status: 1 });
-challengeSchema.index({ workspaceId: 1, createdAt: -1 });
+challengeSchema.index({ groupId: 1, status: 1 });
+challengeSchema.index({ groupId: 1, createdAt: -1 });
 challengeSchema.index({ 'participants.userId': 1 });
 challengeSchema.index({ 'participants.linkedHabitIds': 1 });
 challengeSchema.index({ startDate: 1, endDate: 1 });
@@ -362,9 +362,9 @@ challengeSchema.methods.getLeaderboard = function () {
 
 // ── Static methods ──
 
-challengeSchema.statics.findActiveForWorkspace = function (workspaceId) {
+challengeSchema.statics.findActiveForGroup = function (groupId) {
   return this.find({
-    workspaceId,
+    groupId,
     status: { $in: ['active', 'upcoming'] },
   })
     .populate('createdBy', 'name avatar')
@@ -372,8 +372,8 @@ challengeSchema.statics.findActiveForWorkspace = function (workspaceId) {
     .sort({ startDate: 1 });
 };
 
-challengeSchema.statics.findByWorkspace = function (workspaceId, options = {}) {
-  const query = { workspaceId };
+challengeSchema.statics.findByGroup = function (groupId, options = {}) {
+  const query = { groupId };
   if (options.status) {
     query.status = Array.isArray(options.status) ? { $in: options.status } : options.status;
   }

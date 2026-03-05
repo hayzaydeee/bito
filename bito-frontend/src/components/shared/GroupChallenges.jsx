@@ -12,7 +12,7 @@ import {
   CrossCircledIcon
 } from '@radix-ui/react-icons';
 
-const GroupChallenges = ({ workspaceId }) => {
+const GroupChallenges = ({ groupId }) => {
   const { user } = useAuth();
   const [challenges, setChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -82,7 +82,7 @@ const GroupChallenges = ({ workspaceId }) => {
   useEffect(() => {
     // In real implementation, fetch from API
     fetchChallenges();
-  }, [workspaceId]);
+  }, [groupId]);
 
   const fetchChallenges = async () => {
     try {

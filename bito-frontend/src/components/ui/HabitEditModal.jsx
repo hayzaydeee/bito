@@ -400,7 +400,7 @@ const HabitEditModal = ({
                           Private Habit
                         </Text>
                         <Text as="p" size="1" color="gray">
-                          Hidden from workspace members
+                          Hidden from group members
                         </Text>
                       </div>
                       <Switch

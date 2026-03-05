@@ -6,7 +6,7 @@ import {
 } from "@radix-ui/react-icons";
 import { groupsAPI } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
-import WorkspaceCreationModal from "../components/ui/WorkspaceCreationModal";
+import GroupCreationModal from "../components/ui/GroupCreationModal";
 import AvatarStack from "../components/shared/AvatarStack";
 
 const GroupSelection = () => {
@@ -31,13 +31,13 @@ const GroupSelection = () => {
     fetchGroups();
 
     const onUpdate = (e) => {
-      const ws = e.detail.workspace;
+      const ws = e.detail.group;
       setGroups((prev) =>
         prev.map((g) => (g._id === ws._id ? { ...g, ...ws } : g))
       );
     };
-    window.addEventListener("workspaceUpdated", onUpdate);
-    return () => window.removeEventListener("workspaceUpdated", onUpdate);
+    window.addEventListener("groupUpdated", onUpdate);
+    return () => window.removeEventListener("groupUpdated", onUpdate);
   }, []);
 
   useEffect(() => {
@@ -56,7 +56,7 @@ const GroupSelection = () => {
       const res = await groupsAPI.getGroups();
       if (res.success) {
         const withCounts = await Promise.all(
-          res.workspaces.map(async (ws) => {
+          res.groups.map(async (ws) => {
             if (ws.habitCount == null || ws.habitCount < 0) {
               try {
                 const h = await groupsAPI.getGroupHabits(ws._id);
@@ -88,7 +88,7 @@ const GroupSelection = () => {
       });
       if (res.success) {
         setShowCreateModal(false);
-        navigate(`/app/groups/${res.workspace._id}`);
+        navigate(`/app/groups/${res.group._id}`);
       }
     } catch (err) {
       console.error("Error creating group:", err);
@@ -270,7 +270,7 @@ const GroupSelection = () => {
       </div>
 
       {/* create modal */}
-      <WorkspaceCreationModal
+      <GroupCreationModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSave={handleCreate}

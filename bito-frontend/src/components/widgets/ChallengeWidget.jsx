@@ -26,7 +26,7 @@ const STATUS_COLORS = {
   cancelled: "bg-red-500/10 text-red-500",
 };
 
-const ChallengeWidget = ({ workspaceId, className = "" }) => {
+const ChallengeWidget = ({ groupId, className = "" }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const currentUserId = user?._id || user?.id;
@@ -39,13 +39,13 @@ const ChallengeWidget = ({ workspaceId, className = "" }) => {
 
   useEffect(() => {
     fetchChallenges();
-  }, [workspaceId]);
+  }, [groupId]);
 
   const fetchChallenges = async () => {
-    if (!workspaceId) return;
+    if (!groupId) return;
     try {
       setLoading(true);
-      const res = await groupsAPI.getChallenges(workspaceId);
+      const res = await groupsAPI.getChallenges(groupId);
       if (res.success) {
         setChallenges(res.challenges || []);
       } else {
@@ -164,7 +164,7 @@ const ChallengeWidget = ({ workspaceId, className = "" }) => {
             return (
               <li
                 key={c._id}
-                onClick={() => navigate(`/app/groups/${workspaceId}/challenges/${c._id}`)}
+                onClick={() => navigate(`/app/groups/${groupId}/challenges/${c._id}`)}
                 className="p-4 rounded-2xl border bg-[var(--color-surface-elevated)] border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40 transition-colors cursor-pointer"
               >
                 <div className="flex items-start gap-3">
@@ -245,7 +245,7 @@ const ChallengeWidget = ({ workspaceId, className = "" }) => {
 
       <ChallengeCreateModal
         isOpen={isCreateModalOpen}
-        workspaceId={workspaceId}
+        groupId={groupId}
         onClose={() => setIsCreateModalOpen(false)}
         onSuccess={handleCreated}
       />

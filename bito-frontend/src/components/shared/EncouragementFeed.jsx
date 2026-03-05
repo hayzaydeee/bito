@@ -10,7 +10,7 @@ import {
   EnterIcon
 } from '@radix-ui/react-icons';
 
-const EncouragementFeed = ({ workspaceId, limit = 20 }) => {
+const EncouragementFeed = ({ groupId, limit = 20 }) => {
   const { user } = useAuth();
   const [encouragements, setEncouragements] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,12 +21,12 @@ const EncouragementFeed = ({ workspaceId, limit = 20 }) => {
 
   useEffect(() => {
     fetchEncouragements();
-  }, [workspaceId]);
+  }, [groupId]);
 
   const fetchEncouragements = async () => {
     try {
       setLoading(true);
-      const response = await encouragementAPI.getWorkspaceEncouragements(workspaceId, { limit });
+      const response = await encouragementAPI.getGroupEncouragements(groupId, { limit });
       setEncouragements(response.data || []);
     } catch (err) {
       console.error('Error fetching encouragements:', err);

@@ -3,9 +3,9 @@ const crypto = require('crypto');
 
 const invitationSchema = new mongoose.Schema({
   // Core invitation data
-  workspaceId: {
+  groupId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Workspace',
+    ref: 'Group',
     required: true,
     index: true
   },
@@ -76,7 +76,7 @@ const invitationSchema = new mongoose.Schema({
 });
 
 // Indexes for performance
-invitationSchema.index({ workspaceId: 1, email: 1 });
+invitationSchema.index({ groupId: 1, email: 1 });
 invitationSchema.index({ status: 1, expiresAt: 1 });
 invitationSchema.index({ invitedBy: 1, createdAt: -1 });
 
@@ -140,11 +140,11 @@ invitationSchema.statics.findValidByToken = function(token) {
     token: token,
     status: 'pending',
     expiresAt: { $gt: new Date() }
-  }).populate('workspaceId invitedBy');
+  }).populate('groupId invitedBy');
 };
 
-invitationSchema.statics.findByWorkspace = function(workspaceId, options = {}) {
-  const query = { workspaceId };
+invitationSchema.statics.findByGroup = function(groupId, options = {}) {
+  const query = { groupId };
   
   if (options.status) {
     query.status = options.status;
