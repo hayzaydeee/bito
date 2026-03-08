@@ -13,7 +13,7 @@ const HabitCard = memo(({ habit, onClick }) => {
 
   const completionPct = useMemo(() => {
     const rate = habit.stats?.completionRate;
-    return rate != null ? Math.round(rate * 100) : 0;
+    return rate != null ? Math.round(rate) : 0;
   }, [habit.stats?.completionRate]);
 
   const freqLabel = useMemo(() => {

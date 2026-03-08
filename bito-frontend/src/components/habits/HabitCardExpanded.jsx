@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useEffect } from "react";
+import React, { memo, useMemo, useEffect, useState } from "react";
 import {
   Cross2Icon,
   Pencil1Icon,
@@ -7,6 +7,7 @@ import {
 } from "@radix-ui/react-icons";
 import ProgressRing from "../shared/ProgressRing";
 import CATEGORY_META from "../../data/categoryMeta";
+import { useHabits } from "../../contexts/HabitContext";
 
 /**
  * HabitCardExpanded — minimal slide-over detail panel.
@@ -17,6 +18,20 @@ const HabitCardExpanded = memo(
     const cat = CATEGORY_META[habit?.category] || CATEGORY_META.custom;
     const accentColor = habit?.color || cat.accent || "var(--color-brand-500)";
     const isArchived = habit?.isArchived;
+    const { fetchHabitEntries, entries } = useHabits();
+
+    // Fetch last 30 days of entries when panel opens
+    useEffect(() => {
+      if (!habit?._id) return;
+      const end = new Date();
+      const start = new Date();
+      start.setDate(start.getDate() - 29);
+      fetchHabitEntries(
+        habit._id,
+        start.toISOString().split("T")[0],
+        end.toISOString().split("T")[0]
+      );
+    }, [habit?._id, fetchHabitEntries]);
 
     useEffect(() => {
       document.body.style.overflow = "hidden";
@@ -31,26 +46,29 @@ const HabitCardExpanded = memo(
 
     const completionPct = useMemo(() => {
       const rate = habit?.stats?.completionRate;
-      return rate != null ? Math.round(rate * 100) : 0;
+      return rate != null ? Math.round(rate) : 0;
     }, [habit?.stats?.completionRate]);
 
-    // 30-day heatmap
+    // 30-day heatmap from real entries
     const heatmapCells = useMemo(() => {
-      if (!habit) return [];
-      const rate = habit.stats?.completionRate || 0;
-      const streak = habit.stats?.currentStreak || 0;
+      if (!habit?._id) return [];
+      const habitEntries = entries[habit._id] || {};
       const cells = [];
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
       for (let i = 29; i >= 0; i--) {
-        if (i < streak) {
-          cells.push({ done: true });
-        } else {
-          cells.push({ done: Math.random() < rate });
-        }
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().split("T")[0];
+        const entry = habitEntries[key];
+        cells.push({ done: entry?.completed === true });
       }
-      // Pad to 35
+
+      // Pad to fill a 7-col grid (up to 35)
       while (cells.length < 35) cells.push({ empty: true });
       return cells;
-    }, [habit]);
+    }, [habit?._id, entries]);
 
     const freqLabel = useMemo(() => {
       if (!habit) return "";
