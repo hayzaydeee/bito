@@ -16,7 +16,9 @@ import GroupOverview from "./pages/GroupOverview";
 import GroupSettings from "./pages/GroupSettings";
 import MemberDashboardView from "./pages/MemberDashboardView";
 import ChallengeDetailPage from "./pages/ChallengeDetailPage";
-import CompassPage from "./components/compass/CompassPage";
+import CompassListPage from "./components/compass/CompassListPage";
+import CompassCreatePage from "./components/compass/CompassCreatePage";
+import CompassDetailPage from "./components/compass/CompassDetailPage";
 import GroupSelection from "./pages/GroupSelection";
 import OnboardingPage from "./pages/OnboardingPage";
 import ProfileSetupPage from "./pages/ProfileSetupPage";
@@ -81,7 +83,9 @@ const ThemedApp = () => {
               <Route path="habits" element={<HabitsPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />
               <Route path="journal" element={<JournalPageV2 />} />
-              <Route path="compass" element={<CompassPage />} />
+              <Route path="compass" element={<CompassListPage />} />
+              <Route path="compass/new" element={<CompassCreatePage />} />
+              <Route path="compass/:compassId" element={<CompassDetailPage />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="settings/habit-privacy/:habitId" element={<SettingsPage section="habit-privacy" />} />
               <Route path="settings/personality" element={<SettingsPage section="personality" />} />

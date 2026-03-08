@@ -9,7 +9,7 @@ import CATEGORY_META, { DIFFICULTY_COLORS, METHODOLOGY_LABELS } from "../../data
  */
 
 const ALL_DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
-const DAY_LABELS = { mon: "M", tue: "T", wed: "W", thu: "T", fri: "F", sat: "S", sun: "S" };
+const DAY_LABELS = { mon: "M", tue: "Tu", wed: "W", thu: "Th", fri: "F", sat: "S", sun: "Su" };
 const DAY_FULL = { mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun" };
 
 const HabitCard = ({
@@ -40,7 +40,7 @@ const HabitCard = ({
   };
 
   const saveEdit = () => {
-    onEdit?.(index, editForm);
+    onEdit?.(index, editForm, phaseIndex);
     setIsEditing(false);
     setEditForm({});
   };
@@ -383,7 +383,7 @@ const HabitCard = ({
             </button>
             {canRemove && (
               <button
-                onClick={() => onRemove?.(index)}
+                onClick={() => onRemove?.(index, phaseIndex)}
                 className="p-2 rounded-xl hover:bg-red-500/10 text-[var(--color-text-tertiary)] hover:text-red-400 transition-colors"
                 title="Remove habit"
               >

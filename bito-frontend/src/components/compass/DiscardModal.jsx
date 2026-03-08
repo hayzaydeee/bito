@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Cross2Icon,
   ExclamationTriangleIcon,
   ArchiveIcon,
   TrashIcon,
   CheckCircledIcon,
-  LightningBoltIcon,
 } from "@radix-ui/react-icons";
+import { springs, modalVariants, backdropVariants } from "./compassMotion";
 
 /**
  * DiscardModal — shown when discarding an active compass.
@@ -14,15 +15,39 @@ import {
  *   - Keep habits (just archive the compass)
  *   - Archive habits (cascade archive)
  *   - Delete habits + entries (destructive)
+ *
+ * Accessible: Escape to close, Enter to confirm, focus trap.
  */
 const DiscardModal = ({ compass, onConfirm, onCancel, isLoading = false }) => {
   const [selected, setSelected] = useState("keep_habits");
 
   const sys = compass?.system || {};
+
+  // Phase-aware habit count
+  const phases = sys.phases || [];
+  const isPhased = phases.length > 0 && phases.some((p) => p.habits?.length > 0);
   const habitCount =
     compass?.appliedResources?.habitIds?.length ||
-    sys.habits?.length ||
-    0;
+    (isPhased
+      ? phases.reduce((s, p) => s + (p.habits?.length || 0), 0)
+      : sys.habits?.length || 0);
+
+  // Keyboard handling
+  const handleKeyDown = useCallback(
+    (e) => {
+      if (e.key === "Escape" && !isLoading) {
+        onCancel();
+      } else if (e.key === "Enter" && !isLoading) {
+        onConfirm(selected);
+      }
+    },
+    [onCancel, onConfirm, selected, isLoading]
+  );
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
 
   const options = [
     {
@@ -57,21 +82,42 @@ const DiscardModal = ({ compass, onConfirm, onCancel, isLoading = false }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div
+      <motion.div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onCancel}
+        onClick={!isLoading ? onCancel : undefined}
+        variants={backdropVariants}
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-md rounded-2xl bg-[var(--color-bg-primary)] border border-[var(--color-border-primary)]/30 shadow-2xl animate-in fade-in zoom-in-95">
+      <motion.div
+        className="relative w-full max-w-md rounded-2xl bg-[var(--color-bg-primary)] border border-[var(--color-border-primary)]/30 shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="discard-modal-title"
+        variants={modalVariants}
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-[var(--color-border-primary)]/20">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center">
+            <motion.div
+              className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center"
+              initial={{ rotate: -10 }}
+              animate={{ rotate: 0 }}
+              transition={springs.bouncy}
+            >
               <ExclamationTriangleIcon className="w-5 h-5 text-red-400" />
-            </div>
+            </motion.div>
             <div>
-              <h2 className="text-base font-spartan font-bold text-[var(--color-text-primary)]">
+              <h2
+                id="discard-modal-title"
+                className="text-base font-spartan font-bold text-[var(--color-text-primary)]"
+              >
                 Discard compass
               </h2>
               <p className="text-xs font-spartan text-[var(--color-text-secondary)]">
@@ -81,7 +127,9 @@ const DiscardModal = ({ compass, onConfirm, onCancel, isLoading = false }) => {
           </div>
           <button
             onClick={onCancel}
-            className="p-2 rounded-lg hover:bg-[var(--color-surface-hover)] text-[var(--color-text-tertiary)] transition-colors"
+            disabled={isLoading}
+            className="p-2 rounded-lg hover:bg-[var(--color-surface-hover)] text-[var(--color-text-tertiary)] transition-colors disabled:opacity-50"
+            aria-label="Close"
           >
             <Cross2Icon className="w-4 h-4" />
           </button>
@@ -93,11 +141,11 @@ const DiscardModal = ({ compass, onConfirm, onCancel, isLoading = false }) => {
             This compass has {habitCount} active habit{habitCount !== 1 ? "s" : ""}. What should happen to them?
           </p>
 
-          {options.map((opt) => {
+          {options.map((opt, i) => {
             const Icon = opt.icon;
             const isSelected = selected === opt.key;
             return (
-              <button
+              <motion.button
                 key={opt.key}
                 onClick={() => setSelected(opt.key)}
                 className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
@@ -105,6 +153,10 @@ const DiscardModal = ({ compass, onConfirm, onCancel, isLoading = false }) => {
                     ? `${opt.borderColor} ${opt.bgColor}`
                     : "border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40"
                 }`}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ ...springs.snappy, delay: i * 0.06 }}
+                whileTap={{ scale: 0.98 }}
               >
                 <div className="flex items-start gap-3">
                   <div
@@ -127,21 +179,22 @@ const DiscardModal = ({ compass, onConfirm, onCancel, isLoading = false }) => {
                     </p>
                   </div>
                 </div>
-              </button>
+              </motion.button>
             );
           })}
         </div>
 
         {/* Actions */}
         <div className="flex items-center gap-3 p-5 border-t border-[var(--color-border-primary)]/20">
-          <button
+          <motion.button
             onClick={onCancel}
             disabled={isLoading}
             className="flex-1 h-11 rounded-xl text-sm font-spartan font-medium border border-[var(--color-border-primary)]/30 text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors disabled:opacity-50"
+            whileTap={{ scale: 0.97 }}
           >
             Cancel
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             onClick={() => onConfirm(selected)}
             disabled={isLoading}
             className={`flex-1 h-11 rounded-xl text-sm font-spartan font-medium text-white transition-all disabled:opacity-50 ${
@@ -149,11 +202,17 @@ const DiscardModal = ({ compass, onConfirm, onCancel, isLoading = false }) => {
                 ? "bg-red-600 hover:bg-red-700"
                 : "bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)]"
             }`}
+            whileTap={{ scale: 0.97 }}
           >
             {isLoading ? "Discarding..." : selected === "delete_habits" ? "Delete & Discard" : "Discard"}
-          </button>
+          </motion.button>
         </div>
-      </div>
+
+        {/* Keyboard hint */}
+        <p className="text-center text-[10px] font-spartan text-[var(--color-text-tertiary)]/60 pb-3">
+          <kbd className="px-1.5 py-0.5 rounded bg-[var(--color-surface-hover)] text-[var(--color-text-tertiary)]">Esc</kbd> to cancel · <kbd className="px-1.5 py-0.5 rounded bg-[var(--color-surface-hover)] text-[var(--color-text-tertiary)]">Enter</kbd> to confirm
+        </p>
+      </motion.div>
     </div>
   );
 };
