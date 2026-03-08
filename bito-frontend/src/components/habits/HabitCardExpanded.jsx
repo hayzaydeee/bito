@@ -228,6 +228,7 @@ const HabitCardExpanded = memo(
                   className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-spartan font-medium text-red-400 hover:bg-red-500/10 transition-colors ml-auto"
                 >
                   <TrashIcon className="w-3.5 h-3.5" />
+                  Delete
                 </button>
               </div>
             </div>
