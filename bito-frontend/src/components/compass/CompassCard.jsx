@@ -1,18 +1,21 @@
+import { motion, useReducedMotion } from "framer-motion";
 import { CrossCircledIcon, RocketIcon, DrawingPinFilledIcon } from "@radix-ui/react-icons";
 import CATEGORY_META, { STATUS_THEME } from "../../data/categoryMeta";
 import ProgressRing from "../shared/ProgressRing";
 
 /**
  * CompassCard — rich grid card for the compasses list view.
- * Features: category gradient stripe, progress ring, habit preview chips,
- * glass treatment for active/preview items.
+ * Features: Framer Motion spring entry/exit, category gradient stripe,
+ * progress ring + bar, habit preview chips, glass treatment, mobile-first UX.
  */
 const CompassCard = ({ compass, index = 0, onOpen, onArchive, archiveLoading }) => {
+  const prefersReduced = useReducedMotion();
   const t = compass;
   const sys = t.system || {};
   const catMeta = CATEGORY_META[sys.category] || CATEGORY_META.custom;
   const sTheme = STATUS_THEME[t.status] || STATUS_THEME.preview;
-  const isFeatured = t.status === "active" || t.status === "preview";
+  const isActive = t.status === "active";
+  const isFeatured = isActive || t.status === "preview";
   const pers = t.personalization || {};
   const displayIcon = pers.icon || sys.icon || "🎯";
   const accentColor = pers.color || catMeta.accent;
@@ -46,23 +49,36 @@ const CompassCard = ({ compass, index = 0, onOpen, onArchive, archiveLoading }) 
   const currentPhase = isPhased ? phases[progress.currentPhaseIndex ?? 0] : null;
 
   return (
-    <div
+    <motion.div
+      layout
       onClick={() => onOpen(t)}
-      className={`relative overflow-hidden rounded-2xl border cursor-pointer transition-all duration-200 min-h-[160px] flex flex-col group ${
+      initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={prefersReduced ? { opacity: 0 } : { opacity: 0, x: -20, transition: { duration: 0.2 } }}
+      transition={
+        prefersReduced
+          ? { duration: 0 }
+          : { type: "spring", stiffness: 300, damping: 30, delay: index * 0.05 }
+      }
+      whileHover={prefersReduced ? {} : { y: -2 }}
+      whileTap={prefersReduced ? {} : { scale: 0.98 }}
+      className={`relative overflow-hidden rounded-2xl border cursor-pointer transition-shadow duration-200 min-h-[160px] flex flex-col group ${
         isFeatured
           ? "glass-card-minimal hover:shadow-lg hover:shadow-[var(--color-brand-500)]/5"
           : "bg-[var(--color-surface-elevated)] border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40 hover:shadow-md"
-      } stagger-fade-in`}
-      style={{ animationDelay: `${index * 60}ms` }}
+      }`}
+      style={{
+        ...(isActive ? { borderLeft: `3px solid ${accentColor}` } : {}),
+      }}
     >
       {/* Category gradient stripe */}
       <div
-        className={`h-1.5 w-full bg-gradient-to-r ${catMeta.gradient}`}
+        className="h-1.5 w-full"
         style={{ background: `linear-gradient(to right, ${accentColor}25, ${accentColor}08)` }}
       />
 
       {/* Main content */}
-      <div className="flex-1 p-5 flex flex-col">
+      <div className="flex-1 p-4 sm:p-5 flex flex-col">
         {/* Top row: icon + name + status */}
         <div className="flex items-start gap-3 mb-3">
           <span className="text-2xl flex-shrink-0 mt-0.5">{displayIcon}</span>
@@ -86,7 +102,7 @@ const CompassCard = ({ compass, index = 0, onOpen, onArchive, archiveLoading }) 
               </p>
             )}
             {/* Current phase badge for active compasses */}
-            {t.status === "active" && currentPhase && (
+            {isActive && currentPhase && (
               <div className="flex items-center gap-1.5 mt-1.5">
                 <RocketIcon className="w-3 h-3 text-[var(--color-brand-500)]" />
                 <span className="text-[10px] font-spartan font-medium text-[var(--color-brand-500)]">
@@ -96,14 +112,14 @@ const CompassCard = ({ compass, index = 0, onOpen, onArchive, archiveLoading }) 
             )}
           </div>
 
-          {/* Archive button */}
+          {/* Archive button — always visible on mobile, hover-reveal on desktop */}
           <button
             onClick={(e) => {
               e.stopPropagation();
               onArchive(t._id);
             }}
             disabled={archiveLoading === t._id}
-            className="p-1.5 rounded-lg hover:bg-red-500/10 text-[var(--color-text-tertiary)] hover:text-red-400 transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100 disabled:opacity-50"
+            className="p-1.5 rounded-lg hover:bg-red-500/10 text-[var(--color-text-tertiary)] hover:text-red-400 transition-colors flex-shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 disabled:opacity-50"
             title="Archive"
           >
             <CrossCircledIcon className="w-4 h-4" />
@@ -147,8 +163,8 @@ const CompassCard = ({ compass, index = 0, onOpen, onArchive, archiveLoading }) 
             color={catMeta.ring}
           />
 
-          {/* Habit preview chips */}
-          <div className="flex-1 flex items-center gap-1.5 min-w-0 overflow-hidden">
+          {/* Habit preview chips — wrap on mobile, single-row on desktop */}
+          <div className="flex-1 flex items-center gap-1.5 min-w-0 flex-wrap sm:flex-nowrap sm:overflow-hidden">
             {previewHabits.map((h, i) => (
               <span
                 key={i}
@@ -172,7 +188,21 @@ const CompassCard = ({ compass, index = 0, onOpen, onArchive, archiveLoading }) 
           </span>
         </div>
       </div>
-    </div>
+
+      {/* Bottom progress bar */}
+      {progressPct > 0 && (
+        <div className="w-full bg-transparent">
+          <div
+            className="compass-progress-bar"
+            style={{
+              width: `${progressPct}%`,
+              backgroundColor: accentColor,
+              opacity: 0.5,
+            }}
+          />
+        </div>
+      )}
+    </motion.div>
   );
 };
 

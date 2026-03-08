@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
-import { PlusIcon } from "@radix-ui/react-icons";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { PlusIcon, TargetIcon, LightningBoltIcon } from "@radix-ui/react-icons";
 import { compassAPI } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 import CATEGORY_META from "../../data/categoryMeta";
 import CompassCard from "./CompassCard";
 import CompassDetail from "./CompassDetail";
+import CompassEmptyState from "./CompassEmptyState";
 import GoalInput from "./GoalInput";
 import GeneratingOverlay from "./GeneratingOverlay";
 import RefinementStudio from "./RefinementStudio";
@@ -534,35 +536,62 @@ const CompassPage = () => {
   return (
     <>
       {discardModalEl}
-      <div className="min-h-screen page-container px-4 sm:px-6 py-10">
+      <div className="min-h-screen page-container px-4 sm:px-6 py-8 sm:py-10">
       <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-10">
+        {/* Header — stacks on mobile */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 sm:mb-10">
           <div>
             <h1 className="text-3xl font-bold font-garamond text-[var(--color-text-primary)] mb-1">
               Compasses
             </h1>
             <p className="text-sm text-[var(--color-text-secondary)] font-spartan">
               AI-powered habit systems from your goals
-              {compasses.length > 0 && (
-                <span className="ml-2">
-                  · {activeCount} active · {totalHabits} habit
-                  {totalHabits !== 1 && "s"} created
-                </span>
-              )}
             </p>
           </div>
-          <button
+          <motion.button
+            whileTap={{ scale: 0.97 }}
             onClick={() => {
               setView("create");
               setError(null);
             }}
-            className="flex items-center gap-2 h-10 px-5 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white rounded-xl text-sm font-spartan font-medium transition-colors"
+            className="flex items-center justify-center gap-2 h-11 w-full sm:w-auto px-5 text-white rounded-xl text-sm font-spartan font-medium transition-colors"
+            style={{
+              background: "linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700))",
+            }}
           >
             <PlusIcon className="w-4 h-4" />
             New compass
-          </button>
+          </motion.button>
         </div>
+
+        {/* Stat pills — only when compasses exist */}
+        {!loading && compasses.length > 0 && (
+          <motion.div
+            className="flex items-center gap-3 mb-6 flex-wrap"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.4, ease: "easeOut" }}
+          >
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/15">
+              <TargetIcon className="w-3.5 h-3.5 text-green-400" />
+              <span className="text-xs font-spartan font-semibold text-[var(--color-text-primary)]">
+                {activeCount}
+              </span>
+              <span className="text-xs font-spartan text-[var(--color-text-tertiary)]">
+                active
+              </span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/15">
+              <LightningBoltIcon className="w-3.5 h-3.5 text-[var(--color-brand-500)]" />
+              <span className="text-xs font-spartan font-semibold text-[var(--color-text-primary)]">
+                {totalHabits}
+              </span>
+              <span className="text-xs font-spartan text-[var(--color-text-tertiary)]">
+                habit{totalHabits !== 1 && "s"} tracking
+              </span>
+            </div>
+          </motion.div>
+        )}
 
         {error && (
           <p className="text-sm text-red-400 font-spartan mb-4">{error}</p>
@@ -571,55 +600,99 @@ const CompassPage = () => {
         {/* Loading skeleton */}
         {loading && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div
+            {[0, 1, 2, 3].map((i) => (
+              <motion.div
                 key={i}
-                className="h-[160px] bg-[var(--color-surface-elevated)] rounded-2xl animate-pulse"
-              />
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.08, duration: 0.4 }}
+                className="rounded-2xl overflow-hidden border border-[var(--color-border-primary)]/10 min-h-[160px]"
+              >
+                {/* Stripe shimmer */}
+                <div className="h-1.5 w-full compass-skeleton-shimmer" />
+                <div className="p-4 sm:p-5 flex flex-col gap-3">
+                  {/* Icon + text rows */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg compass-skeleton-shimmer flex-shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 w-3/4 rounded compass-skeleton-shimmer" />
+                      <div className="h-3 w-full rounded compass-skeleton-shimmer" />
+                    </div>
+                  </div>
+                  {/* Phase pills */}
+                  <div className="flex gap-1 mt-auto pt-6">
+                    <div className="h-1 flex-1 rounded-full compass-skeleton-shimmer" />
+                    <div className="h-1 flex-1 rounded-full compass-skeleton-shimmer" />
+                    <div className="h-1 flex-1 rounded-full compass-skeleton-shimmer" />
+                  </div>
+                  {/* Bottom row */}
+                  <div className="flex items-center gap-3 pt-3 border-t border-[var(--color-border-primary)]/10">
+                    <div className="w-8 h-8 rounded-full compass-skeleton-shimmer" />
+                    <div className="flex-1 flex gap-1.5">
+                      <div className="h-5 w-16 rounded-md compass-skeleton-shimmer" />
+                      <div className="h-5 w-20 rounded-md compass-skeleton-shimmer" />
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
             ))}
           </div>
         )}
 
         {/* Empty state */}
         {!loading && compasses.length === 0 && (
-          <div className="glass-card-minimal rounded-2xl p-12 text-center max-w-lg mx-auto">
-            <p className="text-6xl mb-6">🧠</p>
-            <h3 className="text-2xl font-garamond font-bold text-[var(--color-text-primary)] mb-2">
-              No compasses yet
-            </h3>
-            <p className="text-base text-[var(--color-text-secondary)] font-spartan max-w-sm mx-auto mb-6">
-              Tell us your goal and AI will design a personalized habit system
-              for you.
-            </p>
-            <button
-              onClick={() => setView("create")}
-              className="inline-flex items-center gap-2 h-12 px-6 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white rounded-xl text-sm font-spartan font-medium transition-colors"
-            >
-              <PlusIcon className="w-4 h-4" /> Create your first compass
-            </button>
-          </div>
+          <CompassEmptyState
+            onCreateNew={() => setView("create")}
+            onGoalSelect={(goal) => {
+              setGoalText(goal);
+              setView("create");
+            }}
+          />
         )}
 
-        {/* compass grid */}
+        {/* Compass grid */}
         {!loading && compasses.length > 0 && (
           <div className="space-y-6">
             {/* Suite groups */}
             {suiteGroups.map((suite) => (
-              <div key={suite.suiteId} className="space-y-2">
-                <div className="flex items-center gap-2 px-1">
+              <div
+                key={suite.suiteId}
+                className="glass-card-minimal rounded-2xl p-4 space-y-3"
+              >
+                <div className="flex items-center gap-2">
                   <span className="text-xs font-spartan font-semibold text-purple-400 uppercase tracking-wider">
                     Suite
                   </span>
                   <span className="text-xs font-spartan text-[var(--color-text-tertiary)]">
                     · {suite.suiteName}
                   </span>
-                  <div className="flex-1 h-px bg-purple-500/10" />
-                  <span className="text-[10px] font-spartan text-[var(--color-text-tertiary)]">
+                  <div className="flex-1" />
+                  <span className="text-[10px] font-spartan text-[var(--color-text-tertiary)] bg-purple-500/10 px-2 py-0.5 rounded-md">
                     {suite.compasses.length} linked
                   </span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pl-3 border-l-2 border-purple-500/20">
-                  {suite.compasses.map((t, i) => (
+                <AnimatePresence mode="popLayout">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {suite.compasses.map((t, i) => (
+                      <CompassCard
+                        key={t._id}
+                        compass={t}
+                        index={i}
+                        onOpen={openDetail}
+                        onArchive={handleArchive}
+                        archiveLoading={archiveLoading}
+                      />
+                    ))}
+                  </div>
+                </AnimatePresence>
+              </div>
+            ))}
+
+            {/* Standalone compasses */}
+            {sortedStandalone.length > 0 && (
+              <AnimatePresence mode="popLayout">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {sortedStandalone.map((t, i) => (
                     <CompassCard
                       key={t._id}
                       compass={t}
@@ -630,23 +703,7 @@ const CompassPage = () => {
                     />
                   ))}
                 </div>
-              </div>
-            ))}
-
-            {/* Standalone compasses */}
-            {sortedStandalone.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {sortedStandalone.map((t, i) => (
-                  <CompassCard
-                    key={t._id}
-                    compass={t}
-                    index={i}
-                    onOpen={openDetail}
-                    onArchive={handleArchive}
-                    archiveLoading={archiveLoading}
-                  />
-                ))}
-              </div>
+              </AnimatePresence>
             )}
           </div>
         )}

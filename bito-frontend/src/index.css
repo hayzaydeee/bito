@@ -974,6 +974,43 @@ h1, h2, h3, h4, h5, h6 {
   75% { transform: translateX(5px); }
 }
 
+/* ── Compass empty state aurora glow ── */
+.compass-empty-aurora {
+  background: radial-gradient(
+    ellipse 60% 50% at 50% 30%,
+    color-mix(in srgb, var(--color-brand-500) 8%, transparent),
+    transparent 70%
+  );
+  animation: compass-breathe 6s ease-in-out infinite;
+}
+@keyframes compass-breathe {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.06); }
+}
+
+/* ── Compass card progress bar fill ── */
+.compass-progress-bar {
+  height: 2px;
+  border-radius: 0 0 16px 16px;
+  transition: width 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Compass skeleton shimmer ── */
+@keyframes compass-skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.compass-skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-elevated) 25%,
+    var(--color-surface-hover) 50%,
+    var(--color-surface-elevated) 75%
+  );
+  background-size: 200% 100%;
+  animation: compass-skeleton-shimmer 1.8s ease-in-out infinite;
+}
+
 /* Password Strength Indicator */
 .password-strength-bar {
   height: 4px;
