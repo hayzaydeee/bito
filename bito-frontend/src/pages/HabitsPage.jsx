@@ -1,12 +1,8 @@
 import { useState, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { PlusIcon, MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import { useHabits } from "../contexts/HabitContext";
 import { useAuth } from "../contexts/AuthContext";
-import HabitsHeader from "../components/habits/HabitsHeader";
-import HabitMetricCards from "../components/habits/HabitMetricCards";
-import HabitFilterBar from "../components/habits/HabitFilterBar";
 import HabitCard from "../components/habits/HabitCard";
-import HabitCategoryGroup from "../components/habits/HabitCategoryGroup";
 import HabitCardExpanded from "../components/habits/HabitCardExpanded";
 import HabitsEmptyState from "../components/habits/HabitsEmptyState";
 import HabitsSkeleton from "../components/habits/HabitsSkeleton";
@@ -18,7 +14,6 @@ import CustomHabitEditModal from "../components/ui/CustomHabitEditModal";
  * Thin orchestrator composing sub-components from components/habits/.
  */
 const HabitsPage = () => {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const {
     habits,
@@ -32,9 +27,6 @@ const HabitsPage = () => {
   // UI state
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("active");
-  const [sourceFilter, setSourceFilter] = useState("all");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [showFilters, setShowFilters] = useState(false);
   const [selectedHabit, setSelectedHabit] = useState(null);
   const [showCreateWizard, setShowCreateWizard] = useState(false);
   const [editingHabit, setEditingHabit] = useState(null);
@@ -50,14 +42,6 @@ const HabitsPage = () => {
       list = list.filter((h) => h.isArchived);
     }
 
-    if (sourceFilter !== "all") {
-      list = list.filter((h) => (h.source || "personal") === sourceFilter);
-    }
-
-    if (categoryFilter !== "all") {
-      list = list.filter((h) => h.category === categoryFilter);
-    }
-
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(
@@ -68,40 +52,10 @@ const HabitsPage = () => {
     }
 
     return list;
-  }, [habits, search, statusFilter, sourceFilter, categoryFilter]);
+  }, [habits, search, statusFilter]);
 
-  const categories = useMemo(() => {
-    const cats = new Set((habits || []).map((h) => h.category).filter(Boolean));
-    return [...cats].sort();
-  }, [habits]);
-
-  const stats = useMemo(() => {
-    const all = habits || [];
-    return {
-      total: all.length,
-      active: all.filter((h) => h.isActive !== false && !h.isArchived).length,
-      archived: all.filter((h) => h.isArchived).length,
-      personal: all.filter((h) => !h.source || h.source === "personal").length,
-      compass: all.filter((h) => h.source === "compass").length,
-      group: all.filter((h) => h.source === "group").length,
-    };
-  }, [habits]);
-
-  // Group habits by category for visual sections
-  const groupedHabits = useMemo(() => {
-    const isFilteredToOneCategory = categoryFilter !== "all";
-    if (isFilteredToOneCategory) return null; // render flat grid when filtered
-
-    const groups = {};
-    filteredHabits.forEach((h) => {
-      const cat = h.category || "custom";
-      if (!groups[cat]) groups[cat] = [];
-      groups[cat].push(h);
-    });
-
-    // Sort categories by count (descending)
-    return Object.entries(groups).sort((a, b) => b[1].length - a[1].length);
-  }, [filteredHabits, categoryFilter]);
+  const totalCount = (habits || []).length;
+  const activeCount = (habits || []).filter((h) => h.isActive !== false && !h.isArchived).length;
 
   // ── Handlers ──
 
@@ -155,54 +109,69 @@ const HabitsPage = () => {
 
   if (isLoading) return <HabitsSkeleton />;
 
-  const hasAnyHabits = (habits || []).length > 0;
-  const isFiltered = search || statusFilter !== "active" || sourceFilter !== "all" || categoryFilter !== "all";
+  const hasAnyHabits = totalCount > 0;
+  const isFiltered = search || statusFilter !== "active";
 
   return (
     <div className="min-h-screen page-container px-4 sm:px-6 py-8">
-      <div className="max-w-5xl mx-auto space-y-6">
-        <HabitsHeader stats={stats} onCreateHabit={() => setShowCreateWizard(true)} />
+      <div className="max-w-4xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="flex items-center justify-between" data-tour="habits-header">
+          <div>
+            <h1 className="text-2xl font-garamond font-bold text-[var(--color-text-primary)]">
+              Habits
+            </h1>
+            <p className="text-sm font-spartan text-[var(--color-text-tertiary)] mt-0.5">
+              {activeCount} active{totalCount !== activeCount ? ` · ${totalCount} total` : ""}
+            </p>
+          </div>
+          <button
+            onClick={() => setShowCreateWizard(true)}
+            data-tour="habits-add"
+            className="h-9 w-9 rounded-full flex items-center justify-center text-white transition-all hover:scale-105 active:scale-95"
+            style={{ background: "var(--color-brand-500)" }}
+          >
+            <PlusIcon className="w-4 h-4" />
+          </button>
+        </div>
 
-        {hasAnyHabits && <HabitMetricCards habits={habits} />}
-
+        {/* Search + status — single clean row */}
         {hasAnyHabits && (
-          <HabitFilterBar
-            search={search}
-            onSearchChange={setSearch}
-            statusFilter={statusFilter}
-            onStatusChange={setStatusFilter}
-            sourceFilter={sourceFilter}
-            onSourceChange={setSourceFilter}
-            categoryFilter={categoryFilter}
-            onCategoryChange={setCategoryFilter}
-            showFilters={showFilters}
-            onToggleFilters={() => setShowFilters(!showFilters)}
-            categories={categories}
-            stats={stats}
-          />
+          <div className="flex items-center gap-3" data-tour="habits-filters">
+            <div className="flex-1 relative">
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-tertiary)]" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search…"
+                className="w-full h-10 pl-9 pr-4 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] outline-none focus:border-[var(--color-brand-500)]/40 transition-colors"
+              />
+            </div>
+            <div className="flex rounded-xl border border-[var(--color-border-primary)]/20 overflow-hidden flex-shrink-0">
+              {["active", "archived", "all"].map((key) => (
+                <button
+                  key={key}
+                  onClick={() => setStatusFilter(key)}
+                  className={`px-3 py-2 text-xs font-spartan font-medium capitalize transition-colors ${
+                    statusFilter === key
+                      ? "bg-[var(--color-brand-500)]/12 text-[var(--color-brand-500)]"
+                      : "text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface-hover)]"
+                  }`}
+                >
+                  {key}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
 
-        {/* Habit grid */}
+        {/* Grid */}
         {filteredHabits.length === 0 ? (
           <HabitsEmptyState
             isFiltered={!!isFiltered && hasAnyHabits}
             onCreateHabit={() => setShowCreateWizard(true)}
-            onNavigateCompass={() => navigate("/compass")}
           />
-        ) : groupedHabits ? (
-          // Grouped by category
-          <div className="space-y-8" data-tour="habits-grid">
-            {groupedHabits.map(([catKey, catHabits]) => (
-              <HabitCategoryGroup
-                key={catKey}
-                categoryKey={catKey}
-                habits={catHabits}
-                onHabitClick={handleHabitClick}
-              />
-            ))}
-          </div>
         ) : (
-          // Flat grid (filtered to specific category)
           <div
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
             data-tour="habits-grid"
@@ -215,13 +184,6 @@ const HabitsPage = () => {
               />
             ))}
           </div>
-        )}
-
-        {/* Footer */}
-        {filteredHabits.length > 0 && (
-          <p className="text-xs font-spartan text-[var(--color-text-tertiary)] text-center pt-4">
-            Showing {filteredHabits.length} of {stats.total} habits
-          </p>
         )}
       </div>
 

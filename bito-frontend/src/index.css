@@ -442,15 +442,7 @@ h1, h2, h3, h4, h5, h6 {
 .habit-card:hover {
   border-color: var(--color-brand-500);
   box-shadow: 0 0 0 1px var(--color-brand-500), 0 8px 24px var(--color-glow);
-  transform: translateY(-3px);
-}
-
-/* Metric card hover lift */
-.habit-metric-card {
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
-}
-.habit-metric-card:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 /* Slideout panel animation */
