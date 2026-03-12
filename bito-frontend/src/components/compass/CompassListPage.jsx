@@ -100,17 +100,17 @@ const CompassListPage = () => {
         exit="exit"
       >
         <div className="max-w-5xl mx-auto">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 sm:mb-10">
-            <motion.div variants={fadeUp}>
-              <h1 className="text-3xl font-bold font-garamond text-[var(--color-text-primary)] mb-1">
-                Compasses
-              </h1>
-              <p className="text-sm text-[var(--color-text-secondary)] font-spartan">
-                AI-powered habit systems from your goals
-              </p>
-            </motion.div>
-            {!loading && compasses.length > 0 && (
+          {/* Header — hidden in empty state since CompassEmptyState is self-contained */}
+          {!loading && compasses.length > 0 && (
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 sm:mb-10">
+              <motion.div variants={fadeUp}>
+                <h1 className="text-3xl font-bold font-garamond text-[var(--color-text-primary)] mb-1">
+                  Compasses
+                </h1>
+                <p className="text-sm text-[var(--color-text-secondary)] font-spartan">
+                  AI-powered habit systems from your goals
+                </p>
+              </motion.div>
               <motion.button
                 variants={fadeUp}
                 whileTap={{ scale: 0.97 }}
@@ -124,8 +124,8 @@ const CompassListPage = () => {
                 <PlusIcon className="w-4 h-4" />
                 New compass
               </motion.button>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Stat pills */}
           {!loading && compasses.length > 0 && (
