@@ -110,19 +110,21 @@ const CompassListPage = () => {
                 AI-powered habit systems from your goals
               </p>
             </motion.div>
-            <motion.button
-              variants={fadeUp}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => navigate("/app/compass/new")}
-              className="flex items-center justify-center gap-2 h-11 w-full sm:w-auto px-5 text-white rounded-xl text-sm font-spartan font-medium transition-colors"
-              style={{
-                background:
-                  "linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700))",
-              }}
-            >
-              <PlusIcon className="w-4 h-4" />
-              New compass
-            </motion.button>
+            {!loading && compasses.length > 0 && (
+              <motion.button
+                variants={fadeUp}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => navigate("/app/compass/new")}
+                className="flex items-center justify-center gap-2 h-11 w-full sm:w-auto px-5 text-white rounded-xl text-sm font-spartan font-medium transition-colors"
+                style={{
+                  background:
+                    "linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700))",
+                }}
+              >
+                <PlusIcon className="w-4 h-4" />
+                New compass
+              </motion.button>
+            )}
           </div>
 
           {/* Stat pills */}
