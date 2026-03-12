@@ -361,10 +361,11 @@ const GroupOverview = () => {
   /* ================================================================
      RENDER
      ================================================================ */
-  const groupColor = group.color || "#4f46e5";
+  const groupColor = group?.color || "#4f46e5";
 
   return (
     <SkeletonTransition isLoading={loading} skeleton={overviewSkeleton}>
+    {group ? (
     <div className="min-h-screen page-container px-4 sm:px-6 py-10">
       <div className="max-w-5xl mx-auto">
         {/* ── hero header ─────────────── */}
@@ -581,6 +582,7 @@ const GroupOverview = () => {
         onEncouragementSent={() => {}}
       />
     </div>
+    ) : null}
     </SkeletonTransition>
   );
 };
