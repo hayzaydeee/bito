@@ -218,6 +218,7 @@ const HabitsPage = () => {
         onSave={handleEditSave}
       />
     </div>
+    </SkeletonTransition>
   );
 };
 
