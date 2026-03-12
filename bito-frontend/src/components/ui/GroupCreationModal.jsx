@@ -11,6 +11,7 @@ import {
   GlobeIcon,
   InfoCircledIcon,
 } from "@radix-ui/react-icons";
+import AnimatedModal from "./AnimatedModal";
 
 // Predefined color options for group (matching HabitEditModal)
 const colorOptions = [

@@ -4,6 +4,7 @@ import {
   EnvelopeClosedIcon,
   Cross2Icon,
 } from "@radix-ui/react-icons";
+import AnimatedModal from "./AnimatedModal";
 
 const GroupInviteModal = ({ 
   isOpen, 

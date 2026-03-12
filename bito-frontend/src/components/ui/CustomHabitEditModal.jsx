@@ -7,6 +7,7 @@ import {
   ArchiveIcon,
   InfoCircledIcon,
 } from "@radix-ui/react-icons";
+import AnimatedModal from "./AnimatedModal";
 
 // Emoji categories for the picker
 const EMOJI_CATEGORIES = {
