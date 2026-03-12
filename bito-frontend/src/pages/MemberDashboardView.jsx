@@ -109,6 +109,7 @@ const MemberDashboardView = () => {
   const habits = memberData?.habits || [];
   const entries = memberData?.entries || {};
   const member = memberData?.member || null;
+  const memberName = member?.name || "Member";
 
   const habitStats = useMemo(() => {
     return habits.map((h) => {
@@ -176,6 +177,7 @@ const MemberDashboardView = () => {
 
   return (
     <SkeletonTransition isLoading={loading} skeleton={memberSkeleton}>
+    {member ? (
     <div className="min-h-screen page-container px-4 sm:px-6 py-10">
       <div className="max-w-3xl mx-auto">
         {/* header */}
@@ -188,12 +190,12 @@ const MemberDashboardView = () => {
           </button>
 
           <div className="w-11 h-11 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center text-white text-base font-spartan font-bold flex-shrink-0">
-            {member.name?.charAt(0)?.toUpperCase() || "?"}
+            {memberName.charAt(0)?.toUpperCase() || "?"}
           </div>
 
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl font-bold font-garamond text-[var(--color-text-primary)] truncate">
-              {member.name}
+              {memberName}
             </h1>
             <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)] font-spartan">
               <EyeOpenIcon className="w-3 h-3" />
@@ -224,7 +226,7 @@ const MemberDashboardView = () => {
               No habits yet
             </h3>
             <p className="text-sm text-[var(--color-text-secondary)] font-spartan">
-              {member.name} hasn't created any habits to track yet.
+              {memberName} hasn't created any habits to track yet.
             </p>
           </div>
         )}
@@ -289,6 +291,7 @@ const MemberDashboardView = () => {
         )}
       </div>
     </div>
+    ) : null}
     </SkeletonTransition>
   );
 };
