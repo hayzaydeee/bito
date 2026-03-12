@@ -8,6 +8,10 @@ import { groupsAPI } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import GroupCreationModal from "../components/ui/GroupCreationModal";
 import AvatarStack from "../components/shared/AvatarStack";
+import SkeletonTransition from "../components/ui/SkeletonTransition";
+import AnimatedList from "../components/ui/AnimatedList";
+import { motion } from "framer-motion";
+import { listItemVariants } from "../utils/motion";
 
 const GroupSelection = () => {
   const navigate = useNavigate();
@@ -125,28 +129,27 @@ const GroupSelection = () => {
 
   /* ── loading skeleton ───────────────── */
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen page-container px-4 sm:px-6 py-10">
-        <div className="max-w-5xl mx-auto space-y-4">
-          <div className="h-10 w-48 rounded-lg bg-[var(--color-surface-elevated)] animate-pulse" />
-          <div className="h-5 w-72 rounded bg-[var(--color-surface-elevated)] animate-pulse" />
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div
-                key={i}
-                className="h-[180px] rounded-2xl bg-[var(--color-surface-elevated)] animate-pulse"
-              />
-            ))}
-          </div>
+  const groupsSkeleton = (
+    <div className="min-h-screen page-container px-4 sm:px-6 py-10">
+      <div className="max-w-5xl mx-auto space-y-4">
+        <div className="h-10 w-48 rounded-lg bg-[var(--color-surface-elevated)] animate-pulse" />
+        <div className="h-5 w-72 rounded bg-[var(--color-surface-elevated)] animate-pulse" />
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="h-[180px] rounded-2xl bg-[var(--color-surface-elevated)] animate-pulse"
+            />
+          ))}
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 
   /* ── render ──────────────────────────── */
 
   return (
+    <SkeletonTransition isLoading={isLoading} skeleton={groupsSkeleton}>
     <div className="min-h-screen page-container px-4 sm:px-6 py-10">
       <div className="max-w-5xl mx-auto">
         {/* header */}
@@ -191,22 +194,21 @@ const GroupSelection = () => {
           </div>
         ) : (
           /* grid cards */
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <AnimatedList className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {groups.map((group, i) => {
               const color = group.color || "#4f46e5";
               const memberCount = group.members?.length || 0;
               const featured = isRecentlyActive(group);
 
               return (
+                <motion.div key={group._id} variants={listItemVariants} custom={i}>
                 <button
-                  key={group._id}
                   onClick={() => navigate(`/app/groups/${group._id}`)}
-                  className={`relative overflow-hidden rounded-2xl border text-left transition-all duration-200 min-h-[160px] flex flex-col group stagger-fade-in ${
+                  className={`relative overflow-hidden rounded-2xl border text-left transition-all duration-200 min-h-[160px] flex flex-col group w-full ${
                     featured
                       ? "glass-card-minimal hover:shadow-lg hover:shadow-[var(--color-brand-500)]/5"
                       : "bg-[var(--color-surface-elevated)] border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40 hover:shadow-md"
                   }`}
-                  style={{ animationDelay: `${i * 60}ms` }}
                 >
                   {/* Color gradient stripe */}
                   <div
@@ -263,9 +265,10 @@ const GroupSelection = () => {
                     </div>
                   </div>
                 </button>
+                </motion.div>
               );
             })}
-          </div>
+          </AnimatedList>
         )}
       </div>
 
@@ -289,6 +292,7 @@ const GroupSelection = () => {
         </div>
       )}
     </div>
+    </SkeletonTransition>
   );
 };
 

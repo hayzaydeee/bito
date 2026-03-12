@@ -5,6 +5,7 @@ import { useHabits } from "../contexts/HabitContext";
 import { habitUtils as habitLogic } from "../utils/habitLogic";
 import CustomHabitEditModal from "../components/ui/CustomHabitEditModal";
 import HabitCreationWizard from "../components/ui/HabitCreationWizard";
+import SkeletonTransition from "../components/ui/SkeletonTransition";
 
 /* ── Redesigned dashboard components (Phase 6) ── */
 import GreetingBar from "../components/dashboard/GreetingBar";
@@ -184,36 +185,35 @@ const Dashboard = () => {
   );
 
   /* ── Loading skeleton ── */
-  if (isLoading) {
-    return (
-      <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-6">
-        <div className="animate-pulse space-y-6">
-          <div
-            className="h-7 rounded w-2/5"
-            style={{ backgroundColor: "var(--color-surface-hover)" }}
-          />
-          <div className="flex gap-3">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-10 rounded-full flex-1"
-                style={{ backgroundColor: "var(--color-surface-hover)" }}
-              />
-            ))}
-          </div>
-          {[1, 2, 3, 4].map((i) => (
+  const dashboardSkeleton = (
+    <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-6">
+      <div className="animate-pulse space-y-6">
+        <div
+          className="h-7 rounded w-2/5"
+          style={{ backgroundColor: "var(--color-surface-hover)" }}
+        />
+        <div className="flex gap-3">
+          {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-14 rounded-xl"
+              className="h-10 rounded-full flex-1"
               style={{ backgroundColor: "var(--color-surface-hover)" }}
             />
           ))}
         </div>
+        {[1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className="h-14 rounded-xl"
+            style={{ backgroundColor: "var(--color-surface-hover)" }}
+          />
+        ))}
       </div>
-    );
-  }
+    </div>
+  );
 
   return (
+    <SkeletonTransition isLoading={isLoading} skeleton={dashboardSkeleton}>
     <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-6">
       {/* 1. Compact greeting */}
       <GreetingBar userName={user?.name || user?.username || "User"} firstName={user?.firstName} />
@@ -309,6 +309,7 @@ const Dashboard = () => {
       {/* 7. Dashboard tour (Phase 14) */}
       <DashboardTour userId={user?._id || user?.id} />
     </div>
+    </SkeletonTransition>
   );
 };
 

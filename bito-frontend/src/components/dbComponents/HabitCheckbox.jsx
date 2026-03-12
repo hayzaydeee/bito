@@ -1,5 +1,7 @@
 import React, { memo, useCallback } from 'react';
 import { CheckIcon } from '@radix-ui/react-icons';
+import { motion, AnimatePresence } from 'framer-motion';
+import { springs } from '../../utils/motion';
 
 export const HabitCheckbox = memo(({ 
   habitId,
@@ -21,18 +23,20 @@ export const HabitCheckbox = memo(({
   }, [onToggle, disabled]);
 
   return (
-    <button
+    <motion.button
       onClick={handleClick}
       disabled={disabled}
+      whileTap={!disabled ? { scale: 0.85 } : undefined}
+      whileHover={!disabled ? { scale: 1.1 } : undefined}
+      transition={springs.snappy}
       className={`
         habit-checkbox relative
-        w-8 h-8 rounded-lg transition-all duration-200 
+        w-8 h-8 rounded-lg
         flex items-center justify-center
-        hover:scale-105 active:scale-95
         focus:outline-none focus:ring-2 focus:ring-offset-2
         ${isCompleted 
-          ? 'shadow-md transform scale-105' 
-          : 'hover:shadow-sm'
+          ? 'shadow-md' 
+          : ''
         }
         ${isToday 
           ? 'ring-2 ring-[var(--color-brand-400)] ring-opacity-50' 
@@ -54,15 +58,25 @@ export const HabitCheckbox = memo(({
       aria-label={`Toggle ${habitId} for ${date}`}
       aria-pressed={isCompleted}
     >
-      {isCompleted && (
-        <CheckIcon className="w-4 h-4 text-white font-bold" />
-      )}
+      <AnimatePresence mode="wait">
+        {isCompleted && (
+          <motion.div
+            key="check"
+            initial={{ scale: 0, rotate: -45 }}
+            animate={{ scale: 1, rotate: 0 }}
+            exit={{ scale: 0 }}
+            transition={springs.bouncy}
+          >
+            <CheckIcon className="w-4 h-4 text-white font-bold" />
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* Today indicator */}
       {isToday && (
         <div className="absolute -top-1 -right-1 w-2 h-2 bg-[var(--color-brand-500)] rounded-full"></div>
       )}
-    </button>
+    </motion.button>
   );
 });
 

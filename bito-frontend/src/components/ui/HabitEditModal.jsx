@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import "./DialogAnimation.css";
+import { motion, AnimatePresence } from "framer-motion";
+import { backdropVariants, modalVariants } from "../../utils/motion";
 import {
   Flex,
   Button,
@@ -169,9 +170,26 @@ const HabitEditModal = ({
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={onClose}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm animate-fade-in" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-md w-full bg-[var(--color-surface-primary)] rounded-xl p-6 shadow-xl border border-[var(--color-border-primary)] animate-zoom-in">
+      <AnimatePresence>
+        {isOpen && (
+          <Dialog.Portal forceMount>
+            <Dialog.Overlay asChild>
+              <motion.div
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+                variants={backdropVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              />
+            </Dialog.Overlay>
+            <Dialog.Content asChild>
+              <motion.div
+                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-md w-full bg-[var(--color-surface-primary)] rounded-xl p-6 shadow-xl border border-[var(--color-border-primary)]"
+                variants={modalVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
           <Flex direction="column" gap="5">
             <Dialog.Title className="text-2xl font-dmSerif gradient-text">
               {habit ? "Edit Habit" : "Create New Habit"}
@@ -502,8 +520,11 @@ const HabitEditModal = ({
             <Cross2Icon />
           </Button>
         </Dialog.Close>
-      </Dialog.Content>
-      </Dialog.Portal>
+              </motion.div>
+            </Dialog.Content>
+          </Dialog.Portal>
+        )}
+      </AnimatePresence>
     </Dialog.Root>
   );
 };

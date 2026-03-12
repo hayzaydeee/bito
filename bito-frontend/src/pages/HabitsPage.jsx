@@ -8,6 +8,10 @@ import HabitsEmptyState from "../components/habits/HabitsEmptyState";
 import HabitsSkeleton from "../components/habits/HabitsSkeleton";
 import HabitCreationWizard from "../components/ui/HabitCreationWizard";
 import CustomHabitEditModal from "../components/ui/CustomHabitEditModal";
+import SkeletonTransition from "../components/ui/SkeletonTransition";
+import AnimatedList from "../components/ui/AnimatedList";
+import { motion } from "framer-motion";
+import { listItemVariants } from "../utils/motion";
 
 /**
  * HabitsPage — redesigned habit collection / gallery page.
@@ -107,12 +111,11 @@ const HabitsPage = () => {
 
   // ── Render ──
 
-  if (isLoading) return <HabitsSkeleton />;
-
   const hasAnyHabits = totalCount > 0;
   const isFiltered = search || statusFilter !== "active";
 
   return (
+    <SkeletonTransition isLoading={isLoading} skeleton={<HabitsSkeleton />}>
     <div className="min-h-screen page-container px-4 sm:px-6 py-8">
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
@@ -172,18 +175,19 @@ const HabitsPage = () => {
             onCreateHabit={() => setShowCreateWizard(true)}
           />
         ) : (
-          <div
+          <AnimatedList
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
             data-tour="habits-grid"
           >
-            {filteredHabits.map((habit) => (
-              <HabitCard
-                key={habit._id}
-                habit={habit}
-                onClick={handleHabitClick}
-              />
+            {filteredHabits.map((habit, i) => (
+              <motion.div key={habit._id} variants={listItemVariants} custom={i}>
+                <HabitCard
+                  habit={habit}
+                  onClick={handleHabitClick}
+                />
+              </motion.div>
             ))}
-          </div>
+          </AnimatedList>
         )}
       </div>
 

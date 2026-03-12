@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Cross2Icon, ChevronDownIcon, ChevronUpIcon, CheckIcon } from "@radix-ui/react-icons";
 import { groupsAPI } from "../../services/api";
+import AnimatedModal from "./AnimatedModal";
 
 const inputClass =
   "w-full h-10 px-3 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 rounded-xl text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:border-[var(--color-brand-600)]/40";
@@ -125,10 +126,8 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-
-      <div className="relative w-full max-w-lg bg-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)]/20 shadow-xl max-h-[85vh] overflow-y-auto">
+    <AnimatedModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-lg">
+      <div className="relative w-full bg-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)]/20 max-h-[85vh] overflow-y-auto">
         {/* header */}
         <div className="flex items-center justify-between p-5 border-b border-[var(--color-border-primary)]/10">
           <div>
@@ -314,7 +313,7 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
           </div>
         </div>
       </div>
-    </div>
+    </AnimatedModal>
   );
 };
 

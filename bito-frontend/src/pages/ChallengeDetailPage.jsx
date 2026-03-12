@@ -10,6 +10,7 @@ import {
 import { groupsAPI } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import ChallengeJoinModal from "../components/ui/ChallengeJoinModal";
+import SkeletonTransition from "../components/ui/SkeletonTransition";
 
 /* ── type metadata ── */
 const TYPE_META = {
@@ -132,20 +133,19 @@ const ChallengeDetailPage = () => {
   const teamPercent = () =>
     Math.min(100, Math.round((teamTotal() / (challenge?.rules?.targetValue || 1)) * 100));
 
-  /* ── loading / error states ── */
-  if (loading) {
-    return (
-      <div className="max-w-3xl mx-auto p-6">
-        <div className="animate-pulse space-y-6">
-          <div className="h-6 w-48 bg-[var(--color-surface-hover)] rounded" />
-          <div className="h-32 bg-[var(--color-surface-hover)] rounded-2xl" />
-          <div className="h-64 bg-[var(--color-surface-hover)] rounded-2xl" />
-        </div>
+  /* ── skeleton ── */
+  const challengeSkeleton = (
+    <div className="max-w-3xl mx-auto p-6">
+      <div className="animate-pulse space-y-6">
+        <div className="h-6 w-48 bg-[var(--color-surface-hover)] rounded" />
+        <div className="h-32 bg-[var(--color-surface-hover)] rounded-2xl" />
+        <div className="h-64 bg-[var(--color-surface-hover)] rounded-2xl" />
       </div>
-    );
-  }
+    </div>
+  );
 
-  if (error || !challenge) {
+  /* ── error states ── */
+  if (!loading && (error || !challenge)) {
     return (
       <div className="max-w-3xl mx-auto p-6">
         <button
@@ -167,6 +167,7 @@ const ChallengeDetailPage = () => {
   const leaderboard = challenge.leaderboard || [];
 
   return (
+    <SkeletonTransition isLoading={loading} skeleton={challengeSkeleton}>
     <div className="max-w-3xl mx-auto p-6 space-y-6">
       {/* ── Back nav ── */}
       <button
@@ -491,6 +492,7 @@ const ChallengeDetailPage = () => {
         onSuccess={handleJoinSuccess}
       />
     </div>
+    </SkeletonTransition>
   );
 };
 

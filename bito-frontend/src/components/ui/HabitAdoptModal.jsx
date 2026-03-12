@@ -1,6 +1,5 @@
 import React, { useState, useRef } from "react";
-import { createPortal } from "react-dom";
-import "./ModalAnimation.css";
+import AnimatedModal from "./AnimatedModal";
 import { 
   CheckIcon,
   Cross2Icon,
@@ -28,19 +27,11 @@ const HabitAdoptModal = ({
 
   if (!isOpen || !habit) return null;
 
-  return createPortal(
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-200" 
-        onClick={onClose}
-      />
-      
-      {/* Modal */}
-      <div 
+  return (
+    <AnimatedModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-md">
+      <div
         ref={modalRef}
-        className="relative bg-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)] shadow-xl p-6 w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto z-10 transform transition-all duration-200 scale-100"
-        onClick={(e) => e.stopPropagation()}
+        className="bg-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)] p-6 max-h-[90vh] overflow-y-auto"
       >
         <div className="flex items-center justify-between mb-6">
           <div className="text-xl font-dmSerif font-bold text-[var(--color-text-primary)]">
@@ -115,8 +106,7 @@ const HabitAdoptModal = ({
           </div>
         </form>
       </div>
-    </div>,
-    document.body
+    </AnimatedModal>
   );
 };
 

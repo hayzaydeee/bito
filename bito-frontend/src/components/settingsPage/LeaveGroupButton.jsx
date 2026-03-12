@@ -7,7 +7,6 @@ import {
   ExclamationTriangleIcon 
 } from '@radix-ui/react-icons';
 import { groupsAPI } from '../../services/api';
-import '../ui/ModalAnimation.css';
 
 const LeaveGroupButton = ({ group, isOwner }) => {
   const modalRef = useRef(null);

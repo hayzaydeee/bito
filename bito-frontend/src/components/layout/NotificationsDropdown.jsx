@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   PersonIcon,
   RocketIcon,
@@ -11,6 +12,7 @@ import {
   DotFilledIcon
 } from '@radix-ui/react-icons';
 import { notificationsAPI } from '../../services/api';
+import { springs } from '../../utils/motion';
 
 const NotificationsDropdown = ({ isOpen, onClose, onNotificationCountChange }) => {
   const [notifications, setNotifications] = useState([]);
@@ -158,13 +160,21 @@ const NotificationsDropdown = ({ isOpen, onClose, onNotificationCountChange }) =
   return (
     <>
       {/* Backdrop */}
-      <div 
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
         className="fixed inset-0 z-40" 
         onClick={onClose}
       />
       
       {/* Dropdown */}
-      <div className="absolute top-full right-0 mt-2 w-80 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)] rounded-lg shadow-lg z-50 max-h-96 overflow-hidden">
+      <motion.div
+        initial={{ opacity: 0, y: -8, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -8, scale: 0.96 }}
+        transition={springs.snappy}
+        className="absolute top-full right-0 mt-2 w-80 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)] rounded-lg shadow-lg z-50 max-h-96 overflow-hidden origin-top-right">
         {/* Header */}
         <div className="flex items-center justify-between p-3 border-b border-[var(--color-border-primary)]">
           <h3 className="font-semibold text-[var(--color-text-primary)]">Notifications</h3>
@@ -224,7 +234,7 @@ const NotificationsDropdown = ({ isOpen, onClose, onNotificationCountChange }) =
             ))
           )}
         </div>
-      </div>
+      </motion.div>
     </>
   );
 };

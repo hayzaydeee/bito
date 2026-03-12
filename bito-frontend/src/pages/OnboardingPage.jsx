@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRightIcon,
   ArrowLeftIcon,
@@ -8,6 +9,8 @@ import {
 } from "@radix-ui/react-icons";
 import { useAuth } from "../contexts/AuthContext";
 import { userAPI } from "../services/api";
+import AnimatedList from "../components/ui/AnimatedList";
+import { listItemVariants, wizardStepVariants } from "../utils/motion";
 
 /* ─────────────────────────────────────────────
    Phase 4 — Onboarding Interactive Playground
@@ -104,10 +107,10 @@ const OnboardingPage = () => {
   const navigate = useNavigate();
   const { user, updateUser, isAuthenticated, isLoading } = useAuth();
   const [step, setStep] = useState(0); // 0=welcome, 1=goals, 2=time, 3=done
+  const [direction, setDirection] = useState(1); // 1=forward, -1=back
   const [selectedGoals, setSelectedGoals] = useState([]);
   const [preferredTimes, setPreferredTimes] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [animatingOut, setAnimatingOut] = useState(false);
 
   // If not authenticated, redirect to login
   useEffect(() => {
@@ -138,19 +141,13 @@ const OnboardingPage = () => {
   };
 
   const goNext = () => {
-    setAnimatingOut(true);
-    setTimeout(() => {
-      setStep((s) => s + 1);
-      setAnimatingOut(false);
-    }, 200);
+    setDirection(1);
+    setStep((s) => s + 1);
   };
 
   const goBack = () => {
-    setAnimatingOut(true);
-    setTimeout(() => {
-      setStep((s) => s - 1);
-      setAnimatingOut(false);
-    }, 200);
+    setDirection(-1);
+    setStep((s) => s - 1);
   };
 
   const handleComplete = async () => {
@@ -269,14 +266,14 @@ const OnboardingPage = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-10">
-          {GOAL_OPTIONS.map((goal) => {
+        <AnimatedList className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-10">
+          {GOAL_OPTIONS.map((goal, i) => {
             const isSelected = selectedGoals.includes(goal.id);
             return (
+              <motion.div key={goal.id} variants={listItemVariants} custom={i}>
               <button
-                key={goal.id}
                 onClick={() => toggleGoal(goal.id)}
-                className="text-left rounded-xl border p-4 transition-all duration-150"
+                className="text-left rounded-xl border p-4 transition-all duration-150 w-full"
                 style={{
                   backgroundColor: isSelected
                     ? "var(--color-brand-600)"
@@ -314,9 +311,10 @@ const OnboardingPage = () => {
                   </div>
                 )}
               </button>
+              </motion.div>
             );
           })}
-        </div>
+        </AnimatedList>
 
         <div className="flex items-center justify-between">
           <button
@@ -546,14 +544,15 @@ const OnboardingPage = () => {
         {/* Step dots */}
         <div className="flex items-center gap-2">
           {[0, 1, 2, 3].map((s) => (
-            <div
+            <motion.div
               key={s}
-              className="h-1.5 rounded-full transition-all duration-300"
-              style={{
+              className="h-1.5 rounded-full"
+              animate={{
                 width: s === step ? 24 : 8,
                 backgroundColor:
                   s <= step ? "var(--color-brand-500)" : "var(--color-surface-hover)",
               }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
             />
           ))}
         </div>
@@ -562,15 +561,19 @@ const OnboardingPage = () => {
       </div>
 
       {/* Content */}
-      <div
-        className="flex-1 flex items-center justify-center px-6 pb-12"
-        style={{
-          opacity: animatingOut ? 0 : 1,
-          transform: animatingOut ? "translateY(8px)" : "translateY(0)",
-          transition: "opacity 200ms ease, transform 200ms ease",
-        }}
-      >
-        {stepContent[step]}
+      <div className="flex-1 flex items-center justify-center px-6 pb-12">
+        <AnimatePresence mode="wait" custom={direction}>
+          <motion.div
+            key={step}
+            custom={direction}
+            variants={wizardStepVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+          >
+            {stepContent[step]}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );

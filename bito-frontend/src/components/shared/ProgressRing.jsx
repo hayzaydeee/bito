@@ -2,6 +2,10 @@
  * ProgressRing — reusable SVG circular progress indicator.
  * Extracted from StatPills for shared use across Compass, Groups, etc.
  */
+import { motion } from "framer-motion";
+import { springs } from "../../utils/motion";
+import useMotionSafe from "../../hooks/useMotionSafe";
+
 const ProgressRing = ({
   value = 0,
   size = 52,
@@ -10,6 +14,7 @@ const ProgressRing = ({
   trackColor = "var(--color-surface-hover)",
   className = "",
 }) => {
+  const { shouldAnimate } = useMotionSafe();
   const radius = (size - stroke) / 2;
   const circ = 2 * Math.PI * radius;
   const pct = Math.min(Math.max(value, 0), 100);
@@ -31,7 +36,7 @@ const ProgressRing = ({
         stroke={trackColor}
       />
       {/* Fill */}
-      <circle
+      <motion.circle
         cx={size / 2}
         cy={size / 2}
         r={radius}
@@ -40,8 +45,9 @@ const ProgressRing = ({
         stroke={color}
         strokeLinecap="round"
         strokeDasharray={circ}
-        strokeDashoffset={offset}
-        className="transition-all duration-700 ease-out"
+        animate={{ strokeDashoffset: offset }}
+        initial={shouldAnimate ? { strokeDashoffset: circ } : { strokeDashoffset: offset }}
+        transition={shouldAnimate ? { ...springs.soft, duration: 0.8 } : { duration: 0 }}
       />
     </svg>
   );

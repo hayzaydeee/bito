@@ -692,28 +692,21 @@ h1, h2, h3, h4, h5, h6 {
   animation: fadeIn 0.6s ease-out both;
 }
 
+@keyframes zoomIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.animate-zoom-in {
+  animation: zoomIn 200ms ease-out;
+}
+
 .animate-slide-up {
   animation: slideUp 0.8s ease-out both;
 }
 
 .animate-shake {
   animation: shake 0.5s ease-in-out;
-}
-
-/* ── Phase 13: Page transition ── */
-.page-enter {
-  animation: pageFadeIn 200ms ease-out both;
-}
-
-@keyframes pageFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 /* ── Phase 13: Habit completion bounce ── */
@@ -1734,74 +1727,6 @@ body.onboarding-active [data-tour]:hover {
   100% { opacity: 1; transform: scale(1.08); }
 }
 
-/* ── Scroll-triggered reveal ── */
-.landing-reveal {
-  opacity: 0;
-  transform: translateY(32px);
-  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.landing-reveal.landing-revealed {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.landing-reveal-left {
-  opacity: 0;
-  transform: translateX(-40px);
-  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.landing-reveal-left.landing-revealed {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.landing-reveal-right {
-  opacity: 0;
-  transform: translateX(40px);
-  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.landing-reveal-right.landing-revealed {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.landing-reveal-scale {
-  opacity: 0;
-  transform: scale(0.92);
-  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.landing-reveal-scale.landing-revealed {
-  opacity: 1;
-  transform: scale(1);
-}
-
-/* Stagger children */
-.landing-stagger > *:nth-child(1) { transition-delay: 0ms; }
-.landing-stagger > *:nth-child(2) { transition-delay: 80ms; }
-.landing-stagger > *:nth-child(3) { transition-delay: 160ms; }
-.landing-stagger > *:nth-child(4) { transition-delay: 240ms; }
-.landing-stagger > *:nth-child(5) { transition-delay: 320ms; }
-.landing-stagger > *:nth-child(6) { transition-delay: 400ms; }
-
-/* ── Hero text stagger entrance ── */
-@keyframes heroFadeInUp {
-  from { opacity: 0; transform: translateY(24px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.hero-text-reveal > *:nth-child(1) { animation: heroFadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
-.hero-text-reveal > *:nth-child(2) { animation: heroFadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both; }
-.hero-text-reveal > *:nth-child(3) { animation: heroFadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both; }
-.hero-text-reveal > *:nth-child(4) { animation: heroFadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both; }
-.hero-text-reveal > *:nth-child(5) { animation: heroFadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.7s both; }
 
 /* ── Marquee ── */
 .marquee-container {
@@ -1861,16 +1786,6 @@ body.onboarding-active [data-tour]:hover {
 @keyframes tabIndicatorIn {
   from { width: 0; opacity: 0; }
   to   { width: 24px; opacity: 1; }
-}
-
-/* Feature panel transition */
-.feature-panel-enter {
-  animation: featurePanelIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes featurePanelIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ── Stats card ── */

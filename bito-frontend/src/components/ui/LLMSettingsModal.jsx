@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import LLMConfigService from '../../services/llmConfigService';
+import AnimatedModal from './AnimatedModal';
 
 const LLMSettingsModal = ({ isOpen, onClose }) => {
   const [apiKey, setApiKey] = useState('');
@@ -53,8 +54,8 @@ const LLMSettingsModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-      <div className="bg-[var(--color-surface-primary)] rounded-xl shadow-xl border border-[var(--color-border-primary)] p-6 max-w-md w-full animate-zoom-in">
+    <AnimatedModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-md">
+      <div className="bg-[var(--color-surface-primary)] rounded-xl border border-[var(--color-border-primary)] p-6">
         <div className="space-y-5">
           <div className="flex items-center justify-between">
             <h3 className="text-2xl font-dmSerif gradient-text">
@@ -134,7 +135,7 @@ const LLMSettingsModal = ({ isOpen, onClose }) => {
           </div>
         </div>
       </div>
-    </div>
+    </AnimatedModal>
   );
 };
 

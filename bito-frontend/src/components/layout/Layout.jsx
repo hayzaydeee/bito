@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Outlet, useLocation, Navigate } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import VerticalMenu from "./VerticalMenu";
 import StatusBar from "./StatusBar";
 import BottomTabBar from "./BottomTabBar";
+import AnimatedPage from "../ui/AnimatedPage";
 import HabitCreationWizard from "../ui/HabitCreationWizard";
 import { useAuth, withAuth } from "../../contexts/AuthContext";
 import { useHabits } from "../../contexts/HabitContext";
@@ -84,9 +86,11 @@ const Layout = () => {
             paddingBottom: isMobile ? "calc(64px + env(safe-area-inset-bottom, 0px))" : "0",
           }}
         >
-          <div key={location.pathname} className="page-enter min-h-full relative">
-            <Outlet />
-          </div>
+          <AnimatePresence mode="wait">
+            <AnimatedPage key={location.pathname}>
+              <Outlet />
+            </AnimatedPage>
+          </AnimatePresence>
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { createPortal } from "react-dom";
-import "./ModalAnimation.css";
+import { motion, AnimatePresence } from "framer-motion";
+import AnimatedModal from "./AnimatedModal";
+import { wizardStepVariants } from "../../utils/motion";
 import {
   Cross2Icon,
   CheckIcon,
@@ -89,7 +90,7 @@ const HabitCreationWizard = ({ isOpen, onClose, onSave, userId }) => {
 
   /* ── Wizard state ── */
   const [step, setStep] = useState(0);
-  const [animatingOut, setAnimatingOut] = useState(false);
+  const [direction, setDirection] = useState(1); // 1 = forward, -1 = backward
   const [emojiCategory, setEmojiCategory] = useState("common");
   const [errors, setErrors] = useState({});
   const [showDescription, setShowDescription] = useState(false);
@@ -113,11 +114,7 @@ const HabitCreationWizard = ({ isOpen, onClose, onSave, userId }) => {
       setErrors({});
       setShowDescription(false);
       setEmojiCategory("common");
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
     }
-    return () => { document.body.style.overflow = "unset"; };
   }, [isOpen]);
 
   /* Auto-focus name input */
@@ -126,14 +123,6 @@ const HabitCreationWizard = ({ isOpen, onClose, onSave, userId }) => {
       setTimeout(() => nameInputRef.current?.focus(), 100);
     }
   }, [isOpen, step]);
-
-  /* Escape to close */
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleEscape = (e) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", handleEscape);
-    return () => window.removeEventListener("keydown", handleEscape);
-  }, [isOpen, onClose]);
 
   /* ── Navigation ── */
   const goNext = useCallback(() => {
@@ -152,20 +141,14 @@ const HabitCreationWizard = ({ isOpen, onClose, onSave, userId }) => {
     setErrors({});
 
     if (step >= STEP_COUNT - 1) return;
-    setAnimatingOut(true);
-    setTimeout(() => {
-      setStep((s) => s + 1);
-      setAnimatingOut(false);
-    }, 200);
+    setDirection(1);
+    setStep((s) => s + 1);
   }, [step, formData]);
 
   const goBack = useCallback(() => {
     if (step <= 0) { onClose(); return; }
-    setAnimatingOut(true);
-    setTimeout(() => {
-      setStep((s) => s - 1);
-      setAnimatingOut(false);
-    }, 200);
+    setDirection(-1);
+    setStep((s) => s - 1);
   }, [step, onClose]);
 
   /* ── Submit ── */
@@ -614,18 +597,10 @@ const HabitCreationWizard = ({ isOpen, onClose, onSave, userId }) => {
   const isLastStep = step === STEP_COUNT - 1;
   const canProceed = step === 0 ? formData.name.trim().length > 0 : true;
 
-  return createPortal(
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
-      {/* Backdrop */}
+  return (
+    <AnimatedModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-md">
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-200"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div
-        className="relative bg-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)] shadow-xl w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto z-10 transform transition-all duration-200"
-        onClick={(e) => e.stopPropagation()}
+        className="bg-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)] w-full max-h-[90vh] overflow-y-auto"
       >
         {/* Header */}
         <div className="sticky top-0 z-10 bg-[var(--color-surface-primary)] px-5 pt-5 pb-3 border-b border-[var(--color-border-primary)]">
@@ -656,15 +631,18 @@ const HabitCreationWizard = ({ isOpen, onClose, onSave, userId }) => {
           {compactMode ? (
             renderCompact()
           ) : (
-            <div
-              style={{
-                opacity: animatingOut ? 0 : 1,
-                transform: animatingOut ? "translateY(8px)" : "translateY(0)",
-                transition: "opacity 200ms ease, transform 200ms ease",
-              }}
-            >
-              {stepContent[step]()}
-            </div>
+            <AnimatePresence mode="wait" custom={direction}>
+              <motion.div
+                key={step}
+                custom={direction}
+                variants={wizardStepVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+              >
+                {stepContent[step]()}
+              </motion.div>
+            </AnimatePresence>
           )}
         </div>
 
@@ -721,8 +699,7 @@ const HabitCreationWizard = ({ isOpen, onClose, onSave, userId }) => {
           )}
         </div>
       </div>
-    </div>,
-    document.body
+    </AnimatedModal>
   );
 };
 

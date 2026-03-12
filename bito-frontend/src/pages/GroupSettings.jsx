@@ -18,6 +18,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { groupsAPI } from "../services/api";
 import { useAppNotifications } from "../hooks/useAppNotifications";
 import LeaveGroupButton from "../components/settingsPage/LeaveGroupButton";
+import SkeletonTransition from "../components/ui/SkeletonTransition";
 
 /* ================================================================
    GroupSettings — sectioned list layout (no widget grid)
@@ -158,26 +159,26 @@ const GroupSettings = () => {
   const canEdit = userRole === "owner" || userRole === "admin";
   const isOwner = userRole === "owner";
 
-  /* ── loading / error ────────────────── */
+  /* ── skeleton ────────────────────────── */
 
-  if (loading) {
-    return (
-      <div className="min-h-screen page-container px-4 sm:px-6 py-10">
-        <div className="max-w-2xl mx-auto space-y-4">
-          <div className="h-8 w-48 rounded-lg bg-[var(--color-surface-elevated)] animate-pulse" />
-          <div className="h-5 w-64 rounded bg-[var(--color-surface-elevated)] animate-pulse" />
-          <div className="mt-8 space-y-6">
-            {[...Array(4)].map((_, i) => (
-              <div
-                key={i}
-                className="h-24 rounded-2xl bg-[var(--color-surface-elevated)] animate-pulse"
-              />
-            ))}
-          </div>
+  const settingsSkeleton = (
+    <div className="min-h-screen page-container px-4 sm:px-6 py-10">
+      <div className="max-w-2xl mx-auto space-y-4">
+        <div className="h-8 w-48 rounded-lg bg-[var(--color-surface-elevated)] animate-pulse" />
+        <div className="h-5 w-64 rounded bg-[var(--color-surface-elevated)] animate-pulse" />
+        <div className="mt-8 space-y-6">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="h-24 rounded-2xl bg-[var(--color-surface-elevated)] animate-pulse"
+            />
+          ))}
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+
+  /* ── loading / error ────────────────── */
 
   if (error && !group) {
     return (
@@ -198,6 +199,7 @@ const GroupSettings = () => {
   /* ── render ─────────────────────────── */
 
   return (
+    <SkeletonTransition isLoading={loading} skeleton={settingsSkeleton}>
     <div className="min-h-screen page-container px-4 sm:px-6 py-10">
       <div className="max-w-2xl mx-auto">
         {/* header */}
@@ -398,6 +400,7 @@ const GroupSettings = () => {
         </Section>
       </div>
     </div>
+    </SkeletonTransition>
   );
 };
 

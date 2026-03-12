@@ -1,12 +1,16 @@
 import React, { memo, useState, useCallback } from "react";
 import { CheckIcon, Pencil1Icon, PlusIcon } from "@radix-ui/react-icons";
+import { motion, AnimatePresence } from "framer-motion";
 import WeeklyHabitRow from "./WeeklyHabitRow";
 import { habitUtils } from "../../utils/habitLogic";
+import { springs } from "../../utils/motion";
+import useMotionSafe from "../../hooks/useMotionSafe";
 
 /* ─── Single habit row ─── */
 const HabitRow = memo(({ habit, isCompleted, onToggle, onEdit }) => {
   const [animating, setAnimating] = useState(false);
   const [justCompleted, setJustCompleted] = useState(false);
+  const { shouldAnimate } = useMotionSafe();
 
   const handleToggle = useCallback(() => {
     const wasCompleted = isCompleted;
@@ -20,8 +24,13 @@ const HabitRow = memo(({ habit, isCompleted, onToggle, onEdit }) => {
   }, [habit._id, onToggle, isCompleted]);
 
   return (
-    <div
-      className="flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-200 group"
+    <motion.div
+      layout={shouldAnimate}
+      initial={shouldAnimate ? { opacity: 0, y: 8 } : false}
+      animate={{ opacity: 1, y: 0 }}
+      exit={shouldAnimate ? { opacity: 0, x: -20, transition: { duration: 0.2 } } : undefined}
+      transition={springs.soft}
+      className="flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors duration-200 group"
       style={{
         backgroundColor: isCompleted
           ? "rgba(99,102,241,0.04)"
@@ -46,11 +55,18 @@ const HabitRow = memo(({ habit, isCompleted, onToggle, onEdit }) => {
         }}
         aria-label={isCompleted ? `Uncheck ${habit.name}` : `Check ${habit.name}`}
       >
-        {isCompleted && (
-          <CheckIcon
-            className={`w-3.5 h-3.5 text-white ${justCompleted ? 'check-bounce' : ''}`}
-          />
-        )}
+        <AnimatePresence mode="wait">
+          {isCompleted && (
+            <motion.div
+              initial={{ scale: 0, rotate: -45 }}
+              animate={{ scale: 1, rotate: 0 }}
+              exit={{ scale: 0 }}
+              transition={springs.bouncy}
+            >
+              <CheckIcon className="w-3.5 h-3.5 text-white" />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </button>
 
       {/* Icon */}
@@ -94,7 +110,7 @@ const HabitRow = memo(({ habit, isCompleted, onToggle, onEdit }) => {
       >
         <Pencil1Icon className="w-3.5 h-3.5" />
       </button>
-    </div>
+    </motion.div>
   );
 });
 
@@ -178,6 +194,7 @@ const TodayHabits = memo(
                 : "space-y-2"
             }
           >
+            <AnimatePresence mode="popLayout">
             {sortedHabits.map((habit) => {
               const entry = entries[habit._id]?.[todayStr];
               const isCompleted = !!(entry && entry.completed);
@@ -191,6 +208,7 @@ const TodayHabits = memo(
                 />
               );
             })}
+            </AnimatePresence>
           </div>
         )}
 

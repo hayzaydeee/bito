@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   ArrowRightIcon,
   CheckCircledIcon,
@@ -15,39 +16,8 @@ import {
 } from "@radix-ui/react-icons";
 import { useAuth } from "../contexts/AuthContext";
 import ContactModal from "../components/ui/ContactModal";
-
-/* ─── Custom hooks ─── */
-const useScrollReveal = () => {
-  const ref = useRef(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          el.classList.add("landing-revealed");
-          obs.unobserve(el);
-        }
-      },
-      { threshold: 0.15 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-  return ref;
-};
-
-
-
-/* ─── Reveal wrapper ─── */
-const Reveal = ({ children, className = "landing-reveal", delay = 0, style }) => {
-  const ref = useScrollReveal();
-  return (
-    <div ref={ref} className={className} style={{ transitionDelay: `${delay}ms`, ...style }}>
-      {children}
-    </div>
-  );
-};
+import ScrollReveal from "../components/ui/ScrollReveal";
+import { springs } from "../utils/motion";
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -267,32 +237,37 @@ const LandingPage = () => {
       {/* ─── Hero ─── */}
       <section className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">
         <div className="hero-gradient-mesh" />
-        <div className="relative z-10 max-w-4xl mx-auto text-center hero-text-reveal">
-          <div className="inline-flex items-center gap-2 trust-badge mb-8">
+        <motion.div
+          className="relative z-10 max-w-4xl mx-auto text-center"
+          initial="hidden"
+          animate="visible"
+          variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.15 } } }}
+        >
+          <motion.div className="inline-flex items-center gap-2 trust-badge mb-8" variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } } }}>
             <RocketIcon className="w-3.5 h-3.5" style={{ color: "var(--color-brand-400)" }} />
             <span>v2.0 is live!</span>
-          </div>
-          <h1 className="font-garamond font-bold mb-6 px-2" style={{ fontSize: "clamp(2.5rem, 6vw, 4.5rem)", lineHeight: 1.08, letterSpacing: "-0.03em", color: "var(--color-text-primary)" }}>
+          </motion.div>
+          <motion.h1 className="font-garamond font-bold mb-6 px-2" style={{ fontSize: "clamp(2.5rem, 6vw, 4.5rem)", lineHeight: 1.08, letterSpacing: "-0.03em", color: "var(--color-text-primary)" }} variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } } }}>
             The habit app that builds<br />the plan <span className="gradient-text">with you.</span>
-          </h1>
-          <p className="text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-spartan px-4" style={{ color: "var(--color-text-secondary)" }}>
+          </motion.h1>
+          <motion.p className="text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-spartan px-4" style={{ color: "var(--color-text-secondary)" }} variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } } }}>
             An AI-powered habit tracker that helps you build the life you want. Track your habits, see patterns in your behavior, and architect personalized plans for achieving specific goals.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6 font-spartan px-4">
+          </motion.p>
+          <motion.div className="flex flex-col sm:flex-row gap-3 justify-center mb-6 font-spartan px-4" variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } } }}>
             <button onClick={() => navigate("/login")} className="btn-gradient group inline-flex items-center justify-center">
               Start for free <ArrowRightIcon className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </button>
             <button onClick={() => scrollTo(howItWorksRef)} className="btn btn-secondary btn-lg">See how it works</button>
-          </div>
-          <p className="text-sm font-spartan flex items-center justify-center gap-2" style={{ color: "var(--color-text-tertiary)" }}>
+          </motion.div>
+          <motion.p className="text-sm font-spartan flex items-center justify-center gap-2" style={{ color: "var(--color-text-tertiary)" }} variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } } }}>
             <CheckCircledIcon className="w-3.5 h-3.5" style={{ color: "var(--color-success)" }} /> No credit card required
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
       </section>
 
       {/* ─── Feature Showcase — Tabbed ─── */}
       <section ref={featuresRef} id="features" className="py-24 md:py-32 px-4 sm:px-6 lg:px-8">
-        <Reveal className="landing-reveal">
+        <ScrollReveal>
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="heading-lg font-garamond mb-4" style={{ color: "var(--color-text-primary)" }}>A system that works like you do.</h2>
@@ -303,7 +278,7 @@ const LandingPage = () => {
                 <button key={f.tab} onClick={() => setActiveFeature(i)} className={`feature-tab ${i === activeFeature ? "feature-tab-active" : ""}`}>{f.tab}</button>
               ))}
             </div>
-            <div key={activeFeature} className="feature-panel-enter grid md:grid-cols-2 gap-12 md:gap-16 items-center">
+            <motion.div key={activeFeature} className="grid md:grid-cols-2 gap-12 md:gap-16 items-center" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}>
               <div>
                 <span className="text-xs font-spartan font-semibold uppercase tracking-widest mb-3 inline-block" style={{ color: "var(--color-brand-400)" }}>{feat.tab}</span>
                 <h3 className="heading-lg font-garamond mb-4" style={{ color: "var(--color-text-primary)" }}>{feat.title}</h3>
@@ -318,9 +293,9 @@ const LandingPage = () => {
                 </ul>
               </div>
               <div><FeatureVisual type={feat.visual} /></div>
-            </div>
+            </motion.div>
           </div>
-        </Reveal>
+        </ScrollReveal>
       </section>
 
       <hr className="section-divider" />
@@ -328,7 +303,7 @@ const LandingPage = () => {
       {/* ─── Compass — Dedicated Section ─── */}
       <section className="py-24 md:py-32 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: "var(--color-bg-secondary)" }}>
         <div className="max-w-6xl mx-auto">
-          <Reveal className="landing-reveal">
+          <ScrollReveal>
             <div className="text-center mb-6">
               <span className="text-xs font-spartan font-semibold uppercase tracking-widest mb-3 inline-block" style={{ color: "var(--color-brand-400)" }}>Compass</span>
               <h2 className="font-garamond font-bold mb-4" style={{ fontSize: "clamp(1.75rem, 4vw, 2.5rem)", color: "var(--color-text-primary)", letterSpacing: "-0.02em" }}>Tell us your goal.{" "}<span className="gradient-text">We'll build the plan.</span></h2>
@@ -336,9 +311,9 @@ const LandingPage = () => {
                 Type what you want to become. Compass reads your existing habits, your streaks, your patterns — and builds a plan around how you actually live. Not a generic template. A plan that fits you.
               </p>
             </div>
-          </Reveal>
+          </ScrollReveal>
           <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center mt-12">
-            <Reveal className="landing-reveal-left">
+            <ScrollReveal direction="left">
               <div className="space-y-6">
                 {[
                   { icon: "🧠", title: "Knows your routine", desc: "It looks at what you're already doing so the plan doesn't fight your life — it fits it." },
@@ -354,8 +329,8 @@ const LandingPage = () => {
                   </div>
                 ))}
               </div>
-            </Reveal>
-            <Reveal className="landing-reveal-right">
+            </ScrollReveal>
+            <ScrollReveal direction="right">
               <div className="rounded-xl border p-6 space-y-3" style={{ backgroundColor: "var(--color-surface-secondary)", borderColor: "var(--color-border-primary)" }}>
                 <div className="rounded-lg px-4 py-3 border" style={{ backgroundColor: "var(--color-surface-primary)", borderColor: "var(--color-border-primary)" }}>
                   <p className="text-xs font-spartan mb-1" style={{ color: "var(--color-text-tertiary)" }}>Your goal</p>
@@ -389,7 +364,7 @@ const LandingPage = () => {
                   <p className="text-[11px] font-spartan" style={{ color: "var(--color-brand-400)" }}>💬 "Building on your existing evening reading habit and 79% weekly completion rate — this plan starts easy and escalates."</p>
                 </div>
               </div>
-            </Reveal>
+            </ScrollReveal>
           </div>
         </div>
       </section>
@@ -399,7 +374,7 @@ const LandingPage = () => {
       {/* ─── Journal — Dedicated Section ─── */}
       <section className="py-24 md:py-32 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          <Reveal className="landing-reveal">
+          <ScrollReveal>
             <div className="text-center mb-6">
               <span className="text-xs font-spartan font-semibold uppercase tracking-widest mb-3 inline-block" style={{ color: "var(--color-secondary-400)" }}>Rich Journaling</span>
               <h2 className="font-garamond font-bold mb-4" style={{ fontSize: "clamp(1.75rem, 4vw, 2.5rem)", color: "var(--color-text-primary)", letterSpacing: "-0.02em" }}>Your habits tell part of the story.{" "}<span className="gradient-text">Your journal tells the rest.</span></h2>
@@ -407,9 +382,9 @@ const LandingPage = () => {
                 A writing space that lives alongside your habits — and an AI that connects what you write to how you actually perform. Quick notes or deep reflections. Both in one place.
               </p>
             </div>
-          </Reveal>
+          </ScrollReveal>
           <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center mt-12">
-            <Reveal className="landing-reveal-left">
+            <ScrollReveal direction="left">
               <div className="rounded-xl border overflow-hidden" style={{ backgroundColor: "var(--color-surface-secondary)", borderColor: "var(--color-border-primary)" }}>
                 {/* Mini journal UI mockup */}
                 <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: "var(--color-border-primary)" }}>
@@ -457,8 +432,8 @@ const LandingPage = () => {
                   </div>
                 </div>
               </div>
-            </Reveal>
-            <Reveal className="landing-reveal-right">
+            </ScrollReveal>
+            <ScrollReveal direction="right">
               <div className="space-y-6">
                 {[
                   { icon: "✍️", title: "Rich editor", desc: "Headings, lists, images, callouts — write however you think. Everything auto-saves." },
@@ -475,7 +450,7 @@ const LandingPage = () => {
                   </div>
                 ))}
               </div>
-            </Reveal>
+            </ScrollReveal>
           </div>
         </div>
       </section>
@@ -484,7 +459,7 @@ const LandingPage = () => {
 
       {/* ─── How It Works ─── */}
       <section ref={howItWorksRef} id="howItWorks" className="py-24 md:py-32 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: "var(--color-bg-secondary)" }}>
-        <Reveal className="landing-reveal">
+        <ScrollReveal>
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="heading-lg font-garamond mb-4" style={{ color: "var(--color-text-primary)" }}>Three steps. That's it.</h2>
@@ -492,31 +467,31 @@ const LandingPage = () => {
             </div>
             <div className="grid md:grid-cols-3 gap-8">
               {steps.map((s, i) => (
-                <Reveal key={s.num} className="landing-reveal" delay={i * 120}>
+                <ScrollReveal key={s.num} delay={i * 0.12}>
                   <div className="text-center md:text-left">
                     <span className="text-5xl font-garamond font-bold mb-4 inline-block" style={{ color: "var(--color-brand-500)", opacity: 0.3 }}>{s.num}</span>
                     <h3 className="heading-sm font-garamond mb-3" style={{ color: "var(--color-text-primary)" }}>{s.title}</h3>
                     <p className="text-sm font-spartan leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>{s.desc}</p>
                   </div>
-                </Reveal>
+                </ScrollReveal>
               ))}
             </div>
           </div>
-        </Reveal>
+        </ScrollReveal>
       </section>
 
       <hr className="section-divider" />
 
       {/* ─── Testimonials ─── */}
       <section ref={testimonialsRef} id="testimonials" className="py-24 md:py-32 px-4 sm:px-6 lg:px-8">
-        <Reveal className="landing-reveal">
+        <ScrollReveal>
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="heading-lg font-garamond mb-4" style={{ color: "var(--color-text-primary)" }}>From the people using it every day.</h2>
             </div>
             <div className="grid md:grid-cols-3 gap-6">
               {testimonials.map((t, i) => (
-                <Reveal key={i} className="landing-reveal" delay={i * 100}>
+                <ScrollReveal key={i} delay={i * 0.1}>
                   <div className="testimonial-glass">
                     <p className="text-sm font-spartan leading-relaxed mb-6" style={{ color: "var(--color-text-secondary)" }}>{t.content}</p>
                     <div className="flex items-center gap-3">
@@ -527,18 +502,18 @@ const LandingPage = () => {
                       </div>
                     </div>
                   </div>
-                </Reveal>
+                </ScrollReveal>
               ))}
             </div>
           </div>
-        </Reveal>
+        </ScrollReveal>
       </section>
 
       <hr className="section-divider" />
 
       {/* ─── Comparison Table ─── */}
       <section className="py-24 md:py-28 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: "var(--color-bg-secondary)" }}>
-        <Reveal className="landing-reveal">
+        <ScrollReveal>
           <div className="max-w-2xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="heading-lg font-garamond mb-4" style={{ color: "var(--color-text-primary)" }}>Why bito?</h2>
@@ -558,7 +533,7 @@ const LandingPage = () => {
               ))}
             </div>
           </div>
-        </Reveal>
+        </ScrollReveal>
       </section>
 
       <hr className="section-divider" />
@@ -566,7 +541,7 @@ const LandingPage = () => {
       {/* ─── Final CTA ─── */}
       <section className="relative py-28 md:py-36 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 60% 50% at 50% 50%, var(--color-brand-950) 0%, transparent 70%)", opacity: 0.4 }} />
-        <Reveal className="landing-reveal-scale">
+        <ScrollReveal direction="scale">
           <div className="relative z-10 max-w-3xl mx-auto text-center">
             <h2 className="font-garamond font-bold mb-6" style={{ fontSize: "clamp(2rem, 5vw, 3.75rem)", lineHeight: 1.1, letterSpacing: "-0.02em", color: "var(--color-text-primary)" }}>Ready to actually stick to something?</h2>
             <p className="text-lg font-spartan mb-10 max-w-xl mx-auto" style={{ color: "var(--color-text-secondary)" }}>Free to start. No credit card. Two minutes to set up.</p>
@@ -577,7 +552,7 @@ const LandingPage = () => {
               <CheckCircledIcon className="w-4 h-4" style={{ color: "var(--color-success)" }} /> No credit card required
             </p>
           </div>
-        </Reveal>
+        </ScrollReveal>
       </section>
 
       {/* ─── Footer ─── */}

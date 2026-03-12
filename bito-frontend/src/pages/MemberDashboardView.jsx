@@ -9,6 +9,7 @@ import {
 import { groupsAPI } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { habitUtils } from "../contexts/HabitContext";
+import SkeletonTransition from "../components/ui/SkeletonTransition";
 
 /* ================================================================
    MemberDashboardView — read-only stacked layout (no widget grid)
@@ -120,26 +121,24 @@ const MemberDashboardView = () => {
 
   const todayTotal = habitStats.filter((h) => h.todayDone).length;
 
-  /* ── loading ────────────────────────── */
+  /* ── skeleton ────────────────────────── */
 
-  if (loading) {
-    return (
-      <div className="min-h-screen page-container px-4 sm:px-6 py-10">
-        <div className="max-w-3xl mx-auto space-y-4">
-          <div className="h-8 w-56 rounded-lg bg-[var(--color-surface-elevated)] animate-pulse" />
-          <div className="h-5 w-72 rounded bg-[var(--color-surface-elevated)] animate-pulse" />
-          <div className="mt-8 space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <div
-                key={i}
-                className="h-16 rounded-xl bg-[var(--color-surface-elevated)] animate-pulse"
-              />
-            ))}
-          </div>
+  const memberSkeleton = (
+    <div className="min-h-screen page-container px-4 sm:px-6 py-10">
+      <div className="max-w-3xl mx-auto space-y-4">
+        <div className="h-8 w-56 rounded-lg bg-[var(--color-surface-elevated)] animate-pulse" />
+        <div className="h-5 w-72 rounded bg-[var(--color-surface-elevated)] animate-pulse" />
+        <div className="mt-8 space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className="h-16 rounded-xl bg-[var(--color-surface-elevated)] animate-pulse"
+            />
+          ))}
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 
   /* ── error ──────────────────────────── */
 
@@ -176,6 +175,7 @@ const MemberDashboardView = () => {
   /* ── render ─────────────────────────── */
 
   return (
+    <SkeletonTransition isLoading={loading} skeleton={memberSkeleton}>
     <div className="min-h-screen page-container px-4 sm:px-6 py-10">
       <div className="max-w-3xl mx-auto">
         {/* header */}
@@ -289,6 +289,7 @@ const MemberDashboardView = () => {
         )}
       </div>
     </div>
+    </SkeletonTransition>
   );
 };
 

@@ -16,7 +16,6 @@ import {
 } from '@radix-ui/react-icons';
 import { groupsAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import '../components/ui/ModalAnimation.css';
 
 const InvitationPage = () => {
   const { token } = useParams();

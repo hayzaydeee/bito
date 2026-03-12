@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Cross2Icon } from "@radix-ui/react-icons";
 import { groupsAPI } from "../../services/api";
+import AnimatedModal from "./AnimatedModal";
 
 /* ── constants ── */
 
@@ -143,10 +144,8 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-
-      <div className="relative w-full max-w-lg bg-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)]/20 shadow-xl max-h-[85vh] overflow-y-auto">
+    <AnimatedModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-lg">
+      <div className="relative w-full bg-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)]/20 max-h-[85vh] overflow-y-auto">
         {/* header */}
         <div className="flex items-center justify-between p-5 border-b border-[var(--color-border-primary)]/10">
           <h2 className="text-lg font-garamond font-bold text-[var(--color-text-primary)]">
@@ -317,7 +316,7 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
           )}
         </div>
       </div>
-    </div>
+    </AnimatedModal>
   );
 };
 

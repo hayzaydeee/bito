@@ -21,6 +21,7 @@ import EncouragementModal from "../components/shared/EncouragementModal";
 import GroupHabitModal from "../components/ui/GroupHabitModal";
 import HabitAdoptModal from "../components/ui/HabitAdoptModal";
 import ChallengeWidget from "../components/widgets/ChallengeWidget";
+import SkeletonTransition from "../components/ui/SkeletonTransition";
 
 /* ================================================================
    Tab IDs
@@ -298,36 +299,36 @@ const GroupOverview = () => {
     setEmojiCategory("common");
   }
 
-  /* ── loading / not-found ──────────────── */
+  /* ── skeleton ────────────────────────── */
 
-  if (loading) {
-    return (
-      <div className="min-h-screen page-container px-4 sm:px-6 py-10">
-        <div className="max-w-5xl mx-auto space-y-4">
-          <div className="h-[180px] rounded-2xl bg-[var(--color-surface-elevated)] animate-pulse" />
-          <div className="h-12 rounded-xl bg-[var(--color-surface-elevated)] animate-pulse" />
-          <div className="mt-6 flex gap-2">
-            {[...Array(4)].map((_, i) => (
-              <div
-                key={i}
-                className="h-9 w-24 rounded-lg bg-[var(--color-surface-elevated)] animate-pulse"
-              />
-            ))}
-          </div>
-          <div className="mt-4 space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <div
-                key={i}
-                className="h-16 rounded-xl bg-[var(--color-surface-elevated)] animate-pulse"
-              />
-            ))}
-          </div>
+  const overviewSkeleton = (
+    <div className="min-h-screen page-container px-4 sm:px-6 py-10">
+      <div className="max-w-5xl mx-auto space-y-4">
+        <div className="h-[180px] rounded-2xl bg-[var(--color-surface-elevated)] animate-pulse" />
+        <div className="h-12 rounded-xl bg-[var(--color-surface-elevated)] animate-pulse" />
+        <div className="mt-6 flex gap-2">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="h-9 w-24 rounded-lg bg-[var(--color-surface-elevated)] animate-pulse"
+            />
+          ))}
+        </div>
+        <div className="mt-4 space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className="h-16 rounded-xl bg-[var(--color-surface-elevated)] animate-pulse"
+            />
+          ))}
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 
-  if (!group) {
+  /* ── loading / not-found ──────────────── */
+
+  if (!group && !loading) {
     return (
       <div className="min-h-screen page-container px-4 sm:px-6 py-10">
         <div className="max-w-5xl mx-auto text-center py-20">
@@ -363,6 +364,7 @@ const GroupOverview = () => {
   const groupColor = group.color || "#4f46e5";
 
   return (
+    <SkeletonTransition isLoading={loading} skeleton={overviewSkeleton}>
     <div className="min-h-screen page-container px-4 sm:px-6 py-10">
       <div className="max-w-5xl mx-auto">
         {/* ── hero header ─────────────── */}
@@ -579,6 +581,7 @@ const GroupOverview = () => {
         onEncouragementSent={() => {}}
       />
     </div>
+    </SkeletonTransition>
   );
 };
 

@@ -27,6 +27,10 @@ import { useScale } from "../contexts/ScaleContext";
 import usePushNotifications from "../hooks/usePushNotifications";
 import PersonalityQuiz from "../components/settingsPage/PersonalityQuiz";
 import AvatarPicker from "../components/ui/AvatarPicker";
+import SkeletonTransition from "../components/ui/SkeletonTransition";
+import AnimatedList from "../components/ui/AnimatedList";
+import { motion } from "framer-motion";
+import { listItemVariants } from "../utils/motion";
 
 /* ================================================================
    SettingsPage — sectioned list layout (no widget grid)
@@ -620,24 +624,22 @@ const SettingsPage = ({ section }) => {
      MAIN SETTINGS PAGE
      ================================================================ */
 
-  if (loading) {
-    return (
-      <div className="min-h-screen page-container px-4 sm:px-6 py-10">
-        <div className="max-w-2xl mx-auto space-y-4">
-          <div className="h-8 w-40 rounded-lg bg-[var(--color-surface-elevated)] animate-pulse" />
-          <div className="h-5 w-64 rounded bg-[var(--color-surface-elevated)] animate-pulse" />
-          <div className="mt-8 space-y-3">
-            {[...Array(6)].map((_, i) => (
-              <div
-                key={i}
-                className="h-16 rounded-xl bg-[var(--color-surface-elevated)] animate-pulse"
-              />
-            ))}
-          </div>
+  const pageSkeleton = (
+    <div className="min-h-screen page-container px-4 sm:px-6 py-10">
+      <div className="max-w-2xl mx-auto space-y-4">
+        <div className="h-8 w-40 rounded-lg bg-[var(--color-surface-elevated)] animate-pulse" />
+        <div className="h-5 w-64 rounded bg-[var(--color-surface-elevated)] animate-pulse" />
+        <div className="mt-8 space-y-3">
+          {[...Array(6)].map((_, i) => (
+            <div
+              key={i}
+              className="h-16 rounded-xl bg-[var(--color-surface-elevated)] animate-pulse"
+            />
+          ))}
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 
   /* ── theme cards config ───────────────── */
   const themeCards = [
@@ -702,6 +704,7 @@ const SettingsPage = ({ section }) => {
   ];
 
   return (
+    <SkeletonTransition isLoading={loading} skeleton={pageSkeleton}>
     <div className="min-h-screen page-container px-4 sm:px-6 py-10">
       <div className="max-w-2xl mx-auto">
         {/* ── header ──────────────────── */}
@@ -747,15 +750,15 @@ const SettingsPage = ({ section }) => {
 
         {/* ═══════ 2. APPEARANCE ═══════ */}
         <Section title="Appearance" icon={MoonIcon}>
-          <div className="grid grid-cols-4 gap-3">
-            {themeCards.map((t) => {
+          <AnimatedList className="grid grid-cols-4 gap-3">
+            {themeCards.map((t, i) => {
               const active = settings.theme === t.value;
               const Icon = t.icon;
               return (
+                <motion.div key={t.value} variants={listItemVariants} custom={i}>
                 <button
-                  key={t.value}
                   onClick={() => saveSetting("theme", t.value)}
-                  className={`relative rounded-xl border-2 overflow-hidden transition-all ${
+                  className={`relative rounded-xl border-2 overflow-hidden transition-all w-full ${
                     active
                       ? "border-[var(--color-brand-500)] ring-2 ring-[var(--color-brand-500)]/20"
                       : "border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/50"
@@ -804,9 +807,10 @@ const SettingsPage = ({ section }) => {
                     </div>
                   )}
                 </button>
+                </motion.div>
               );
             })}
-          </div>
+          </AnimatedList>
         </Section>
 
         {/* ═══════ 2b. TEXT SIZE ═══════ */}
@@ -1221,6 +1225,7 @@ const SettingsPage = ({ section }) => {
 
       <Toast toast={toast} />
     </div>
+    </SkeletonTransition>
   );
 };
 
