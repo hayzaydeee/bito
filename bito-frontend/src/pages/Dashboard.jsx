@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useHabits } from "../contexts/HabitContext";
 import { habitUtils as habitLogic } from "../utils/habitLogic";
@@ -24,7 +24,11 @@ import DashboardTour from "../components/dashboard/DashboardTour";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  const [isOnboardingHandoffLoading, setIsOnboardingHandoffLoading] = useState(
+    Boolean(location.state?.fromOnboarding)
+  );
 
   // Redirect to onboarding if not completed
   useEffect(() => {
@@ -32,6 +36,20 @@ const Dashboard = () => {
       navigate("/onboarding");
     }
   }, [user, navigate]);
+
+  // Smooth first paint after onboarding completion.
+  useEffect(() => {
+    if (!location.state?.fromOnboarding) {
+      setIsOnboardingHandoffLoading(false);
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setIsOnboardingHandoffLoading(false);
+    }, 550);
+
+    return () => window.clearTimeout(timer);
+  }, [location.state]);
 
   const {
     habits,
@@ -187,6 +205,18 @@ const Dashboard = () => {
   /* ── Loading skeleton ── */
   const dashboardSkeleton = (
     <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-6">
+      {isOnboardingHandoffLoading && (
+        <div
+          className="rounded-xl border px-4 py-3 text-sm font-spartan"
+          style={{
+            borderColor: "var(--color-border-primary)",
+            backgroundColor: "var(--color-surface-primary)",
+            color: "var(--color-text-secondary)",
+          }}
+        >
+          Finalizing your dashboard setup...
+        </div>
+      )}
       <div className="animate-pulse space-y-6">
         <div
           className="h-7 rounded w-2/5"
@@ -212,8 +242,10 @@ const Dashboard = () => {
     </div>
   );
 
+  const isDashboardLoading = isLoading || isOnboardingHandoffLoading;
+
   return (
-    <SkeletonTransition isLoading={isLoading} skeleton={dashboardSkeleton}>
+    <SkeletonTransition isLoading={isDashboardLoading} skeleton={dashboardSkeleton}>
     <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-6">
       {/* 1. Compact greeting */}
       <GreetingBar userName={user?.name || user?.username || "User"} firstName={user?.firstName} />

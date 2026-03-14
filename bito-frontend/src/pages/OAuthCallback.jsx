@@ -1,10 +1,15 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { authAPI } from '../services/api';
+import useMotionSafe from '../hooks/useMotionSafe';
+import { springs } from '../utils/motion';
 
 const OAuthCallback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { prefersReduced } = useMotionSafe();
+  const shouldAnimate = typeof motion !== "undefined" && !prefersReduced;
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -55,10 +60,15 @@ const OAuthCallback = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--color-bg-primary)] via-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)]">
-      <div className="text-center">
+      <motion.div
+        className="text-center"
+        initial={shouldAnimate ? { opacity: 0, y: 14 } : false}
+        animate={shouldAnimate ? { opacity: 1, y: 0 } : {}}
+        transition={springs.soft}
+      >
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-brand-500)] mx-auto mb-4"></div>
         <p className="text-[var(--color-text-secondary)]">Completing sign in...</p>
-      </div>
+      </motion.div>
     </div>
   );
 };

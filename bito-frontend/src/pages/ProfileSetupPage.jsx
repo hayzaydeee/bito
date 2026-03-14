@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   TargetIcon,
   ExclamationTriangleIcon,
@@ -10,6 +11,8 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import { userAPI } from "../services/api";
 import AvatarPicker from "../components/ui/AvatarPicker";
+import useMotionSafe from "../hooks/useMotionSafe";
+import { buttonHover, buttonTap, springs } from "../utils/motion";
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/;
 const DEBOUNCE_MS = 400;
@@ -17,6 +20,8 @@ const DEBOUNCE_MS = 400;
 const ProfileSetupPage = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, isLoading: authLoading, updateUser } = useAuth();
+  const { prefersReduced } = useMotionSafe();
+  const shouldAnimate = typeof motion !== "undefined" && !prefersReduced;
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -25,9 +30,10 @@ const ProfileSetupPage = () => {
   const [avatar, setAvatar] = useState("");
 
   const [errors, setErrors] = useState({});
-  const [usernameStatus, setUsernameStatus] = useState("idle"); // 'idle' | 'checking' | 'available' | 'taken' | 'invalid'
+  const [usernameStatus, setUsernameStatus] = useState("idle"); // 'idle' | 'typing' | 'checking' | 'available' | 'taken' | 'invalid'
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [formShakeKey, setFormShakeKey] = useState(0);
 
   const usernameTimerRef = useRef(null);
   const firstNameRef = useRef(null);
@@ -97,6 +103,7 @@ const ProfileSetupPage = () => {
     // Debounce availability check
     if (usernameTimerRef.current) clearTimeout(usernameTimerRef.current);
     if (val.length >= 3 && USERNAME_REGEX.test(val)) {
+      setUsernameStatus("typing");
       usernameTimerRef.current = setTimeout(() => checkUsername(val), DEBOUNCE_MS);
     } else {
       setUsernameStatus(val.length > 0 && val.length < 3 ? "invalid" : "idle");
@@ -124,8 +131,12 @@ const ProfileSetupPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {
+      setFormShakeKey((k) => k + 1);
+      return;
+    }
     if (usernameStatus === "taken") {
+      setFormShakeKey((k) => k + 1);
       setErrors((prev) => ({ ...prev, username: "Username is already taken" }));
       return;
     }
@@ -155,6 +166,7 @@ const ProfileSetupPage = () => {
         error?.message?.includes("409") || error?.message?.includes("taken")
           ? "Username is already taken"
           : "Something went wrong. Please try again.";
+      setFormShakeKey((k) => k + 1);
       setSubmitError(msg);
     } finally {
       setIsSubmitting(false);
@@ -176,6 +188,13 @@ const ProfileSetupPage = () => {
   const usernameIcon =
     usernameStatus === "checking" ? (
       <div className="w-4 h-4 border-2 border-[var(--color-brand-500)] border-t-transparent rounded-full animate-spin" />
+    ) : usernameStatus === "typing" ? (
+      <motion.div
+        className="w-4 h-4 rounded-full"
+        style={{ backgroundColor: "var(--color-border-primary)" }}
+        animate={shouldAnimate ? { opacity: [0.45, 0.85, 0.45] } : {}}
+        transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
+      />
     ) : usernameStatus === "available" ? (
       <CheckCircledIcon
         className="w-4 h-4"
@@ -198,9 +217,27 @@ const ProfileSetupPage = () => {
       className="min-h-screen flex items-center justify-center px-4"
       style={{ backgroundColor: "var(--color-bg-primary)" }}
     >
-      <div className="w-full max-w-md">
+      <motion.div
+        className="w-full max-w-md"
+        animate={
+          prefersReduced
+            ? {}
+            : {
+                x:
+                  formShakeKey > 0
+                    ? [0, -8, 8, -6, 6, -4, 4, 0]
+                    : 0,
+              }
+        }
+        transition={{ duration: 0.42, ease: "easeOut" }}
+      >
         {/* Logo */}
-        <div className="flex items-center justify-center gap-2.5 mb-10">
+        <motion.div
+          className="flex items-center justify-center gap-2.5 mb-10"
+          initial={prefersReduced ? false : { opacity: 0, y: 14 }}
+          animate={prefersReduced ? {} : { opacity: 1, y: 0 }}
+          transition={{ ...springs.soft, delay: 0.05 }}
+        >
           <div
             className="w-9 h-9 rounded-xl flex items-center justify-center"
             style={{ backgroundColor: "var(--color-brand-500)" }}
@@ -213,15 +250,18 @@ const ProfileSetupPage = () => {
           >
             Bito
           </span>
-        </div>
+        </motion.div>
 
         {/* Card */}
-        <div
+        <motion.div
           className="rounded-2xl border p-8"
           style={{
             backgroundColor: "var(--color-surface-primary)",
             borderColor: "var(--color-border-primary)",
           }}
+          initial={prefersReduced ? false : { opacity: 0, y: 16, scale: 0.98 }}
+          animate={prefersReduced ? {} : { opacity: 1, y: 0, scale: 1 }}
+          transition={{ ...springs.soft, delay: 0.1 }}
         >
           {/* Avatar picker */}
           <div className="flex justify-center mb-4">
@@ -249,19 +289,25 @@ const ProfileSetupPage = () => {
           </div>
 
           {/* Submit error */}
+          <AnimatePresence>
           {submitError && (
-            <div
+            <motion.div
               className="mb-5 p-3 rounded-lg flex items-center gap-3"
               style={{
                 backgroundColor: "rgba(239, 68, 68, 0.08)",
                 border: "1px solid rgba(239, 68, 68, 0.2)",
                 color: "#f87171",
               }}
+              initial={prefersReduced ? false : { opacity: 0, y: 8 }}
+              animate={prefersReduced ? {} : { opacity: 1, y: 0 }}
+              exit={prefersReduced ? {} : { opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}
             >
               <ExclamationTriangleIcon className="w-4 h-4 flex-shrink-0" />
               <span className="text-sm font-spartan">{submitError}</span>
-            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* First & Last Name row */}
@@ -291,14 +337,20 @@ const ProfileSetupPage = () => {
                       : {}
                   }
                 />
+                <AnimatePresence>
                 {errors.firstName && (
-                  <p
+                  <motion.p
                     className="mt-1 text-xs font-spartan"
                     style={{ color: "var(--color-error)" }}
+                    initial={prefersReduced ? false : { opacity: 0, y: 4 }}
+                    animate={prefersReduced ? {} : { opacity: 1, y: 0 }}
+                    exit={prefersReduced ? {} : { opacity: 0, y: -4 }}
+                    transition={{ duration: 0.16 }}
                   >
                     {errors.firstName}
-                  </p>
+                  </motion.p>
                 )}
+                </AnimatePresence>
               </div>
 
               <div>
@@ -325,14 +377,20 @@ const ProfileSetupPage = () => {
                       : {}
                   }
                 />
+                <AnimatePresence>
                 {errors.lastName && (
-                  <p
+                  <motion.p
                     className="mt-1 text-xs font-spartan"
                     style={{ color: "var(--color-error)" }}
+                    initial={prefersReduced ? false : { opacity: 0, y: 4 }}
+                    animate={prefersReduced ? {} : { opacity: 1, y: 0 }}
+                    exit={prefersReduced ? {} : { opacity: 0, y: -4 }}
+                    transition={{ duration: 0.16 }}
                   >
                     {errors.lastName}
-                  </p>
+                  </motion.p>
                 )}
+                </AnimatePresence>
               </div>
             </div>
 
@@ -369,46 +427,90 @@ const ProfileSetupPage = () => {
                         : {}),
                   }}
                 />
-                {usernameIcon && (
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2">
-                    {usernameIcon}
-                  </span>
-                )}
+                <AnimatePresence mode="wait" initial={false}>
+                  {usernameIcon && (
+                    <motion.span
+                      key={usernameStatus}
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                      initial={prefersReduced ? false : { opacity: 0, scale: 0.8 }}
+                      animate={prefersReduced ? {} : { opacity: 1, scale: 1 }}
+                      exit={prefersReduced ? {} : { opacity: 0, scale: 0.85 }}
+                      transition={{ duration: 0.14 }}
+                    >
+                      {usernameIcon}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </div>
+              <AnimatePresence mode="wait" initial={false}>
               {errors.username && (
-                <p
+                <motion.p
+                  key="username-error"
                   className="mt-1 text-xs font-spartan"
                   style={{ color: "var(--color-error)" }}
+                  initial={prefersReduced ? false : { opacity: 0, y: 4 }}
+                  animate={prefersReduced ? {} : { opacity: 1, y: 0 }}
+                  exit={prefersReduced ? {} : { opacity: 0, y: -4 }}
+                  transition={{ duration: 0.16 }}
                 >
                   {errors.username}
-                </p>
+                </motion.p>
               )}
               {!errors.username && usernameStatus === "taken" && (
-                <p
+                <motion.p
+                  key="username-taken"
                   className="mt-1 text-xs font-spartan"
                   style={{ color: "var(--color-error)" }}
+                  initial={prefersReduced ? false : { opacity: 0, y: 4 }}
+                  animate={prefersReduced ? {} : { opacity: 1, y: 0 }}
+                  exit={prefersReduced ? {} : { opacity: 0, y: -4 }}
+                  transition={{ duration: 0.16 }}
                 >
                   Username is already taken
-                </p>
+                </motion.p>
               )}
               {!errors.username && usernameStatus === "available" && (
-                <p
+                <motion.p
+                  key="username-available"
                   className="mt-1 text-xs font-spartan"
                   style={{ color: "var(--color-success, #22c55e)" }}
+                  initial={prefersReduced ? false : { opacity: 0, y: 4 }}
+                  animate={prefersReduced ? {} : { opacity: 1, y: 0 }}
+                  exit={prefersReduced ? {} : { opacity: 0, y: -4 }}
+                  transition={{ duration: 0.16 }}
                 >
                   Username is available
-                </p>
+                </motion.p>
               )}
               {!errors.username && usernameStatus === "invalid" && username.length > 0 && (
-                <p
+                <motion.p
+                  key="username-invalid"
                   className="mt-1 text-xs font-spartan"
                   style={{ color: "var(--color-error)" }}
+                  initial={prefersReduced ? false : { opacity: 0, y: 4 }}
+                  animate={prefersReduced ? {} : { opacity: 1, y: 0 }}
+                  exit={prefersReduced ? {} : { opacity: 0, y: -4 }}
+                  transition={{ duration: 0.16 }}
                 >
                   {username.length < 3
                     ? "At least 3 characters"
                     : "Letters, numbers, and underscores only"}
-                </p>
+                </motion.p>
               )}
+              {!errors.username && usernameStatus === "typing" && username.length > 0 && (
+                <motion.p
+                  key="username-typing"
+                  className="mt-1 text-xs font-spartan"
+                  style={{ color: "var(--color-text-tertiary)" }}
+                  initial={prefersReduced ? false : { opacity: 0, y: 4 }}
+                  animate={prefersReduced ? {} : { opacity: 1, y: 0 }}
+                  exit={prefersReduced ? {} : { opacity: 0, y: -4 }}
+                  transition={{ duration: 0.16 }}
+                >
+                  Checking availability...
+                </motion.p>
+              )}
+              </AnimatePresence>
               <p
                 className="mt-1.5 text-xs font-spartan"
                 style={{ color: "var(--color-text-tertiary)" }}
@@ -418,10 +520,12 @@ const ProfileSetupPage = () => {
             </div>
 
             {/* Submit */}
-            <button
+            <motion.button
               type="submit"
               disabled={isSubmitting || usernameStatus === "checking"}
               className="btn btn-primary w-full justify-center btn-md mt-2"
+              whileHover={isSubmitting || prefersReduced ? {} : buttonHover}
+              whileTap={isSubmitting || prefersReduced ? {} : buttonTap}
             >
               {isSubmitting ? (
                 <span className="flex items-center gap-2 font-spartan">
@@ -434,10 +538,10 @@ const ProfileSetupPage = () => {
                   <ArrowRightIcon className="w-4 h-4" />
                 </span>
               )}
-            </button>
+            </motion.button>
           </form>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 };

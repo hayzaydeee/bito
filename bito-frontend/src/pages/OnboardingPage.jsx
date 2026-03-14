@@ -8,9 +8,20 @@ import {
   TargetIcon,
 } from "@radix-ui/react-icons";
 import { useAuth } from "../contexts/AuthContext";
+import { useNotifications } from "../contexts/NotificationContext";
 import { userAPI } from "../services/api";
+import useMotionSafe from "../hooks/useMotionSafe";
 import AnimatedList from "../components/ui/AnimatedList";
-import { listItemVariants, wizardStepVariants } from "../utils/motion";
+import {
+  listItemVariants,
+  wizardStepVariants,
+  celebrationVariants,
+  confettiParticle,
+  buttonHover,
+  buttonTap,
+  backdropVariants,
+  springs,
+} from "../utils/motion";
 
 /* ─────────────────────────────────────────────
    Phase 4 — Onboarding Interactive Playground
@@ -106,11 +117,15 @@ const TIME_OPTIONS = [
 const OnboardingPage = () => {
   const navigate = useNavigate();
   const { user, updateUser, isAuthenticated, isLoading } = useAuth();
+  const { showError, showSuccess } = useNotifications();
+  const { getVariants, prefersReduced } = useMotionSafe();
+  const shouldAnimate = typeof motion !== "undefined" && !prefersReduced;
   const [step, setStep] = useState(0); // 0=welcome, 1=goals, 2=time, 3=done
   const [direction, setDirection] = useState(1); // 1=forward, -1=back
   const [selectedGoals, setSelectedGoals] = useState([]);
   const [preferredTimes, setPreferredTimes] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   // If not authenticated, redirect to login
   useEffect(() => {
@@ -141,16 +156,19 @@ const OnboardingPage = () => {
   };
 
   const goNext = () => {
+    setSubmitError("");
     setDirection(1);
     setStep((s) => s + 1);
   };
 
   const goBack = () => {
+    setSubmitError("");
     setDirection(-1);
     setStep((s) => s - 1);
   };
 
   const handleComplete = async () => {
+    setSubmitError("");
     setIsSubmitting(true);
     try {
       // Save onboarding preferences (no habits created — wizard handles that)
@@ -162,24 +180,47 @@ const OnboardingPage = () => {
         },
       });
       updateUser({ onboardingComplete: true });
-      navigate("/app/dashboard");
+      showSuccess("Welcome aboard. Your setup has been saved.");
+      navigate("/app/dashboard", { state: { fromOnboarding: true } });
     } catch (err) {
       console.error("Failed to complete onboarding:", err);
-      updateUser({ onboardingComplete: true });
-      navigate("/app/dashboard");
+      const message = "We couldn't save your setup yet. Please try again.";
+      setSubmitError(message);
+      showError(message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleSkip = async () => {
+    setSubmitError("");
     setIsSubmitting(true);
     try {
       await userAPI.updateProfile({ onboardingComplete: true });
       updateUser({ onboardingComplete: true });
     } catch {
       updateUser({ onboardingComplete: true });
+      showError("Setup skipped due to a temporary save issue.");
+    } finally {
+      setIsSubmitting(false);
     }
-    navigate("/app/dashboard");
+    navigate("/app/dashboard", { state: { fromOnboarding: true } });
   };
+
+  const confettiAngles = [
+    -1.7,
+    -1.35,
+    -1.1,
+    -0.85,
+    -0.6,
+    -0.35,
+    -0.1,
+    0.15,
+    0.4,
+    0.65,
+    0.9,
+    1.15,
+  ];
 
   if (isLoading) {
     return (
@@ -204,14 +245,21 @@ const OnboardingPage = () => {
     0: (
       <div className="text-center max-w-lg mx-auto">
         {/* Logo mark */}
-        <div className="flex justify-center mb-8">
-          <div
+        <motion.div
+          className="flex justify-center mb-8"
+          initial={shouldAnimate ? { opacity: 0, scale: 0.9, y: 10 } : false}
+          animate={shouldAnimate ? { opacity: 1, scale: 1, y: 0 } : {}}
+          transition={{ ...springs.soft, delay: 0.05 }}
+        >
+          <motion.div
             className="w-16 h-16 rounded-2xl flex items-center justify-center"
             style={{ backgroundColor: "var(--color-brand-600)" }}
+            whileHover={shouldAnimate ? { rotate: -4, scale: 1.03 } : {}}
+            whileTap={shouldAnimate ? buttonTap : {}}
           >
             <TargetIcon className="w-8 h-8 text-white" />
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         <h1
           className="heading-display font-garamond mb-4"
@@ -228,23 +276,27 @@ const OnboardingPage = () => {
           only takes a minute.
         </p>
 
-        <button
+        <motion.button
           onClick={goNext}
           className="btn btn-primary btn-lg group mx-auto"
+          whileHover={prefersReduced ? {} : buttonHover}
+          whileTap={prefersReduced ? {} : buttonTap}
         >
           Let's go
           <ArrowRightIcon className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
-        </button>
+        </motion.button>
 
-        <button
+        <motion.button
           onClick={handleSkip}
+          disabled={isSubmitting}
           className="block mx-auto mt-4 text-sm font-spartan transition-colors"
           style={{ color: "var(--color-text-tertiary)" }}
+          whileTap={prefersReduced ? {} : buttonTap}
           onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-text-secondary)")}
           onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-tertiary)")}
         >
           Skip setup — I'll explore on my own
-        </button>
+        </motion.button>
       </div>
     ),
 
@@ -270,10 +322,12 @@ const OnboardingPage = () => {
           {GOAL_OPTIONS.map((goal, i) => {
             const isSelected = selectedGoals.includes(goal.id);
             return (
-              <motion.div key={goal.id} variants={listItemVariants} custom={i}>
-              <button
+              <motion.div key={goal.id} variants={getVariants(listItemVariants)} custom={i}>
+              <motion.button
                 onClick={() => toggleGoal(goal.id)}
                 className="text-left rounded-xl border p-4 transition-all duration-150 w-full"
+                whileHover={prefersReduced ? {} : { y: -2, scale: isSelected ? 1.02 : 1.01 }}
+                whileTap={prefersReduced ? {} : buttonTap}
                 style={{
                   backgroundColor: isSelected
                     ? "var(--color-brand-600)"
@@ -305,32 +359,40 @@ const OnboardingPage = () => {
                 </p>
                 {isSelected && (
                   <div className="mt-2 flex justify-end">
-                    <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
+                    <motion.div
+                      className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center"
+                      initial={prefersReduced ? false : { scale: 0.4, opacity: 0 }}
+                      animate={prefersReduced ? {} : { scale: 1, opacity: 1 }}
+                      transition={{ ...springs.bouncy, duration: 0.3 }}
+                    >
                       <CheckIcon className="w-3 h-3 text-white" />
-                    </div>
+                    </motion.div>
                   </div>
                 )}
-              </button>
+              </motion.button>
               </motion.div>
             );
           })}
         </AnimatedList>
 
         <div className="flex items-center justify-between">
-          <button
+          <motion.button
             onClick={goBack}
             className="flex items-center gap-2 text-sm font-spartan transition-colors"
             style={{ color: "var(--color-text-secondary)" }}
+            whileTap={prefersReduced ? {} : buttonTap}
             onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-text-primary)")}
             onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-secondary)")}
           >
             <ArrowLeftIcon className="w-4 h-4" />
             Back
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             onClick={goNext}
             disabled={selectedGoals.length === 0}
             className="btn btn-primary btn-md group"
+            whileHover={selectedGoals.length === 0 || prefersReduced ? {} : buttonHover}
+            whileTap={selectedGoals.length === 0 || prefersReduced ? {} : buttonTap}
             style={{
               opacity: selectedGoals.length === 0 ? 0.4 : 1,
               cursor: selectedGoals.length === 0 ? "not-allowed" : "pointer",
@@ -338,7 +400,7 @@ const OnboardingPage = () => {
           >
             Continue
             <ArrowRightIcon className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-          </button>
+          </motion.button>
         </div>
       </div>
     ),
@@ -361,14 +423,18 @@ const OnboardingPage = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-          {TIME_OPTIONS.map((opt) => {
+        <AnimatedList className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+          {TIME_OPTIONS.map((opt, i) => {
             const isSelected = preferredTimes.includes(opt.id);
             return (
-              <button
+              <motion.button
                 key={opt.id}
+                variants={getVariants(listItemVariants)}
+                custom={i}
                 onClick={() => toggleTime(opt.id)}
                 className="text-center rounded-xl border p-5 transition-all duration-150"
+                whileHover={prefersReduced ? {} : { y: -2, scale: isSelected ? 1.02 : 1.01 }}
+                whileTap={prefersReduced ? {} : buttonTap}
                 style={{
                   backgroundColor: isSelected
                     ? "var(--color-brand-600)"
@@ -399,14 +465,19 @@ const OnboardingPage = () => {
                   {opt.time}
                 </p>
                 {isSelected && (
-                  <div className="mt-2 mx-auto w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
+                  <motion.div
+                    className="mt-2 mx-auto w-5 h-5 rounded-full bg-white/20 flex items-center justify-center"
+                    initial={prefersReduced ? false : { scale: 0.4, opacity: 0 }}
+                    animate={prefersReduced ? {} : { scale: 1, opacity: 1 }}
+                    transition={{ ...springs.bouncy, duration: 0.3 }}
+                  >
                     <CheckIcon className="w-3 h-3 text-white" />
-                  </div>
+                  </motion.div>
                 )}
-              </button>
+              </motion.button>
             );
           })}
-        </div>
+        </AnimatedList>
 
         <p
           className="text-center text-xs font-spartan mb-8"
@@ -416,10 +487,11 @@ const OnboardingPage = () => {
         </p>
 
         <div className="flex items-center justify-between">
-          <button
+          <motion.button
             onClick={goBack}
             className="flex items-center gap-2 text-sm font-spartan transition-colors"
             style={{ color: "var(--color-text-secondary)" }}
+            whileTap={prefersReduced ? {} : buttonTap}
             onMouseEnter={(e) =>
               (e.currentTarget.style.color = "var(--color-text-primary)")
             }
@@ -429,23 +501,55 @@ const OnboardingPage = () => {
           >
             <ArrowLeftIcon className="w-4 h-4" />
             Back
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             onClick={goNext}
             className="btn btn-primary btn-md group"
+            whileHover={prefersReduced ? {} : buttonHover}
+            whileTap={prefersReduced ? {} : buttonTap}
           >
             Continue
             <ArrowRightIcon className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-          </button>
+          </motion.button>
         </div>
       </div>
     ),
 
     /* ── Step 3: Done ── */
     3: (
-      <div className="text-center max-w-lg mx-auto">
+      <div className="text-center max-w-lg mx-auto relative">
         {/* Celebration emoji */}
-        <div className="text-6xl mb-6">🎉</div>
+        <AnimatePresence>
+          {step === 3 && !prefersReduced && (
+            <motion.div
+              key="confetti"
+              className="absolute inset-0 pointer-events-none"
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              {confettiAngles.map((angle, i) => (
+                <motion.span
+                  key={`${angle}-${i}`}
+                  className="absolute top-8 left-1/2 w-2 h-2 rounded-full"
+                  style={{
+                    backgroundColor: i % 2 === 0 ? "var(--color-brand-500)" : "#F59E0B",
+                  }}
+                  variants={confettiParticle(angle, 90 + i * 3)}
+                />
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <motion.div
+          className="text-6xl mb-6"
+          variants={getVariants(celebrationVariants)}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+        >
+          🎉
+        </motion.div>
 
         <h2
           className="heading-lg font-garamond mb-4"
@@ -474,13 +578,18 @@ const OnboardingPage = () => {
           >
             Quick tips
           </h4>
-          <div className="space-y-2.5">
+          <AnimatedList className="space-y-2.5" stagger={0.05}>
             {[
               "Tap + to create a habit — daily schedules or flexible weekly targets.",
               "Check Analytics to see your patterns after a few days.",
               "Invite friends to a group for shared accountability.",
             ].map((tip, i) => (
-              <div key={i} className="flex items-start gap-2.5">
+              <motion.div
+                key={i}
+                className="flex items-start gap-2.5"
+                variants={getVariants(listItemVariants)}
+                custom={i}
+              >
                 <div
                   className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
                   style={{ backgroundColor: "var(--color-brand-600)" }}
@@ -493,15 +602,36 @@ const OnboardingPage = () => {
                 >
                   {tip}
                 </p>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </AnimatedList>
         </div>
 
-        <button
+        <AnimatePresence>
+          {submitError && (
+            <motion.div
+              className="rounded-lg border px-4 py-3 mb-5 text-sm font-spartan"
+              style={{
+                borderColor: "rgba(239, 68, 68, 0.35)",
+                color: "#f87171",
+                backgroundColor: "rgba(239, 68, 68, 0.08)",
+              }}
+              initial={prefersReduced ? false : { opacity: 0, y: 10 }}
+              animate={prefersReduced ? {} : { opacity: 1, y: 0 }}
+              exit={prefersReduced ? {} : { opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}
+            >
+              {submitError}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <motion.button
           onClick={handleComplete}
           disabled={isSubmitting}
           className="btn btn-primary btn-lg group mx-auto"
+          whileHover={isSubmitting || prefersReduced ? {} : buttonHover}
+          whileTap={isSubmitting || prefersReduced ? {} : buttonTap}
         >
           {isSubmitting ? (
             <span className="flex items-center gap-2">
@@ -514,7 +644,7 @@ const OnboardingPage = () => {
               <ArrowRightIcon className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
             </>
           )}
-        </button>
+        </motion.button>
       </div>
     ),
   };
@@ -549,8 +679,13 @@ const OnboardingPage = () => {
               className="h-1.5 rounded-full"
               animate={{
                 width: s === step ? 24 : 8,
+                scale: s === step ? 1.05 : 1,
                 backgroundColor:
                   s <= step ? "var(--color-brand-500)" : "var(--color-surface-hover)",
+                boxShadow:
+                  s === step
+                    ? "0 0 10px rgba(79, 70, 229, 0.35)"
+                    : "0 0 0 rgba(0,0,0,0)",
               }}
               transition={{ type: "spring", stiffness: 500, damping: 30 }}
             />
@@ -561,15 +696,28 @@ const OnboardingPage = () => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex items-center justify-center px-6 pb-12">
+      <div className="flex-1 flex items-center justify-center px-6 pb-12 relative">
+        <AnimatePresence>
+          {isSubmitting && (
+            <motion.div
+              className="absolute inset-0 z-10"
+              style={{ backgroundColor: "rgba(15, 23, 42, 0.28)", backdropFilter: "blur(1px)" }}
+              variants={getVariants(backdropVariants)}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            />
+          )}
+        </AnimatePresence>
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={step}
             custom={direction}
-            variants={wizardStepVariants}
+            variants={getVariants(wizardStepVariants)}
             initial="enter"
             animate="center"
             exit="exit"
+            className="w-full max-w-3xl min-h-[460px] flex items-center"
           >
             {stepContent[step]}
           </motion.div>
