@@ -206,12 +206,17 @@ class WeeklyReportService {
         (e) => e.habitId.toString() === habit._id.toString()
       );
       const completed = habitEntries.filter((e) => e.completed).length;
+      // Logged entries are useful context, but should never drive completion percentage.
       const total = habitEntries.length;
       const moods = habitEntries.filter((e) => e.mood).map((e) => e.mood);
       const avgMood = moods.length ? (moods.reduce((a, b) => a + b, 0) / moods.length).toFixed(1) : null;
 
       const isWeekly = habit.frequency === 'weekly';
       const weeklyTarget = habit.weeklyTarget || 3;
+      const completionTarget = isWeekly ? weeklyTarget : 7;
+      const rate = completionTarget > 0
+        ? Math.min(100, Math.round((completed / completionTarget) * 100))
+        : 0;
 
       return {
         name: habit.name,
@@ -219,9 +224,8 @@ class WeeklyReportService {
         category: habit.category || 'General',
         completed,
         total,
-        rate: isWeekly
-          ? (completed >= weeklyTarget ? 100 : Math.round((completed / weeklyTarget) * 100))
-          : (total > 0 ? Math.round((completed / 7) * 100) : 0),
+        rate,
+        completionTarget,
         currentStreak: habit.stats?.currentStreak || 0,
         longestStreak: habit.stats?.longestStreak || 0,
         avgMood,

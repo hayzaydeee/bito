@@ -19,6 +19,18 @@ const getSteps = () => {
       position: 'bottom',
     },
     {
+      target: '[data-tour="habit-add"]',
+      title: 'Add a habit',
+      body: 'Use Add Habit to create a new routine in seconds. You can set frequency, category, icon, and targets from there.',
+      position: 'bottom',
+    },
+    {
+      target: '[data-tour="habit-edit"]',
+      title: 'Edit a habit',
+      body: 'Use the pencil icon on any row to update a habit name, schedule, targets, or archive/delete it later.',
+      position: 'bottom',
+    },
+    {
       target: '[data-tour="week-strip"]',
       title: 'Your habit timeline',
       body: 'This is your visual progress map — see how consistent you\'ve been at a glance. Colour intensity shows your completion rate for each day.',

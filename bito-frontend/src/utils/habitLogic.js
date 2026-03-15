@@ -344,10 +344,10 @@ export const habitUtils = {
   },
 
   /** Get {start, end} Date pair for a given view + anchor date */
-  getDateRangeForView: (view, anchorDate) => {
+  getDateRangeForView: (view, anchorDate, weekStartDay = null) => {
     const d = new Date(anchorDate);
     if (view === 'week') {
-      const start = habitUtils.getWeekStart(d);
+      const start = habitUtils.getWeekStart(d, weekStartDay);
       const end = new Date(start);
       end.setDate(end.getDate() + 6);
       return { start, end };
@@ -377,10 +377,10 @@ export const habitUtils = {
   },
 
   /** Human-readable label for the current range */
-  getRangeLabel: (view, anchorDate) => {
+  getRangeLabel: (view, anchorDate, weekStartDay = null) => {
     const d = new Date(anchorDate);
     if (view === 'week') {
-      const { start, end } = habitUtils.getDateRangeForView('week', d);
+      const { start, end } = habitUtils.getDateRangeForView('week', d, weekStartDay);
       const opts = { month: 'short', day: 'numeric' };
       return `${start.toLocaleDateString('en-US', opts)} – ${end.toLocaleDateString('en-US', opts)}`;
     }

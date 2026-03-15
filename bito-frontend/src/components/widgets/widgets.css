@@ -57,6 +57,19 @@
   opacity: 0.8;
 }
 
+@media (max-width: 767px) {
+  .widget-content-area {
+    scrollbar-width: none;
+  }
+
+  .widget-content-area::-webkit-scrollbar,
+  .widget-content-area::-webkit-scrollbar-track,
+  .widget-content-area::-webkit-scrollbar-thumb {
+    display: none;
+    background: transparent;
+  }
+}
+
 /* Widget header fixed positioning */
 .widget-header {
   flex-shrink: 0;

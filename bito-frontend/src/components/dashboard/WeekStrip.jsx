@@ -206,12 +206,12 @@ const WeekStrip = memo(({ habits, entries, onToggle, onEdit, fetchHabitEntries }
   // Fetch entries for the visible range
   useEffect(() => {
     if (!fetchHabitEntries || !habits.length) return;
-    const { start, end } = habitUtils.getDateRangeForView(view, anchor);
+    const { start, end } = habitUtils.getDateRangeForView(view, anchor, weekStartDay);
     habits.forEach((h) => fetchHabitEntries(h._id, start, end));
-  }, [view, anchor, habits, fetchHabitEntries]);
+  }, [view, anchor, habits, fetchHabitEntries, weekStartDay]);
 
   // Range label
-  const rangeLabel = useMemo(() => habitUtils.getRangeLabel(view, anchor), [view, anchor]);
+  const rangeLabel = useMemo(() => habitUtils.getRangeLabel(view, anchor, weekStartDay), [view, anchor, weekStartDay]);
 
   // ── WEEK data ──
   const weekData = useMemo(() => {
@@ -224,9 +224,9 @@ const WeekStrip = memo(({ habits, entries, onToggle, onEdit, fetchHabitEntries }
   // ── MONTH data ──
   const monthGrid = useMemo(() => {
     if (view !== "month") return [];
-    const cells = habitUtils.getMonthCalendarGrid(anchor);
+    const cells = habitUtils.getMonthCalendarGrid(anchor, weekStartDay);
     return buildDayStats(cells, habits, entries);
-  }, [view, anchor, habits, entries]);
+  }, [view, anchor, habits, entries, weekStartDay]);
 
   // ── YEAR data ──
   const yearData = useMemo(() => {
@@ -347,7 +347,7 @@ const WeekStrip = memo(({ habits, entries, onToggle, onEdit, fetchHabitEntries }
   // Month calendar grid
   const renderMonthGrid = () => (
     <div>
-      <DayLabels />
+      <DayLabels weekStartDay={weekStartDay} />
       <div className="grid grid-cols-7 gap-1">
         {monthGrid.map((cell, i) => (
           <button

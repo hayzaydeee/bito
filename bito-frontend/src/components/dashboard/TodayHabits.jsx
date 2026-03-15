@@ -104,6 +104,7 @@ const HabitRow = memo(({ habit, isCompleted, onToggle, onEdit }) => {
       {/* Edit icon — always visible, brighter on hover */}
       <button
         onClick={() => onEdit(habit)}
+        data-tour="habit-edit"
         className="opacity-100 transition-opacity p-1 rounded-md"
         style={{ color: "var(--color-text-secondary)" }}
         aria-label={`Edit ${habit.name}`}
@@ -135,7 +136,7 @@ const TodayHabits = memo(
           >
             Add your first habit to get started.
           </p>
-          <button onClick={onAdd} className="btn btn-primary btn-sm">
+          <button onClick={onAdd} className="btn btn-primary btn-sm" data-tour="habit-add">
             Add a habit
           </button>
         </div>
@@ -164,6 +165,7 @@ const TodayHabits = memo(
           </h2>
           <button
               onClick={onAdd}
+              data-tour="habit-add"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-spartan font-semibold transition-all duration-200 active:scale-95"
               style={{
                 color: "white",

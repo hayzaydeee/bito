@@ -63,7 +63,12 @@ const StatPills = memo(({ completed, total, streak, weeklyProgress }) => {
           borderColor: "var(--color-border-primary)",
         }}
       >
-        <span className="text-sm">🔥</span>
+        <div
+          className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: "var(--color-surface-elevated)" }}
+        >
+          <span className="text-sm leading-none">🔥</span>
+        </div>
         <span
           className="text-sm font-spartan font-bold tabular-nums"
           style={{ color: "var(--color-text-primary)" }}
