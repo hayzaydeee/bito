@@ -452,7 +452,7 @@ router.post('/:id/members/invite', [
     const group = await Group.findById(req.params.id)
       .populate('ownerId', 'name email');
     
-    if (!Group) {
+    if (!group) {
       return res.status(404).json({
         success: false,
         error: 'Group not found'
@@ -619,7 +619,7 @@ router.get('/:id/invitations', authenticateJWT, async (req, res) => {
   try {
     const group = await Group.findById(req.params.id);
     
-    if (!Group) {
+    if (!group) {
       return res.status(404).json({
         success: false,
         error: 'Group not found'
@@ -862,7 +862,7 @@ router.delete('/:id/invitations/:invitationId', authenticateJWT, async (req, res
   try {
     const group = await Group.findById(req.params.id);
     
-    if (!Group) {
+    if (!group) {
       return res.status(404).json({
         success: false,
         error: 'Group not found'
@@ -925,7 +925,7 @@ router.put('/:id/members/:userId', [
     
     const group = await Group.findById(req.params.id);
     
-    if (!Group) {
+    if (!group) {
       return res.status(404).json({
         success: false,
         error: 'Group not found'
@@ -991,7 +991,7 @@ router.delete('/:id/members/:userId', authenticateJWT, async (req, res) => {
   try {
     const group = await Group.findById(req.params.id);
     
-    if (!Group) {
+    if (!group) {
       return res.status(404).json({
         success: false,
         error: 'Group not found'
@@ -1091,7 +1091,7 @@ router.post('/:id/leave', authenticateJWT, async (req, res) => {
     // Find the Group
     const group = await Group.findById(groupId);
     
-    if (!Group) {
+    if (!group) {
       return res.status(404).json({ message: 'Group not found' });
     }
 
@@ -1163,7 +1163,7 @@ router.get('/:groupId/member-habits', authenticateJWT, async (req, res) => {
 
     // Verify user has access to Group
     const group = await Group.findById(groupId);
-    if (!Group) {
+    if (!group) {
       return res.status(404).json({
         success: false,
         error: 'Group not found'
@@ -1224,7 +1224,7 @@ router.get('/:groupId/group-trackers', authenticateJWT, async (req, res) => {
 
     // Verify Group exists and user has access
     const group = await Group.findById(groupId);
-    if (!Group) {
+    if (!group) {
       return res.status(404).json({
         success: false,
         error: 'Group not found'
@@ -1379,7 +1379,7 @@ router.get('/:groupId/members/:memberId/dashboard', authenticateJWT, async (req,
 
     // Verify Group exists and requesting user has access
     const group = await Group.findById(groupId);
-    if (!Group) {
+    if (!group) {
       return res.status(404).json({
         success: false,
         error: 'Group not found'
@@ -1593,7 +1593,7 @@ router.post('/:groupId/habits/:habitId/adopt', [
 
     // Verify Group exists and user has access
     const group = await Group.findById(groupId);
-    if (!Group) {
+    if (!group) {
       return res.status(404).json({
         success: false,
         error: 'Group not found'
@@ -1864,7 +1864,7 @@ router.get('/:groupId/habits', authenticateJWT, async (req, res) => {
 
     // Check if user is a member of the Group
     const group = await Group.findById(groupId);
-    if (!Group) {
+    if (!group) {
       return res.status(404).json({
         success: false,
         error: 'Group not found'
@@ -1973,7 +1973,7 @@ router.post('/:groupId/habits', [
 
     // Check if user is a member of the Group
     const group = await Group.findById(groupId);
-    if (!Group) {
+    if (!group) {
       return res.status(404).json({
         success: false,
         error: 'Group not found'
@@ -2331,7 +2331,7 @@ router.put('/:id', authenticateJWT, async (req, res) => {
 
     // Find the Group
     const group = await Group.findById(groupId);
-    if (!Group) {
+    if (!group) {
       return res.status(404).json({
         success: false,
         error: 'Group not found'
@@ -2462,7 +2462,7 @@ router.delete('/:id', authenticateJWT, async (req, res) => {
 
     // Get the Group and verify ownership
     const group = await Group.findById(groupId);
-    if (!Group) {
+    if (!group) {
       return res.status(404).json({
         success: false,
         error: 'Group not found'
@@ -2545,7 +2545,7 @@ router.get('/:id/dashboard-permissions', authenticateJWT, async (req, res) => {
 
     // Find the Group to verify membership
     const group = await Group.findById(groupId);
-    if (!Group) {
+    if (!group) {
       return res.status(404).json({
         success: false,
         error: 'Group not found'
@@ -2598,7 +2598,7 @@ router.put('/:id/dashboard-permissions', authenticateJWT, async (req, res) => {
 
     // Find the Group to verify membership
     const group = await Group.findById(groupId);
-    if (!Group) {
+    if (!group) {
       return res.status(404).json({
         success: false,
         error: 'Group not found'
@@ -2664,3 +2664,4 @@ router.put('/:id/dashboard-permissions', authenticateJWT, async (req, res) => {
 });
 
 module.exports = router;
+
