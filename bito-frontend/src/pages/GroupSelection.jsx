@@ -87,8 +87,11 @@ const GroupSelection = () => {
         name: formData.name,
         description: formData.description,
         type: formData.type || "team",
-        isPublic: !formData.isPrivate,
         color: formData.color,
+        settings: {
+          isPublic: !formData.isPrivate,
+          privacyLevel: formData.isPrivate ? "invite-only" : "open",
+        },
       });
       if (res.success) {
         setShowCreateModal(false);

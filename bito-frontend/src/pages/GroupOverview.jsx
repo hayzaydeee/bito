@@ -139,6 +139,33 @@ const GroupOverview = () => {
   });
   const userRole = userMember?.role || "member";
   const canManage = userRole === "owner" || userRole === "admin";
+  const canCreateHabits = canManage || (userRole === "member" && group?.settings?.allowMemberHabitCreation !== false);
+
+  const toHabitPayload = (form) => ({
+    name: form.name,
+    description: form.description,
+    category: form.category,
+    icon: form.icon,
+    color: form.color,
+    isRequired: Boolean(form.isRequired),
+    defaultTarget: {
+      value: Math.max(1, Number(form.defaultTarget?.value) || 1),
+      unit: form.defaultTarget?.unit === "time" ? "times" : (form.defaultTarget?.unit || "times"),
+    },
+    schedule: {
+      days: Array.isArray(form.schedule?.days) ? form.schedule.days : [0, 1, 2, 3, 4, 5, 6],
+      reminderEnabled: Boolean(form.schedule?.reminderEnabled),
+      reminderTime: form.schedule?.reminderTime || "",
+    },
+    settings: {
+      allowCustomization: true,
+      visibility: "all",
+      defaultTarget: {
+        value: Math.max(1, Number(form.defaultTarget?.value) || 1),
+        unit: form.defaultTarget?.unit === "time" ? "times" : (form.defaultTarget?.unit || "times"),
+      },
+    },
+  });
 
   /* ── habit helpers ────────────────────── */
 
@@ -173,7 +200,7 @@ const GroupOverview = () => {
 
   const handleAddHabit = async () => {
     try {
-      const res = await groupsAPI.createGroupHabit(groupId, habitForm);
+      const res = await groupsAPI.createGroupHabit(groupId, toHabitPayload(habitForm));
       if (res.success) {
         setShowAddHabitModal(false);
         resetHabitForm();
@@ -193,13 +220,13 @@ const GroupOverview = () => {
       category: h.category || "health",
       icon: h.icon || "🎯",
       color: h.color || "#4f46e5",
-      defaultTarget: h.settings?.defaultTarget || { value: 1, unit: "time" },
-      schedule: h.settings?.schedule || {
+      defaultTarget: h.defaultSettings?.target || h.settings?.defaultTarget || { value: 1, unit: "times" },
+      schedule: h.defaultSettings?.schedule || h.settings?.schedule || {
         days: [0, 1, 2, 3, 4, 5, 6],
         reminderTime: "",
         reminderEnabled: false,
       },
-      isRequired: h.isRequired || false,
+      isRequired: h.groupSettings?.isRequired || h.isRequired || false,
     });
     setFormTab("details");
     setShowEditHabitModal(true);
@@ -207,13 +234,7 @@ const GroupOverview = () => {
 
   const handleUpdateHabit = async () => {
     try {
-      const res = await groupsAPI.updateGroupHabit(groupId, selectedHabit._id, {
-        ...habitForm,
-        settings: {
-          defaultTarget: habitForm.defaultTarget,
-          schedule: habitForm.schedule,
-        },
-      });
+      const res = await groupsAPI.updateGroupHabit(groupId, selectedHabit._id, toHabitPayload(habitForm));
       if (res.success) {
         setShowEditHabitModal(false);
         habitNotif.updated(habitForm.name);
@@ -284,7 +305,7 @@ const GroupOverview = () => {
       category: "health",
       icon: "🎯",
       color: "#4f46e5",
-      defaultTarget: { value: 1, unit: "time" },
+      defaultTarget: { value: 1, unit: "times" },
       schedule: {
         days: [0, 1, 2, 3, 4, 5, 6],
         reminderTime: "",
@@ -465,7 +486,9 @@ const GroupOverview = () => {
         {activeTab === "habits" && (
           <HabitsTab
             habits={groupHabits}
+            canCreateHabits={canCreateHabits}
             canManage={canManage}
+            currentUserId={currentUserId}
             isAdopted={isAdopted}
             onAdd={() => setShowAddHabitModal(true)}
             onEdit={handleEditHabitOpen}
@@ -736,7 +759,7 @@ function ActivityTab({ activities, reactions, onReact }) {
 /* ================================================================
    Tab: Habits
    ================================================================ */
-function HabitsTab({ habits, canManage, isAdopted, onAdd, onEdit, onAdopt }) {
+function HabitsTab({ habits, canCreateHabits, canManage, currentUserId, isAdopted, onAdd, onEdit, onAdopt }) {
   return (
     <div>
       {/* section header */}
@@ -744,7 +767,7 @@ function HabitsTab({ habits, canManage, isAdopted, onAdd, onEdit, onAdopt }) {
         <p className="text-sm text-[var(--color-text-secondary)] font-spartan">
           {habits.length} habit{habits.length !== 1 && "s"} available
         </p>
-        {canManage && (
+        {canCreateHabits && (
           <button
             onClick={onAdd}
             className="flex items-center gap-1.5 h-8 px-3 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white rounded-lg text-xs font-spartan font-medium transition-colors"
@@ -764,13 +787,17 @@ function HabitsTab({ habits, canManage, isAdopted, onAdd, onEdit, onAdopt }) {
           <p className="text-sm text-[var(--color-text-secondary)] font-spartan">
             {canManage
               ? "Add the first habit to get started."
-              : "Admins can add habits for the group."}
+              : canCreateHabits
+              ? "Add the first habit to get started."
+              : "Only managers can add habits for this group."}
           </p>
         </div>
       ) : (
         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {habits.map((h) => {
             const adopted = isAdopted(h);
+            const creatorId = (h.createdBy?._id || h.createdBy || "").toString();
+            const canEdit = canManage || creatorId === currentUserId?.toString();
             return (
               <li
                 key={h._id}
@@ -802,7 +829,7 @@ function HabitsTab({ habits, canManage, isAdopted, onAdd, onEdit, onAdopt }) {
                 </div>
 
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  {canManage && (
+                  {canEdit && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();

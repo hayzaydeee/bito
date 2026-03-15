@@ -18,6 +18,11 @@ const groupSchema = new mongoose.Schema({
     enum: ['family', 'team', 'fitness', 'study', 'community', 'personal'],
     default: 'personal'
   },
+  color: {
+    type: String,
+    match: [/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, 'Please provide a valid hex color'],
+    default: '#4f46e5'
+  },
   
   // Ownership and management
   ownerId: {

@@ -65,7 +65,11 @@ router.post('/', [
   body('type')
     .optional()
     .isIn(['family', 'team', 'fitness', 'study', 'community', 'personal'])
-    .withMessage('Invalid Group type')
+    .withMessage('Invalid Group type'),
+  body('color')
+    .optional()
+    .matches(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)
+    .withMessage('Please provide a valid hex color')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -77,7 +81,7 @@ router.post('/', [
       });
     }
     
-    const { name, description, type, settings } = req.body;
+    const { name, description, type, settings, color, isPublic } = req.body;
     
     // Debug logging
     console.log('Creating Group for user:', {
@@ -104,9 +108,11 @@ router.post('/', [
       name,
       description,
       type: type || 'personal',
+      color: color || '#4f46e5',
       ownerId: userId,
       settings: {
-        isPublic: settings?.isPublic || false,
+        // Accept both nested settings.isPublic and legacy top-level isPublic.
+        isPublic: settings?.isPublic ?? Boolean(isPublic),
         allowInvites: settings?.allowInvites !== false, // Default true
         requireApproval: settings?.requireApproval !== false, // Default true
         privacyLevel: settings?.privacyLevel || 'invite-only'
@@ -1948,7 +1954,31 @@ router.post('/:groupId/habits', [
   body('icon')
     .optional()
     .isLength({ max: 10 })
-    .withMessage('Icon cannot exceed 10 characters')
+    .withMessage('Icon cannot exceed 10 characters'),
+  body('defaultTarget.value')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Target value must be at least 1'),
+  body('defaultTarget.unit')
+    .optional()
+    .isIn(['times', 'minutes', 'hours', 'pages', 'miles', 'calories', 'glasses', 'custom'])
+    .withMessage('Invalid target unit'),
+  body('schedule.days')
+    .optional()
+    .isArray()
+    .withMessage('Schedule days must be an array'),
+  body('schedule.days.*')
+    .optional()
+    .isInt({ min: 0, max: 6 })
+    .withMessage('Schedule day values must be between 0 and 6'),
+  body('schedule.reminderTime')
+    .optional({ nullable: true, checkFalsy: true })
+    .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
+    .withMessage('Reminder time must be in HH:MM format'),
+  body('isRequired')
+    .optional()
+    .isBoolean()
+    .withMessage('isRequired must be a boolean')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -1961,7 +1991,18 @@ router.post('/:groupId/habits', [
     }
 
     const { groupId } = req.params;
-    const { name, description, category, color, icon } = req.body;
+    const {
+      name,
+      description,
+      category,
+      color,
+      icon,
+      isRequired,
+      defaultTarget,
+      schedule,
+      frequency,
+      weeklyTarget,
+    } = req.body;
     
     // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(groupId)) {
@@ -1980,16 +2021,36 @@ router.post('/:groupId/habits', [
       });
     }
 
-    const isMember = group.members.some(member => 
+    const activeMember = group.members.find(member =>
       member.userId.toString() === req.user.id && member.status === 'active'
     );
 
-    if (!isMember) {
+    if (!activeMember) {
       return res.status(403).json({
         success: false,
         error: 'Access denied. You are not a member of this Group.'
       });
     }
+
+    const role = activeMember.role;
+    const canCreateHabits = ['owner', 'admin'].includes(role)
+      || (role === 'member' && group.settings?.allowMemberHabitCreation !== false);
+
+    if (!canCreateHabits) {
+      return res.status(403).json({
+        success: false,
+        error: 'You do not have permission to create group habits.'
+      });
+    }
+
+    const normalizedUnit = (defaultTarget?.unit === 'time' ? 'times' : defaultTarget?.unit) || 'times';
+    const normalizedDays = Array.isArray(schedule?.days)
+      ? [...new Set(schedule.days.map((d) => Number(d)).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6))].sort((a, b) => a - b)
+      : [0, 1, 2, 3, 4, 5, 6];
+
+    const safeWeeklyTarget = Number.isInteger(Number(weeklyTarget))
+      ? Math.max(1, Math.min(7, Number(weeklyTarget)))
+      : 3;
 
     // Create the Group habit
     const groupHabit = new GroupHabit({
@@ -1999,7 +2060,22 @@ router.post('/:groupId/habits', [
       createdBy: req.user.id,
       category: category || 'other',
       color: color || '#3B82F6',
-      icon: icon || '🎯'
+      icon: icon || '🎯',
+      groupSettings: {
+        isRequired: Boolean(isRequired),
+      },
+      defaultSettings: {
+        frequency: ['daily', 'weekly', 'monthly'].includes(frequency) ? frequency : 'daily',
+        weeklyTarget: safeWeeklyTarget,
+        target: {
+          value: Math.max(1, Number(defaultTarget?.value) || 1),
+          unit: normalizedUnit,
+        },
+        schedule: {
+          days: normalizedDays,
+          reminderTime: schedule?.reminderEnabled ? (schedule?.reminderTime || undefined) : undefined,
+        },
+      },
     });
 
     await groupHabit.save();
@@ -2131,7 +2207,7 @@ router.put('/group-habits/:id', [
     .withMessage('isRequired must be a boolean'),
   body('settings.visibility')
     .optional()
-    .isIn(['all', 'admins-only', 'self-only'])
+    .isIn(['all', 'admins-only', 'creator-only'])
     .withMessage('Invalid visibility setting'),
   body('settings.allowCustomization')
     .optional()
@@ -2190,25 +2266,59 @@ router.put('/group-habits/:id', [
       });
     }
 
-    const { name, description, category, isRequired, settings, icon, color, schedule } = req.body;
+    const { name, description, category, isRequired, settings, icon, color, schedule, frequency, weeklyTarget } = req.body;
 
     // Update habit
     if (name !== undefined) groupHabit.name = name;
     if (description !== undefined) groupHabit.description = description;
     if (category !== undefined) groupHabit.category = category;
-    if (isRequired !== undefined) groupHabit.isRequired = isRequired;
+    if (isRequired !== undefined) groupHabit.groupSettings.isRequired = Boolean(isRequired);
     if (icon !== undefined) groupHabit.icon = icon;
     if (color !== undefined) groupHabit.color = color;
     
     if (settings) {
-      if (!groupHabit.settings) groupHabit.settings = {};
-      if (settings.visibility !== undefined) groupHabit.settings.visibility = settings.visibility;
-      if (settings.allowCustomization !== undefined) groupHabit.settings.allowCustomization = settings.allowCustomization;
+      if (!groupHabit.groupSettings) groupHabit.groupSettings = {};
+      if (!groupHabit.defaultSettings) groupHabit.defaultSettings = {};
+
+      if (settings.visibility !== undefined) groupHabit.groupSettings.visibility = settings.visibility;
+      if (settings.allowCustomization !== undefined) groupHabit.groupSettings.allowCustomization = settings.allowCustomization;
       if (settings.defaultTarget) {
-        groupHabit.settings.defaultTarget = settings.defaultTarget;
+        groupHabit.defaultSettings.target = settings.defaultTarget;
       }
-      if (schedule) {
-        groupHabit.settings.schedule = schedule;
+    }
+
+    if (schedule) {
+      if (!groupHabit.defaultSettings) groupHabit.defaultSettings = {};
+      groupHabit.defaultSettings.schedule = {
+        ...(groupHabit.defaultSettings.schedule || {}),
+        ...schedule,
+      };
+    }
+
+    if (frequency !== undefined) {
+      groupHabit.defaultSettings.frequency = frequency;
+    }
+
+    if (weeklyTarget !== undefined) {
+      groupHabit.defaultSettings.weeklyTarget = Math.max(1, Math.min(7, Number(weeklyTarget) || 3));
+    }
+
+    if (settings?.defaultTarget?.unit === 'time' && groupHabit.defaultSettings?.target) {
+      groupHabit.defaultSettings.target.unit = 'times';
+    }
+
+    if (groupHabit.defaultSettings?.target?.unit === 'time') {
+      groupHabit.defaultSettings.target.unit = 'times';
+    }
+
+    if (groupHabit.defaultSettings?.schedule?.days) {
+      groupHabit.defaultSettings.schedule.days = [...new Set(
+        groupHabit.defaultSettings.schedule.days
+          .map((d) => Number(d))
+          .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6)
+      )].sort((a, b) => a - b);
+      if (groupHabit.defaultSettings.schedule.days.length === 0) {
+        groupHabit.defaultSettings.schedule.days = [0, 1, 2, 3, 4, 5, 6];
       }
     }
 
@@ -2325,7 +2435,7 @@ router.put('/:id', authenticateJWT, async (req, res) => {
   try {
     const groupId = req.params.id;
     const userId = req.user._id || req.user.id;
-    const { name, description, type, settings } = req.body;
+    const { name, description, type, settings, color } = req.body;
 
     console.log(`🔧 UPDATE Group REQUEST: group ${groupId}, User ${userId}`);
 
@@ -2379,6 +2489,17 @@ router.put('/:id', authenticateJWT, async (req, res) => {
         });
       }
       group.type = type;
+    }
+
+    if (color !== undefined) {
+      const colorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+      if (!colorRegex.test(color)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Please provide a valid hex color'
+        });
+      }
+      group.color = color;
     }
 
     // Update settings object

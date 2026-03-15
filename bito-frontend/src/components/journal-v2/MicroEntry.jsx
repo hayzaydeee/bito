@@ -1,4 +1,4 @@
-import React, { useState, useCallback, memo } from 'react';
+import React, { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { PlusIcon, Cross2Icon, Pencil1Icon, TrashIcon, CheckIcon } from '@radix-ui/react-icons';
 
 /* ═══════════════════════════════════════════════════════════════
@@ -70,12 +70,63 @@ export const MicroEntryCard = memo(({ entry, onEdit, onDelete }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(entry.plainTextContent || '');
   const [showActions, setShowActions] = useState(false);
+  const [isSelected, setIsSelected] = useState(false);
+  const touchStartRef = useRef(0);
+  const lastTapRef = useRef(0);
+  const longPressTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+      }
+    };
+  }, []);
+
+  const openEditor = useCallback(() => {
+    setEditText(entry.plainTextContent || '');
+    setIsEditing(true);
+    setIsSelected(false);
+  }, [entry.plainTextContent]);
+
+  const clearLongPressTimer = useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
+
+  const handleTouchStart = useCallback(() => {
+    touchStartRef.current = Date.now();
+    clearLongPressTimer();
+    longPressTimerRef.current = setTimeout(() => {
+      setIsSelected(true);
+      setShowActions(true);
+    }, 450);
+  }, [clearLongPressTimer]);
+
+  const handleTouchEnd = useCallback(() => {
+    const touchDuration = Date.now() - touchStartRef.current;
+    const now = Date.now();
+
+    // Treat quick successive taps as a double-tap edit gesture.
+    if (touchDuration < 300) {
+      if (now - lastTapRef.current < 320) {
+        clearLongPressTimer();
+        openEditor();
+      }
+      lastTapRef.current = now;
+    }
+
+    clearLongPressTimer();
+  }, [clearLongPressTimer, openEditor]);
 
   const handleSave = useCallback(() => {
     if (editText.trim()) {
       onEdit(entry._id, editText.trim());
     }
     setIsEditing(false);
+    setIsSelected(false);
   }, [entry._id, editText, onEdit]);
 
   const time = new Date(entry.createdAt).toLocaleTimeString('en-US', {
@@ -112,6 +163,21 @@ export const MicroEntryCard = memo(({ entry, onEdit, onDelete }) => {
       className="group flex items-start gap-3 px-3 py-2 rounded-lg transition-colors hover:bg-[var(--color-surface-hover)]"
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
+      onDoubleClick={openEditor}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={clearLongPressTimer}
+      onTouchMove={clearLongPressTimer}
+      onClick={() => {
+        if (isSelected) {
+          setIsSelected(false);
+          setShowActions(false);
+        }
+      }}
+      style={{
+        backgroundColor: isSelected ? 'var(--color-surface-hover)' : undefined,
+        border: isSelected ? '1px solid var(--color-brand-300)' : '1px solid transparent',
+      }}
     >
       {/* Bullet / timeline dot */}
       <div className="flex-shrink-0 mt-1.5">
@@ -143,9 +209,9 @@ export const MicroEntryCard = memo(({ entry, onEdit, onDelete }) => {
       </div>
 
       {/* Actions */}
-      <div className={`flex items-center gap-1 flex-shrink-0 transition-opacity duration-150 ${showActions ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={`flex items-center gap-1 flex-shrink-0 transition-opacity duration-150 ${(showActions || isSelected) ? 'opacity-100' : 'opacity-0'}`}>
         <button
-          onClick={() => { setEditText(entry.plainTextContent); setIsEditing(true); }}
+          onClick={() => openEditor()}
           className="p-1.5 rounded-md border hover:bg-[var(--color-surface-elevated)] transition-colors"
           style={{ color: 'var(--color-text-secondary)', borderColor: 'var(--color-border-primary)' }}
           aria-label="Edit"

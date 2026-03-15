@@ -259,7 +259,7 @@ const GroupHabitModal = ({
                     <option value="mindfulness">Mindfulness</option>
                     <option value="learning">Learning</option>
                     <option value="social">Social</option>
-                    <option value="hobby">Hobbies</option>
+                    <option value="creative">Hobbies & Creative</option>
                     <option value="other">Other</option>
                   </select>
                 </div>
@@ -281,12 +281,14 @@ const GroupHabitModal = ({
                       onChange={(e) => handleTargetChange('unit', e.target.value)}
                       className="flex-1 px-3 py-2 rounded-lg border border-[var(--color-border-primary)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] font-outfit text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)] focus:border-transparent"
                     >
-                      <option value="time">times</option>
+                      <option value="times">times</option>
                       <option value="minutes">minutes</option>
                       <option value="hours">hours</option>
                       <option value="pages">pages</option>
-                      <option value="cups">cups</option>
-                      <option value="steps">steps</option>
+                      <option value="miles">miles</option>
+                      <option value="calories">calories</option>
+                      <option value="glasses">glasses</option>
+                      <option value="custom">custom</option>
                     </select>
                   </div>
                 </div>
