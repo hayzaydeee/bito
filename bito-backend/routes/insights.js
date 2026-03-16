@@ -266,6 +266,107 @@ router.get('/analytics', async (req, res) => {
   }
 });
 
+// @route   POST /api/insights/query
+// @desc    Conversational analytics query for habit-specific insights
+// @access  Private
+router.post('/query', async (req, res) => {
+  try {
+    const userId = req.user._id.toString();
+    const rawQuery = String(req.body?.query || '').trim();
+    const range = req.body?.range || '30d';
+
+    if (rawQuery.length < 3) {
+      return res.status(400).json({ success: false, error: 'Query must be at least 3 characters long.' });
+    }
+    if (rawQuery.length > 500) {
+      return res.status(400).json({ success: false, error: 'Query is too long. Please keep it under 500 characters.' });
+    }
+
+    const tierInfo = await getUserInsightTier(req.user._id);
+    if (tierInfo.tier === 'seedling') {
+      const remaining = Math.max(0, (tierInfo.thresholds?.sprouting || 7) - tierInfo.entryCount);
+      return res.json({
+        success: true,
+        data: {
+          answer: `You need ${remaining} more tracked ${remaining === 1 ? 'entry' : 'entries'} before conversational analytics can answer this reliably.`,
+          followUps: [
+            'Which habits should I prioritize this week?',
+            'How can I make my tracking more consistent?',
+          ],
+          habits: [],
+          llmUsed: false,
+          tier: tierInfo.tier,
+          generatedAt: new Date().toISOString(),
+        },
+      });
+    }
+
+    const rangeDays = range === 'all' ? 365 : parseInt(range, 10) || 30;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - rangeDays);
+
+    const HabitModel = mongoose.model('Habit');
+    const HabitEntryModel = mongoose.model('HabitEntry');
+    const JournalEntryModel = mongoose.model('JournalEntry');
+
+    const [habits, allEntries, journalEntries] = await Promise.all([
+      HabitModel.find({ userId: req.user._id, isActive: true }).lean(),
+      HabitEntryModel.find({ userId: req.user._id, date: { $gte: startDate } }).lean(),
+      JournalEntryModel.find({ userId: req.user._id, date: { $gte: startDate } }).lean(),
+    ]);
+
+    const activeHabitIds = new Set(habits.map((h) => String(h._id)));
+    const activatedAtMap = new Map(habits.map((h) => [String(h._id), h.activatedAt]));
+    const entries = allEntries.filter((e) => {
+      const hid = String(e.habitId);
+      if (!activeHabitIds.has(hid)) return false;
+      const activatedAt = activatedAtMap.get(hid);
+      if (activatedAt && new Date(e.date) < new Date(activatedAt)) return false;
+      return true;
+    });
+
+    const analyticsData = buildAnalyticsData(habits, entries, journalEntries, rangeDays);
+
+    const habitsForResponse = analyticsData.habitStats
+      .filter((h) => !h.noData)
+      .sort((a, b) => (b.completionRate || 0) - (a.completionRate || 0))
+      .slice(0, 6)
+      .map((h) => ({
+        name: h.name,
+        completionRate: h.completionRate,
+        currentStreak: h.currentStreak,
+        completedInRange: h.completedInRange,
+        totalInRange: h.totalInRange,
+        category: h.category,
+      }));
+
+    const llm = await answerAnalyticsQueryWithLLM({
+      query: rawQuery,
+      analyticsData,
+      habits: habitsForResponse,
+      personality: req.user.aiPersonality || DEFAULT_PERSONALITY,
+      tier: tierInfo.tier,
+    });
+
+    const fallback = buildFallbackQueryAnswer(rawQuery, analyticsData, habitsForResponse);
+    const result = llm || fallback;
+
+    res.json({
+      success: true,
+      data: {
+        ...result,
+        habits: result.habits?.length ? result.habits : habitsForResponse,
+        llmUsed: Boolean(llm),
+        tier: tierInfo.tier,
+        generatedAt: new Date().toISOString(),
+      },
+    });
+  } catch (error) {
+    console.error('Analytics query error:', error);
+    res.status(500).json({ success: false, error: 'Failed to answer analytics query' });
+  }
+});
+
 // @route   POST /api/insights/dismiss
 // @desc    Dismiss a specific insight (clear from cache)
 // @access  Private
@@ -574,5 +675,110 @@ function buildFallbackSections(ruleInsights, data) {
     correlations,
     recommendations: recommendations.slice(0, 3),
     _llmUsed: false,
+  };
+}
+
+async function answerAnalyticsQueryWithLLM({ query, analyticsData, habits, personality, tier }) {
+  if (!isLLMAvailable()) return null;
+
+  const OpenAIModule = require('openai');
+  const OpenAI = OpenAIModule.default || OpenAIModule.OpenAI || OpenAIModule;
+
+  let client;
+  try {
+    client = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+      ...(process.env.OPENAI_BASE_URL && { baseURL: process.env.OPENAI_BASE_URL }),
+    });
+  } catch {
+    return null;
+  }
+
+  const model = process.env.INSIGHTS_LLM_MODEL || 'gpt-4o-mini';
+  const feature = tier === 'sprouting' ? 'early-analytics' : 'analytics-report';
+  const systemPrompt = buildSystemPrompt(personality, feature);
+  const temperature = getTemperature(personality);
+
+  const schemaHint = {
+    answer: 'string',
+    followUps: ['string'],
+    habits: [
+      {
+        name: 'string',
+        completionRate: 0,
+        currentStreak: 0,
+        completedInRange: 0,
+        totalInRange: 0,
+      },
+    ],
+  };
+
+  try {
+    const completion = await client.chat.completions.create({
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        {
+          role: 'user',
+          content: JSON.stringify({
+            task: 'Answer this analytics question using only provided data. Return strict JSON matching schema.',
+            query,
+            schema: schemaHint,
+            data: {
+              overallCompletionRate: analyticsData.overallCompletionRate,
+              daysTracked: analyticsData.daysTracked,
+              totalCompletions: analyticsData.totalCompletions,
+              habitStats: analyticsData.habitStats,
+              dayOfWeek: analyticsData.dayOfWeek,
+              weeklyTrend: analyticsData.weeklyTrend,
+              categories: analyticsData.categories,
+              habits,
+            },
+          }),
+        },
+      ],
+      temperature,
+      max_tokens: 450,
+    });
+
+    const text = completion.choices?.[0]?.message?.content;
+    if (!text) return null;
+
+    const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    const parsed = JSON.parse(cleaned);
+    if (!parsed?.answer || typeof parsed.answer !== 'string') return null;
+
+    return {
+      answer: parsed.answer,
+      followUps: Array.isArray(parsed.followUps) ? parsed.followUps.slice(0, 3) : [],
+      habits: Array.isArray(parsed.habits) ? parsed.habits.slice(0, 6) : habits,
+    };
+  } catch (err) {
+    console.warn('[Insights Query] LLM failed:', err.message);
+    return null;
+  }
+}
+
+function buildFallbackQueryAnswer(query, analyticsData, habits) {
+  const top = habits[0];
+  const trendNow = analyticsData.weeklyTrend?.[0]?.completionRate;
+  const trendPrev = analyticsData.weeklyTrend?.[1]?.completionRate;
+  const trendText = (trendNow != null && trendPrev != null)
+    ? (trendNow >= trendPrev
+      ? `Your latest weekly completion (${trendNow}%) is holding above or equal to last week (${trendPrev}%).`
+      : `Your latest weekly completion (${trendNow}%) is below last week (${trendPrev}%).`)
+    : `Your overall completion rate is ${analyticsData.overallCompletionRate}%.`;
+
+  return {
+    answer: top
+      ? `${trendText} Based on your current data, ${top.name} is your strongest habit at ${top.completionRate}% with a ${top.currentStreak}-day streak. For your question, start by doubling down on the habits with the lowest completion rates this range.`
+      : `${trendText} I need a bit more habit-level data to answer this in detail, but I can already help you prioritize consistency over volume.`,
+    followUps: [
+      `Which habit should I focus on first over the next 7 days?`,
+      `Show me my weakest day of week and how to improve it.`,
+      `Compare my top two habits and suggest one concrete adjustment.`,
+    ],
+    habits,
+    query,
   };
 }

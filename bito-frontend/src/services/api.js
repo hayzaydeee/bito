@@ -931,6 +931,14 @@ export const insightsAPI = {
       body: JSON.stringify({ insightType, habitId }),
     });
   },
+
+  // Conversational analytics query
+  queryAnalytics: async (query, range = '30d') => {
+    return apiRequest('/api/insights/query', {
+      method: 'POST',
+      body: JSON.stringify({ query, range }),
+    });
+  },
 };
 
 // ── Push Notifications API (Phase 16) ──────────────────────

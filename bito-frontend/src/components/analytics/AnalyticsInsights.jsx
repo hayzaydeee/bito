@@ -1,5 +1,6 @@
-﻿import React, { memo } from 'react';
+﻿import React, { memo, useCallback, useState } from 'react';
 import { useAnalyticsInsights } from '../../globalHooks/useAnalyticsInsights';
+import { insightsAPI } from '../../services/api';
 
 /* ---------------------------------------------------------------------
    AnalyticsInsights - comprehensive AI-powered analytics section.
@@ -100,9 +101,33 @@ const Skeleton = () => (
 );
 
 /* -- Main component -------------------------------------------------- */
-const AnalyticsInsights = memo(({ habits, entries, timeRange }) => {
+const AnalyticsInsights = memo(({ timeRange }) => {
   const apiRange = timeRange === 'all' ? 'all' : timeRange;
   const { sections, llmUsed, isLoading, error, refresh, generatedAt, tier, entryCount, thresholds } = useAnalyticsInsights(apiRange);
+  const [query, setQuery] = useState('');
+  const [queryLoading, setQueryLoading] = useState(false);
+  const [queryError, setQueryError] = useState('');
+  const [queryResult, setQueryResult] = useState(null);
+
+  const runQuery = useCallback(async (forcedQuery) => {
+    const q = (forcedQuery ?? query).trim();
+    if (!q) return;
+
+    try {
+      setQueryLoading(true);
+      setQueryError('');
+      const res = await insightsAPI.queryAnalytics(q, apiRange);
+      if (res.success) {
+        setQueryResult(res.data);
+      } else {
+        setQueryError(res.error || 'Unable to answer your analytics question right now.');
+      }
+    } catch (err) {
+      setQueryError(err.message || 'Unable to answer your analytics question right now.');
+    } finally {
+      setQueryLoading(false);
+    }
+  }, [apiRange, query]);
 
   if (isLoading) return <Skeleton />;
 
@@ -200,6 +225,115 @@ const AnalyticsInsights = memo(({ habits, entries, timeRange }) => {
         >
           Refresh
         </button>
+      </div>
+
+      {/* -- Conversational query ------------------------------------ */}
+      <div
+        className="rounded-2xl border p-4 space-y-3"
+        style={{
+          background: 'var(--color-surface-primary)',
+          borderColor: 'var(--color-border-primary)',
+        }}
+      >
+        <p className="text-xs font-spartan font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)]">
+          Ask Your Analytics
+        </p>
+
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                runQuery();
+              }
+            }}
+            placeholder="Why does my consistency drop on weekends?"
+            className="flex-1 h-10 rounded-xl border px-3 text-sm font-spartan bg-transparent outline-none"
+            style={{ borderColor: 'var(--color-border-primary)', color: 'var(--color-text-primary)' }}
+          />
+          <button
+            onClick={() => runQuery()}
+            disabled={queryLoading || !query.trim()}
+            className="h-10 px-4 rounded-xl text-sm font-spartan font-semibold text-white disabled:opacity-60"
+            style={{ backgroundColor: 'var(--color-brand-500)' }}
+          >
+            {queryLoading ? 'Thinking...' : 'Ask'}
+          </button>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {[
+            'Which habit is hurting my consistency the most?',
+            'What is my strongest habit trend this month?',
+            'Give me one adjustment to improve next week.',
+          ].map((q) => (
+            <button
+              key={q}
+              onClick={() => {
+                setQuery(q);
+                runQuery(q);
+              }}
+              className="text-[11px] font-spartan px-2.5 py-1 rounded-full border transition-colors"
+              style={{ borderColor: 'var(--color-border-primary)', color: 'var(--color-text-secondary)' }}
+            >
+              {q}
+            </button>
+          ))}
+        </div>
+
+        {queryError && (
+          <p className="text-xs font-spartan" style={{ color: 'var(--color-warning)' }}>
+            {queryError}
+          </p>
+        )}
+
+        {queryResult?.answer && (
+          <div className="space-y-3 pt-1">
+            <p className="text-sm font-spartan leading-relaxed text-[var(--color-text-secondary)]">
+              {queryResult.answer}
+            </p>
+
+            {queryResult.habits?.length > 0 && (
+              <div className="grid gap-2 sm:grid-cols-2">
+                {queryResult.habits.slice(0, 4).map((h, idx) => (
+                  <div
+                    key={`${h.name}-${idx}`}
+                    className="rounded-xl border p-2.5"
+                    style={{ borderColor: 'var(--color-border-primary)', background: 'var(--color-surface-elevated)' }}
+                  >
+                    <p className="text-xs font-spartan font-semibold text-[var(--color-text-primary)] truncate">
+                      {h.name}
+                    </p>
+                    <p className="text-[11px] font-spartan text-[var(--color-text-tertiary)] mt-0.5">
+                      {h.completionRate ?? 0}% completion · {h.currentStreak ?? 0} streak
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {queryResult.followUps?.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {queryResult.followUps.map((nextQ, idx) => (
+                  <button
+                    key={`${idx}-${nextQ}`}
+                    onClick={() => {
+                      setQuery(nextQ);
+                      runQuery(nextQ);
+                    }}
+                    className="text-[11px] font-spartan px-2.5 py-1 rounded-full"
+                    style={{ background: 'rgba(99,102,241,0.12)', color: 'var(--color-brand-500)' }}
+                  >
+                    {nextQ}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* -- Summary card (glassmorphic) ------------------------------ */}
