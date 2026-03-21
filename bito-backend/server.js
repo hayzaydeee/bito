@@ -11,8 +11,10 @@ const rateLimit = require('express-rate-limit');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const passport = require('passport');
+const { assertRequiredSecurityConfig, getSessionSecret } = require('./config/securityConfig');
 
 // Import configurations
+assertRequiredSecurityConfig();
 require('./config/passport');
 
 // Import routes
@@ -151,7 +153,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Session configuration for OAuth
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'fallback-secret-change-this',
+  secret: getSessionSecret(),
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({

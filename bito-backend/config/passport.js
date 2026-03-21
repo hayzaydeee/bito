@@ -2,6 +2,7 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
+const { getJwtSecret } = require('./securityConfig');
 
 const User = require('../models/User');
 const { sendWelcomeEmail } = require('../services/welcomeEmailService');
@@ -24,7 +25,7 @@ passport.deserializeUser(async (id, done) => {
 // JWT Strategy for API authentication
 passport.use(new JwtStrategy({
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-  secretOrKey: process.env.JWT_SECRET || 'fallback-secret'
+  secretOrKey: getJwtSecret()
 }, async (payload, done) => {
   try {
     const user = await User.findById(payload.userId);

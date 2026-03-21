@@ -7,6 +7,8 @@ const { authenticateJWT } = require('../middleware/auth');
 const { validateMagicLinkRequest, validateMagicLinkVerify } = require('../middleware/validation');
 const { sendWelcomeEmail } = require('../services/welcomeEmailService');
 const emailService = require('../services/emailService');
+const { getJwtSecret } = require('../config/securityConfig');
+const { securityLogger } = require('../utils/securityLogger');
 
 const router = express.Router();
 
@@ -14,7 +16,7 @@ const router = express.Router();
 const generateToken = (user) => {
   return jwt.sign(
     user.getJWTPayload(),
-    process.env.JWT_SECRET || 'fallback-secret',
+    getJwtSecret(),
     { expiresIn: process.env.JWT_EXPIRE || '7d' }
   );
 };
@@ -52,6 +54,14 @@ router.post('/magic-link', validateMagicLinkRequest, async (req, res) => {
 
     // Rate limit per email
     if (!checkMagicLinkRateLimit(normalizedEmail)) {
+      securityLogger.append({
+        type: 'rate_limit_violation',
+        details: {
+          action_taken: 'blocked',
+          surface: 'api',
+          action: 'magic_link_request',
+        },
+      });
       return res.status(429).json({
         success: false,
         error: 'Too many sign-in requests. Please wait a few minutes before trying again.'
@@ -76,6 +86,14 @@ router.post('/magic-link', validateMagicLinkRequest, async (req, res) => {
       // Fire-and-forget welcome email
       sendWelcomeEmail(user);
     }
+
+    securityLogger.append({
+      type: 'auth_magic_link_requested',
+      details: {
+        action_taken: 'review_prompt',
+        surface: 'api',
+      },
+    });
 
     if (!user.isActive) {
       // Don't reveal that the account is deactivated
@@ -136,6 +154,14 @@ router.post('/magic-link/verify', validateMagicLinkVerify, async (req, res) => {
     });
 
     if (!user) {
+      securityLogger.append({
+        type: 'auth_failure',
+        details: {
+          action_taken: 'blocked',
+          surface: 'api',
+          reason: 'invalid_or_expired_magic_link',
+        },
+      });
       return res.status(400).json({
         success: false,
         error: 'Sign-in link is invalid or has expired'
@@ -143,6 +169,14 @@ router.post('/magic-link/verify', validateMagicLinkVerify, async (req, res) => {
     }
 
     if (!user.isActive) {
+      securityLogger.append({
+        type: 'auth_failure',
+        details: {
+          action_taken: 'blocked',
+          surface: 'api',
+          reason: 'deactivated_user',
+        },
+      });
       return res.status(403).json({
         success: false,
         error: 'Account is deactivated'
@@ -161,6 +195,15 @@ router.post('/magic-link/verify', validateMagicLinkVerify, async (req, res) => {
 
     // Generate JWT
     const jwtToken = generateToken(user);
+
+    securityLogger.append({
+      type: 'auth_success',
+      details: {
+        action_taken: 'review_prompt',
+        surface: 'api',
+        method: 'magic_link',
+      },
+    });
 
     res.json({
       success: true,

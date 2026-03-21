@@ -1,21 +1,39 @@
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { getJwtSecret } = require('../config/securityConfig');
+const { securityLogger } = require('../utils/securityLogger');
 
 // JWT Authentication middleware
 const authenticateJWT = (req, res, next) => {
   passport.authenticate('jwt', { session: false }, (err, user, info) => {
     if (err) {
-      console.log('JWT Auth Error:', err);
+      securityLogger.append({
+        type: 'auth_failure',
+        details: {
+          action_taken: 'blocked',
+          surface: 'api',
+          reason: 'jwt_auth_error',
+          path: req.originalUrl,
+        },
+      });
       return res.status(500).json({ error: 'Authentication error' });
     }
     
     if (!user) {
-      console.log('JWT Auth Failed - No user found:', info);
+      securityLogger.append({
+        type: 'auth_failure',
+        details: {
+          action_taken: 'blocked',
+          surface: 'api',
+          reason: 'jwt_user_not_found',
+          path: req.originalUrl,
+          info: info?.message,
+        },
+      });
       return res.status(401).json({ error: 'Access denied. No valid token provided.' });
     }
-    
-    console.log('JWT Auth Success - User:', { id: user._id || user.id, email: user.email, name: user.name });
+
     req.user = user;
     next();
   })(req, res, next);
@@ -30,7 +48,7 @@ const optionalAuth = (req, res, next) => {
   }
   
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
+    const decoded = jwt.verify(token, getJwtSecret());
     User.findById(decoded.userId)
       .then(user => {
         if (user && user.isActive) {
@@ -40,6 +58,15 @@ const optionalAuth = (req, res, next) => {
       })
       .catch(() => next());
   } catch (error) {
+    securityLogger.append({
+      type: 'auth_failure',
+      details: {
+        action_taken: 'blocked',
+        surface: 'api',
+        reason: 'optional_jwt_invalid',
+        path: req.originalUrl,
+      },
+    });
     next();
   }
 };
