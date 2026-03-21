@@ -7,6 +7,8 @@ const { getUserInsightTier } = require('../utils/insightTier');
 const { generateKickstartInsights } = require('../services/kickstartService');
 const Habit = require('../models/Habit');
 const mongoose = require('mongoose');
+const { buildIdentityActionRateLimitMiddleware } = require('../middleware/identityActionRateLimiter');
+const { sanitizeText } = require('../utils/llmSanitizer');
 
 const router = express.Router();
 
@@ -16,6 +18,12 @@ router.use(authenticateJWT);
 // Simple in-memory per-user cache (TTL = 1 hour)
 const cache = new Map();
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
+const limitInsightsQuery = buildIdentityActionRateLimitMiddleware({
+  action: 'insights_query',
+  windowMs: 60 * 1000,
+  maxRequests: 20,
+});
 
 function getCached(userId) {
   const entry = cache.get(userId);
@@ -269,16 +277,17 @@ router.get('/analytics', async (req, res) => {
 // @route   POST /api/insights/query
 // @desc    Conversational analytics query for habit-specific insights
 // @access  Private
-router.post('/query', async (req, res) => {
+router.post('/query', limitInsightsQuery, async (req, res) => {
   try {
     const userId = req.user._id.toString();
     const rawQuery = String(req.body?.query || '').trim();
+    const { sanitizedText: safeQuery } = sanitizeText(rawQuery);
     const range = req.body?.range || '30d';
 
-    if (rawQuery.length < 3) {
+    if (safeQuery.length < 3) {
       return res.status(400).json({ success: false, error: 'Query must be at least 3 characters long.' });
     }
-    if (rawQuery.length > 500) {
+    if (safeQuery.length > 500) {
       return res.status(400).json({ success: false, error: 'Query is too long. Please keep it under 500 characters.' });
     }
 
@@ -341,14 +350,14 @@ router.post('/query', async (req, res) => {
       }));
 
     const llm = await answerAnalyticsQueryWithLLM({
-      query: rawQuery,
+      query: safeQuery,
       analyticsData,
       habits: habitsForResponse,
       personality: req.user.aiPersonality || DEFAULT_PERSONALITY,
       tier: tierInfo.tier,
     });
 
-    const fallback = buildFallbackQueryAnswer(rawQuery, analyticsData, habitsForResponse);
+    const fallback = buildFallbackQueryAnswer(safeQuery, analyticsData, habitsForResponse);
     const result = llm || fallback;
 
     res.json({

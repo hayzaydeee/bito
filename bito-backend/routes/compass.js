@@ -5,20 +5,35 @@ const Compass = require('../models/Compass');
 const Habit = require('../models/Habit');
 const User = require('../models/User');
 const compassEngine = require('../services/compassEngine');
+const { buildIdentityActionRateLimitMiddleware } = require('../middleware/identityActionRateLimiter');
+const { sanitizeText } = require('../utils/llmSanitizer');
 
 // All routes require authentication
 router.use(authenticateJWT);
+
+const limitCompassClarify = buildIdentityActionRateLimitMiddleware({
+  action: 'compass_clarify',
+  windowMs: 60 * 1000,
+  maxRequests: 20,
+});
+
+const limitCompassGenerate = buildIdentityActionRateLimitMiddleware({
+  action: 'compass_generate',
+  windowMs: 60 * 1000,
+  maxRequests: 10,
+});
 
 // ─────────────────────────────────────────────────────────
 // POST /api/compass/clarify
 // Assess if clarifying questions are needed before generation
 // ─────────────────────────────────────────────────────────
-router.post('/clarify', async (req, res) => {
+router.post('/clarify', limitCompassClarify, async (req, res) => {
   try {
     const userId = req.user._id;
     const { goalText } = req.body;
+    const { sanitizedText: safeGoalText } = sanitizeText(goalText);
 
-    if (!goalText || typeof goalText !== 'string' || goalText.trim().length < 5) {
+    if (!safeGoalText || typeof safeGoalText !== 'string' || safeGoalText.trim().length < 5) {
       return res.status(400).json({
         success: false,
         error: 'Please provide a goal with at least 5 characters.',
@@ -32,7 +47,7 @@ router.post('/clarify', async (req, res) => {
       });
     }
 
-    const result = await compassEngine.clarify(goalText.trim(), userId);
+    const result = await compassEngine.clarify(safeGoalText.trim(), userId);
     res.json({ success: true, ...result });
   } catch (error) {
     console.error('Clarification error:', error.message);
@@ -45,19 +60,20 @@ router.post('/clarify', async (req, res) => {
 // POST /api/compass/generate
 // Generate a compass from goal text, return preview
 // ─────────────────────────────────────────────────────────
-router.post('/generate', async (req, res) => {
+router.post('/generate', limitCompassGenerate, async (req, res) => {
   try {
     const userId = req.user._id;
     const { goalText, clarificationAnswers, parsedGoal } = req.body;
+    const { sanitizedText: safeGoalText } = sanitizeText(goalText);
 
-    if (!goalText || typeof goalText !== 'string' || goalText.trim().length < 5) {
+    if (!safeGoalText || typeof safeGoalText !== 'string' || safeGoalText.trim().length < 5) {
       return res.status(400).json({
         success: false,
         error: 'Please provide a goal with at least 5 characters.',
       });
     }
 
-    if (goalText.length > 3000) {
+    if (safeGoalText.length > 3000) {
       return res.status(400).json({
         success: false,
         error: 'Goal text cannot exceed 3000 characters.',
@@ -85,7 +101,7 @@ router.post('/generate', async (req, res) => {
     }
 
     // ── Generate ──
-    const result = await compassEngine.generate(goalText.trim(), userId, clarificationAnswers, parsedGoal || undefined);
+    const result = await compassEngine.generate(safeGoalText.trim(), userId, clarificationAnswers, parsedGoal || undefined);
 
     if (result.goalType === 'multi' && Array.isArray(result.previews)) {
       // ── Suite: create multiple linked compasses ──
