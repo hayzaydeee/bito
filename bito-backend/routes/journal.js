@@ -3,6 +3,19 @@ const router = express.Router();
 const JournalEntry = require('../models/JournalEntry');
 const { authenticateJWT } = require('../middleware/auth');
 const { body, param, query, validationResult } = require('express-validator');
+const { buildIdentityActionRateLimitMiddleware } = require('../middleware/identityActionRateLimiter');
+
+const limitJournalWrites = buildIdentityActionRateLimitMiddleware({
+  action: 'journal_write',
+  windowMs: 60 * 1000,
+  maxRequests: 20,
+});
+
+const limitJournalDeletes = buildIdentityActionRateLimitMiddleware({
+  action: 'journal_delete',
+  windowMs: 60 * 1000,
+  maxRequests: 10,
+});
 
 // Validation middleware
 const validateJournalEntry = [
@@ -63,7 +76,7 @@ router.get('/:date', authenticateJWT, validateDate, async (req, res) => {
 });
 
 // POST /api/journal/:date - Create or update daily journal entry
-router.post('/:date', authenticateJWT, validateDate, validateJournalEntry, async (req, res) => {
+router.post('/:date', authenticateJWT, limitJournalWrites, validateDate, validateJournalEntry, async (req, res) => {
   try {
     console.log('Journal POST request:', { 
       date: req.params.date, 
@@ -142,7 +155,7 @@ router.post('/:date', authenticateJWT, validateDate, validateJournalEntry, async
 });
 
 // PATCH /api/journal/:date - Update specific fields of daily journal entry
-router.patch('/:date', authenticateJWT, validateDate, validateJournalEntry, async (req, res) => {
+router.patch('/:date', authenticateJWT, limitJournalWrites, validateDate, validateJournalEntry, async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -180,7 +193,7 @@ router.patch('/:date', authenticateJWT, validateDate, validateJournalEntry, asyn
 });
 
 // DELETE /api/journal/:date - Delete daily journal entry
-router.delete('/:date', authenticateJWT, validateDate, async (req, res) => {
+router.delete('/:date', authenticateJWT, limitJournalDeletes, validateDate, async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

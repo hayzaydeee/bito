@@ -22,6 +22,8 @@ const emailService = require('./emailService');
 const { baseLayout, button, buttonSecondary, statPill, infoCard, sectionTitle, BRAND } = require('./emailTemplates');
 const { buildSystemPrompt, getTemperature, DEFAULT_PERSONALITY } = require('../prompts/buildSystemPrompt');
 const { getUserInsightTier } = require('../utils/insightTier');
+const { sanitizeText } = require('../utils/llmSanitizer');
+const { securityLogger } = require('../utils/securityLogger');
 
 // ── OpenAI client (shared lazy singleton) ──────────────────
 let _openaiClient = null;
@@ -236,18 +238,22 @@ class WeeklyReportService {
   }
 
   async _generateInsights(user, stats, habitBreakdown) {
+    if (!this._shouldUseAiWeeklySummary(user)) {
+      return this._getStaticInsights(stats, habitBreakdown);
+    }
+
     const client = getOpenAIClient();
     if (!client) return this._getStaticInsights(stats, habitBreakdown);
 
     try {
-      const firstName = user.firstName || (user.name || 'there').split(' ')[0];
+      const { sanitizedFirstName, sanitizedHabitBreakdown } = this._sanitizeWeeklyInsightsPromptData(user, habitBreakdown);
       const model = process.env.INSIGHTS_LLM_MODEL || 'gpt-4o-mini';
 
       const personality = user.aiPersonality || DEFAULT_PERSONALITY;
       const systemPrompt = buildSystemPrompt(personality, 'weekly-report');
       const temperature = getTemperature(personality);
 
-      const habitSummary = habitBreakdown
+      const habitSummary = sanitizedHabitBreakdown
         .map((h) => h.isWeekly
           ? `- ${h.icon} ${h.name} [WEEKLY]: ${h.completed}/${h.weeklyTarget} target (${h.rate}%), weekly streak: ${h.currentStreak} weeks`
           : `- ${h.icon} ${h.name}: ${h.completed}/7 days (${h.rate}%), streak: ${h.currentStreak}`)
@@ -263,7 +269,7 @@ class WeeklyReportService {
           {
             role: 'user',
             content:
-              `Weekly report for ${firstName}:\n` +
+              `Weekly report for ${sanitizedFirstName}:\n` +
               `Overall: ${stats.completedEntries}/${stats.totalEntries} entries completed` +
               (stats.averageMood ? `, avg mood: ${stats.averageMood.toFixed(1)}/5` : '') +
               `\n\nHabits:\n${habitSummary}`,
@@ -294,6 +300,49 @@ class WeeklyReportService {
       text += `Try focusing on ${worstHabit.icon} ${worstHabit.name} next week — consistency builds momentum.`;
     }
     return text;
+  }
+
+  _shouldUseAiWeeklySummary(user) {
+    return user?.preferences?.journalAI?.weeklySummaries !== false;
+  }
+
+  _sanitizeWeeklyInsightsPromptData(user, habitBreakdown) {
+    let matchedPatternCount = 0;
+
+    const firstName = user.firstName || (user.name || 'there').split(' ')[0];
+    const firstNameResult = sanitizeText(firstName);
+    if (firstNameResult.hadMatches) matchedPatternCount += 1;
+
+    const sanitizedHabitBreakdown = habitBreakdown.map((habit) => {
+      const nameResult = sanitizeText(habit.name);
+      const iconResult = sanitizeText(habit.icon);
+
+      if (nameResult.hadMatches) matchedPatternCount += 1;
+      if (iconResult.hadMatches) matchedPatternCount += 1;
+
+      return {
+        ...habit,
+        name: nameResult.sanitizedText,
+        icon: iconResult.sanitizedText,
+      };
+    });
+
+    if (matchedPatternCount > 0) {
+      securityLogger.append({
+        type: 'injection_pattern_match',
+        details: {
+          route: '/weekly-reports',
+          action: 'generate-insights',
+          userId: user._id?.toString?.() || null,
+          matchedPatternCount,
+        },
+      });
+    }
+
+    return {
+      sanitizedFirstName: firstNameResult.sanitizedText,
+      sanitizedHabitBreakdown,
+    };
   }
 
   async _sendReport(user, data) {

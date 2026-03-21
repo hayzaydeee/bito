@@ -8,9 +8,22 @@ const Group = require('../models/Group');
 const Activity = require('../models/Activity');
 const Habit = require('../models/Habit');
 const { invalidateCache } = require('../controllers/challengeController');
+const { sanitizeObject } = require('../utils/llmSanitizer');
+const { securityLogger } = require('../utils/securityLogger');
 
 // All routes require auth
 router.use(authenticateJWT);
+
+function sanitizeChallengePromptData({ challengeContext, habitList }) {
+  const contextResult = sanitizeObject(challengeContext);
+  const habitsResult = sanitizeObject(habitList);
+
+  return {
+    challengeContext: contextResult.sanitized,
+    habitList: habitsResult.sanitized,
+    hadMatches: contextResult.hadMatches || habitsResult.hadMatches,
+  };
+}
 
 // ─────────────────────────────────────────────────────────
 // GET /api/groups/:groupId/challenges
@@ -465,17 +478,32 @@ router.post('/challenges/:id/suggest-habits', async (req, res) => {
           unit: h.target?.unit || '',
         }));
 
+        const sanitization = sanitizeChallengePromptData({
+          challengeContext,
+          habitList,
+        });
+
+        if (sanitization.hadMatches) {
+          securityLogger.append({
+            type: 'injection_pattern_match',
+            details: {
+              action_taken: 'sanitised',
+              surface: 'challenge_suggest_habits',
+            },
+          });
+        }
+
         const prompt = `You are a habit-matching assistant. Given a challenge and a user's habits, rank each habit by relevance to the challenge.
 
 Challenge:
-- Title: ${challengeContext.title}
-- Description: ${challengeContext.description}
-- Type: ${challengeContext.type}
-- Habit Slot: ${challengeContext.habitSlot || '(open)'}
-- Target: ${challengeContext.targetValue} ${challengeContext.targetUnit}
+- Title: ${sanitization.challengeContext.title}
+- Description: ${sanitization.challengeContext.description}
+- Type: ${sanitization.challengeContext.type}
+- Habit Slot: ${sanitization.challengeContext.habitSlot || '(open)'}
+- Target: ${sanitization.challengeContext.targetValue} ${sanitization.challengeContext.targetUnit}
 
 User's habits:
-${JSON.stringify(habitList, null, 2)}
+${JSON.stringify(sanitization.habitList, null, 2)}
 
 Return a JSON array of objects with { index, score, reason } where score is 0-100 (relevance to the challenge) and reason is a short 1-sentence explanation. Sort by score descending. Only include habits with score > 0.
 
@@ -683,5 +711,7 @@ router.post('/groups/:groupId/kudos', [
     res.status(500).json({ success: false, error: 'Failed to send kudos' });
   }
 });
+
+router.sanitizeChallengePromptData = sanitizeChallengePromptData;
 
 module.exports = router;

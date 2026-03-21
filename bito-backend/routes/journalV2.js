@@ -4,8 +4,27 @@ const JournalEntryV2 = require('../models/JournalEntryV2');
 const JournalEntry = require('../models/JournalEntry'); // Legacy model for archive
 const { authenticateJWT } = require('../middleware/auth');
 const { body, param, query, validationResult } = require('express-validator');
+const { buildIdentityActionRateLimitMiddleware } = require('../middleware/identityActionRateLimiter');
 const { uploadToCloudinary } = require('../config/cloudinary');
 const multer = require('multer');
+
+const limitJournalV2Writes = buildIdentityActionRateLimitMiddleware({
+  action: 'journal_v2_write',
+  windowMs: 60 * 1000,
+  maxRequests: 20,
+});
+
+const limitJournalV2Uploads = buildIdentityActionRateLimitMiddleware({
+  action: 'journal_v2_upload',
+  windowMs: 60 * 1000,
+  maxRequests: 10,
+});
+
+const limitJournalV2Deletes = buildIdentityActionRateLimitMiddleware({
+  action: 'journal_v2_delete',
+  windowMs: 60 * 1000,
+  maxRequests: 10,
+});
 
 // Journal-specific upload — accepts images + common file types, rejects videos
 const journalUpload = multer({
@@ -68,7 +87,7 @@ const validateLongformEntry = [
 
 // ── POST /api/journal-v2/upload-image — Upload an image or file for journal entries ──
 
-router.post('/upload-image', authenticateJWT, (req, res, next) => {
+router.post('/upload-image', authenticateJWT, limitJournalV2Uploads, (req, res, next) => {
   journalUpload.single('file')(req, res, (err) => {
     if (err) {
       return res.status(400).json({ error: err.message });
@@ -141,7 +160,7 @@ router.get('/indicators', authenticateJWT, [
 
 // ── POST /api/journal-v2/micro/:date — Create micro-entry ─────
 
-router.post('/micro/:date', authenticateJWT, validateDate, validateMicroEntry, async (req, res) => {
+router.post('/micro/:date', authenticateJWT, limitJournalV2Writes, validateDate, validateMicroEntry, async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -167,7 +186,7 @@ router.post('/micro/:date', authenticateJWT, validateDate, validateMicroEntry, a
 
 // ── POST /api/journal-v2/longform/:date — Create/update longform ──
 
-router.post('/longform/:date', authenticateJWT, validateDate, validateLongformEntry, async (req, res) => {
+router.post('/longform/:date', authenticateJWT, limitJournalV2Writes, validateDate, validateLongformEntry, async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -201,7 +220,7 @@ router.post('/longform/:date', authenticateJWT, validateDate, validateLongformEn
 
 // ── PATCH /api/journal-v2/:id — Update any entry by ID ─────────
 
-router.patch('/:id', authenticateJWT, [
+router.patch('/:id', authenticateJWT, limitJournalV2Writes, [
   param('id').isMongoId(),
   body('text').optional().isString().isLength({ max: 10000 }),
   body('richContent').optional().custom(v => v === null || typeof v === 'object'),
@@ -255,7 +274,7 @@ router.patch('/:id', authenticateJWT, [
 
 // ── DELETE /api/journal-v2/:id — Soft delete an entry ──────────
 
-router.delete('/:id', authenticateJWT, [
+router.delete('/:id', authenticateJWT, limitJournalV2Deletes, [
   param('id').isMongoId(),
 ], async (req, res) => {
   try {
