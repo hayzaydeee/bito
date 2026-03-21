@@ -10,6 +10,7 @@ const Habit = require('../models/Habit');
 const { invalidateCache } = require('../controllers/challengeController');
 const { sanitizeObject } = require('../utils/llmSanitizer');
 const { securityLogger } = require('../utils/securityLogger');
+const { buildIdentityActionRateLimitMiddleware } = require('../middleware/identityActionRateLimiter');
 
 // All routes require auth
 router.use(authenticateJWT);
@@ -24,6 +25,18 @@ function sanitizeChallengePromptData({ challengeContext, habitList }) {
     hadMatches: contextResult.hadMatches || habitsResult.hadMatches,
   };
 }
+
+const limitFeedReactions = buildIdentityActionRateLimitMiddleware({
+  action: 'feed_reaction_write',
+  windowMs: 60 * 1000,
+  maxRequests: 20,
+});
+
+const limitKudosWrites = buildIdentityActionRateLimitMiddleware({
+  action: 'group_kudos_write',
+  windowMs: 60 * 1000,
+  maxRequests: 10,
+});
 
 // ─────────────────────────────────────────────────────────
 // GET /api/groups/:groupId/challenges
@@ -600,7 +613,7 @@ router.get('/challenges/:id/leaderboard', async (req, res) => {
 // POST /api/feed/:eventId/reactions
 // Add/change reaction on a feed event
 // ─────────────────────────────────────────────────────────
-router.post('/feed/:eventId/reactions', [
+router.post('/feed/:eventId/reactions', limitFeedReactions, [
   body('type').isIn(['like', 'celebrate', 'fire', 'clap', 'heart']).withMessage('Invalid reaction type'),
 ], async (req, res) => {
   try {
@@ -633,7 +646,7 @@ router.post('/feed/:eventId/reactions', [
 // DELETE /api/feed/:eventId/reactions
 // Remove reaction from a feed event
 // ─────────────────────────────────────────────────────────
-router.delete('/feed/:eventId/reactions', async (req, res) => {
+router.delete('/feed/:eventId/reactions', limitFeedReactions, async (req, res) => {
   try {
     const activity = await Activity.findById(req.params.eventId);
     if (!activity) {
@@ -658,7 +671,7 @@ router.delete('/feed/:eventId/reactions', async (req, res) => {
 // POST /api/groups/:groupId/kudos
 // Send kudos to a group member
 // ─────────────────────────────────────────────────────────
-router.post('/groups/:groupId/kudos', [
+router.post('/groups/:groupId/kudos', limitKudosWrites, [
   body('targetUserId').isMongoId().withMessage('Target user ID is required'),
   body('message').optional().trim().isLength({ max: 280 }).withMessage('Message cannot exceed 280 characters'),
 ], async (req, res) => {
