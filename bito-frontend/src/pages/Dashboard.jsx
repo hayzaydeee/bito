@@ -67,8 +67,10 @@ const Dashboard = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [currentHabit, setCurrentHabit] = useState(null);
 
-  /* ── Tour sample habit (created temporarily so the edit step has a target) ── */
-  const [tourSampleHabitId, setTourSampleHabitId] = useState(null);
+  /* ── Tour sample habit created during onboarding ── */
+  const [tourSampleHabitId, setTourSampleHabitId] = useState(
+    location.state?.tourSampleHabitId || null
+  );
 
   /* ── Fetch entries for this week's habits ── */
   useEffect(() => {
@@ -190,22 +192,6 @@ const Dashboard = () => {
   );
 
   /* ── Tour callbacks ── */
-  const handleTourStart = useCallback(async () => {
-    // Only create a sample habit when the user has none — ensures the
-    // "Edit a habit" tour step always has a pencil icon to spotlight.
-    if (habits.length === 0) {
-      const result = await createHabit({
-        name: 'Morning walk',
-        icon: '\uD83D\uDEB6',
-        frequency: 'daily',
-        category: 'health',
-      });
-      if (result.success && result.habit?._id) {
-        setTourSampleHabitId(result.habit._id);
-      }
-    }
-  }, [habits.length, createHabit]);
-
   const handleTourComplete = useCallback(async () => {
     if (tourSampleHabitId) {
       await deleteHabit(tourSampleHabitId);
@@ -368,7 +354,6 @@ const Dashboard = () => {
       {/* 7. Dashboard tour (Phase 14) */}
       <DashboardTour
         userId={user?._id || user?.id}
-        onStart={handleTourStart}
         onComplete={handleTourComplete}
       />
     </div>

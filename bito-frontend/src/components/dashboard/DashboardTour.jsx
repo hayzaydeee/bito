@@ -124,11 +124,10 @@ const getSteps = () => {
  *   forceShow  — if true, bypass localStorage and show tour (for replay)
  *   onComplete — callback after tour finishes or is skipped
  */
-const DashboardTour = ({ forceShow = false, onComplete, onStart, userId }) => {
+const DashboardTour = ({ forceShow = false, onComplete, userId }) => {
   const lsKey = getTourKey(userId);
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(-1); // -1 = prompt, 0..N = steps
-  const [starting, setStarting] = useState(false); // waiting for onStart async callback
   const [spotlightRect, setSpotlightRect] = useState(null);
   const tooltipRef = useRef(null);
   const stepsRef = useRef(getSteps());
@@ -252,15 +251,7 @@ const DashboardTour = ({ forceShow = false, onComplete, onStart, userId }) => {
     onComplete?.();
   }, [onComplete, lsKey]);
 
-  const startTour = async () => {
-    if (onStart) {
-      setStarting(true);
-      try {
-        await onStart();
-      } finally {
-        setStarting(false);
-      }
-    }
+  const startTour = () => {
     setStep(0);
   };
 
@@ -292,8 +283,8 @@ const DashboardTour = ({ forceShow = false, onComplete, onStart, userId }) => {
             30 seconds to learn your way around. You can always replay it later from Settings → About.
           </p>
           <div className="flex gap-3">
-            <button onClick={startTour} className="tour-btn-primary" disabled={starting}>
-              {starting ? 'One moment…' : 'Show me around'}
+            <button onClick={startTour} className="tour-btn-primary">
+              Show me around
             </button>
             <button onClick={finish} className="tour-btn-skip">
               Skip
