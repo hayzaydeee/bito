@@ -9,7 +9,8 @@ import {
 } from "@radix-ui/react-icons";
 import { useAuth } from "../contexts/AuthContext";
 import { useNotifications } from "../contexts/NotificationContext";
-import { userAPI, habitsAPI } from "../services/api";
+import { useHabits } from "../contexts/HabitContext";
+import { userAPI } from "../services/api";
 import useMotionSafe from "../hooks/useMotionSafe";
 import AnimatedList from "../components/ui/AnimatedList";
 import {
@@ -118,6 +119,7 @@ const OnboardingPage = () => {
   const navigate = useNavigate();
   const { user, updateUser, isAuthenticated, isLoading } = useAuth();
   const { showError, showSuccess } = useNotifications();
+  const { createHabit } = useHabits();
   const { getVariants, prefersReduced } = useMotionSafe();
   const shouldAnimate = typeof motion !== "undefined" && !prefersReduced;
   const [step, setStep] = useState(0); // 0=welcome, 1=goals, 2=time, 3=done
@@ -185,13 +187,13 @@ const OnboardingPage = () => {
       // Create a sample habit so the tour's "Edit a habit" step has a target
       let tourSampleHabitId = null;
       try {
-        const res = await habitsAPI.createHabit({
+        const res = await createHabit({
           name: 'Morning walk',
           icon: '\uD83D\uDEB6',
           frequency: 'daily',
           category: 'health',
         });
-        tourSampleHabitId = res?.data?.habit?._id || null;
+        tourSampleHabitId = res?.habit?._id || null;
       } catch {
         // Non-fatal — tour edit step simply won't spotlight if this fails
       }
@@ -217,13 +219,13 @@ const OnboardingPage = () => {
 
       // Create a sample habit so the tour's "Edit a habit" step has a target
       try {
-        const res = await habitsAPI.createHabit({
+        const res = await createHabit({
           name: 'Morning walk',
           icon: '\uD83D\uDEB6',
           frequency: 'daily',
           category: 'health',
         });
-        tourSampleHabitId = res?.data?.habit?._id || null;
+        tourSampleHabitId = res?.habit?._id || null;
       } catch {
         // Non-fatal
       }
