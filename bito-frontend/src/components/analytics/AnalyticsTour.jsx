@@ -23,9 +23,15 @@ const getSteps = () => [
   },
   {
     target: '[data-tour="analytics-charts"]',
-    title: 'Completion & streaks',
-    body: 'The area chart shows your daily completion rate over time, while the bar chart shows each habit\'s current streak. Hover any point for details.',
+    title: 'Completion rate',
+    body: 'This area chart shows your daily completion rate over time. Hover any point to see exactly how many habits you finished that day.',
     position: 'bottom',
+  },
+  {
+    target: '[data-tour="analytics-streaks-grid"]',
+    title: 'Streaks & top habits',
+    body: 'The bar chart shows each habit\'s current streak, and the list on the right ranks your most consistently completed habits over the selected period.',
+    position: 'top',
   },
   {
     target: '[data-tour="analytics-streak-timeline"]',

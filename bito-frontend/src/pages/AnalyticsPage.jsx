@@ -89,7 +89,7 @@ const AnalyticsPage = () => {
       </div>
 
       {/* ── Current streaks + Top habits: 2-col ──── */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2" data-tour="analytics-streaks-grid">
         <StreakBarChart habits={habits} entries={entries} />
         <TopHabitsList habits={habits} entries={entries} timeRange={timeRange} accountAgeDays={accountAgeDays} />
       </div>
@@ -101,17 +101,17 @@ const AnalyticsPage = () => {
       */}
 
       {/* ── Streak timeline: full-width row ──── */}
-      {habits.length > 0 && (
-        <div data-tour="analytics-streak-timeline">
-        <HabitStreakChart
-          habits={habits}
-          entries={entries}
-          timeRange={timeRange}
-          maxHabitsDisplayed={5}
-          accountAgeDays={accountAgeDays}
-        />
-        </div>
-      )}
+      <div data-tour="analytics-streak-timeline">
+        {habits.length > 0 && (
+          <HabitStreakChart
+            habits={habits}
+            entries={entries}
+            timeRange={timeRange}
+            maxHabitsDisplayed={5}
+            accountAgeDays={accountAgeDays}
+          />
+        )}
+      </div>
 
       {/* ── AI Insights ────────────────────────── */}
       {user?.preferences?.aiAnalytics !== false && (
