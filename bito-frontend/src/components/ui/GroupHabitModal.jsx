@@ -35,11 +35,9 @@ const GroupHabitModal = ({
   habitForm,
   setHabitForm,
   onSave,
-  onDelete, // Add delete handler
+  onDelete,
   activeTab,
   setActiveTab,
-  emojiCategory,
-  setEmojiCategory
 }) => {
   const modalRef = useRef();
   const [isSubmitting, setIsSubmitting] = useState(false);

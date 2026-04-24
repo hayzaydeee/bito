@@ -10,6 +10,7 @@ import { groupsAPI } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { habitUtils } from "../contexts/HabitContext";
 import SkeletonTransition from "../components/ui/SkeletonTransition";
+import HabitIcon from "../components/shared/HabitIcon";
 
 /* ================================================================
    MemberDashboardView — read-only stacked layout (no widget grid)
@@ -247,7 +248,7 @@ const MemberDashboardView = () => {
                   className="flex items-center gap-4 px-4 py-3 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20"
                 >
                   <span className="text-lg flex-shrink-0">
-                    {h.icon || "🎯"}
+                    <HabitIcon icon={h.icon || "Target"} size={16} />
                   </span>
 
                   <div className="flex-1 min-w-0">

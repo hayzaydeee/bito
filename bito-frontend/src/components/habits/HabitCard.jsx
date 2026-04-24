@@ -1,6 +1,7 @@
 import React, { memo, useMemo } from "react";
 import ProgressRing from "../shared/ProgressRing";
 import CATEGORY_META from "../../data/categoryMeta";
+import HabitIcon from "../shared/HabitIcon";
 
 /**
  * HabitCard — minimal, premium card for the habits grid.
@@ -39,10 +40,10 @@ const HabitCard = memo(({ habit, onClick }) => {
       <div className="p-4 flex items-center gap-3.5">
         {/* Icon */}
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
+          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ background: `${accentColor}12` }}
         >
-          {habit.icon || cat.icon || "🎯"}
+          <HabitIcon icon={habit.icon || cat.icon || "Target"} size={20} />
         </div>
 
         {/* Name + frequency */}

@@ -5,6 +5,7 @@ import { EmptyStateWithAddHabit } from "./EmptyStateWithAddHabit.jsx";
 import { JournalButton, DailyJournalModal } from "../journal/index.js";
 import { journalService } from "../../services/journalService.js";
 import { habitUtils } from "../../utils/habitLogic.js";
+import HabitIcon from "../shared/HabitIcon";
 import {
   DndContext,
   closestCenter,
@@ -188,7 +189,7 @@ export const TableView = ({
                         habit={habit}
                         isInEditMode={isInEditMode}
                       >
-                        <span className="text-base">{habit.icon}</span>
+                        <HabitIcon icon={habit.icon} size={16} />
                         <span className="truncate max-w-[50px]">
                           {habit.name}
                         </span>
@@ -206,7 +207,7 @@ export const TableView = ({
                       className="text-center py-3 px-3 text-xs font-medium text-[var(--color-text-secondary)] font-outfit min-w-[60px]"
                     >
                       <div className="flex flex-col items-center gap-1">
-                        <span className="text-base">{habit.icon}</span>
+                        <HabitIcon icon={habit.icon} size={16} />
                         <span className="truncate max-w-[50px]">
                           {habit.name}
                         </span>

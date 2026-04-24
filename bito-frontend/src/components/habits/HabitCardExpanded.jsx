@@ -8,6 +8,7 @@ import {
 import ProgressRing from "../shared/ProgressRing";
 import CATEGORY_META from "../../data/categoryMeta";
 import { useHabits } from "../../contexts/HabitContext";
+import HabitIcon from "../shared/HabitIcon";
 
 /**
  * HabitCardExpanded — minimal slide-over detail panel.
@@ -114,10 +115,10 @@ const HabitCardExpanded = memo(
               {/* Icon + Name */}
               <div className="flex items-center gap-4">
                 <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl flex-shrink-0"
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
                   style={{ background: `${accentColor}12` }}
                 >
-                  {habit.icon || cat.icon || "🎯"}
+                  <HabitIcon icon={habit.icon || cat.icon || "Target"} size={24} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h2 className="text-xl font-garamond font-bold text-[var(--color-text-primary)] leading-tight">

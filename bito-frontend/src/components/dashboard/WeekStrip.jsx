@@ -8,6 +8,7 @@ import {
   Pencil1Icon,
 } from "@radix-ui/react-icons";
 import { useWeekStartDay } from "../../hooks/useUserPreferences";
+import HabitIcon from "../shared/HabitIcon";
 
 /* ════════════════════════════════════════════
    Sub-components
@@ -52,7 +53,7 @@ const DayHabitRow = memo(({ habit, isCompleted, onToggle, onEdit, dateStr }) => 
         {isCompleted && <CheckIcon className="w-3 h-3 text-white" />}
       </button>
 
-      <span className="text-base flex-shrink-0">{habit.icon || "⭐"}</span>
+      <HabitIcon icon={habit.icon || "Star"} size={16} className="flex-shrink-0" />
 
       <span
         className="text-sm font-spartan font-medium truncate transition-colors duration-200"

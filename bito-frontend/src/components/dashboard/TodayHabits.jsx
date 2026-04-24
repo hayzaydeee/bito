@@ -5,6 +5,7 @@ import WeeklyHabitRow from "./WeeklyHabitRow";
 import { habitUtils } from "../../utils/habitLogic";
 import { springs } from "../../utils/motion";
 import useMotionSafe from "../../hooks/useMotionSafe";
+import HabitIcon from "../shared/HabitIcon";
 
 /* ─── Single habit row ─── */
 const HabitRow = memo(({ habit, isCompleted, onToggle, onEdit }) => {
@@ -70,7 +71,7 @@ const HabitRow = memo(({ habit, isCompleted, onToggle, onEdit }) => {
       </button>
 
       {/* Icon */}
-      <span className="text-lg flex-shrink-0">{habit.icon || "⭐"}</span>
+      <span className="flex-shrink-0"><HabitIcon icon={habit.icon || "Star"} size={20} /></span>
 
       {/* Name + target */}
       <div className="flex-1 min-w-0">

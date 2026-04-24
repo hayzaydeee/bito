@@ -3,6 +3,7 @@ import { HabitCheckbox } from './HabitCheckbox.jsx';
 import { IconButton } from '@radix-ui/themes';
 import { Pencil1Icon } from '@radix-ui/react-icons';
 import { useHabits } from '../../contexts/HabitContext.jsx';
+import HabitIcon from '../shared/HabitIcon';
 
 export const HabitRow = memo(({ 
   habit, 
@@ -20,7 +21,7 @@ export const HabitRow = memo(({
       <div className="flex items-center">
         {/* Habit Info */}
         <div className="habit-info flex items-center gap-3 p-4 min-w-[200px] bg-[var(--color-surface-secondary)]/30">
-          <span className="text-xl">{habit.icon || '✓'}</span>
+          <HabitIcon icon={habit.icon || "Check"} size={22} />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <h3 className="font-medium text-[var(--color-text-primary)] truncate">

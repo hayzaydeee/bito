@@ -2,6 +2,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { CrossCircledIcon, RocketIcon, DrawingPinFilledIcon } from "@radix-ui/react-icons";
 import CATEGORY_META, { STATUS_THEME } from "../../data/categoryMeta";
 import ProgressRing from "../shared/ProgressRing";
+import HabitIcon from "../shared/HabitIcon";
 
 /**
  * CompassCard — rich grid card for the compasses list view.
@@ -171,7 +172,7 @@ const CompassCard = ({ compass, index = 0, onOpen, onArchive, archiveLoading }) 
                 className="inline-flex items-center gap-1 text-[10px] font-spartan text-[var(--color-text-secondary)] bg-[var(--color-surface-hover)] px-2 py-0.5 rounded-md truncate max-w-[100px]"
                 title={h.name}
               >
-                <span className="text-xs">{h.icon}</span>
+                <HabitIcon icon={h.icon} size={14} />
                 <span className="truncate">{h.name}</span>
               </span>
             ))}

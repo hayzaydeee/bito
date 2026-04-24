@@ -8,16 +8,10 @@ import {
   ArrowLeftIcon,
   ArrowRightIcon,
 } from "@radix-ui/react-icons";
+import IconPicker from "../shared/IconPicker";
+import HabitIcon from "../shared/HabitIcon";
 
 /* ── Constants ── */
-
-const EMOJI_CATEGORIES = {
-  common: ["✅", "🔴", "🔵", "🟢", "⭐", "🎯", "💪", "🧠", "📚", "💧", "🏃", "🥗"],
-  activity: ["🏋️", "🧘", "🚶", "🏃", "🚴", "🏊", "⚽", "🎮", "🎨", "🎵", "📝", "💻"],
-  health: ["💧", "🥗", "🍎", "🥦", "💊", "😴", "🧠", "🧘", "❤️", "🦷", "🚭", "☀️"],
-  productivity: ["📝", "⏰", "📅", "📚", "💼", "💻", "📱", "✉️", "📊", "🔍", "⚙️", "🏆"],
-  mindfulness: ["🧘", "😌", "🌱", "🌈", "🌞", "🌙", "💭", "🧠", "❤️", "🙏", "✨", "💫"],
-};
 
 const COLOR_OPTIONS = [
   "#4f46e5", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444",
@@ -25,15 +19,17 @@ const COLOR_OPTIONS = [
   "#e11d48", "#059669", "#dc2626",
 ];
 
+import { CalendarDots, Target, Barbell, BookOpen, Brain, Users, Palette, Sparkle } from '@phosphor-icons/react';
+
 const CATEGORIES = [
-  { id: "health",       emoji: "💪", label: "Health" },
-  { id: "fitness",      emoji: "🏃", label: "Fitness" },
-  { id: "productivity", emoji: "🎯", label: "Productivity" },
-  { id: "learning",     emoji: "📚", label: "Learning" },
-  { id: "mindfulness",  emoji: "🧘", label: "Mindfulness" },
-  { id: "social",       emoji: "🤝", label: "Social" },
-  { id: "creative",     emoji: "🎨", label: "Creative" },
-  { id: "other",        emoji: "✨", label: "Other" },
+  { id: "health",       Icon: Barbell,   label: "Health" },
+  { id: "fitness",      Icon: Barbell,   label: "Fitness" },
+  { id: "productivity", Icon: Target,    label: "Productivity" },
+  { id: "learning",     Icon: BookOpen,  label: "Learning" },
+  { id: "mindfulness",  Icon: Brain,     label: "Mindfulness" },
+  { id: "social",       Icon: Users,     label: "Social" },
+  { id: "creative",     Icon: Palette,   label: "Creative" },
+  { id: "other",        Icon: Sparkle,   label: "Other" },
 ];
 
 const STEP_COUNT = 4;
@@ -75,7 +71,7 @@ const HabitCreationWizard = ({ isOpen, onClose, onSave, userId }) => {
   /* ── Form state ── */
   const [formData, setFormData] = useState({
     name: "",
-    icon: "✅",
+    icon: "Target",
     description: "",
     color: "#4f46e5",
     category: "other",
@@ -91,7 +87,6 @@ const HabitCreationWizard = ({ isOpen, onClose, onSave, userId }) => {
   /* ── Wizard state ── */
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = backward
-  const [emojiCategory, setEmojiCategory] = useState("common");
   const [errors, setErrors] = useState({});
   const [showDescription, setShowDescription] = useState(false);
 
@@ -106,14 +101,13 @@ const HabitCreationWizard = ({ isOpen, onClose, onSave, userId }) => {
   useEffect(() => {
     if (isOpen) {
       setFormData({
-        name: "", icon: "✅", description: "", color: "#4f46e5", category: "other",
+        name: "", icon: "Target", description: "", color: "#4f46e5", category: "other",
         frequency: "daily", weeklyTarget: 3,
         schedule: { days: [0, 1, 2, 3, 4, 5, 6], reminderTime: "", reminderEnabled: false },
       });
       setStep(0);
       setErrors({});
       setShowDescription(false);
-      setEmojiCategory("common");
     }
   }, [isOpen]);
 
@@ -232,40 +226,12 @@ const HabitCreationWizard = ({ isOpen, onClose, onSave, userId }) => {
         {errors.name && <p className="text-xs text-red-500 mt-1 font-outfit">{errors.name}</p>}
       </div>
 
-      {/* Emoji picker */}
+      {/* Icon picker */}
       <div>
-        <div className="flex gap-1 mb-2">
-          {Object.keys(EMOJI_CATEGORIES).map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              className={`px-2 py-1 text-[11px] rounded-md transition-colors font-outfit ${
-                emojiCategory === cat
-                  ? "bg-[var(--color-brand-500)] text-white"
-                  : "bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)]"
-              }`}
-              onClick={() => setEmojiCategory(cat)}
-            >
-              {cat.charAt(0).toUpperCase() + cat.slice(1)}
-            </button>
-          ))}
-        </div>
-        <div className="border border-[var(--color-border-primary)]/40 p-2 rounded-xl bg-[var(--color-surface-elevated)]">
-          <div className="flex flex-wrap gap-1">
-            {EMOJI_CATEGORIES[emojiCategory].map((emoji) => (
-              <button
-                key={emoji}
-                type="button"
-                className={`w-9 h-9 flex items-center justify-center text-lg hover:bg-[var(--color-surface-hover)] rounded-lg transition-colors ${
-                  formData.icon === emoji ? "bg-[var(--color-brand-100)] ring-1 ring-[var(--color-brand-500)]" : ""
-                }`}
-                onClick={() => setFormData((p) => ({ ...p, icon: emoji }))}
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
-        </div>
+        <IconPicker
+          value={formData.icon}
+          onChange={(icon) => setFormData((p) => ({ ...p, icon }))}
+        />
       </div>
     </div>
   );
@@ -292,7 +258,7 @@ const HabitCreationWizard = ({ isOpen, onClose, onSave, userId }) => {
               : "bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] border-[var(--color-border-primary)]/40 hover:bg-[var(--color-surface-hover)]"
           }`}
         >
-          <span className="block text-lg mb-0.5">📅</span>
+          <span className="block flex justify-center mb-0.5"><CalendarDots size={20} /></span>
           Daily
         </button>
         <button
@@ -304,7 +270,7 @@ const HabitCreationWizard = ({ isOpen, onClose, onSave, userId }) => {
               : "bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] border-[var(--color-border-primary)]/40 hover:bg-[var(--color-surface-hover)]"
           }`}
         >
-          <span className="block text-lg mb-0.5">🎯</span>
+          <span className="block flex justify-center mb-0.5"><Target size={20} /></span>
           Weekly target
         </button>
       </div>
@@ -331,13 +297,13 @@ const HabitCreationWizard = ({ isOpen, onClose, onSave, userId }) => {
             >+</button>
             <span className="text-sm font-outfit text-[var(--color-text-primary)]">days/week</span>
           </div>
-          <div className="flex items-start gap-2 px-1">
-            <span className="text-sm mt-0.5">💡</span>
+          <span className="flex items-start gap-2 px-1">
+            <span className="mt-0.5 text-[var(--color-text-tertiary)]"><Sparkle size={14} weight="duotone" /></span>
             <p className="text-[12px] text-[var(--color-text-tertiary)] font-outfit leading-relaxed">
               No fixed schedule — pick any {formData.weeklyTarget} day{formData.weeklyTarget > 1 ? "s" : ""} each week. 
               Your streak counts <strong>consecutive weeks</strong> where you meet the target.
             </p>
-          </div>
+          </span>
         </div>
       ) : (
         <div className="space-y-2">
@@ -384,10 +350,10 @@ const HabitCreationWizard = ({ isOpen, onClose, onSave, userId }) => {
       {/* Preview */}
       <div className="flex items-center justify-center gap-3 py-3">
         <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl text-white shadow-sm"
+          className="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-sm"
           style={{ backgroundColor: formData.color }}
         >
-          {formData.icon}
+          <HabitIcon icon={formData.icon} size={24} color="#fff" />
         </div>
         <span className="text-sm font-outfit font-medium text-[var(--color-text-primary)]">
           {formData.name || "Your habit"}
@@ -400,7 +366,9 @@ const HabitCreationWizard = ({ isOpen, onClose, onSave, userId }) => {
           Category
         </label>
         <div className="grid grid-cols-4 gap-1.5">
-          {CATEGORIES.map((cat) => (
+          {CATEGORIES.map((cat) => {
+              const { Icon } = cat;
+              return (
             <button
               key={cat.id}
               type="button"
@@ -411,10 +379,11 @@ const HabitCreationWizard = ({ isOpen, onClose, onSave, userId }) => {
                   : "bg-[var(--color-surface-elevated)] border-[var(--color-border-primary)]/40 text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]"
               }`}
             >
-              <span className="text-base">{cat.emoji}</span>
+              <Icon size={16} weight="duotone" />
               <span className="font-medium">{cat.label}</span>
             </button>
-          ))}
+          );
+          })}
         </div>
       </div>
 
@@ -494,10 +463,10 @@ const HabitCreationWizard = ({ isOpen, onClose, onSave, userId }) => {
         >
           <div className="flex items-center gap-3">
             <div
-              className="w-11 h-11 rounded-xl flex items-center justify-center text-xl text-white"
+              className="w-11 h-11 rounded-xl flex items-center justify-center text-white"
               style={{ backgroundColor: formData.color }}
             >
-              {formData.icon}
+              <HabitIcon icon={formData.icon} size={22} color="#fff" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-outfit font-semibold text-[var(--color-text-primary)] truncate">
@@ -514,7 +483,7 @@ const HabitCreationWizard = ({ isOpen, onClose, onSave, userId }) => {
                 color: "var(--color-text-secondary)",
               }}
             >
-              {categoryObj?.emoji} {categoryObj?.label}
+              {categoryObj?.label}
             </span>
           </div>
           {formData.description && (

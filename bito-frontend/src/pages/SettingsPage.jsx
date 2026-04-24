@@ -965,6 +965,40 @@ const SettingsPage = ({ section }) => {
               disabled={saving}
             />
           </SettingRow>
+          {/* ═══════ 7.5 AI VOICE ═══════ */}
+        <Section title="AI Voice" icon={GearIcon}>
+          <button
+            onClick={() => navigate("/app/settings/personality")}
+            className="w-full flex items-center justify-between p-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-base">🗣️</span>
+              <div className="text-left">
+                <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)]">
+                  Customise how Bito talks to you
+                </p>
+                <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mt-0.5">
+                  {(() => {
+                    const p = userProfile?.aiPersonality || {};
+                    const labels = {
+                      tone: { warm: "Warm", direct: "Direct", playful: "Playful", neutral: "Neutral" },
+                      focus: { wins: "Wins", patterns: "Patterns", actionable: "Actions", balanced: "Balanced" },
+                      verbosity: { concise: "Concise", detailed: "Detailed" },
+                      accountability: { gentle: "Gentle", honest: "Honest", tough: "Tough" },
+                    };
+                    return [
+                      labels.tone[p.tone] || "Warm",
+                      labels.focus[p.focus] || "Balanced",
+                      labels.verbosity[p.verbosity] || "Concise",
+                      labels.accountability[p.accountability] || "Gentle",
+                    ].join(" · ");
+                  })()}
+                </p>
+              </div>
+            </div>
+            <ChevronRightIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
+          </button>
+        </Section>
         </Section>
 
         {/* ═══════ 5. NOTIFICATIONS ═══════ */}
@@ -1126,40 +1160,7 @@ const SettingsPage = ({ section }) => {
           </button>
         </Section>
 
-        {/* ═══════ 7.5 AI VOICE ═══════ */}
-        <Section title="AI Voice" icon={GearIcon}>
-          <button
-            onClick={() => navigate("/app/settings/personality")}
-            className="w-full flex items-center justify-between p-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] transition-colors cursor-pointer"
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-base">🗣️</span>
-              <div className="text-left">
-                <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)]">
-                  Customise how Bito talks to you
-                </p>
-                <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mt-0.5">
-                  {(() => {
-                    const p = userProfile?.aiPersonality || {};
-                    const labels = {
-                      tone: { warm: "Warm", direct: "Direct", playful: "Playful", neutral: "Neutral" },
-                      focus: { wins: "Wins", patterns: "Patterns", actionable: "Actions", balanced: "Balanced" },
-                      verbosity: { concise: "Concise", detailed: "Detailed" },
-                      accountability: { gentle: "Gentle", honest: "Honest", tough: "Tough" },
-                    };
-                    return [
-                      labels.tone[p.tone] || "Warm",
-                      labels.focus[p.focus] || "Balanced",
-                      labels.verbosity[p.verbosity] || "Concise",
-                      labels.accountability[p.accountability] || "Gentle",
-                    ].join(" · ");
-                  })()}
-                </p>
-              </div>
-            </div>
-            <ChevronRightIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
-          </button>
-        </Section>
+        
 
         {/* ═══════ 8. DANGER ZONE ═══════ */}
         <div className="mt-10 mb-20">

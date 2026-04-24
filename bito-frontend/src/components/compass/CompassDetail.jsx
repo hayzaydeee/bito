@@ -13,6 +13,7 @@ import CategoryBanner from "./CategoryBanner";
 import PhaseTimeline from "./PhaseTimeline";
 import HabitCard from "./HabitCard";
 import { springs, fadeUp, collapseVariants, habitCardVariants } from "./compassMotion";
+import HabitIcon from "../shared/HabitIcon";
 
 /**
  * CompassDetail — full detail / preview view for a single compass.
@@ -303,7 +304,7 @@ const CompassDetail = ({
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ ...springs.soft, delay: 0.3 + i * 0.04 }}
                 >
-                  <span className="text-lg">{h.icon || "🎯"}</span>
+                  <HabitIcon icon={h.icon || "Target"} size={20} />
                   <span className="text-sm font-spartan text-[var(--color-text-primary)]">
                     {h.name || "Habit"}
                   </span>

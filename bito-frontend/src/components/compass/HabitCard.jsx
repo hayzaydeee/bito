@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
 import CATEGORY_META, { DIFFICULTY_COLORS, METHODOLOGY_LABELS } from "../../data/categoryMeta";
+import HabitIcon from "../shared/HabitIcon";
 
 /**
  * HabitCard — displays a single habit within a compass detail view.
@@ -298,7 +299,7 @@ const HabitCard = ({
       <div className="flex items-start gap-3">
         {/* Icon */}
         <span className={`flex-shrink-0 mt-0.5 ${compact ? "text-base" : "text-xl"}`}>
-          {h.icon}
+          <HabitIcon icon={h.icon} size={16} />
         </span>
 
         {/* Content */}

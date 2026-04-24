@@ -1,5 +1,6 @@
 import React, { memo, useState, useCallback } from "react";
 import { CheckIcon, Pencil1Icon } from "@radix-ui/react-icons";
+import HabitIcon from "../shared/HabitIcon";
 
 /* ─── Segmented progress dots ─── */
 const ProgressDots = memo(({ completed, target }) => {
@@ -83,7 +84,7 @@ const WeeklyHabitRow = memo(({ habit, weekProgress, isTodayCompleted, onToggle, 
       </button>
 
       {/* Icon */}
-      <span className="text-lg flex-shrink-0">{habit.icon || "🎯"}</span>
+      <span className="flex-shrink-0"><HabitIcon icon={habit.icon || "Target"} size={20} /></span>
 
       {/* Name + progress */}
       <div className="flex-1 min-w-0">

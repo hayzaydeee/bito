@@ -2,6 +2,7 @@ import React from "react";
 import { PlusIcon, CheckIcon, Pencil1Icon } from "@radix-ui/react-icons";
 import { habitUtils } from "../../../../utils/habitLogic.js";
 import { EmptyStateWithAddHabit } from "../../../dbComponents/EmptyStateWithAddHabit";
+import HabitIcon from "../../../shared/HabitIcon";
 
 /**
  * Gallery View Component - Card-based layout for habits
@@ -112,7 +113,7 @@ export const GalleryView = ({
                 className="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
                 style={{ backgroundColor: `${habit.color}20`, color: habit.color }}
               >
-                {habit.icon}
+                <HabitIcon icon={habit.icon} size={20} />
               </div>
               <div className="flex-1">
                 <h4 className="text-sm font-semibold text-[var(--color-text-primary)] font-outfit">

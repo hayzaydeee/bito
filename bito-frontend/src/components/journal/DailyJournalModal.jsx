@@ -13,6 +13,7 @@ import TemplateSelector from "./TemplateSelector";
 import TemplateManager from "./TemplateManager";
 import { journalService } from "../../services/journalService";
 import { useAuth } from "../../contexts/AuthContext";
+import HabitIcon from "../shared/HabitIcon";
 
 const DailyJournalModal = ({
   isOpen,
@@ -577,7 +578,7 @@ const DailyJournalModal = ({
                             }
                           `}
                       >
-                        <span className="text-lg">{habit.icon}</span>
+                        <HabitIcon icon={habit.icon} size={20} />
                         <span
                           className={`flex-1 font-medium ${
                             isCompleted
