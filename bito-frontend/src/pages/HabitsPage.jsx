@@ -6,8 +6,7 @@ import HabitCard from "../components/habits/HabitCard";
 import HabitCardExpanded from "../components/habits/HabitCardExpanded";
 import HabitsEmptyState from "../components/habits/HabitsEmptyState";
 import HabitsSkeleton from "../components/habits/HabitsSkeleton";
-import HabitCreationWizard from "../components/ui/HabitCreationWizard";
-import CustomHabitEditModal from "../components/ui/CustomHabitEditModal";
+import HabitModal from "../components/ui/HabitModal";
 import SkeletonTransition from "../components/ui/SkeletonTransition";
 import AnimatedList from "../components/ui/AnimatedList";
 import { motion } from "framer-motion";
@@ -89,6 +88,22 @@ const HabitsPage = () => {
       setEditingHabit(null);
     },
     [editingHabit, updateHabit]
+  );
+
+  const handleEditDelete = useCallback(
+    async (habitId) => {
+      await deleteHabit(habitId);
+      setEditingHabit(null);
+    },
+    [deleteHabit]
+  );
+
+  const handleEditArchive = useCallback(
+    async (habit) => {
+      await archiveHabit(habit._id, !habit.isActive);
+      setEditingHabit(null);
+    },
+    [archiveHabit]
   );
 
   const handleCreateSave = useCallback(
@@ -203,7 +218,7 @@ const HabitsPage = () => {
       )}
 
       {/* Create wizard modal */}
-      <HabitCreationWizard
+      <HabitModal
         isOpen={showCreateWizard}
         onClose={() => setShowCreateWizard(false)}
         onSave={handleCreateSave}
@@ -211,11 +226,13 @@ const HabitsPage = () => {
       />
 
       {/* Edit modal */}
-      <CustomHabitEditModal
+      <HabitModal
         isOpen={!!editingHabit}
         onClose={() => setEditingHabit(null)}
         habit={editingHabit}
         onSave={handleEditSave}
+        onDelete={handleEditDelete}
+        onArchive={handleEditArchive}
       />
     </div>
     </SkeletonTransition>

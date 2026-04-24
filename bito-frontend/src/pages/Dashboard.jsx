@@ -3,8 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useHabits } from "../contexts/HabitContext";
 import { habitUtils as habitLogic } from "../utils/habitLogic";
-import CustomHabitEditModal from "../components/ui/CustomHabitEditModal";
-import HabitCreationWizard from "../components/ui/HabitCreationWizard";
+import HabitModal from "../components/ui/HabitModal";
 import SkeletonTransition from "../components/ui/SkeletonTransition";
 
 /* ── Redesigned dashboard components (Phase 6) ── */
@@ -333,20 +332,13 @@ const Dashboard = () => {
         );
       })}
 
-      {/* Habit creation wizard (when no habit selected) */}
-      <HabitCreationWizard
-        isOpen={editModalOpen && !currentHabit}
+      {/* Unified habit modal — add or edit based on currentHabit */}
+      <HabitModal
+        isOpen={editModalOpen}
         onClose={handleCloseModal}
         onSave={handleSaveHabit}
         userId={user?._id || user?.id}
-      />
-
-      {/* Habit edit modal (when editing existing habit) */}
-      <CustomHabitEditModal
-        isOpen={editModalOpen && !!currentHabit}
-        onClose={handleCloseModal}
         habit={currentHabit}
-        onSave={handleSaveHabit}
         onDelete={handleDeleteHabit}
         onArchive={handleArchiveHabit}
       />
