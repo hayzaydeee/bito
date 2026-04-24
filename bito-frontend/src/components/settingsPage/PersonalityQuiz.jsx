@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { CheckIcon } from "@radix-ui/react-icons";
+import { Sun, Target, Smiley, ChartBar, Trophy, MagnifyingGlass, Lightning, Scales, ChatTeardrop, BookOpen, Heart, Fire } from "@phosphor-icons/react";
 
 /* ================================================================
    PersonalityQuiz — example-driven personality axis selector.
@@ -15,25 +16,25 @@ const AXES = [
     options: [
       {
         value: "warm",
-        emoji: "☀️",
+        Icon: Sun,
         label: "Warm",
         example: `"Honestly, your meditation streak is looking really solid — 34 days and counting."`,
       },
       {
         value: "direct",
-        emoji: "🎯",
+        Icon: Target,
         label: "Direct",
         example: `"Meditation: 34-day streak. Reading: 14 days. Exercise held at 100%."`,
       },
       {
         value: "playful",
-        emoji: "😄",
+        Icon: Smiley,
         label: "Playful",
         example: `"Your meditation habit is basically on autopilot at this point — 34 days without blinking."`,
       },
       {
         value: "neutral",
-        emoji: "📊",
+        Icon: ChartBar,
         label: "Neutral",
         example: `"Meditation completed daily for 34 consecutive days. All four habits maintained full completion."`,
       },
@@ -45,25 +46,25 @@ const AXES = [
     options: [
       {
         value: "wins",
-        emoji: "🏆",
+        Icon: Trophy,
         label: "Wins first",
         example: `"You crushed it this week — every single habit, every single day. Your meditation streak just passed 30 days."`,
       },
       {
         value: "patterns",
-        emoji: "🔍",
+        Icon: MagnifyingGlass,
         label: "Patterns",
         example: `"Interesting — your exercise and reading completion track together. When one drops, so does the other."`,
       },
       {
         value: "actionable",
-        emoji: "⚡",
+        Icon: Lightning,
         label: "Actions",
         example: `"Your phone habit is at 29%. Try moving your phone to another room before bed to break the morning reach."`,
       },
       {
         value: "balanced",
-        emoji: "⚖️",
+        Icon: Scales,
         label: "Balanced",
         example: `"Strong week overall. Reading streak held at 42 days, but phone-free mornings need attention at 2/7."`,
       },
@@ -75,13 +76,13 @@ const AXES = [
     options: [
       {
         value: "concise",
-        emoji: "💬",
+        Icon: ChatTeardrop,
         label: "Just the headlines",
         example: `"Reading streak at 42 days. Exercise alternating. Phone habit needs a new approach."`,
       },
       {
         value: "detailed",
-        emoji: "📖",
+        Icon: BookOpen,
         label: "Full context",
         example: `"Your reading streak hit 42 days — that's your longest active streak and it's been rock-solid. Exercise follows an every-other-day rhythm, which might actually work better than forcing daily. The phone habit at 2/7 suggests the current approach isn't clicking — worth experimenting with a different trigger."`,
       },
@@ -93,19 +94,19 @@ const AXES = [
     options: [
       {
         value: "gentle",
-        emoji: "🤗",
+        Icon: Heart,
         label: "Gentle",
         example: `"You had a tough few days with reading — but your meditation streak held strong."`,
       },
       {
         value: "honest",
-        emoji: "📊",
+        Icon: ChartBar,
         label: "Honest",
         example: `"Reading dropped to 2/7 this week, down from 5/7 last week."`,
       },
       {
         value: "tough",
-        emoji: "🔥",
+        Icon: Fire,
         label: "Tough",
         example: `"Reading fell off a cliff. Three weeks ago you were at 85%. What happened?"`,
       },
@@ -157,7 +158,9 @@ export default function PersonalityQuiz({
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <span className="text-base mt-0.5">{opt.emoji}</span>
+                    <span className="mt-0.5 text-[var(--color-text-secondary)]">
+                      <opt.Icon size={16} weight="duotone" />
+                    </span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium font-spartan text-[var(--color-text-primary)]">
