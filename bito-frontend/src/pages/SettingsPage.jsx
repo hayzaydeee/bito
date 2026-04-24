@@ -19,6 +19,10 @@ import {
   ArrowLeftIcon,
   CheckIcon,
   MagicWandIcon,
+  DashboardIcon,
+  BarChartIcon,
+  ReaderIcon,
+  ChatBubbleIcon,
 } from "@radix-ui/react-icons";
 import { userAPI } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
@@ -965,14 +969,13 @@ const SettingsPage = ({ section }) => {
               disabled={saving}
             />
           </SettingRow>
-          {/* ═══════ 7.5 AI VOICE ═══════ */}
-        <Section title="AI Voice" icon={GearIcon}>
+          {/* ═══════ AI VOICE ═══════ */}
           <button
             onClick={() => navigate("/app/settings/personality")}
-            className="w-full flex items-center justify-between p-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] transition-colors cursor-pointer"
+            className="w-full mt-1 flex items-center justify-between p-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <span className="text-base">🗣️</span>
+              <ChatBubbleIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
               <div className="text-left">
                 <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)]">
                   Customise how Bito talks to you
@@ -998,7 +1001,6 @@ const SettingsPage = ({ section }) => {
             </div>
             <ChevronRightIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
           </button>
-        </Section>
         </Section>
 
         {/* ═══════ 5. NOTIFICATIONS ═══════ */}
@@ -1113,7 +1115,7 @@ const SettingsPage = ({ section }) => {
             className="w-full mt-2 flex items-center justify-between p-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-2.5">
-              <span className="text-base">🗺️</span>
+              <DashboardIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
               <span className="text-sm font-medium font-spartan text-[var(--color-text-primary)]">
                 Replay dashboard tour
               </span>
@@ -1132,7 +1134,7 @@ const SettingsPage = ({ section }) => {
             className="w-full mt-2 flex items-center justify-between p-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-2.5">
-              <span className="text-base">📊</span>
+              <BarChartIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
               <span className="text-sm font-medium font-spartan text-[var(--color-text-primary)]">
                 Replay analytics tour
               </span>
@@ -1151,7 +1153,7 @@ const SettingsPage = ({ section }) => {
             className="w-full mt-2 flex items-center justify-between p-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-2.5">
-              <span className="text-base">📓</span>
+              <ReaderIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
               <span className="text-sm font-medium font-spartan text-[var(--color-text-primary)]">
                 Replay journal tour
               </span>

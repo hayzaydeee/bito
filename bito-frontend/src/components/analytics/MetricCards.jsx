@@ -1,4 +1,5 @@
 ﻿import React, { useMemo } from 'react';
+import { ClipboardText, CheckCircle, Fire, Target } from '@phosphor-icons/react';
 
 /* -----------------------------------------------------------------
    MetricCards -- 4-5 compact stat cards with accent glow + trend
@@ -102,13 +103,13 @@ const MetricCards = ({ habits, entries, timeRange, accountAgeDays = 365 }) => {
   const rateDelta = data.rate - data.prevRate;
 
   const cards = [
-    { label: 'Active Habits', value: data.total, icon: '📋',
+    { label: 'Active Habits', value: data.total, Icon: ClipboardText,
       gradient: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(99,102,241,0.03) 100%)',
       accent: 'var(--color-brand-400)', glow: 'rgba(99,102,241,0.12)' },
-    { label: 'Completions', value: data.completions, icon: '✅',
+    { label: 'Completions', value: data.completions, Icon: CheckCircle,
       gradient: 'linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(16,185,129,0.03) 100%)',
       accent: 'var(--color-success)', glow: 'rgba(16,185,129,0.12)' },
-    { label: 'Best Streak', value: `${data.bestStreak}d`, icon: '🔥',
+    { label: 'Best Streak', value: `${data.bestStreak}d`, Icon: Fire,
       gradient: 'linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(245,158,11,0.03) 100%)',
       accent: 'var(--color-warning)', glow: 'rgba(245,158,11,0.12)' },
   ];
@@ -118,7 +119,7 @@ const MetricCards = ({ habits, entries, timeRange, accountAgeDays = 365 }) => {
     cards.push({
       label: 'Weekly Goals',
       value: `${data.weeklyMet}/${data.weeklyTotal}w`,
-      icon: '🎯',
+      Icon: Target,
       gradient: 'linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(139,92,246,0.03) 100%)',
       accent: '#8B5CF6',
       glow: 'rgba(139,92,246,0.12)',
@@ -144,7 +145,7 @@ const MetricCards = ({ habits, entries, timeRange, accountAgeDays = 365 }) => {
             style={{ background: c.accent }}
           />
 
-          <span className="text-lg relative z-10">{c.icon}</span>
+          <c.Icon size={20} color={c.accent} weight="duotone" className="relative z-10" />
           <span
             className="text-2xl font-garamond font-bold relative z-10"
             style={{ color: c.accent }}

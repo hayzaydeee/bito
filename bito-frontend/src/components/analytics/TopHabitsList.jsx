@@ -1,4 +1,6 @@
 ﻿import React, { useMemo } from 'react';
+import { Trophy } from '@phosphor-icons/react';
+import HabitIcon from '../shared/HabitIcon';
 
 /* -----------------------------------------------------------------
    TopHabitsList -- ranked habits with progress bars + sparklines
@@ -72,7 +74,7 @@ const TopHabitsList = ({ habits, entries, timeRange, accountAgeDays = 365 }) => 
         return {
           id: habit._id,
           name: habit.name,
-          icon: habit.icon || '🎯',
+          icon: habit.icon || 'Target',
           color: habit.color || '#818cf8',
           rate,
           completions,
@@ -90,7 +92,7 @@ const TopHabitsList = ({ habits, entries, timeRange, accountAgeDays = 365 }) => 
   if (!ranked.length) {
     return (
       <div className="analytics-chart-card flex flex-col items-center justify-center h-[240px] gap-2">
-        <span className="text-3xl opacity-40">🏆</span>
+        <Trophy size={28} weight="duotone" className="opacity-40 text-[var(--color-text-tertiary)]" />
         <p className="text-sm font-spartan text-[var(--color-text-tertiary)]">
           Your top habits will appear here
         </p>
@@ -124,8 +126,9 @@ const TopHabitsList = ({ habits, entries, timeRange, accountAgeDays = 365 }) => 
             />
 
             {/* Icon + Name */}
-            <span className="flex-1 text-sm font-spartan text-[var(--color-text-primary)] truncate min-w-0">
-              {h.icon} {h.name}
+            <span className="flex items-center gap-1.5 flex-1 text-sm font-spartan text-[var(--color-text-primary)] truncate min-w-0">
+              <HabitIcon icon={h.icon} size={14} />
+              <span className="truncate">{h.name}</span>
             </span>
 
             {/* Progress bar */}
