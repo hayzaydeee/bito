@@ -65,6 +65,7 @@ ${account}
 ## Hard Rules
 ${BANNED_PHRASES}
 
+Never use emoji anywhere in your response — not in summaries, insight titles, bodies, or any other field.
 Never open with "This week". Find a more specific entry point.
 Never end on a forced positive note if the data doesn't support it.
 Reference actual habit names and real numbers — never be generic.

@@ -12,12 +12,12 @@ Return EXACTLY this structure:
 {
   "summary": "2-3 sentence overview based ONLY on what the data explicitly shows. Mention how many days they've tracked and which habits they've engaged with.",
   "patterns": [
-    { "title": "short title", "body": "1-2 sentence observation — NOT a pattern claim", "icon": "emoji", "sentiment": "positive|neutral|negative" }
+    { "title": "short title", "body": "1-2 sentence observation — NOT a pattern claim", "sentiment": "positive|neutral|negative" }
   ],
   "trends": [],
   "correlations": [],
   "recommendations": [
-    { "title": "short actionable title", "body": "1-2 sentence specific suggestion", "icon": "emoji", "priority": "medium" }
+    { "title": "short actionable title", "body": "1-2 sentence specific suggestion", "priority": "medium" }
   ]
 }
 

@@ -21,7 +21,7 @@ Respond ONLY with valid JSON:
 {
   "summary": "string",
   "additionalInsights": [
-    { "title": "string", "body": "string", "icon": "emoji", "category": "insight" }
+    { "title": "string", "body": "string", "category": "insight" }
   ]
 }
 

@@ -15,16 +15,16 @@ Return EXACTLY this structure:
 {
   "summary": "2-3 sentence overview of their current trajectory — specific, data-backed. Mention both daily and weekly habits if both exist.",
   "patterns": [
-    { "title": "short title", "body": "1-2 sentence insight", "icon": "emoji", "sentiment": "positive|neutral|negative" }
+    { "title": "short title", "body": "1-2 sentence insight", "sentiment": "positive|neutral|negative" }
   ],
   "trends": [
-    { "title": "short title", "body": "1-2 sentence insight about trajectory", "icon": "emoji", "direction": "up|down|stable" }
+    { "title": "short title", "body": "1-2 sentence insight about trajectory", "direction": "up|down|stable" }
   ],
   "correlations": [
-    { "title": "short title", "body": "1-2 sentence connection found", "icon": "emoji" }
+    { "title": "short title", "body": "1-2 sentence connection found" }
   ],
   "recommendations": [
-    { "title": "short actionable title", "body": "1-2 sentence specific suggestion", "icon": "emoji", "priority": "high|medium|low" }
+    { "title": "short actionable title", "body": "1-2 sentence specific suggestion", "priority": "high|medium|low" }
   ]
 }
 

@@ -1,6 +1,7 @@
 ﻿import React, { memo, useCallback, useState } from 'react';
 import { useAnalyticsInsights } from '../../globalHooks/useAnalyticsInsights';
 import { insightsAPI } from '../../services/api';
+import { MagnifyingGlass, TrendUp, ArrowsCounterClockwise, Lightbulb } from '@phosphor-icons/react';
 
 /* ---------------------------------------------------------------------
    AnalyticsInsights - comprehensive AI-powered analytics section.
@@ -9,10 +10,10 @@ import { insightsAPI } from '../../services/api';
    --------------------------------------------------------------------- */
 
 /* -- Section wrapper ------------------------------------------------- */
-const Section = ({ title, icon, children, accent }) => (
+const Section = ({ title, icon: Icon, children, accent }) => (
   <div className="analytics-section">
     <div className="flex items-center gap-2 mb-3">
-      <span className="text-base">{icon}</span>
+      {Icon && <Icon size={15} weight="duotone" style={{ color: accent || 'var(--color-text-secondary)', flexShrink: 0 }} />}
       <h4
         className="text-sm font-spartan font-semibold uppercase tracking-wider"
         style={{ color: accent || 'var(--color-text-secondary)' }}
@@ -38,7 +39,6 @@ const InsightCard = ({ item, accentVar }) => {
       style={{ borderLeftColor: borderColor }}
     >
       <p className="text-sm font-spartan font-medium text-[var(--color-text-primary)] mb-0.5">
-        {item.icon && <span className="mr-1.5">{item.icon}</span>}
         {item.title}
       </p>
       <p className="text-xs font-spartan text-[var(--color-text-secondary)] leading-relaxed">
@@ -367,7 +367,7 @@ const AnalyticsInsights = memo(({ timeRange }) => {
       <div className="grid gap-5 lg:grid-cols-2">
         {/* Patterns */}
         {patterns?.length > 0 && (
-          <Section title="Patterns" icon="🔍" accent="var(--color-brand-400)">
+          <Section title="Patterns" icon={MagnifyingGlass} accent="var(--color-brand-400)">
             <div className="space-y-2">
               {patterns.map((item, i) => (
                 <InsightCard key={`p-${i}`} item={item} />
@@ -378,7 +378,7 @@ const AnalyticsInsights = memo(({ timeRange }) => {
 
         {/* Trends */}
         {trends?.length > 0 && (
-          <Section title="Trends" icon="📈" accent="var(--color-success)">
+          <Section title="Trends" icon={TrendUp} accent="var(--color-success)">
             <div className="space-y-2">
               {trends.map((item, i) => (
                 <div key={`t-${i}`}>
@@ -396,7 +396,7 @@ const AnalyticsInsights = memo(({ timeRange }) => {
 
         {/* Correlations */}
         {correlations?.length > 0 && (
-          <Section title="Correlations" icon="🔗" accent="#a78bfa">
+          <Section title="Correlations" icon={ArrowsCounterClockwise} accent="#a78bfa">
             <div className="space-y-2">
               {correlations.map((item, i) => (
                 <InsightCard key={`c-${i}`} item={item} accentVar="#a78bfa" />
@@ -407,7 +407,7 @@ const AnalyticsInsights = memo(({ timeRange }) => {
 
         {/* Recommendations */}
         {recommendations?.length > 0 && (
-          <Section title="Recommendations" icon="💡" accent="#ca8a04">
+          <Section title="Recommendations" icon={Lightbulb} accent="#ca8a04">
             <div className="space-y-2">
               {recommendations.map((item, i) => (
                 <div key={`r-${i}`}>
