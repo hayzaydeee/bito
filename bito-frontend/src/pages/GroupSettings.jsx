@@ -276,12 +276,12 @@ const GroupSettings = () => {
               onChange={(v) => set("type", v)}
               disabled={!canEdit}
               options={[
-                { label: "👨‍👩‍👧‍👦 Family", value: "family" },
-                { label: "💼 Team/Work", value: "team" },
-                { label: "💪 Fitness", value: "fitness" },
-                { label: "📚 Study", value: "study" },
-                { label: "🌍 Community", value: "community" },
-                { label: "👤 Personal", value: "personal" },
+                { label: "Family", value: "family" },
+                { label: "Team / Work", value: "team" },
+                { label: "Fitness", value: "fitness" },
+                { label: "Study", value: "study" },
+                { label: "Community", value: "community" },
+                { label: "Personal", value: "personal" },
               ]}
             />
           </SettingRow>

@@ -12,6 +12,12 @@ import {
   StarIcon,
   TrashIcon,
 } from "@radix-ui/react-icons";
+import {
+  CheckCircle, PlusCircle, Fire, HandWaving, Target, Trash,
+  Trophy, Handshake, Star, Heart, MapPin, Users, House,
+  Envelope, Barbell, BookOpen, Globe,
+} from "@phosphor-icons/react";
+import HabitIcon from "../components/shared/HabitIcon";
 import { groupsAPI } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { useAppNotifications } from "../hooks/useAppNotifications";
@@ -77,7 +83,6 @@ const GroupOverview = () => {
   });
   const [habitForm, setHabitForm] = useState(defaultHabitForm());
   const [formTab, setFormTab] = useState("details");
-  const [emojiCategory, setEmojiCategory] = useState("common");
 
   /* ── inline reactions local state ─────── */
   const [reactions, setReactions] = useState({}); // { activityId: { emoji: count } }
@@ -218,8 +223,7 @@ const GroupOverview = () => {
       name: h.name || "",
       description: h.description || "",
       category: h.category || "health",
-      icon: h.icon || "🎯",
-      color: h.color || "#4f46e5",
+      icon: h.icon || "Target",
       defaultTarget: h.defaultSettings?.target || h.settings?.defaultTarget || { value: 1, unit: "times" },
       schedule: h.defaultSettings?.schedule || h.settings?.schedule || {
         days: [0, 1, 2, 3, 4, 5, 6],
@@ -303,7 +307,7 @@ const GroupOverview = () => {
       name: "",
       description: "",
       category: "health",
-      icon: "🎯",
+      icon: "Target",
       color: "#4f46e5",
       defaultTarget: { value: 1, unit: "times" },
       schedule: {
@@ -317,7 +321,6 @@ const GroupOverview = () => {
   function resetHabitForm() {
     setHabitForm(defaultHabitForm());
     setFormTab("details");
-    setEmojiCategory("common");
   }
 
   /* ── skeleton ────────────────────────── */
@@ -370,13 +373,13 @@ const GroupOverview = () => {
     );
   }
 
-  /* ── type → emoji map ───────────────── */
+  /* ── type → icon map ─────────────── */
   const typeEmoji = {
-    family: "👨‍👩‍👧‍👦",
-    team: "💼",
-    fitness: "💪",
-    study: "📚",
-    community: "🌍",
+    family:    <Users    size={32} weight="duotone" />,
+    team:      <Handshake size={32} weight="duotone" />,
+    fitness:   <Barbell  size={32} weight="duotone" />,
+    study:     <BookOpen size={32} weight="duotone" />,
+    community: <Globe    size={32} weight="duotone" />,
   };
 
   /* ================================================================
@@ -425,7 +428,7 @@ const GroupOverview = () => {
               className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl flex-shrink-0"
               style={{ backgroundColor: `${groupColor}18` }}
             >
-              {typeEmoji[group.type] || "💼"}
+              {typeEmoji[group.type] || <Handshake size={32} weight="duotone" />}
             </span>
 
             <div className="flex-1 min-w-0">
@@ -541,8 +544,6 @@ const GroupOverview = () => {
           setHabitForm={setHabitForm}
           activeTab={formTab}
           setActiveTab={setFormTab}
-          emojiCategory={emojiCategory}
-          setEmojiCategory={setEmojiCategory}
           onSave={handleAddHabit}
           onSuccess={() => {
             setShowAddHabitModal(false);
@@ -567,8 +568,6 @@ const GroupOverview = () => {
           setHabitForm={setHabitForm}
           activeTab={formTab}
           setActiveTab={setFormTab}
-          emojiCategory={emojiCategory}
-          setEmojiCategory={setEmojiCategory}
           onSave={handleUpdateHabit}
           onDelete={handleDeleteHabit}
           onSuccess={() => {
@@ -661,25 +660,28 @@ function ActivityTab({ activities, reactions, onReact }) {
   };
 
   const iconFor = (type) => {
+    const iconProps = { size: 12, weight: 'fill' };
     const map = {
-      habit_completed: "✅",
-      habit_adopted: "➕",
-      streak_milestone: "🔥",
-      member_joined: "👋",
-      habit_created: "🎯",
-      habit_deleted: "🗑️",
-      challenge_started: "🏆",
-      challenge_joined: "🤝",
-      challenge_milestone: "⭐",
-      kudos: "💛",
+      habit_completed: <CheckCircle {...iconProps} className="text-emerald-500" />,
+      habit_adopted:   <PlusCircle  {...iconProps} className="text-blue-500" />,
+      streak_milestone:<Fire        {...iconProps} className="text-orange-500" />,
+      member_joined:   <HandWaving  {...iconProps} className="text-yellow-500" />,
+      habit_created:   <Target      {...iconProps} className="text-indigo-500" />,
+      habit_deleted:   <Trash       {...iconProps} className="text-red-400" />,
+      challenge_started:<Trophy     {...iconProps} className="text-amber-500" />,
+      challenge_joined: <Handshake  {...iconProps} className="text-teal-500" />,
+      challenge_milestone:<Star     {...iconProps} className="text-yellow-500" />,
+      kudos:           <Heart       {...iconProps} className="text-rose-500" />,
     };
-    return map[type] || "📌";
+    return map[type] || <MapPin {...iconProps} className="text-[var(--color-text-tertiary)]" />;
   };
 
   if (activities.length === 0) {
     return (
       <div className="text-center py-20">
-        <p className="text-4xl mb-4">📭</p>
+        <div className="flex justify-center mb-4 text-[var(--color-text-quaternary)]">
+          <Envelope size={48} weight="thin" />
+        </div>
         <h3 className="text-lg font-garamond font-bold text-[var(--color-text-primary)] mb-1">
           No activity yet
         </h3>
@@ -808,8 +810,8 @@ function HabitsTab({ habits, canCreateHabits, canManage, currentUserId, isAdopte
                 }`}
                 onClick={() => !adopted && onAdopt(h)}
               >
-                <span className="text-xl flex-shrink-0">
-                  {h.icon || "🎯"}
+                <span className="flex-shrink-0 flex items-center justify-center">
+                  <HabitIcon icon={h.icon} size={20} />
                 </span>
 
                 <div className="flex-1 min-w-0">

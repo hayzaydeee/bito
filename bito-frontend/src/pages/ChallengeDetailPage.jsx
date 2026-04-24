@@ -7,6 +7,7 @@ import {
   CheckCircledIcon,
   CrossCircledIcon,
 } from "@radix-ui/react-icons";
+import { Fire, TrendUp, CalendarCheck, Handshake, Sword, Trophy, Medal } from "@phosphor-icons/react";
 import { groupsAPI } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import ChallengeJoinModal from "../components/ui/ChallengeJoinModal";
@@ -14,11 +15,11 @@ import SkeletonTransition from "../components/ui/SkeletonTransition";
 
 /* ── type metadata ── */
 const TYPE_META = {
-  streak: { icon: "🔥", label: "Streak", unit: "days" },
-  cumulative: { icon: "📈", label: "Cumulative", unit: "completions" },
-  consistency: { icon: "📅", label: "Consistency", unit: "%" },
-  team_goal: { icon: "🤝", label: "Team Goal", unit: "total" },
-  head_to_head: { icon: "⚔️", label: "Head to Head", unit: "" },
+  streak:       { icon: Fire,         label: "Streak",       unit: "days" },
+  cumulative:   { icon: TrendUp,      label: "Cumulative",   unit: "completions" },
+  consistency:  { icon: CalendarCheck,label: "Consistency",  unit: "%" },
+  team_goal:    { icon: Handshake,    label: "Team Goal",    unit: "total" },
+  head_to_head: { icon: Sword,        label: "Head to Head", unit: "" },
 };
 
 const STATUS_THEME = {
@@ -180,7 +181,9 @@ const ChallengeDetailPage = () => {
       {/* ── Header card ── */}
       <div className="p-6 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20">
         <div className="flex items-start gap-4">
-          <span className="text-3xl">{meta.icon}</span>
+          <span className="w-14 h-14 rounded-2xl bg-[var(--color-surface-hover)] flex items-center justify-center flex-shrink-0 text-[var(--color-text-secondary)]">
+            {meta.icon ? <meta.icon size={28} weight="duotone" /> : <Trophy size={28} weight="duotone" />}
+          </span>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-xl font-garamond font-bold text-[var(--color-text-primary)]">
@@ -408,7 +411,10 @@ const ChallengeDetailPage = () => {
                 >
                   {/* rank */}
                   <span className="w-6 text-center text-sm font-spartan font-bold text-[var(--color-text-tertiary)]">
-                    {entry.rank <= 3 ? ["🥇", "🥈", "🥉"][entry.rank - 1] : entry.rank}
+                    {entry.rank === 1 ? <Medal size={18} weight="fill" className="text-amber-400" /> :
+                     entry.rank === 2 ? <Medal size={18} weight="fill" className="text-slate-400" /> :
+                     entry.rank === 3 ? <Medal size={18} weight="fill" className="text-amber-700" /> :
+                     entry.rank}
                   </span>
 
                   {/* avatar */}

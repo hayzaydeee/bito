@@ -8,15 +8,8 @@ import {
   InfoCircledIcon,
 } from "@radix-ui/react-icons";
 import AnimatedModal from "./AnimatedModal";
-
-// Emoji categories for the picker
-const EMOJI_CATEGORIES = {
-  common: ["✅", "🔴", "🔵", "🟢", "⭐", "🎯", "💪", "🧠", "📚", "💧", "🏃", "🥗", "😊"],
-  activity: ["🏋️", "🧘", "🚶", "🏃", "🚴", "🏊", "⚽", "🎮", "🎨", "🎵", "📝", "📚", "💻"],
-  health: ["💧", "🥗", "🍎", "🥦", "💊", "😴", "🧠", "🧘", "❤️", "🦷", "🚭", "🧹", "☀️"],
-  productivity: ["📝", "⏰", "📅", "📚", "💼", "💻", "📱", "✉️", "📊", "🔍", "⚙️", "🏆", "💯"],
-  mindfulness: ["🧘", "😌", "🌱", "🌈", "🌞", "🌙", "💭", "🧠", "❤️", "🙏", "✨", "💫", "🔮"],
-};
+import IconPicker from "../shared/IconPicker";
+import HabitIcon from "../shared/HabitIcon";
 
 // Predefined colors
 const COLOR_OPTIONS = [
@@ -49,7 +42,7 @@ const CustomHabitEditModal = ({
   // Initialize state with habit data or empty values
   const [formData, setFormData] = useState({
     name: "",
-    icon: "✅",
+    icon: "Target",
     description: "",
     color: "#4f46e5",
     isActive: true,
@@ -63,7 +56,6 @@ const CustomHabitEditModal = ({
   });
   
   const [activeTab, setActiveTab] = useState("details");
-  const [emojiCategory, setEmojiCategory] = useState("common");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -94,7 +86,7 @@ const CustomHabitEditModal = ({
 
       setFormData({
         name: habit.name || "",
-        icon: habit.icon || "✅",
+        icon: habit.icon || "Target",
         description: habit.description || "",
         color: habit.color || "#4f46e5",
         isActive: habit.isActive !== undefined ? habit.isActive : true,
@@ -414,52 +406,23 @@ const CustomHabitEditModal = ({
                 {/* Icon & Color Preview */}
                 <div className="flex items-center gap-3 mb-3">
                   <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center text-xl text-white"
+                    className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
                     style={{ backgroundColor: formData.color }}
                   >
-                    {formData.icon}
+                    <HabitIcon icon={formData.icon} size={20} color="#fff" />
                   </div>
                   <span className="text-sm text-[var(--color-text-secondary)] font-outfit">
                     Preview
                   </span>
                 </div>
                 
-                {/* Compact Emoji Picker */}
+                {/* Icon Picker */}
                 <div>
                   <label className="text-xs font-medium text-[var(--color-text-primary)] font-outfit block mb-2">Icon</label>
-                  <div className="flex gap-1 mb-2">
-                    {Object.keys(EMOJI_CATEGORIES).map((category) => (
-                      <button
-                        key={category}
-                        type="button"
-                        className={`px-2 py-1 text-xs rounded transition-colors font-outfit ${
-                          emojiCategory === category
-                            ? "bg-[var(--color-brand-500)] text-white"
-                            : "bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)]"
-                        }`}
-                        onClick={() => setEmojiCategory(category)}
-                      >
-                        {category.charAt(0).toUpperCase() + category.slice(1)}
-                      </button>
-                    ))}
-                  </div>
-                  
-                  <div className="border border-[var(--color-border-primary)]/40 p-2 rounded-lg bg-[var(--color-surface-elevated)]">
-                    <div className="flex flex-wrap gap-1">
-                      {EMOJI_CATEGORIES[emojiCategory].slice(0, 12).map((emoji) => (
-                        <button
-                          key={emoji}
-                          type="button"
-                          className={`w-8 h-8 flex items-center justify-center text-lg hover:bg-[var(--color-surface-hover)] rounded transition-colors ${
-                            formData.icon === emoji ? 'bg-[var(--color-brand-100)] ring-1 ring-[var(--color-brand-500)]' : ''
-                          }`}
-                          onClick={() => handleIconSelect(emoji)}
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  <IconPicker
+                    value={formData.icon}
+                    onChange={(icon) => handleIconSelect(icon)}
+                  />
                 </div>
                 
                 {/* Compact Color Picker */}

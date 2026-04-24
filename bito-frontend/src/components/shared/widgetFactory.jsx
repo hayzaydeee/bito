@@ -1,4 +1,5 @@
 import React, { lazy, Suspense } from 'react';
+import { ListChecks, ChartBar, PlusCircle, Clock, Warning } from '@phosphor-icons/react';
 
 // Safe JSON stringifier to prevent circular reference errors
 const safeStringify = (obj, maxDepth = 3) => {
@@ -84,7 +85,7 @@ class WidgetErrorBoundary extends React.Component {
       return (
         <div className="w-full h-full flex items-center justify-center text-[var(--color-text-tertiary)] bg-[var(--color-surface-elevated)] rounded-xl border border-red-200">
           <div className="text-center p-4">
-            <div className="text-2xl mb-2">⚠️</div>
+            <div className="text-2xl mb-2"><Warning size={28} weight="regular" className="mx-auto text-red-400" /></div>
             <div className="text-sm font-medium mb-1">Widget Error</div>
             <div className="text-xs text-[var(--color-text-quaternary)]">
               {String(this.props.widgetType || 'unknown')}
@@ -117,7 +118,7 @@ const HabitsListWidget = lazy(() => Promise.resolve({
     <div className="w-full h-full flex flex-col">
       <div className="widget-content-area flex items-center justify-center text-[var(--color-text-secondary)]">
         <div className="text-center">
-          <div className="text-4xl mb-4">📋</div>
+          <div className="text-4xl mb-4"><ListChecks size={40} className="mx-auto" /></div>
           <div className="text-lg font-semibold mb-2">Habits List</div>
           <div className="text-sm">Coming soon</div>
         </div>
@@ -131,7 +132,7 @@ const HabitStatsWidget = lazy(() => Promise.resolve({
     <div className="w-full h-full flex flex-col">
       <div className="widget-content-area flex items-center justify-center text-[var(--color-text-secondary)]">
         <div className="text-center">
-          <div className="text-4xl mb-4">📊</div>
+          <div className="text-4xl mb-4"><ChartBar size={40} className="mx-auto" /></div>
           <div className="text-lg font-semibold mb-2">Habit Statistics</div>
           <div className="text-sm">Coming soon</div>
         </div>
@@ -145,7 +146,7 @@ const QuickAddHabitWidget = lazy(() => Promise.resolve({
     <div className="w-full h-full flex flex-col">
       <div className="widget-content-area flex items-center justify-center text-[var(--color-text-secondary)]">
         <div className="text-center">
-          <div className="text-4xl mb-4">➕</div>
+          <div className="text-4xl mb-4"><PlusCircle size={40} className="mx-auto" /></div>
           <div className="text-lg font-semibold mb-2">Quick Add Habit</div>
           <div className="text-sm">Coming soon</div>
         </div>
@@ -159,7 +160,7 @@ const RecentActivityWidget = lazy(() => Promise.resolve({
     <div className="w-full h-full flex flex-col">
       <div className="widget-content-area flex items-center justify-center text-[var(--color-text-secondary)]">
         <div className="text-center">
-          <div className="text-4xl mb-4">🕒</div>
+          <div className="text-4xl mb-4"><Clock size={40} className="mx-auto" /></div>
           <div className="text-lg font-semibold mb-2">Recent Activity</div>
           <div className="text-sm">Coming soon</div>
         </div>

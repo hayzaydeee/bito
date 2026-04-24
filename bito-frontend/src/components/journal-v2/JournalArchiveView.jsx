@@ -1,10 +1,30 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { journalV2Service } from '../../services/journalV2Service';
 import { ChevronDownIcon, ChevronUpIcon } from '@radix-ui/react-icons';
+import {
+  SmileyAngry, SmileySad, SmileyMeh, Smiley, SmileyWink,
+  BatteryEmpty, BatteryLow, BatteryMedium, BatteryHigh, BatteryFull,
+} from '@phosphor-icons/react';
 
 /* ═══════════════════════════════════════════════════════════════
    JournalArchiveView — Read-only view of legacy journal entries
    ═══════════════════════════════════════════════════════════════ */
+
+const MOOD_ICONS = [
+  { Icon: SmileyAngry, color: '#ef4444', label: 'Awful' },
+  { Icon: SmileySad,   color: '#f97316', label: 'Bad' },
+  { Icon: SmileyMeh,   color: '#eab308', label: 'Okay' },
+  { Icon: Smiley,      color: '#22c55e', label: 'Good' },
+  { Icon: SmileyWink,  color: '#6366f1', label: 'Great' },
+];
+
+const ENERGY_ICONS = [
+  { Icon: BatteryEmpty,  color: '#ef4444', label: 'Drained' },
+  { Icon: BatteryLow,    color: '#f97316', label: 'Low' },
+  { Icon: BatteryMedium, color: '#eab308', label: 'Moderate' },
+  { Icon: BatteryHigh,   color: '#22c55e', label: 'High' },
+  { Icon: BatteryFull,   color: '#6366f1', label: 'Peak' },
+];
 
 const ArchiveEntry = memo(({ entry }) => {
   const [expanded, setExpanded] = useState(false);
@@ -19,9 +39,6 @@ const ArchiveEntry = memo(({ entry }) => {
   // Extract plain text for preview
   const plainText = entry.plainTextContent || '';
   const preview = plainText.length > 200 ? plainText.slice(0, 200) + '…' : plainText;
-
-  const MOOD_EMOJI = ['😞', '😕', '😐', '🙂', '😊'];
-  const ENERGY_EMOJI = ['🪫', '😴', '⚡', '🔋', '🚀'];
 
   return (
     <div
@@ -41,12 +58,14 @@ const ArchiveEntry = memo(({ entry }) => {
             {date}
           </h3>
           <div className="flex items-center gap-2 mt-1">
-            {entry.mood && (
-              <span className="text-xs">{MOOD_EMOJI[entry.mood - 1]}</span>
-            )}
-            {entry.energy && (
-              <span className="text-xs">{ENERGY_EMOJI[entry.energy - 1]}</span>
-            )}
+            {entry.mood && (() => {
+              const m = MOOD_ICONS[entry.mood - 1];
+              return m ? <m.Icon size={14} weight="fill" color={m.color} title={m.label} /> : null;
+            })()}
+            {entry.energy && (() => {
+              const e = ENERGY_ICONS[entry.energy - 1];
+              return e ? <e.Icon size={14} weight="fill" color={e.color} title={e.label} /> : null;
+            })()}
             {entry.wordCount > 0 && (
               <span className="text-[10px] font-spartan" style={{ color: 'var(--color-text-tertiary)' }}>
                 {entry.wordCount} words

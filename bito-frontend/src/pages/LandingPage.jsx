@@ -14,6 +14,9 @@ import {
   LightningBoltIcon,
   PersonIcon,
 } from "@radix-ui/react-icons";
+import {
+  Brain, ChatCircle, Ruler, PenNib, Lightning, MagnifyingGlass, Robot,
+} from "@phosphor-icons/react";
 import { useAuth } from "../contexts/AuthContext";
 import ContactModal from "../components/ui/ContactModal";
 import ScrollReveal from "../components/ui/ScrollReveal";
@@ -316,12 +319,12 @@ const LandingPage = () => {
             <ScrollReveal direction="left">
               <div className="space-y-6">
                 {[
-                  { icon: "🧠", title: "Knows your routine", desc: "It looks at what you're already doing so the plan doesn't fight your life — it fits it." },
-                  { icon: "💬", title: "Refine with conversation", desc: "Not quite right? Tell it what to change. Swap a habit, shift the schedule, make it harder — it adjusts instantly." },
-                  { icon: "📐", title: "Starts easy, builds up", desc: "Plans begin with simple wins and escalate when you're ready — not before." },
+                  { icon: Brain,      title: "Knows your routine", desc: "It looks at what you're already doing so the plan doesn't fight your life \u2014 it fits it." },
+                  { icon: ChatCircle, title: "Refine with conversation", desc: "Not quite right? Tell it what to change. Swap a habit, shift the schedule, make it harder \u2014 it adjusts instantly." },
+                  { icon: Ruler,      title: "Starts easy, builds up", desc: "Plans begin with simple wins and escalate when you're ready \u2014 not before." },
                 ].map((item, i) => (
                   <div key={i} className="flex gap-4">
-                    <span className="text-2xl flex-shrink-0 mt-0.5">{item.icon}</span>
+                    <span className="flex-shrink-0 mt-0.5 text-[var(--color-text-tertiary)]"><item.icon size={22} weight="duotone" /></span>
                     <div>
                       <h4 className="text-sm font-spartan font-bold mb-1" style={{ color: "var(--color-text-primary)" }}>{item.title}</h4>
                       <p className="text-sm font-spartan leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>{item.desc}</p>
@@ -361,7 +364,7 @@ const LandingPage = () => {
                   </div>
                 ))}
                 <div className="rounded-lg px-4 py-2.5" style={{ backgroundColor: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.15)" }}>
-                  <p className="text-[11px] font-spartan" style={{ color: "var(--color-brand-400)" }}>💬 "Building on your existing evening reading habit and 79% weekly completion rate — this plan starts easy and escalates."</p>
+                  <p className="text-[11px] font-spartan" style={{ color: "var(--color-brand-400)" }}>"Building on your existing evening reading habit and 79% weekly completion rate — this plan starts easy and escalates."</p>
                 </div>
               </div>
             </ScrollReveal>
@@ -416,14 +419,14 @@ const LandingPage = () => {
                   <p className="text-sm font-garamond leading-relaxed" style={{ color: "var(--color-text-primary)" }}>Had a breakthrough today during the morning run — finally hit the 5K without stopping. The consistency is paying off.</p>
                   <p className="text-sm font-garamond leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>Noticed that I've been sleeping better on days I journal before bed. Want to explore that pattern more...</p>
                   <div className="flex gap-2 pt-2">
-                    <span className="text-[10px] font-spartan px-2 py-0.5 rounded-full" style={{ backgroundColor: "var(--color-surface-hover)", color: "var(--color-text-tertiary)" }}>🏃 fitness</span>
-                    <span className="text-[10px] font-spartan px-2 py-0.5 rounded-full" style={{ backgroundColor: "var(--color-surface-hover)", color: "var(--color-text-tertiary)" }}>😊 good</span>
-                    <span className="text-[10px] font-spartan px-2 py-0.5 rounded-full" style={{ backgroundColor: "var(--color-surface-hover)", color: "var(--color-text-tertiary)" }}>⚡ high</span>
+                    <span className="text-[10px] font-spartan px-2 py-0.5 rounded-full" style={{ backgroundColor: "var(--color-surface-hover)", color: "var(--color-text-tertiary)" }}>fitness</span>
+                    <span className="text-[10px] font-spartan px-2 py-0.5 rounded-full" style={{ backgroundColor: "var(--color-surface-hover)", color: "var(--color-text-tertiary)" }}>good</span>
+                    <span className="text-[10px] font-spartan px-2 py-0.5 rounded-full" style={{ backgroundColor: "var(--color-surface-hover)", color: "var(--color-text-tertiary)" }}>high energy</span>
                   </div>
                   <hr style={{ borderColor: "var(--color-border-primary)" }} />
                   <div className="space-y-2">
                     <p className="text-[10px] font-spartan font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-tertiary)" }}>Quick entries</p>
-                    {["Drank 2L water today 💧", "Meditation felt deeper than usual"].map((m, i) => (
+                    {["Drank 2L water today", "Meditation felt deeper than usual"].map((m, i) => (
                       <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg border" style={{ backgroundColor: "var(--color-surface-primary)", borderColor: "var(--color-border-primary)" }}>
                         <span className="text-[10px] font-spartan px-1.5 py-0.5 rounded-full" style={{ backgroundColor: "var(--color-surface-hover)", color: "var(--color-text-tertiary)" }}>micro</span>
                         <p className="text-xs font-spartan" style={{ color: "var(--color-text-secondary)" }}>{m}</p>
@@ -436,13 +439,13 @@ const LandingPage = () => {
             <ScrollReveal direction="right">
               <div className="space-y-6">
                 {[
-                  { icon: "✍️", title: "Rich editor", desc: "Headings, lists, images, callouts — write however you think. Everything auto-saves." },
-                  { icon: "⚡", title: "Quick notes & deep entries", desc: "Tap out a one-liner or write a full page. Both live on the same timeline." },
-                  { icon: "🔍", title: "Search everything", desc: "Find any entry instantly. That insight from three weeks ago is one search away." },
-                  { icon: "🤖", title: "AI that reads between the lines", desc: "Opt in to surface patterns between what you write and how your habits perform. Privacy-first — you choose what the AI sees." },
+                  { icon: PenNib,           title: "Rich editor", desc: "Headings, lists, images, callouts \u2014 write however you think. Everything auto-saves." },
+                  { icon: Lightning,         title: "Quick notes & deep entries", desc: "Tap out a one-liner or write a full page. Both live on the same timeline." },
+                  { icon: MagnifyingGlass,   title: "Search everything", desc: "Find any entry instantly. That insight from three weeks ago is one search away." },
+                  { icon: Robot,             title: "AI that reads between the lines", desc: "Opt in to surface patterns between what you write and how your habits perform. Privacy-first \u2014 you choose what the AI sees." },
                 ].map((item, i) => (
                   <div key={i} className="flex gap-4">
-                    <span className="text-2xl flex-shrink-0 mt-0.5">{item.icon}</span>
+                    <span className="flex-shrink-0 mt-0.5 text-[var(--color-text-tertiary)]"><item.icon size={22} weight="duotone" /></span>
                     <div>
                       <h4 className="text-sm font-spartan font-bold mb-1" style={{ color: "var(--color-text-primary)" }}>{item.title}</h4>
                       <p className="text-sm font-spartan leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>{item.desc}</p>

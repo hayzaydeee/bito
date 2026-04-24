@@ -3,7 +3,7 @@ export const WIDGET_TYPES = {
   // Dashboard widgets
   "habits-overview": {
     title: "Habits Overview",
-    icon: "📊",
+    icon: "ChartBar",
     description: "Daily habit completion chart",
     defaultProps: { w: 6, h: 4 },
     category: "dashboard"
@@ -11,14 +11,14 @@ export const WIDGET_TYPES = {
 
   "habit-list": {
     title: "Habits List",
-    icon: "📋",
+    icon: "ListChecks",
     description: "Manage your daily habits",
     defaultProps: { w: 4, h: 6 },
     category: "dashboard"
   },
   "quick-actions": {
     title: "Quick Actions",
-    icon: "⚡",
+    icon: "Lightning",
     description: "Fast habit logging buttons",
     defaultProps: { w: 6, h: 4 },
     category: "dashboard"
@@ -27,7 +27,7 @@ export const WIDGET_TYPES = {
   // Analytics widgets
   "habit-streak-chart": {
     title: "Habit Streaks",
-    icon: "📈",
+    icon: "TrendUp",
     description: "Track your consistency over time",
     defaultProps: { w: 6, h: 6 },
     category: "analytics"
@@ -36,28 +36,28 @@ export const WIDGET_TYPES = {
   // Habits widgets (Modern Design)
   "habits-list-widget": {
     title: "Habits Manager",
-    icon: "📝",
+    icon: "Notebook",
     description: "Clean, modern habit management with quick actions",
     defaultProps: { w: 8, h: 8 },
     category: "habits"
   },
   "habit-stats": {
     title: "Statistics",
-    icon: "📊",
+    icon: "ChartBar",
     description: "Beautiful overview of your habit performance",
     defaultProps: { w: 4, h: 6 },
     category: "habits"
   },
   "quick-add-habit": {
     title: "Quick Add",
-    icon: "✨",
+    icon: "Sparkle",
     description: "Fast habit creation with smart templates",
     defaultProps: { w: 4, h: 8 },
     category: "habits"
   },
   "recent-activity": {
     title: "Activity Feed",
-    icon: "🎯",
+    icon: "Target",
     description: "Recent completions and achievements",
     defaultProps: { w: 4, h: 6 },
     category: "habits"
@@ -66,42 +66,42 @@ export const WIDGET_TYPES = {
   // Settings widgets
   "profile-widget": {
     title: "Profile & Account",
-    icon: "👤",
+    icon: "UserCircle",
     description: "Manage your account information and preferences",
     defaultProps: { w: 6, h: 6 },
     category: "settings"
   },
   "notifications-widget": {
     title: "Notification Settings",
-    icon: "🔔",
+    icon: "Bell",
     description: "Control notification and alert preferences",
     defaultProps: { w: 6, h: 6 },
     category: "settings"
   },
   "privacy-widget": {
     title: "Privacy & Security",
-    icon: "🔒",
+    icon: "LockSimple",
     description: "Manage privacy and security settings",
     defaultProps: { w: 6, h: 6 },
     category: "settings"
   },
   "appearance-widget": {
     title: "Appearance & Theme",
-    icon: "🎨",
+    icon: "Palette",
     description: "Customize the look and feel of your app",
     defaultProps: { w: 6, h: 6 },
     category: "settings"
   },
   "data-management-widget": {
     title: "Data Management",
-    icon: "💾",
+    icon: "HardDrive",
     description: "Import, export, and manage your data",
     defaultProps: { w: 6, h: 8 },
     category: "settings"
   },
   "help-support-widget": {
     title: "Help & Support",
-    icon: "❓",
+    icon: "Question",
     description: "Get help and support resources",
     defaultProps: { w: 6, h: 8 },
     category: "settings"
@@ -110,35 +110,35 @@ export const WIDGET_TYPES = {
   // Group Accountability widgets
   "group-overview": {
     title: "Group Overview",
-    icon: "📊",
+    icon: "ChartBar",
     description: "Key metrics and stats for the group",
     defaultProps: { w: 4, h: 4 },
     category: "group-accountability"
   },
   "member-progress": {
     title: "Member Progress",
-    icon: "👥",
+    icon: "Users",
     description: "Track individual member progress and performance",
     defaultProps: { w: 8, h: 6 },
     category: "group-accountability"
   },
   "encouragement-feed": {
     title: "Encouragement Feed",
-    icon: "💬",
+    icon: "ChatCircle",
     description: "Team encouragements and social interactions",
     defaultProps: { w: 6, h: 6 },
     category: "group-accountability"
   },
   "group-leaderboard": {
     title: "Leaderboard",
-    icon: "🏆",
+    icon: "Trophy",
     description: "Member rankings and performance comparison",
     defaultProps: { w: 6, h: 6 },
     category: "group-accountability"
   },
   "group-challenges": {
     title: "Group Challenges",
-    icon: "🎯",
+    icon: "Target",
     description: "Team challenges and milestone tracking",
     defaultProps: { w: 6, h: 6 },
     category: "group-accountability"

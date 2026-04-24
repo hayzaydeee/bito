@@ -5,7 +5,7 @@
 
 const CATEGORY_META = {
   fitness: {
-    icon: "💪",
+    icon: "Barbell",
     label: "Fitness",
     color: "emerald",
     gradient: "from-emerald-500/15 to-emerald-500/5",
@@ -13,7 +13,7 @@ const CATEGORY_META = {
     ring: "#10b981",
   },
   health_wellness: {
-    icon: "🧘",
+    icon: "Leaf",
     label: "Health & Wellness",
     color: "cyan",
     gradient: "from-cyan-500/15 to-cyan-500/5",
@@ -21,7 +21,7 @@ const CATEGORY_META = {
     ring: "#06b6d4",
   },
   learning_skill: {
-    icon: "📚",
+    icon: "BookOpen",
     label: "Learning",
     color: "blue",
     gradient: "from-blue-500/15 to-blue-500/5",
@@ -29,7 +29,7 @@ const CATEGORY_META = {
     ring: "#3b82f6",
   },
   productivity: {
-    icon: "⚡",
+    icon: "Lightning",
     label: "Productivity",
     color: "amber",
     gradient: "from-amber-500/15 to-amber-500/5",
@@ -37,7 +37,7 @@ const CATEGORY_META = {
     ring: "#f59e0b",
   },
   finance: {
-    icon: "💰",
+    icon: "CurrencyDollar",
     label: "Finance",
     color: "green",
     gradient: "from-green-500/15 to-green-500/5",
@@ -45,7 +45,7 @@ const CATEGORY_META = {
     ring: "#22c55e",
   },
   event_prep: {
-    icon: "🎯",
+    icon: "Target",
     label: "Event Prep",
     color: "orange",
     gradient: "from-orange-500/15 to-orange-500/5",
@@ -53,7 +53,7 @@ const CATEGORY_META = {
     ring: "#f97316",
   },
   career: {
-    icon: "💼",
+    icon: "Briefcase",
     label: "Career",
     color: "indigo",
     gradient: "from-indigo-500/15 to-indigo-500/5",
@@ -61,7 +61,7 @@ const CATEGORY_META = {
     ring: "#6366f1",
   },
   relationships: {
-    icon: "❤️",
+    icon: "Heart",
     label: "Relationships",
     color: "rose",
     gradient: "from-rose-500/15 to-rose-500/5",
@@ -69,7 +69,7 @@ const CATEGORY_META = {
     ring: "#f43f5e",
   },
   creative: {
-    icon: "🎨",
+    icon: "Palette",
     label: "Creative",
     color: "violet",
     gradient: "from-violet-500/15 to-violet-500/5",
@@ -77,7 +77,7 @@ const CATEGORY_META = {
     ring: "#8b5cf6",
   },
   custom: {
-    icon: "✨",
+    icon: "Sparkle",
     label: "Custom",
     color: "brand",
     gradient: "from-[var(--color-brand-500)]/15 to-[var(--color-brand-500)]/5",

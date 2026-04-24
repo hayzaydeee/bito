@@ -1,12 +1,29 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { journalV2Service } from '../../services/journalV2Service';
+import {
+  SmileyAngry, SmileySad, SmileyMeh, Smiley, SmileyWink,
+  BatteryEmpty, BatteryLow, BatteryMedium, BatteryHigh, BatteryFull,
+} from '@phosphor-icons/react';
 
 /* ═══════════════════════════════════════════════════════════════
    JournalEntryList — Paginated list of V2 longform entries
    ═══════════════════════════════════════════════════════════════ */
 
-const MOOD_EMOJI = ['😞', '😕', '😐', '🙂', '😊'];
-const ENERGY_EMOJI = ['🪫', '😴', '⚡', '🔋', '🚀'];
+const MOOD_ICONS = [
+  { Icon: SmileyAngry, color: '#ef4444', label: 'Awful' },
+  { Icon: SmileySad,   color: '#f97316', label: 'Bad' },
+  { Icon: SmileyMeh,   color: '#eab308', label: 'Okay' },
+  { Icon: Smiley,      color: '#22c55e', label: 'Good' },
+  { Icon: SmileyWink,  color: '#6366f1', label: 'Great' },
+];
+
+const ENERGY_ICONS = [
+  { Icon: BatteryEmpty,  color: '#ef4444', label: 'Drained' },
+  { Icon: BatteryLow,    color: '#f97316', label: 'Low' },
+  { Icon: BatteryMedium, color: '#eab308', label: 'Moderate' },
+  { Icon: BatteryHigh,   color: '#22c55e', label: 'High' },
+  { Icon: BatteryFull,   color: '#6366f1', label: 'Peak' },
+];
 
 const EntryRow = memo(({ entry, onSelect }) => {
   const date = new Date(entry.date);
@@ -53,16 +70,22 @@ const EntryRow = memo(({ entry, onSelect }) => {
           >
             {formattedDate}
           </h3>
-          {entry.mood && (
-            <span className="text-xs flex-shrink-0" title={`Mood: ${entry.mood}/5`}>
-              {MOOD_EMOJI[entry.mood - 1]}
-            </span>
-          )}
-          {entry.energy && (
-            <span className="text-xs flex-shrink-0" title={`Energy: ${entry.energy}/5`}>
-              {ENERGY_EMOJI[entry.energy - 1]}
-            </span>
-          )}
+          {entry.mood && (() => {
+            const m = MOOD_ICONS[entry.mood - 1];
+            return m ? (
+              <span className="flex-shrink-0" title={`Mood: ${m.label}`}>
+                <m.Icon size={14} weight="fill" color={m.color} />
+              </span>
+            ) : null;
+          })()}
+          {entry.energy && (() => {
+            const e = ENERGY_ICONS[entry.energy - 1];
+            return e ? (
+              <span className="flex-shrink-0" title={`Energy: ${e.label}`}>
+                <e.Icon size={14} weight="fill" color={e.color} />
+              </span>
+            ) : null;
+          })()}
         </div>
         {entry.wordCount > 0 && (
           <span

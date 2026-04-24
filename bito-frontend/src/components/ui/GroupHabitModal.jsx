@@ -8,15 +8,7 @@ import {
   InfoCircledIcon,
 } from "@radix-ui/react-icons";
 import AnimatedModal from "./AnimatedModal";
-
-// Emoji categories for the picker
-const EMOJI_CATEGORIES = {
-  common: ["✅", "🔴", "🔵", "🟢", "⭐", "🎯", "💪", "🧠", "📚", "💧", "🏃", "🥗", "😊"],
-  activity: ["🏋️", "🧘", "🚶", "🏃", "🚴", "🏊", "⚽", "🎮", "🎨", "🎵", "📝", "📚", "💻"],
-  health: ["💧", "🥗", "🍎", "🥦", "💊", "😴", "🧠", "🧘", "❤️", "🦷", "🚭", "🧹", "☀️"],
-  productivity: ["📝", "⏰", "📅", "📚", "💼", "💻", "📱", "✉️", "📊", "🔍", "⚙️", "🏆", "💯"],
-  mindfulness: ["🧘", "😌", "🌱", "🌈", "🌞", "🌙", "💭", "🧠", "❤️", "🙏", "✨", "💫", "🔮"],
-};
+import IconPicker from "../shared/IconPicker";
 
 // Predefined colors
 const COLOR_OPTIONS = [
@@ -302,38 +294,10 @@ const GroupHabitModal = ({
                   <label className="text-sm font-medium text-[var(--color-text-primary)] font-outfit block mb-2">
                     Icon
                   </label>
-                  <div className="space-y-3">
-                    <div className="flex gap-2 border-b border-[var(--color-border-primary)] pb-2">
-                      {Object.keys(EMOJI_CATEGORIES).map((category) => (
-                        <button
-                          key={category}
-                          type="button"
-                          className={`px-2 py-1 text-xs rounded font-outfit capitalize ${
-                            emojiCategory === category
-                              ? "bg-[var(--color-brand-500)] text-white"
-                              : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
-                          }`}
-                          onClick={() => setEmojiCategory(category)}
-                        >
-                          {category}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="grid grid-cols-6 gap-2">
-                      {EMOJI_CATEGORIES[emojiCategory].map((emoji) => (
-                        <button
-                          key={emoji}
-                          type="button"
-                          className={`p-2 rounded-lg text-lg hover:bg-[var(--color-surface-hover)] ${
-                            habitForm.icon === emoji ? "bg-[var(--color-brand-100)] ring-2 ring-[var(--color-brand-500)]" : ""
-                          }`}
-                          onClick={() => setHabitForm(prev => ({ ...prev, icon: emoji }))}
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  <IconPicker
+                    value={habitForm.icon}
+                    onChange={(icon) => setHabitForm(prev => ({ ...prev, icon }))}
+                  />
                 </div>
 
                 <div>

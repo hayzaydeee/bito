@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { SunIcon, MoonIcon, DesktopIcon, Half2Icon } from '@radix-ui/react-icons';
+import { Sun, Moon, Monitor, CircleHalf } from '@phosphor-icons/react';
 import { useTheme } from '../../contexts/ThemeContext';
 
 const ThemeSwitcher = ({ compact = false }) => {
@@ -52,7 +53,13 @@ const ThemeSwitcher = ({ compact = false }) => {
             {/* Menu */}
             <div className="absolute  top-full right-0 mt-2 w-36 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)] rounded-lg shadow-lg z-50 py-1">
               {themeOptions.map((option) => {
-                const icons = { light: '☀️', dark: '🌙', auto: '🖥️', bw: '◐' };
+                const iconProps = { size: 15, weight: 'regular' };
+                const icons = {
+                  light: <Sun {...iconProps} />,
+                  dark:  <Moon {...iconProps} />,
+                  auto:  <Monitor {...iconProps} />,
+                  bw:    <CircleHalf {...iconProps} />,
+                };
                 return (
                   <button
                     key={option.value}
@@ -63,8 +70,8 @@ const ThemeSwitcher = ({ compact = false }) => {
                         : 'text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]'
                     }`}
                   >
-                    <span className="text-base font-normal">
-                      {icons[option.value] || '🖥️'}
+                    <span className="flex-shrink-0 text-[var(--color-text-secondary)]">
+                      {icons[option.value] || <Monitor size={15} />}
                     </span>
                     <span className="text-xs font-medium font-outfit">
                       {option.label.replace(/^[^\s]+\s/, '')}

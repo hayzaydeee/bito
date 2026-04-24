@@ -43,7 +43,7 @@ const HabitEditModal = ({
   // Initialize state with habit data or empty values
   const [formData, setFormData] = useState({
     name: "",
-    icon: "✅",
+    icon: "Target",
     description: "",
     color: "#4f46e5",
     isActive: true,
@@ -56,7 +56,6 @@ const HabitEditModal = ({
   });
   
   const [activeTab, setActiveTab] = useState("details");
-  const [emojiCategory, setEmojiCategory] = useState("common");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -65,7 +64,7 @@ const HabitEditModal = ({
     if (habit) {
       setFormData({
         name: habit.name || "",
-        icon: habit.icon || "✅",
+        icon: habit.icon || "Target",
         description: habit.description || "",
         color: habit.color || "#4f46e5",
         isActive: habit.isActive !== undefined ? habit.isActive : true,
@@ -289,44 +288,19 @@ const HabitEditModal = ({
                     </Text>
                     <Box className="flex items-center gap-2 mb-2">
                       <Box
-                        className="w-12 h-12 rounded-md flex items-center justify-center text-2xl"
+                        className="w-12 h-12 rounded-md flex items-center justify-center"
                         style={{ backgroundColor: formData.color, color: "#fff" }}
                       >
-                        {formData.icon}
+                        <HabitIcon icon={formData.icon} size={24} color="#fff" />
                       </Box>
                       <Text>Current icon</Text>
                     </Box>
                     
                     <Box className="mb-4">
-                      <Flex gap="1" mb="2">
-                        {Object.keys(EMOJI_CATEGORIES).map((category) => (
-                          <Button
-                            key={category}
-                            type="button"
-                            variant={emojiCategory === category ? "solid" : "outline"}
-                            size="1"
-                            onClick={() => setEmojiCategory(category)}
-                          >
-                            {category.charAt(0).toUpperCase() + category.slice(1)}
-                          </Button>
-                        ))}
-                      </Flex>
-                      
-                      <Box className="border border-[var(--color-border-primary)] p-2 rounded-md">
-                        <Flex gap="2" wrap="wrap">
-                          {EMOJI_CATEGORIES[emojiCategory].map((emoji) => (
-                            <Button
-                              key={emoji}
-                              type="button"
-                              variant="ghost"
-                              onClick={() => handleIconSelect(emoji)}
-                              className="hover:bg-[var(--color-surface-hover)] text-xl"
-                            >
-                              {emoji}
-                            </Button>
-                          ))}
-                        </Flex>
-                      </Box>
+                      <IconPicker
+                        value={formData.icon}
+                        onChange={(icon) => handleIconSelect(icon)}
+                      />
                     </Box>
                   </div>
                   

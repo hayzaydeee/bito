@@ -4,6 +4,7 @@ import {
   PlusIcon,
   ChevronRightIcon,
 } from "@radix-ui/react-icons";
+import { Users, Handshake, Barbell, BookOpen, Globe } from "@phosphor-icons/react";
 import { groupsAPI } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import GroupCreationModal from "../components/ui/GroupCreationModal";
@@ -102,14 +103,14 @@ const GroupSelection = () => {
     }
   };
 
-  /* ── type → emoji map ───────────────── */
+  /* ── type → icon map ─────────────── */
 
-  const typeEmoji = {
-    family: "👨‍👩‍👧‍👦",
-    team: "💼",
-    fitness: "💪",
-    study: "📚",
-    community: "🌍",
+  const typeIcon = {
+    family:    <Users     size={28} weight="duotone" />,
+    team:      <Handshake size={28} weight="duotone" />,
+    fitness:   <Barbell   size={28} weight="duotone" />,
+    study:     <BookOpen  size={28} weight="duotone" />,
+    community: <Globe     size={28} weight="duotone" />,
   };
 
   /* ── derived stats ──────────────────── */
@@ -229,7 +230,7 @@ const GroupSelection = () => {
                         className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
                         style={{ backgroundColor: `${color}18` }}
                       >
-                        {typeEmoji[group.type] || "💼"}
+                        {typeIcon[group.type] || <Handshake size={28} weight="duotone" />}
                       </span>
                       <div className="flex-1 min-w-0">
                         <h3 className="text-lg font-garamond font-bold text-[var(--color-text-primary)] truncate">
