@@ -1,6 +1,7 @@
 import React, { memo, useState } from "react";
 import { ChevronDownIcon, ChevronUpIcon } from "@radix-ui/react-icons";
 import CATEGORY_META from "../../data/categoryMeta";
+import HabitIcon from "../shared/HabitIcon";
 import HabitCard from "./HabitCard";
 
 /**
@@ -24,8 +25,8 @@ const HabitCategoryGroup = memo(({ categoryKey, habits, onHabitClick }) => {
           style={{ background: meta.accent || "var(--color-brand-500)" }}
         />
 
-        <span className="text-sm font-garamond font-semibold text-[var(--color-text-primary)]">
-          {meta.icon} {meta.label || categoryKey}
+        <span className="text-sm font-garamond font-semibold text-[var(--color-text-primary)] flex items-center gap-1.5">
+          <HabitIcon icon={meta.icon} size={14} />{meta.label || categoryKey}
         </span>
 
         <span className="text-xs font-spartan text-[var(--color-text-tertiary)]">

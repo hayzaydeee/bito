@@ -87,7 +87,7 @@ const HabitMetricCards = memo(({ habits }) => {
     },
     {
       label: data.topCat ? data.topCat.meta.label : "Top Category",
-      value: data.topCat ? `${data.topCat.meta.icon} ${data.topCat.count}` : "—",
+      value: data.topCat ? `${data.topCat.count}` : "—",
       gradient: data.topCat
         ? `linear-gradient(135deg, ${data.topCat.meta.accent}26 0%, ${data.topCat.meta.accent}08 100%)`
         : "linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(139,92,246,0.03) 100%)",

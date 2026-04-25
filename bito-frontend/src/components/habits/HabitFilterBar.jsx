@@ -4,6 +4,7 @@ import {
   MixerHorizontalIcon,
 } from "@radix-ui/react-icons";
 import CATEGORY_META from "../../data/categoryMeta";
+import HabitIcon from "../shared/HabitIcon";
 
 /**
  * HabitFilterBar — source pills, search, status toggle, category chips.
@@ -125,7 +126,7 @@ const HabitFilterBar = memo(
                     : "border-[var(--color-border-primary)]/30 text-[var(--color-text-tertiary)]"
                 }`}
               >
-                {meta.icon} {meta.label || cat}
+                <HabitIcon icon={meta.icon} size={12} className="inline-flex" />{meta.label || cat}
               </button>
             );
           })}

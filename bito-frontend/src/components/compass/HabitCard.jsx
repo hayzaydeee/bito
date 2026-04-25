@@ -29,7 +29,7 @@ const HabitCard = ({
 
   const h = habit;
   const diff = DIFFICULTY_COLORS[h.difficulty] || DIFFICULTY_COLORS.medium;
-  const catMeta = CATEGORY_META[h.category];
+  const catMeta = CATEGORY_META[h.category] || null;
 
   const startEdit = () => {
     setEditForm({
@@ -314,8 +314,8 @@ const HabitCard = ({
               {h.difficulty}
             </span>
             {catMeta && (
-              <span className="text-[10px] font-spartan text-[var(--color-text-tertiary)]">
-                {catMeta.icon} {catMeta.label}
+              <span className="text-[10px] font-spartan text-[var(--color-text-tertiary)] flex items-center gap-1">
+                <HabitIcon icon={catMeta.icon} size={10} />{catMeta.label}
               </span>
             )}
             {!h.isRequired && (

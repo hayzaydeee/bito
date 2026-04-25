@@ -25,6 +25,42 @@ export const HABIT_ICONS = {
   Handshake, Smiley, Trophy, Medal, Fire,
 };
 
+// Aliases for common LLM misnaming (map to the nearest valid Phosphor component)
+const ICON_ALIASES = {
+  People: Users,
+  Social: Users,
+  Group: Users,
+  Mind: Brain,
+  Meditation: Moon,
+  Run: Person,
+  Walk: Person,
+  Exercise: Barbell,
+  Workout: Barbell,
+  Gym: Barbell,
+  Read: BookOpen,
+  Study: BookOpen,
+  Book: BookOpen,
+  Write: Pen,
+  Writing: Pen,
+  Journal: Notebook,
+  Music: MusicNote,
+  Coding: Code,
+  Work: Briefcase,
+  Money: CurrencyDollar,
+  Finance: CurrencyDollar,
+  Nature: Leaf,
+  Plant: Leaf,
+  Water: Drop,
+  Hydrate: Drop,
+  Sleep: Bed,
+  Rest: Bed,
+  Dentist: Tooth,
+  Teeth: Tooth,
+  Bike: Bicycle,
+  Swimming: SwimmingPool,
+  Soccer: Football,
+};
+
 const DEFAULT_ICON = Target;
 
 /**
@@ -45,7 +81,7 @@ const HabitIcon = ({
   }
 
   // If the icon is a known Phosphor name, render it
-  const PhosphorIcon = HABIT_ICONS[icon];
+  const PhosphorIcon = HABIT_ICONS[icon] || ICON_ALIASES[icon];
   if (PhosphorIcon) {
     return <PhosphorIcon size={size} weight={weight} color={color} className={className} style={style} />;
   }
