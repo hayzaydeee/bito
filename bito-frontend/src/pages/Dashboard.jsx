@@ -66,11 +66,6 @@ const Dashboard = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [currentHabit, setCurrentHabit] = useState(null);
 
-  /* ── Tour sample habit created during onboarding ── */
-  const [tourSampleHabitId, setTourSampleHabitId] = useState(
-    location.state?.tourSampleHabitId || null
-  );
-
   /* ── Fetch entries for this week's habits ── */
   useEffect(() => {
     if (!habits || habits.length === 0) return;
@@ -189,14 +184,6 @@ const Dashboard = () => {
     },
     [archiveHabit]
   );
-
-  /* ── Tour callbacks ── */
-  const handleTourComplete = useCallback(async () => {
-    if (tourSampleHabitId) {
-      await deleteHabit(tourSampleHabitId);
-      setTourSampleHabitId(null);
-    }
-  }, [tourSampleHabitId, deleteHabit]);
 
   const handleToggle = useCallback(
     (habitId) => {
@@ -346,7 +333,7 @@ const Dashboard = () => {
       {/* 7. Dashboard tour (Phase 14) */}
       <DashboardTour
         userId={user?._id || user?.id}
-        onComplete={handleTourComplete}
+        hasHabits={habits.length > 0}
       />
     </div>
     </SkeletonTransition>

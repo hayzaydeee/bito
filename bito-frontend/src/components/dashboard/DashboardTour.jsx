@@ -124,7 +124,7 @@ const getSteps = () => {
  *   forceShow  — if true, bypass localStorage and show tour (for replay)
  *   onComplete — callback after tour finishes or is skipped
  */
-const DashboardTour = ({ forceShow = false, onComplete, userId }) => {
+const DashboardTour = ({ forceShow = false, onComplete, hasHabits = false, userId }) => {
   const lsKey = getTourKey(userId);
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(-1); // -1 = prompt, 0..N = steps
@@ -142,6 +142,11 @@ const DashboardTour = ({ forceShow = false, onComplete, userId }) => {
       setStep(-1);
       return;
     }
+    // Don't show until the user has at least one real habit
+    if (!hasHabits) {
+      setVisible(false);
+      return;
+    }
     try {
       if (localStorage.getItem(lsKey) !== 'true') {
         setVisible(true);
@@ -149,7 +154,7 @@ const DashboardTour = ({ forceShow = false, onComplete, userId }) => {
     } catch {
       /* ignore */
     }
-  }, [forceShow, lsKey]);
+  }, [forceShow, hasHabits, lsKey]);
 
   // Measure target element whenever step changes
   const measureTarget = useCallback(() => {

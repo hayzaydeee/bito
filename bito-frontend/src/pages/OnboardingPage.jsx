@@ -9,7 +9,6 @@ import {
 } from "@radix-ui/react-icons";
 import { useAuth } from "../contexts/AuthContext";
 import { useNotifications } from "../contexts/NotificationContext";
-import { useHabits } from "../contexts/HabitContext";
 import { userAPI } from "../services/api";
 import useMotionSafe from "../hooks/useMotionSafe";
 import AnimatedList from "../components/ui/AnimatedList";
@@ -173,7 +172,6 @@ const OnboardingPage = () => {
     setSubmitError("");
     setIsSubmitting(true);
     try {
-      // Save onboarding preferences (no habits created — wizard handles that)
       await userAPI.updateProfile({
         onboardingComplete: true,
         onboardingData: {
@@ -183,22 +181,7 @@ const OnboardingPage = () => {
       });
       updateUser({ onboardingComplete: true });
       showSuccess("Welcome aboard. Your setup has been saved.");
-
-      // Create a sample habit so the tour's "Edit a habit" step has a target
-      let tourSampleHabitId = null;
-      try {
-        const res = await createHabit({
-          name: 'Morning walk',
-          icon: '\uD83D\uDEB6',
-          frequency: 'daily',
-          category: 'health',
-        });
-        tourSampleHabitId = res?.habit?._id || null;
-      } catch {
-        // Non-fatal — tour edit step simply won't spotlight if this fails
-      }
-
-      navigate("/app/dashboard", { state: { fromOnboarding: true, tourSampleHabitId } });
+      navigate("/app/dashboard", { state: { fromOnboarding: true } });
     } catch (err) {
       console.error("Failed to complete onboarding:", err);
       const message = "We couldn't save your setup yet. Please try again.";
@@ -212,30 +195,16 @@ const OnboardingPage = () => {
   const handleSkip = async () => {
     setSubmitError("");
     setIsSubmitting(true);
-    let tourSampleHabitId = null;
     try {
       await userAPI.updateProfile({ onboardingComplete: true });
       updateUser({ onboardingComplete: true });
-
-      // Create a sample habit so the tour's "Edit a habit" step has a target
-      try {
-        const res = await createHabit({
-          name: 'Morning walk',
-          icon: '\uD83D\uDEB6',
-          frequency: 'daily',
-          category: 'health',
-        });
-        tourSampleHabitId = res?.habit?._id || null;
-      } catch {
-        // Non-fatal
-      }
     } catch {
       updateUser({ onboardingComplete: true });
       showError("Setup skipped due to a temporary save issue.");
     } finally {
       setIsSubmitting(false);
     }
-    navigate("/app/dashboard", { state: { fromOnboarding: true, tourSampleHabitId } });
+    navigate("/app/dashboard", { state: { fromOnboarding: true } });
   };
 
   const confettiAngles = [
