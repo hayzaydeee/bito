@@ -9,6 +9,8 @@ import {
   Cell,
   CartesianGrid,
 } from 'recharts';
+import { Fire } from '@phosphor-icons/react';
+import HabitIcon from '../shared/HabitIcon';
 
 /* -----------------------------------------------------------------
    StreakBarChart -- per-habit current streak as horizontal bars
@@ -100,7 +102,7 @@ const StreakBarChart = ({ habits, entries }) => {
   if (!streakData.length) {
     return (
       <div className="analytics-chart-card flex flex-col items-center justify-center h-[280px] gap-2">
-        <span className="text-3xl opacity-40">🔥</span>
+        <Fire size={32} weight="duotone" className="text-orange-400 opacity-40" />
         <p className="text-sm font-spartan text-[var(--color-text-tertiary)]">
           Complete habits consistently to build streaks
         </p>
@@ -111,14 +113,14 @@ const StreakBarChart = ({ habits, entries }) => {
   if (!hasStreaks) {
     return (
       <div className="analytics-chart-card flex flex-col items-center justify-center h-[280px] gap-2">
-        <span className="text-3xl opacity-40">🔥</span>
+        <Fire size={32} weight="duotone" className="text-orange-400 opacity-40" />
         <p className="text-sm font-spartan text-[var(--color-text-tertiary)] text-center leading-relaxed">
           Complete habits consistently to build streaks
         </p>
         <div className="flex flex-wrap justify-center gap-2 mt-2 max-w-xs">
           {streakData.slice(0, 5).map((h, i) => (
-            <span key={i} className="text-[10px] font-spartan px-2 py-0.5 rounded-full border border-[var(--color-border-primary)] text-[var(--color-text-tertiary)]">
-              {h.icon} {h.fullName}
+            <span key={i} className="inline-flex items-center gap-1 text-[10px] font-spartan px-2 py-0.5 rounded-full border border-[var(--color-border-primary)] text-[var(--color-text-tertiary)]">
+              <HabitIcon icon={h.icon} size={10} /> {h.fullName}
             </span>
           ))}
         </div>
@@ -183,9 +185,12 @@ const StreakTooltip = ({ active, payload }) => {
   const unitLabel = d.isWeekly ? 'week' : 'day';
   return (
     <div className="analytics-tooltip">
-      <p className="font-medium text-[var(--color-text-primary)]">{d.icon} {d.fullName}</p>
-      <p style={{ color: d.color }}>
-        🔥 <span className="font-semibold">{d.streak}</span> {unitLabel} streak
+      <p className="font-medium text-[var(--color-text-primary)] flex items-center gap-1.5">
+        <HabitIcon icon={d.icon} size={14} /> {d.fullName}
+      </p>
+      <p style={{ color: d.color }} className="flex items-center gap-1">
+        <Fire size={13} weight="duotone" className="text-orange-400" />
+        <span className="font-semibold">{d.streak}</span> {unitLabel} streak
         {d.isWeekly && <span className="text-xs opacity-70"> (weekly target)</span>}
       </p>
     </div>
