@@ -1,4 +1,5 @@
 import React, { memo } from "react";
+import { CalendarBlank, Fire } from "@phosphor-icons/react";
 import ProgressRing from "../shared/ProgressRing";
 
 /* ─── Stat Pills row ─── */
@@ -39,7 +40,7 @@ const StatPills = memo(({ completed, total, streak, weeklyProgress }) => {
             borderColor: "var(--color-border-primary)",
           }}
         >
-          <span className="text-sm">📅</span>
+          <CalendarBlank size={16} weight="duotone" className="text-[var(--color-text-tertiary)]" />
           <span
             className="text-sm font-spartan font-bold tabular-nums"
             style={{ color: "var(--color-text-primary)" }}
@@ -67,7 +68,7 @@ const StatPills = memo(({ completed, total, streak, weeklyProgress }) => {
           className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
           style={{ backgroundColor: "var(--color-surface-elevated)" }}
         >
-          <span className="text-sm leading-none">🔥</span>
+          <Fire size={16} weight="duotone" className="text-orange-400" />
         </div>
         <span
           className="text-sm font-spartan font-bold tabular-nums"
