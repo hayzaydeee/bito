@@ -24,6 +24,10 @@ const TopHabitsList = ({ habits, entries, timeRange, accountAgeDays = 365 }) => 
         let possible = 0;
         const isWeekly = habit.frequency === 'weekly';
 
+        // Clamp start to habit creation date so new habits aren't penalized
+        const habitCreatedAt = habit.createdAt ? new Date(habit.createdAt) : startDate;
+        const effectiveStart = new Date(Math.max(startDate.getTime(), habitCreatedAt.getTime()));
+
         // Sparkline: last 14 days (binary dots)
         const sparkDays = Math.min(14, days);
         const sparkStart = new Date(endDate);
@@ -33,7 +37,7 @@ const TopHabitsList = ({ habits, entries, timeRange, accountAgeDays = 365 }) => 
         if (isWeekly) {
           // For weekly habits: count weeks met vs total weeks
           const target = habit.weeklyTarget || 3;
-          let weekStart = new Date(startDate);
+          let weekStart = new Date(effectiveStart);
           // Align to Monday
           const startDay = weekStart.getDay();
           const toMonday = startDay === 0 ? 1 : (startDay === 1 ? 0 : 8 - startDay);
@@ -58,7 +62,7 @@ const TopHabitsList = ({ habits, entries, timeRange, accountAgeDays = 365 }) => 
             spark.push(entry?.completed ? 1 : 0);
           }
         } else {
-          for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+          for (let d = new Date(effectiveStart); d <= endDate; d.setDate(d.getDate() + 1)) {
             const dateStr = fmtDate(d);
             if (habit.schedule?.days?.length && !habit.schedule.days.includes(d.getDay())) continue;
             possible++;
@@ -118,12 +122,6 @@ const TopHabitsList = ({ habits, entries, timeRange, accountAgeDays = 365 }) => 
             }`}>
               {i + 1}
             </span>
-
-            {/* Color dot */}
-            <div
-              className="w-2.5 h-2.5 rounded-full flex-shrink-0 ring-2 ring-offset-1 ring-offset-[var(--color-surface-primary)]"
-              style={{ backgroundColor: h.color, ringColor: `${h.color}33` }}
-            />
 
             {/* Icon + Name */}
             <span className="flex items-center gap-1.5 flex-1 text-sm font-spartan text-[var(--color-text-primary)] truncate min-w-0">

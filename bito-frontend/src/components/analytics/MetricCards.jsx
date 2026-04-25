@@ -32,7 +32,12 @@ const MetricCards = ({ habits, entries, timeRange, accountAgeDays = 365 }) => {
       const hEntries = entries[habit._id] || {};
       let streak = 0;
 
-      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      // Clamp start to habit creation date so new habits aren't penalized
+      const habitCreatedAt = habit.createdAt ? new Date(habit.createdAt) : startDate;
+      const effectiveStart = new Date(Math.max(startDate.getTime(), habitCreatedAt.getTime()));
+      const effectivePrevStart = new Date(Math.max(prevStart.getTime(), habitCreatedAt.getTime()));
+
+      for (let d = new Date(effectiveStart); d <= endDate; d.setDate(d.getDate() + 1)) {
         const dateStr = fmtDate(d);
         if (habit.schedule?.days?.length && !habit.schedule.days.includes(d.getDay())) continue;
         possible++;
@@ -41,7 +46,7 @@ const MetricCards = ({ habits, entries, timeRange, accountAgeDays = 365 }) => {
         else { streak = 0; }
       }
 
-      for (let d = new Date(prevStart); d < startDate; d.setDate(d.getDate() + 1)) {
+      for (let d = new Date(effectivePrevStart); d < startDate; d.setDate(d.getDate() + 1)) {
         const dateStr = fmtDate(d);
         if (habit.schedule?.days?.length && !habit.schedule.days.includes(d.getDay())) continue;
         prevPossible++;
@@ -59,8 +64,10 @@ const MetricCards = ({ habits, entries, timeRange, accountAgeDays = 365 }) => {
       const target = habit.weeklyTarget || 3;
       let weekStreak = 0;
 
-      // Walk through weeks in the time range
-      const ws = getMonday(new Date(startDate));
+      // Walk through weeks in the time range, clamped to habit creation date
+      const habitCreatedAt = habit.createdAt ? new Date(habit.createdAt) : startDate;
+      const effectiveWeekStart = new Date(Math.max(startDate.getTime(), habitCreatedAt.getTime()));
+      const ws = getMonday(new Date(effectiveWeekStart));
       for (let w = new Date(ws); w <= endDate; w.setDate(w.getDate() + 7)) {
         const weekEnd = new Date(w);
         weekEnd.setDate(weekEnd.getDate() + 6);
