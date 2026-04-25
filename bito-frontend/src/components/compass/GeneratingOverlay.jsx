@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircledIcon } from "@radix-ui/react-icons";
+import { Brain, Target, BookOpen, Gear, Sparkle } from "@phosphor-icons/react";
 import { springs, stepVariants } from "./compassMotion";
 
 /**
@@ -8,10 +9,10 @@ import { springs, stepVariants } from "./compassMotion";
  * as the AI gets closer to finishing.
  */
 const STEPS = [
-  { label: "Understanding your goal...", icon: "🎯", skeleton: "goal" },
-  { label: "Researching best practices...", icon: "📖", skeleton: "research" },
-  { label: "Designing your habit system...", icon: "⚙️", skeleton: "habits" },
-  { label: "Polishing your plan...", icon: "✨", skeleton: "polish" },
+  { label: "Understanding your goal...", Icon: Target, skeleton: "goal" },
+  { label: "Researching best practices...", Icon: BookOpen, skeleton: "research" },
+  { label: "Designing your habit system...", Icon: Gear, skeleton: "habits" },
+  { label: "Polishing your plan...", Icon: Sparkle, skeleton: "polish" },
 ];
 
 const GeneratingOverlay = ({ step = 0 }) => {
@@ -31,7 +32,9 @@ const GeneratingOverlay = ({ step = 0 }) => {
             animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0, 0.3] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           />
-          <span className="text-5xl relative z-10">🧠</span>
+          <span className="text-5xl relative z-10">
+            <Brain size={48} weight="duotone" className="text-[var(--color-brand-400)]" />
+          </span>
         </div>
 
         <h2 className="text-xl sm:text-2xl font-garamond font-bold text-[var(--color-text-primary)] mb-6">
@@ -83,7 +86,7 @@ const GeneratingOverlay = ({ step = 0 }) => {
                       <CheckCircledIcon className="w-4 h-4" />
                     </motion.span>
                   ) : (
-                    s.icon
+                    <s.Icon size={16} weight="duotone" />
                   )}
                 </motion.div>
                 <span

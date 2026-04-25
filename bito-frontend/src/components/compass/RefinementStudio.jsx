@@ -5,6 +5,8 @@ import {
   ReloadIcon,
 } from "@radix-ui/react-icons";
 import { compassAPI } from "../../services/api";
+import CATEGORY_META from "../../data/categoryMeta";
+import HabitIcon from "../shared/HabitIcon";
 import RefinementChat from "./RefinementChat";
 import PlanArtifact from "./PlanArtifact";
 
@@ -30,6 +32,7 @@ const RefinementStudio = ({
 
   const sys = compass.system || {};
   const phases = sys.phases || [];
+  const catMeta = CATEGORY_META[sys.category] || CATEGORY_META.custom;
   const isActive = compass.status === 'active';
   const turnsUsed = Math.floor((compass.refinements?.length || 0) / 2);
   const turnsRemaining = 20 - turnsUsed;
@@ -95,8 +98,9 @@ const RefinementStudio = ({
             <Cross2Icon className="w-4 h-4 text-[var(--color-text-secondary)]" />
           </button>
           <div>
-            <h2 className="text-sm font-spartan font-bold text-[var(--color-text-primary)] truncate max-w-[200px] sm:max-w-none">
-              {sys.icon} {sys.name || "Untitled Plan"}
+            <h2 className="text-sm font-spartan font-bold text-[var(--color-text-primary)] truncate max-w-[200px] sm:max-w-none flex items-center gap-1.5">
+              <HabitIcon icon={catMeta.icon} size={14} />
+              {sys.name || "Untitled Plan"}
             </h2>
             <p className="text-xs font-spartan text-[var(--color-text-secondary)]">
               {isActive ? "Living Plan" : "Refinement Studio"} · {turnsRemaining} turns left
@@ -149,7 +153,7 @@ const RefinementStudio = ({
               onSend={handleSend}
               isSending={isSending}
               planName={sys.name || "Untitled Plan"}
-              planIcon={sys.icon || "🎯"}
+              planIcon={catMeta.icon}
               onToggleArtifact={toggleArtifact}
               isArtifactOpen={showArtifact}
               userAvatar={userAvatar}

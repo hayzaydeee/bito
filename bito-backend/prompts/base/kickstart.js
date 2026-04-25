@@ -24,6 +24,6 @@ Respond as JSON:
 {
   "summary": "<welcome message>",
   "additionalInsights": [
-    { "title": "<short title>", "body": "<1-2 sentence tip>", "icon": "<relevant emoji>", "category": "kickstart" }
+    { "title": "<short title>", "body": "<1-2 sentence tip>", "category": "kickstart" }
   ]
 }`;

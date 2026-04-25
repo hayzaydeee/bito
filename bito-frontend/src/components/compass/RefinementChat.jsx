@@ -7,6 +7,7 @@ import {
   FileTextIcon,
   ChevronRightIcon,
 } from "@radix-ui/react-icons";
+import HabitIcon from "../shared/HabitIcon";
 
 /**
  * RefinementChat — chat panel for the conversational refinement studio.
@@ -19,7 +20,7 @@ const RefinementChat = ({
   onSend,
   isSending = false,
   planName = "Plan",
-  planIcon = "🎯",
+  planIcon = "Target",
   onToggleArtifact,
   isArtifactOpen = false,
   userAvatar,
@@ -71,9 +72,9 @@ const RefinementChat = ({
       ];
 
   const mutationLabels = {
-    modifyHabit: '✏️ Updated',
-    addHabit: '✨ Created',
-    removeHabit: '🗂️ Archived',
+    modifyHabit: '• Updated',
+    addHabit: '+ Created',
+    removeHabit: '− Archived',
   };
 
   return (
@@ -163,8 +164,9 @@ const RefinementChat = ({
                     <FileTextIcon className="w-4.5 h-4.5 text-[var(--color-brand-500)]" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] truncate">
-                      {planIcon} {planName}
+                    <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] truncate flex items-center gap-1.5">
+                      <HabitIcon icon={planIcon} size={14} />
+                      {planName}
                     </p>
                     <p className="text-xs font-spartan text-[var(--color-text-secondary)]">
                       Plan · Updated

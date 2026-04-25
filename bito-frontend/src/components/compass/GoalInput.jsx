@@ -1,6 +1,7 @@
 import { useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeftIcon, Link2Icon } from "@radix-ui/react-icons";
+import { Brain, Question } from "@phosphor-icons/react";
 import { SUGGESTED_GOALS } from "../../data/categoryMeta";
 import { springs, fadeUp } from "./compassMotion";
 
@@ -109,14 +110,16 @@ const GoalInput = ({
           exit={{ opacity: 0, y: -12 }}
           transition={springs.soft}
         >
-          <motion.p
-            className="text-6xl mb-4"
+          <motion.div
+            className="w-16 h-16 mb-4 mx-auto flex items-center justify-center rounded-2xl bg-[var(--color-brand-500)]/10"
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             transition={springs.bouncy}
           >
-            {hasClarification ? "🤔" : "🧠"}
-          </motion.p>
+            {hasClarification
+              ? <Question size={36} weight="duotone" className="text-[var(--color-brand-400)]" />
+              : <Brain size={36} weight="duotone" className="text-[var(--color-brand-400)]" />}
+          </motion.div>
           <h2 className="text-2xl sm:text-3xl font-garamond font-bold text-[var(--color-text-primary)]">
             {hasClarification
               ? "A few things first..."

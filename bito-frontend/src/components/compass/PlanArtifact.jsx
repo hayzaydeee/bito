@@ -1,5 +1,6 @@
 import { Cross2Icon } from "@radix-ui/react-icons";
 import CATEGORY_META from "../../data/categoryMeta";
+import HabitIcon from "../shared/HabitIcon";
 import PhaseTimeline from "./PhaseTimeline";
 import HabitCard from "./HabitCard";
 
@@ -18,7 +19,7 @@ const PlanArtifact = ({ compass, onClose }) => {
       {/* Artifact header */}
       <div className="flex items-center justify-between px-4 h-12 border-b border-[var(--color-border-primary)]/20 flex-shrink-0">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-base flex-shrink-0">{sys.icon || "🎯"}</span>
+          <HabitIcon icon={catMeta.icon} size={16} />
           <span className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] truncate">
             {sys.name || "Untitled Plan"}
           </span>

@@ -294,7 +294,7 @@ Output JSON schema:
 {
   "name": "string — catchy name for this system, e.g. 'Marathon Ready Plan'",
   "description": "string — 1-2 sentence summary that references the user's context (e.g., 'Building on your existing morning routine...')",
-  "icon": "string — single emoji that represents this goal",
+  "icon": "string — Phosphor icon name that best represents this goal. Pick from: Target, Brain, Heart, Barbell, BookOpen, Leaf, Lightning, CurrencyDollar, Briefcase, Users, Palette, Sparkle, Globe, Moon, Sun, Clock, Fire, Trophy, Scales, MusicNote, Code",
   "category": "fitness | health_wellness | learning_skill | productivity | finance | event_prep | career | relationships | creative | custom",
   "estimatedDuration": { "value": number, "unit": "days | weeks | months" },
   "contextualReasoning": "string — 2-3 sentences explaining WHY you designed the plan this way based on the user's data. Reference specific habits, stats, or patterns.",
@@ -318,7 +318,7 @@ Output JSON schema:
             "value": number or null,
             "unit": "string or null — minutes, pages, reps, glasses, etc."
           },
-          "icon": "string — single emoji",
+          "icon": "string — Phosphor icon name. Pick from: Target, Brain, Heart, Barbell, BookOpen, Leaf, Lightning, Moon, Sun, Clock, Fire, Trophy, Scales, MusicNote, Code, Drop, Pill, Bed, Tooth, Bicycle, Person, Notebook, Pen, Palette, Camera",
           "category": "health | productivity | learning | fitness | mindfulness | social | creative | other",
           "difficulty": "easy | medium | hard",
           "isRequired": true/false

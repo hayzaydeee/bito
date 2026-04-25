@@ -181,7 +181,9 @@ const GroupSelection = () => {
         {/* empty state */}
         {groups.length === 0 ? (
           <div className="glass-card-minimal rounded-2xl p-12 text-center max-w-lg mx-auto">
-            <p className="text-6xl mb-6">👥</p>
+            <div className="mb-6 flex justify-center">
+              <Users size={64} weight="duotone" className="text-[var(--color-brand-400)]/50" />
+            </div>
             <h2 className="text-2xl font-garamond font-bold text-[var(--color-text-primary)] mb-2">
               No groups yet
             </h2>

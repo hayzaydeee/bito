@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Pencil1Icon, DrawingPinIcon, DrawingPinFilledIcon, CheckIcon, Cross2Icon } from "@radix-ui/react-icons";
 import CATEGORY_META, { STATUS_THEME } from "../../data/categoryMeta";
+import HabitIcon from "../shared/HabitIcon";
 import { springs } from "./compassMotion";
 
 /**
@@ -24,7 +25,7 @@ const CategoryBanner = ({ compass, onPersonalize }) => {
     : (sys.habits?.length || 0);
 
   // Personalized overrides
-  const displayIcon = p.icon || sys.icon || "🎯";
+  const displayIcon = p.icon || catMeta.icon;
   const accentColor = p.color || catMeta.accent;
 
   // Inline icon editing (replaces prompt())
@@ -147,7 +148,7 @@ const CategoryBanner = ({ compass, onPersonalize }) => {
             ) : (
               <motion.div
                 key="display"
-                className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl group relative ${
+                className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center group relative ${
                   canPersonalize ? "cursor-pointer" : ""
                 }`}
                 style={{ backgroundColor: `${accentColor}15` }}
@@ -160,7 +161,7 @@ const CategoryBanner = ({ compass, onPersonalize }) => {
                 exit={{ scale: 0.9, opacity: 0 }}
                 transition={springs.soft}
               >
-                {displayIcon}
+                <HabitIcon icon={displayIcon} size={40} />
                 {canPersonalize && (
                   <div className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <Pencil1Icon className="w-5 h-5 text-white" />
@@ -193,7 +194,7 @@ const CategoryBanner = ({ compass, onPersonalize }) => {
           {/* Stat chips */}
           <div className="flex items-center gap-4 mt-3 text-sm text-[var(--color-text-tertiary)] font-spartan flex-wrap">
             <span className="flex items-center gap-1.5">
-              <span className="text-base">{catMeta.icon}</span>
+              <HabitIcon icon={catMeta.icon} size={14} />
               {catMeta.label}
             </span>
             {sys.estimatedDuration?.value && (

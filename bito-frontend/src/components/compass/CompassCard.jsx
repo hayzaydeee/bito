@@ -18,7 +18,7 @@ const CompassCard = ({ compass, index = 0, onOpen, onArchive, archiveLoading }) 
   const isActive = t.status === "active";
   const isFeatured = isActive || t.status === "preview";
   const pers = t.personalization || {};
-  const displayIcon = pers.icon || sys.icon || "🎯";
+  const displayIcon = pers.icon || catMeta.icon;
   const accentColor = pers.color || catMeta.accent;
 
   // Phase-aware counts and progress
@@ -82,7 +82,9 @@ const CompassCard = ({ compass, index = 0, onOpen, onArchive, archiveLoading }) 
       <div className="flex-1 p-4 sm:p-5 flex flex-col">
         {/* Top row: icon + name + status */}
         <div className="flex items-start gap-3 mb-3">
-          <span className="text-2xl flex-shrink-0 mt-0.5">{displayIcon}</span>
+          <span className="text-2xl flex-shrink-0 mt-0.5">
+            <HabitIcon icon={displayIcon} size={24} />
+          </span>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               {pers.isPinned && (
@@ -184,8 +186,9 @@ const CompassCard = ({ compass, index = 0, onOpen, onArchive, archiveLoading }) 
           </div>
 
           {/* Category label */}
-          <span className="text-[10px] font-spartan text-[var(--color-text-tertiary)] flex-shrink-0 hidden sm:inline">
-            {catMeta.icon} {catMeta.label}
+          <span className="text-[10px] font-spartan text-[var(--color-text-tertiary)] flex-shrink-0 hidden sm:inline flex items-center gap-1">
+            <HabitIcon icon={catMeta.icon} size={12} />
+            {catMeta.label}
           </span>
         </div>
       </div>
