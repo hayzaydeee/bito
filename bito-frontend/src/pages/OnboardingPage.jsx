@@ -118,7 +118,6 @@ const OnboardingPage = () => {
   const navigate = useNavigate();
   const { user, updateUser, isAuthenticated, isLoading } = useAuth();
   const { showError, showSuccess } = useNotifications();
-  const { createHabit } = useHabits();
   const { getVariants, prefersReduced } = useMotionSafe();
   const shouldAnimate = typeof motion !== "undefined" && !prefersReduced;
   const [step, setStep] = useState(0); // 0=welcome, 1=goals, 2=time, 3=done
