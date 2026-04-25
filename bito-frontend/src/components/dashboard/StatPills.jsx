@@ -10,13 +10,13 @@ const StatPills = memo(({ completed, total, streak, weeklyProgress }) => {
     <div className="flex items-center justify-center gap-3 flex-wrap">
       {/* Progress ring + today count */}
       <div
-        className="flex items-center gap-2.5 rounded-full px-3 py-1.5 border"
+        className="flex items-center gap-2.5 rounded-full px-3 h-9 border"
         style={{
           backgroundColor: "var(--color-surface-primary)",
           borderColor: "var(--color-border-primary)",
         }}
       >
-        <ProgressRing value={dailyPct} size={36} stroke={3} />
+        <ProgressRing value={dailyPct} size={22} stroke={2.5} />
         <span
           className="text-sm font-spartan font-bold tabular-nums"
           style={{ color: "var(--color-text-primary)" }}
@@ -34,7 +34,7 @@ const StatPills = memo(({ completed, total, streak, weeklyProgress }) => {
       {/* Weekly progress pill (only if weekly habits exist) */}
       {weeklyProgress && weeklyProgress.total > 0 && (
         <div
-          className="flex items-center gap-1.5 rounded-full px-3 py-2 border"
+          className="flex items-center gap-1.5 rounded-full px-3 h-9 border"
           style={{
             backgroundColor: "var(--color-surface-primary)",
             borderColor: "var(--color-border-primary)",
@@ -58,18 +58,13 @@ const StatPills = memo(({ completed, total, streak, weeklyProgress }) => {
 
       {/* Streak pill */}
       <div
-        className="flex items-center gap-1.5 rounded-full px-3 py-2 border"
+        className="flex items-center gap-1.5 rounded-full px-3 h-9 border"
         style={{
           backgroundColor: "var(--color-surface-primary)",
           borderColor: "var(--color-border-primary)",
         }}
       >
-        <div
-          className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: "var(--color-surface-elevated)" }}
-        >
-          <Fire size={16} weight="duotone" className="text-orange-400" />
-        </div>
+        <Fire size={16} weight="duotone" className="text-orange-400" />
         <span
           className="text-sm font-spartan font-bold tabular-nums"
           style={{ color: "var(--color-text-primary)" }}
