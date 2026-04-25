@@ -124,7 +124,7 @@ const getSteps = () => {
  *   forceShow  — if true, bypass localStorage and show tour (for replay)
  *   onComplete — callback after tour finishes or is skipped
  */
-const DashboardTour = ({ forceShow = false, onComplete, hasHabits = false, userId }) => {
+const DashboardTour = ({ forceShow = false, onComplete, hasHabits = false, habitCount = 0, userId }) => {
   const lsKey = getTourKey(userId);
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(-1); // -1 = prompt, 0..N = steps
@@ -282,10 +282,12 @@ const DashboardTour = ({ forceShow = false, onComplete, hasHabits = false, userI
           aria-label="Dashboard tour prompt"
         >
           <h2 className="text-xl font-garamond font-bold text-[var(--color-text-primary)] mb-1">
-            Want a quick tour?
+            {habitCount === 1 ? 'First habit created!' : 'Want a quick tour?'}
           </h2>
           <p className="text-sm font-spartan text-[var(--color-text-secondary)] mb-5">
-            30 seconds to learn your way around. You can always replay it later from Settings → About.
+            {habitCount === 1
+              ? "Now that you've created your first habit, take 30 seconds to learn your way around."
+              : '30 seconds to learn your way around. You can always replay it later from Settings \u2192 About.'}
           </p>
           <div className="flex gap-3">
             <button onClick={startTour} className="tour-btn-primary">

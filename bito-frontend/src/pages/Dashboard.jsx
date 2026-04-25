@@ -334,6 +334,7 @@ const Dashboard = () => {
       <DashboardTour
         userId={user?._id || user?.id}
         hasHabits={habits.length > 0}
+        habitCount={habits.length}
       />
     </div>
     </SkeletonTransition>
