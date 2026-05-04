@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { HabitCheckbox } from './HabitCheckbox.jsx';
 import { IconButton } from '@radix-ui/themes';
 import { Pencil1Icon } from '@radix-ui/react-icons';
+import { ChartBar, Person } from '@phosphor-icons/react';
 import { useHabits } from '../../contexts/HabitContext.jsx';
 import HabitIcon from '../shared/HabitIcon';
 
@@ -28,13 +29,13 @@ export const HabitRow = memo(({
                 {habit.name}
               </h3>
               {isFromGroup && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                  📊 Group
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                  <ChartBar size={10} weight="duotone" /> Group
                 </span>
               )}
               {isPersonal && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                  👤 Personal
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                  <Person size={10} weight="duotone" /> Personal
                 </span>
               )}
             </div>

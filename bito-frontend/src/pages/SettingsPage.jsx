@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import HabitIcon from "../components/shared/HabitIcon";
 import { useNavigate } from "react-router-dom";
 import {
   PersonIcon,
@@ -519,7 +520,7 @@ const SettingsPage = ({ section }) => {
                     backgroundColor: `${habitData.color || "#4f46e5"}18`,
                   }}
                 >
-                  {habitData.icon || "🎯"}
+                  {habitData.icon ? <HabitIcon icon={habitData.icon} size={18} /> : <HabitIcon icon="Target" size={18} />}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)] truncate">

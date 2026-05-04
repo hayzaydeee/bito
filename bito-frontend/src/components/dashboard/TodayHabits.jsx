@@ -1,6 +1,7 @@
 import React, { memo, useState, useCallback } from "react";
 import { CheckIcon, Pencil1Icon, PlusIcon } from "@radix-ui/react-icons";
 import { motion, AnimatePresence } from "framer-motion";
+import { Leaf } from "@phosphor-icons/react";
 import WeeklyHabitRow from "./WeeklyHabitRow";
 import { habitUtils } from "../../utils/habitLogic";
 import { springs } from "../../utils/motion";
@@ -124,7 +125,9 @@ const TodayHabits = memo(
     if (habits.length === 0 && weeklyHabits.length === 0) {
       return (
         <div className="text-center py-10">
-          <div className="text-4xl mb-3">🌱</div>
+          <div className="flex justify-center mb-3">
+            <Leaf size={40} weight="duotone" className="text-green-400" />
+          </div>
           <h3
             className="text-base font-garamond font-bold mb-1"
             style={{ color: "var(--color-text-primary)" }}

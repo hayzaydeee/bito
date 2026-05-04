@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
+import { ChatTeardrop } from '@phosphor-icons/react';
 
 const LS_KEY_PREFIX = 'bito_analytics_tour_completed';
 
@@ -357,7 +358,7 @@ const AnalyticsTour = ({ forceShow = false, onComplete, userId }) => {
             }}
             className="mb-3 w-full flex items-center gap-2 p-2.5 rounded-lg bg-[rgba(99,102,241,0.08)] border border-[rgba(99,102,241,0.18)] hover:bg-[rgba(99,102,241,0.14)] transition-colors cursor-pointer"
           >
-            <span className="text-base">🗣️</span>
+            <ChatTeardrop size={18} weight="duotone" className="text-[var(--color-brand-400)] flex-shrink-0" />
             <div className="text-left">
               <p className="text-xs font-spartan font-semibold text-[var(--color-brand-400)]">
                 Customise your AI voice

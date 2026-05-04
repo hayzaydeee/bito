@@ -6,6 +6,7 @@ import {
   EyeOpenIcon,
   CheckCircledIcon,
 } from "@radix-ui/react-icons";
+import { Warning, ClipboardText } from "@phosphor-icons/react";
 import { groupsAPI } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { habitUtils } from "../contexts/HabitContext";
@@ -148,7 +149,7 @@ const MemberDashboardView = () => {
     return (
       <div className="min-h-screen page-container px-4 sm:px-6 py-10">
         <div className="max-w-3xl mx-auto text-center py-20">
-          <p className="text-4xl mb-4">⚠️</p>
+          <p className="text-4xl mb-4"><Warning size={40} weight="duotone" className="text-yellow-400 mx-auto" /></p>
           <h2 className="text-xl font-garamond font-bold text-[var(--color-text-primary)] mb-2">
             Something went wrong
           </h2>
@@ -222,7 +223,7 @@ const MemberDashboardView = () => {
         {/* empty state */}
         {habits.length === 0 && (
           <div className="text-center py-20">
-            <p className="text-4xl mb-4">📋</p>
+            <p className="text-4xl mb-4"><ClipboardText size={40} weight="duotone" className="text-[var(--color-text-tertiary)] mx-auto" /></p>
             <h3 className="text-lg font-garamond font-bold text-[var(--color-text-primary)] mb-1">
               No habits yet
             </h3>

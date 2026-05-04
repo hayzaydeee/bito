@@ -5,6 +5,7 @@ import {
   PersonIcon,
   StarIcon,
 } from "@radix-ui/react-icons";
+import { Trophy, Fire, TrendUp, CalendarBlank, Handshake, Sword } from "@phosphor-icons/react";
 import { groupsAPI } from "../../services/api";
 import ChallengeCreateModal from "../ui/ChallengeCreateModal";
 import ChallengeJoinModal from "../ui/ChallengeJoinModal";
@@ -12,11 +13,11 @@ import { useAuth } from "../../contexts/AuthContext";
 
 /* ── type metadata ── */
 const TYPE_META = {
-  streak: { icon: "🔥", label: "Streak" },
-  cumulative: { icon: "📈", label: "Cumulative" },
-  consistency: { icon: "📅", label: "Consistency" },
-  team_goal: { icon: "🤝", label: "Team Goal" },
-  head_to_head: { icon: "⚔️", label: "Head to Head" },
+  streak: { Icon: Fire, label: "Streak" },
+  cumulative: { Icon: TrendUp, label: "Cumulative" },
+  consistency: { Icon: CalendarBlank, label: "Consistency" },
+  team_goal: { Icon: Handshake, label: "Team Goal" },
+  head_to_head: { Icon: Sword, label: "Head to Head" },
 };
 
 const STATUS_COLORS = {
@@ -146,7 +147,9 @@ const ChallengeWidget = ({ groupId, className = "" }) => {
 
       {challenges.length === 0 ? (
         <div className="text-center py-20">
-          <p className="text-4xl mb-4">🏆</p>
+          <div className="flex justify-center mb-4">
+            <Trophy size={40} weight="duotone" className="text-[var(--color-text-tertiary)]" />
+          </div>
           <h3 className="text-lg font-garamond font-bold text-[var(--color-text-primary)] mb-1">
             No challenges yet
           </h3>
@@ -157,7 +160,7 @@ const ChallengeWidget = ({ groupId, className = "" }) => {
       ) : (
         <ul className="space-y-3">
           {challenges.map((c) => {
-            const meta = TYPE_META[c.type] || { icon: "🏆", label: c.type };
+            const meta = TYPE_META[c.type] || { Icon: Trophy, label: c.type };
             const joined = isParticipant(c);
             const pct = progressPercent(c);
 
@@ -168,7 +171,9 @@ const ChallengeWidget = ({ groupId, className = "" }) => {
                 className="p-4 rounded-2xl border bg-[var(--color-surface-elevated)] border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40 transition-colors cursor-pointer"
               >
                 <div className="flex items-start gap-3">
-                  <span className="text-xl flex-shrink-0 mt-0.5">{meta.icon}</span>
+                  <span className="flex-shrink-0 mt-0.5">
+                    <meta.Icon size={18} weight="duotone" className="text-[var(--color-brand-400)]" />
+                  </span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] truncate">

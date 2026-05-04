@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from 'react';
-import { ListChecks, ChartBar, PlusCircle, Clock, Warning } from '@phosphor-icons/react';
+import { ListChecks, ChartBar, PlusCircle, Clock, Warning, Buildings, Users, Gear } from '@phosphor-icons/react';
 
 // Safe JSON stringifier to prevent circular reference errors
 const safeStringify = (obj, maxDepth = 3) => {
@@ -445,7 +445,7 @@ const WidgetRenderer = ({
     case 'group-overview':
       return (
         <div className="w-full h-full flex flex-col items-center justify-center text-[var(--color-text-secondary)] bg-[var(--color-surface-elevated] rounded-xl border-2 border-dashed border-[var(--color-border-primary)]/30">
-          <div className="text-4xl mb-4">🏢</div>
+          <div className="text-4xl mb-4"><Buildings size={40} className="mx-auto" /></div>
           <div className="text-lg font-semibold mb-2">Group Overview</div>
           <div className="text-sm text-center">Coming soon - Team progress and insights</div>
         </div>
@@ -454,7 +454,7 @@ const WidgetRenderer = ({
     case 'team-activity':
       return (
         <div className="w-full h-full flex flex-col items-center justify-center text-[var(--color-text-secondary)] bg-[var(--color-surface-elevated] rounded-xl border-2 border-dashed border-[var(--color-border-primary)]/30">
-          <div className="text-4xl mb-4">👥</div>
+          <div className="text-4xl mb-4"><Users size={40} className="mx-auto" /></div>
           <div className="text-lg font-semibold mb-2">Team Activity</div>
           <div className="text-sm text-center">Coming soon - Live team activity feed</div>
         </div>
@@ -535,7 +535,7 @@ const WidgetRenderer = ({
       // For the widget factory, we'll return a placeholder that indicates this should be handled by the settings page
       return (
         <div className="w-full h-full flex flex-col items-center justify-center text-[var(--color-text-secondary)] bg-[var(--color-surface-elevated] rounded-xl">
-          <div className="text-2xl mb-2">⚙️</div>
+          <div className="text-2xl mb-2"><Gear size={24} className="mx-auto" /></div>
           <div className="text-sm text-center">Settings widget rendered by page</div>
         </div>
       );

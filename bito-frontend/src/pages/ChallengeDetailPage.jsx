@@ -7,7 +7,7 @@ import {
   CheckCircledIcon,
   CrossCircledIcon,
 } from "@radix-ui/react-icons";
-import { Fire, TrendUp, CalendarCheck, Handshake, Sword, Trophy, Medal } from "@phosphor-icons/react";
+import { Fire, TrendUp, CalendarCheck, Handshake, Sword, Trophy, Medal, ChartBar } from "@phosphor-icons/react";
 import { groupsAPI } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import ChallengeJoinModal from "../components/ui/ChallengeJoinModal";
@@ -468,7 +468,9 @@ const ChallengeDetailPage = () => {
       {/* ── Empty state when no leaderboard ── */}
       {leaderboard.length === 0 && challenge.settings?.showLeaderboard && (
         <div className="p-6 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 text-center">
-          <p className="text-3xl mb-2">📊</p>
+          <div className="flex justify-center mb-2">
+            <ChartBar size={36} weight="duotone" className="text-[var(--color-text-tertiary)]" />
+          </div>
           <p className="text-sm text-[var(--color-text-secondary)] font-spartan">
             No leaderboard data yet. Join the challenge to see rankings!
           </p>

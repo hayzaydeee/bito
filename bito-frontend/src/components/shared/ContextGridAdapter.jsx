@@ -83,7 +83,7 @@ const ContextGridAdapter = ({
           description: '',
           category: 'other',
           color: '#4f46e5',
-          icon: '⭐',
+          icon: 'Star',
         };
       }
       
@@ -93,7 +93,7 @@ const ContextGridAdapter = ({
         description: String(habitData.description || ''),
         category: String(habitData.category || 'other'),
         color: String(habitData.color || '#4f46e5'),
-        icon: String(habitData.icon || '⭐'),
+        icon: String(habitData.icon || 'Star'),
         frequency: String(habitData.frequency || 'daily'),
         ...(habitData.schedule && {
           schedule: {
@@ -134,7 +134,7 @@ const ContextGridAdapter = ({
         description: String(habitData.description || ''),
         category: String(habitData.category || 'other'),
         color: String(habitData.color || '#4f46e5'),
-        icon: String(habitData.icon || '⭐'),
+        icon: String(habitData.icon || 'Star'),
         isActive: Boolean(habitData.isActive !== undefined ? habitData.isActive : true),
         ...(habitData.schedule && {
           schedule: {

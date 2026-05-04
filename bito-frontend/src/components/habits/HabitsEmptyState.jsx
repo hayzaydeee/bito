@@ -1,5 +1,6 @@
 import React, { memo } from "react";
 import { PlusIcon } from "@radix-ui/react-icons";
+import { Leaf } from "@phosphor-icons/react";
 
 /**
  * HabitsEmptyState — minimal empty state.
@@ -17,7 +18,7 @@ const HabitsEmptyState = memo(({ isFiltered, onCreateHabit }) => {
 
   return (
     <div className="flex flex-col items-center justify-center py-24 gap-4">
-      <span className="text-4xl">🌱</span>
+      <Leaf size={40} weight="duotone" className="text-green-400" />
       <p className="text-sm font-spartan text-[var(--color-text-tertiary)]">
         No habits yet
       </p>

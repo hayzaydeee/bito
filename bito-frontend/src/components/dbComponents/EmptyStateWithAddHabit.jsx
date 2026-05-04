@@ -27,7 +27,7 @@ export const EmptyStateWithAddHabit = ({ className = "", onAddHabit = null }) =>
     const newHabit = {
       name: String(newHabitName.trim()),
       color: '#3B82F6',
-      icon: '⭐',
+      icon: 'Star',
       category: 'other',
       description: '',
       frequency: 'daily',

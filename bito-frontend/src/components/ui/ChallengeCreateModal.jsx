@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import { Cross2Icon } from "@radix-ui/react-icons";
+import { Fire, TrendUp, CalendarBlank, Handshake } from "@phosphor-icons/react";
 import { groupsAPI } from "../../services/api";
 import AnimatedModal from "./AnimatedModal";
 
 /* ── constants ── */
 
 const CHALLENGE_TYPES = [
-  { value: "streak", label: "Streak", icon: "🔥", desc: "Maintain consecutive days" },
-  { value: "cumulative", label: "Cumulative", icon: "📈", desc: "Reach a total target" },
-  { value: "consistency", label: "Consistency", icon: "📅", desc: "Hit a completion-rate %" },
-  { value: "team_goal", label: "Team Goal", icon: "🤝", desc: "Group works toward one total" },
+  { value: "streak", label: "Streak", Icon: Fire, desc: "Maintain consecutive days" },
+  { value: "cumulative", label: "Cumulative", Icon: TrendUp, desc: "Reach a total target" },
+  { value: "consistency", label: "Consistency", Icon: CalendarBlank, desc: "Hit a completion-rate %" },
+  { value: "team_goal", label: "Team Goal", Icon: Handshake, desc: "Group works toward one total" },
 ];
 
 const TARGET_UNITS = [
@@ -171,7 +172,7 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
                         : "border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40"
                     }`}
                   >
-                    <span className="text-2xl">{t.icon}</span>
+                    <t.Icon size={22} weight="duotone" className="text-[var(--color-brand-400)]" />
                     <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] mt-2">{t.label}</p>
                     <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mt-0.5">{t.desc}</p>
                   </button>
@@ -195,7 +196,7 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
               >
                 ← Back ·{" "}
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--color-brand-600)]/10 text-[var(--color-brand-600)] font-medium">
-                  {selectedType?.icon} {selectedType?.label}
+                  {selectedType?.Icon && <selectedType.Icon size={13} weight="duotone" />} {selectedType?.label}
                 </span>
               </button>
 

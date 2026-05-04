@@ -1,5 +1,6 @@
 import React, { memo, useMemo, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import { Leaf, TrendUp } from "@phosphor-icons/react";
 import { useInsights } from "../../globalHooks/useInsights";
 
 /* ─── Progress bar for seedling / sprouting tiers ─── */
@@ -22,7 +23,15 @@ const TierProgress = ({ entryCount, thresholds, tier }) => {
           className="text-[10px] font-spartan font-medium uppercase tracking-wider"
           style={{ color: "var(--color-text-muted)" }}
         >
-          {tier === "seedling" ? "🌱 Getting started" : "🌿 Building momentum"}
+          {tier === "seedling" ? (
+            <span className="inline-flex items-center gap-1">
+              <Leaf size={12} weight="duotone" className="text-green-400" /> Getting started
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1">
+              <TrendUp size={12} weight="duotone" style={{ color: "var(--color-brand-400)" }} /> Building momentum
+            </span>
+          )}
         </span>
         <span
           className="text-[10px] font-spartan"

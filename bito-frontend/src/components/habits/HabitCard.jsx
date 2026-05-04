@@ -2,6 +2,7 @@ import React, { memo, useMemo } from "react";
 import ProgressRing from "../shared/ProgressRing";
 import CATEGORY_META from "../../data/categoryMeta";
 import HabitIcon from "../shared/HabitIcon";
+import { Fire } from "@phosphor-icons/react";
 
 /**
  * HabitCard — minimal, premium card for the habits grid.
@@ -59,10 +60,10 @@ const HabitCard = memo(({ habit, onClick }) => {
             )}
             {habit.stats?.currentStreak > 0 && (
               <span
-                className="text-[11px] font-spartan font-semibold tabular-nums"
+                className="inline-flex items-center gap-0.5 text-[11px] font-spartan font-semibold tabular-nums"
                 style={{ color: accentColor }}
               >
-                🔥 {habit.stats.currentStreak}d
+                <Fire size={11} weight="duotone" className="text-orange-400" /> {habit.stats.currentStreak}d
               </span>
             )}
           </div>

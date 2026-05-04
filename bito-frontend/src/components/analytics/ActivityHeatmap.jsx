@@ -1,4 +1,5 @@
 ﻿import React, { useMemo, useState } from 'react';
+import { CalendarBlank } from '@phosphor-icons/react';
 
 /* -----------------------------------------------------------------
    ActivityHeatmap -- GitHub-style contribution heatmap
@@ -58,7 +59,7 @@ const ActivityHeatmap = ({ habits, entries, timeRange, accountAgeDays = 365 }) =
   if (!habits.length) {
     return (
       <div className="analytics-chart-card flex flex-col items-center justify-center h-[240px] gap-2">
-        <span className="text-3xl opacity-40">📅</span>
+        <CalendarBlank size={36} weight="duotone" className="text-[var(--color-text-tertiary)] opacity-40" />
         <p className="text-sm font-spartan text-[var(--color-text-tertiary)]">
           Activity data will appear as you track habits
         </p>

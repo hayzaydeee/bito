@@ -59,7 +59,7 @@ const StreakBarChart = ({ habits, entries }) => {
             fullName: habit.name,
             streak,
             color: habit.color || '#8B5CF6',
-            icon: habit.icon || '🎯',
+            icon: habit.icon || 'Target',
             isWeekly: true,
             unit: 'w',
           };
@@ -87,7 +87,7 @@ const StreakBarChart = ({ habits, entries }) => {
           fullName: habit.name,
           streak,
           color: habit.color || '#818cf8',
-          icon: habit.icon || '🎯',
+          icon: habit.icon || 'Target',
           isWeekly: false,
           unit: 'd',
         };

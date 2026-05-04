@@ -360,10 +360,10 @@ const GroupSettings = () => {
               onChange={(v) => set("defaultHabitVisibility", v)}
               disabled={!canEdit}
               options={[
-                { label: "🌐 Public", value: "public" },
-                { label: "📊 Progress Only", value: "progress-only" },
-                { label: "🔥 Streaks Only", value: "streaks-only" },
-                { label: "🔒 Private", value: "private" },
+                { label: "Public", value: "public" },
+                { label: "Progress Only", value: "progress-only" },
+                { label: "Streaks Only", value: "streaks-only" },
+                { label: "Private", value: "private" },
               ]}
             />
           </SettingRow>
@@ -391,9 +391,9 @@ const GroupSettings = () => {
               onChange={(v) => set("privacyLevel", v)}
               disabled={!canEdit}
               options={[
-                { label: "🔒 Invite Only", value: "invite-only" },
-                { label: "👥 Members Only", value: "members-only" },
-                { label: "🌐 Open to All", value: "open" },
+                { label: "Invite Only", value: "invite-only" },
+                { label: "Members Only", value: "members-only" },
+                { label: "Open to All", value: "open" },
               ]}
             />
           </SettingRow>

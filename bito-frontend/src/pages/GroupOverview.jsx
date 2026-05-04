@@ -782,7 +782,9 @@ function HabitsTab({ habits, canCreateHabits, canManage, currentUserId, isAdopte
 
       {habits.length === 0 ? (
         <div className="text-center py-20">
-          <p className="text-4xl mb-4">🎯</p>
+          <div className="flex justify-center mb-4">
+            <Target size={40} weight="duotone" className="text-[var(--color-text-tertiary)]" />
+          </div>
           <h3 className="text-lg font-garamond font-bold text-[var(--color-text-primary)] mb-1">
             No group habits yet
           </h3>

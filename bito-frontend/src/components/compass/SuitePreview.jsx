@@ -1,5 +1,6 @@
 import { ArrowLeftIcon, RocketIcon, LinkBreak2Icon } from "@radix-ui/react-icons";
 import CATEGORY_META from "../../data/categoryMeta";
+import HabitIcon from "../shared/HabitIcon";
 
 /**
  * SuitePreview — overview of a multi-goal compass suite.
@@ -105,8 +106,8 @@ const SuitePreview = ({
               />
 
               <div className="flex items-start gap-3">
-                <span className="text-2xl flex-shrink-0 mt-0.5">
-                  {sys.icon || "🎯"}
+                <span className="flex-shrink-0 mt-0.5">
+                  <HabitIcon icon={sys.icon || "Target"} size={22} />
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">

@@ -5,6 +5,7 @@ import {
   Cross2Icon,
   ExclamationTriangleIcon,
 } from "@radix-ui/react-icons";
+import HabitIcon from "../shared/HabitIcon";
 
 const HabitAdoptModal = ({ 
   isOpen, 
@@ -52,7 +53,7 @@ const HabitAdoptModal = ({
                 className="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
                 style={{ backgroundColor: habit.color || '#4f46e5' }}
               >
-                {habit.icon || '🎯'}
+                <HabitIcon icon={habit.icon || 'Target'} size={18} />
               </div>
               <div>
                 <h3 className="font-medium text-[var(--color-text-primary)] font-outfit">

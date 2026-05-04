@@ -4,6 +4,7 @@ import {
   PersonIcon,
   BarChartIcon
 } from '@radix-ui/react-icons';
+import { Trophy, Medal } from '@phosphor-icons/react';
 
 const GroupLeaderboardWidget = ({ 
   leaderboardData,
@@ -11,12 +12,10 @@ const GroupLeaderboardWidget = ({
   ...props 
 }) => {
   const getTrophyIcon = (position) => {
-    switch (position) {
-      case 1: return '🥇';
-      case 2: return '🥈';
-      case 3: return '🥉';
-      default: return `${position}`;
-    }
+    if (position === 1) return <Trophy size={18} weight="fill" className="text-yellow-500" />;
+    if (position === 2) return <Medal size={18} weight="fill" className="text-gray-400" />;
+    if (position === 3) return <Medal size={18} weight="fill" className="text-amber-600" />;
+    return <span className="text-sm font-bold">{position}</span>;
   };
 
   const getScoreColor = (score) => {
@@ -79,15 +78,12 @@ const GroupLeaderboardWidget = ({
               }`}
             >
               {/* Position */}
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
                 isTopThree 
-                  ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300' 
+                  ? 'bg-yellow-100 dark:bg-yellow-900/30' 
                   : 'bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)]'
               }`}>
-                {typeof getTrophyIcon(position) === 'string' && getTrophyIcon(position).includes('�') 
-                  ? getTrophyIcon(position) 
-                  : position
-                }
+                {getTrophyIcon(position)}
               </div>
 
               {/* Member Info */}

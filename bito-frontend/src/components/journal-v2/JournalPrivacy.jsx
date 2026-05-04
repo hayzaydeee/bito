@@ -8,6 +8,7 @@ import {
   InfoCircledIcon,
   Cross2Icon,
 } from '@radix-ui/react-icons';
+import { MagnifyingGlass, Sparkle } from '@phosphor-icons/react';
 
 /* ═══════════════════════════════════════════════════════════════
    JournalPrivacy — AI opt-in tour + settings + privacy indicator
@@ -26,7 +27,7 @@ const AI_TIERS = [
     key: 'contentAnalysis',
     title: 'Content Insights',
     description: 'AI reads your journal text to surface deeper themes, correlations, and habit connections.',
-    icon: '🔍',
+    icon: <MagnifyingGlass size={16} weight="duotone" />,
     dataAccess: 'All journal text content + metadata',
     tier: 2,
   },
@@ -73,7 +74,7 @@ export const AIOptInNudge = memo(({ onStartTour, onDismiss }) => {
         borderColor: 'rgba(99,102,241,0.15)',
       }}
     >
-      <span className="text-lg flex-shrink-0 mt-0.5">✨</span>
+      <Sparkle size={20} weight="duotone" className="flex-shrink-0 mt-0.5 text-[var(--color-brand-400)]" />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-spartan font-semibold" style={{ color: 'var(--color-text-primary)' }}>
           Unlock Journal Intelligence

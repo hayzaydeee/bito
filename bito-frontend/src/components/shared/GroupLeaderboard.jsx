@@ -9,6 +9,7 @@ import {
   CheckCircledIcon,
   MixIcon
 } from '@radix-ui/react-icons';
+import { Trophy, Medal } from '@phosphor-icons/react';
 
 const GroupLeaderboard = ({ groupId }) => {
   const [leaderboardData, setLeaderboardData] = useState([]);
@@ -82,10 +83,10 @@ const GroupLeaderboard = ({ groupId }) => {
   };
 
   const getTrophyIcon = (position) => {
-    if (position === 0) return '🥇';
-    if (position === 1) return '🥈';
-    if (position === 2) return '🥉';
-    return '🏅';
+    if (position === 0) return <Trophy size={24} weight="fill" className="text-yellow-500" />;
+    if (position === 1) return <Medal size={24} weight="fill" className="text-gray-400" />;
+    if (position === 2) return <Medal size={24} weight="fill" className="text-amber-600" />;
+    return <Medal size={24} weight="duotone" className="text-[var(--color-text-tertiary)]" />;
   };
 
   const getPositionColor = (position) => {

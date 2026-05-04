@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import LLMConfigService from '../../services/llmConfigService';
 import AnimatedModal from './AnimatedModal';
+import { Eye, EyeSlash, Lock } from '@phosphor-icons/react';
 
 const LLMSettingsModal = ({ isOpen, onClose }) => {
   const [apiKey, setApiKey] = useState('');
@@ -87,7 +88,7 @@ const LLMSettingsModal = ({ isOpen, onClose }) => {
                   onClick={() => setShowApiKey(!showApiKey)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
                 >
-                  {showApiKey ? '🙈' : '👁️'}
+                  {showApiKey ? <EyeSlash size={16} /> : <Eye size={16} />}
                 </button>
               </div>
               {error && (
@@ -109,7 +110,7 @@ const LLMSettingsModal = ({ isOpen, onClose }) => {
             </div>
 
             <div className="bg-[var(--color-warning-surface)] border border-[var(--color-warning-border)] rounded-lg p-3">
-              <h4 className="font-medium text-[var(--color-warning-text)] text-sm mb-1 font-outfit">🔒 Privacy & Security</h4>
+              <h4 className="font-medium text-[var(--color-warning-text)] text-sm mb-1 font-outfit flex items-center gap-1.5"><Lock size={13} weight="duotone" /> Privacy & Security</h4>
               <p className="text-[var(--color-warning-text)] text-xs font-outfit">
                 Your API key is encrypted and stored locally. Only CSV headers and sample rows are sent to OpenAI for analysis.
               </p>

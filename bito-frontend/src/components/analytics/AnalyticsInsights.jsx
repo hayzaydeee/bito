@@ -1,7 +1,7 @@
 ﻿import React, { memo, useCallback, useState } from 'react';
 import { useAnalyticsInsights } from '../../globalHooks/useAnalyticsInsights';
 import { insightsAPI } from '../../services/api';
-import { MagnifyingGlass, TrendUp, ArrowsCounterClockwise, Lightbulb } from '@phosphor-icons/react';
+import { MagnifyingGlass, TrendUp, ArrowsCounterClockwise, Lightbulb, Leaf } from '@phosphor-icons/react';
 
 /* ---------------------------------------------------------------------
    AnalyticsInsights - comprehensive AI-powered analytics section.
@@ -139,7 +139,7 @@ const AnalyticsInsights = memo(({ timeRange }) => {
 
     return (
       <div className="card p-5 text-center space-y-4">
-        <span className="text-3xl">🌱</span>
+        <Leaf size={36} weight="duotone" className="text-green-400 mx-auto" />
         <h3 className="text-lg font-garamond font-bold text-[var(--color-text-primary)]">
           Building Your Data
         </h3>

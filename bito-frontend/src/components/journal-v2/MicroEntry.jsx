@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { PlusIcon, Cross2Icon, Pencil1Icon, TrashIcon, CheckIcon } from '@radix-ui/react-icons';
+import HabitIcon from '../shared/HabitIcon';
 
 /* ═══════════════════════════════════════════════════════════════
    MicroEntry — quick text capture + display cards
@@ -196,7 +197,7 @@ export const MicroEntryCard = memo(({ entry, onEdit, onDelete }) => {
           {entry.linkedHabitId && (
             <span className="inline-flex items-center gap-1 text-[10px] font-spartan px-1.5 py-0.5 rounded-full"
               style={{ backgroundColor: 'var(--color-surface-elevated)', color: 'var(--color-text-secondary)' }}>
-              {entry.linkedHabitId.icon || '⭐'} {entry.linkedHabitId.name}
+              <HabitIcon icon={entry.linkedHabitId.icon || 'Star'} size={12} /> {entry.linkedHabitId.name}
             </span>
           )}
           {entry.tags?.map(t => (

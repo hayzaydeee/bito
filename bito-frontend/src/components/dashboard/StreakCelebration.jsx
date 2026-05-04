@@ -1,4 +1,5 @@
 import React, { memo, useState, useEffect } from "react";
+import { Fire } from "@phosphor-icons/react";
 
 /**
  * StreakCelebration — Phase 13
@@ -46,7 +47,9 @@ const StreakCelebration = memo(({ streak, habitName, isWeekly = false }) => {
           animation: "checkBounce 350ms cubic-bezier(0.34,1.56,0.64,1) both",
         }}
       >
-        <div className="text-3xl mb-1">🔥</div>
+        <div className="flex justify-center mb-1">
+          <Fire size={36} weight="duotone" className="text-orange-400" />
+        </div>
         <h3
           className="text-lg font-garamond font-bold"
           style={{ color: "var(--color-text-primary)" }}

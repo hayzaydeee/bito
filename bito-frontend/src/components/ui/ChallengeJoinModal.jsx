@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Cross2Icon, ChevronDownIcon, ChevronUpIcon, CheckIcon } from "@radix-ui/react-icons";
 import { groupsAPI } from "../../services/api";
 import AnimatedModal from "./AnimatedModal";
+import HabitIcon from "../shared/HabitIcon";
 
 const inputClass =
   "w-full h-10 px-3 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 rounded-xl text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:border-[var(--color-brand-600)]/40";
@@ -198,7 +199,7 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="text-sm">{habit.icon || "📋"}</span>
+                              <HabitIcon icon={habit.icon || "ClipboardText"} size={16} />
                               <p className="text-sm font-spartan font-medium text-[var(--color-text-primary)] truncate">
                                 {habit.name}
                               </p>
@@ -256,7 +257,7 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                <span className="text-sm">{h.icon || "📋"}</span>
+                                <HabitIcon icon={h.icon || "ClipboardText"} size={16} />
                                 <p className="text-sm font-spartan font-medium text-[var(--color-text-primary)] truncate">
                                   {h.name}
                                 </p>

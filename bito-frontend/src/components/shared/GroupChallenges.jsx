@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { groupsAPI } from '../../services/api';
+import { Fire, Target, Mountains, Handshake } from '@phosphor-icons/react';
 import { 
   TargetIcon,
   CalendarIcon,
@@ -101,10 +102,10 @@ const GroupChallenges = ({ groupId }) => {
 
   const getChallengeTypeInfo = (type) => {
     const typeMap = {
-      streak: { label: 'Streak Challenge', icon: '🔥', color: 'orange' },
-      collective: { label: 'Team Challenge', icon: '🤝', color: 'blue' },
-      completion: { label: 'Completion Challenge', icon: '🎯', color: 'green' },
-      milestone: { label: 'Milestone Challenge', icon: '🏔️', color: 'purple' }
+      streak: { label: 'Streak Challenge', Icon: Fire, color: 'orange' },
+      collective: { label: 'Team Challenge', Icon: Handshake, color: 'blue' },
+      completion: { label: 'Completion Challenge', Icon: Target, color: 'green' },
+      milestone: { label: 'Milestone Challenge', Icon: Mountains, color: 'purple' }
     };
     return typeMap[type] || typeMap.streak;
   };
@@ -228,7 +229,7 @@ const GroupChallenges = ({ groupId }) => {
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="text-2xl">{typeInfo.icon}</span>
+                      <typeInfo.Icon size={22} weight="duotone" className="flex-shrink-0" />
                       <h3 className="text-lg font-bold text-[var(--color-text-primary)] font-dmSerif">
                         {challenge.title}
                       </h3>

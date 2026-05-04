@@ -8,6 +8,10 @@ import {
   TargetIcon,
 } from "@radix-ui/react-icons";
 import { useAuth } from "../contexts/AuthContext";
+import {
+  Barbell, Target, Moon, BookOpen, Handshake, Palette,
+  Sun, PersonSimple, Brain, Lightbulb, ChatTeardrop, Pen, Bed, Drop
+} from "@phosphor-icons/react";
 import { useNotifications } from "../contexts/NotificationContext";
 import { userAPI } from "../services/api";
 import useMotionSafe from "../hooks/useMotionSafe";
@@ -30,88 +34,88 @@ import {
 const GOAL_OPTIONS = [
   {
     id: "health",
-    emoji: "💪",
+    Icon: Barbell,
     label: "Health & fitness",
     description: "Exercise, hydration, sleep",
     category: "health",
     color: "#22C55E",
     habits: [
-      { name: "Drink 8 glasses of water", icon: "💧", target: { value: 8, unit: "glasses" } },
-      { name: "Exercise for 30 min", icon: "🏃", frequency: "weekly", weeklyTarget: 5, target: { value: 30, unit: "minutes" } },
-      { name: "Sleep by 11 PM", icon: "😴", target: { value: 1, unit: "times" } },
+      { name: "Drink 8 glasses of water", icon: "Drop", target: { value: 8, unit: "glasses" } },
+      { name: "Exercise for 30 min", icon: "PersonSimple", frequency: "weekly", weeklyTarget: 5, target: { value: 30, unit: "minutes" } },
+      { name: "Sleep by 11 PM", icon: "Bed", target: { value: 1, unit: "times" } },
     ],
   },
   {
     id: "productivity",
-    emoji: "🎯",
+    Icon: Target,
     label: "Productivity",
     description: "Focus, planning, deep work",
     category: "productivity",
     color: "#6366F1",
     habits: [
-      { name: "Plan 3 daily priorities", icon: "📝", target: { value: 3, unit: "times" } },
-      { name: "Deep work session", icon: "🧠", target: { value: 1, unit: "times" } },
-      { name: "No phone first hour", icon: "📵", target: { value: 1, unit: "times" } },
+      { name: "Plan 3 daily priorities", icon: "Pen", target: { value: 3, unit: "times" } },
+      { name: "Deep work session", icon: "Brain", target: { value: 1, unit: "times" } },
+      { name: "No phone first hour", icon: "Moon", target: { value: 1, unit: "times" } },
     ],
   },
   {
     id: "mindfulness",
-    emoji: "🧘",
+    Icon: Moon,
     label: "Mindfulness",
     description: "Meditation, journaling, gratitude",
     category: "mindfulness",
     color: "#8B5CF6",
     habits: [
-      { name: "Morning meditation", icon: "🧘", target: { value: 10, unit: "minutes" } },
-      { name: "Gratitude journal", icon: "🙏", target: { value: 1, unit: "times" } },
-      { name: "Digital sunset", icon: "🌅", target: { value: 1, unit: "times" } },
+      { name: "Morning meditation", icon: "Moon", target: { value: 10, unit: "minutes" } },
+      { name: "Gratitude journal", icon: "Heart", target: { value: 1, unit: "times" } },
+      { name: "Digital sunset", icon: "Sun", target: { value: 1, unit: "times" } },
     ],
   },
   {
     id: "learning",
-    emoji: "📚",
+    Icon: BookOpen,
     label: "Learning",
     description: "Reading, courses, practice",
     category: "learning",
     color: "#3B82F6",
     habits: [
-      { name: "Read for 20 minutes", icon: "📖", frequency: "weekly", weeklyTarget: 5, target: { value: 20, unit: "minutes" } },
-      { name: "Learn something new", icon: "💡", target: { value: 1, unit: "times" } },
-      { name: "Review notes", icon: "📝", target: { value: 1, unit: "times" } },
+      { name: "Read for 20 minutes", icon: "BookOpen", frequency: "weekly", weeklyTarget: 5, target: { value: 20, unit: "minutes" } },
+      { name: "Learn something new", icon: "Lightbulb", target: { value: 1, unit: "times" } },
+      { name: "Review notes", icon: "Pen", target: { value: 1, unit: "times" } },
     ],
   },
   {
     id: "social",
-    emoji: "🤝",
+    Icon: Handshake,
     label: "Relationships",
     description: "Connection, kindness, outreach",
     category: "social",
     color: "#F59E0B",
     habits: [
-      { name: "Reach out to a friend", icon: "📱", frequency: "weekly", weeklyTarget: 3, target: { value: 1, unit: "times" } },
-      { name: "Random act of kindness", icon: "💛", frequency: "weekly", weeklyTarget: 2, target: { value: 1, unit: "times" } },
-      { name: "Quality time (no screens)", icon: "🤝", target: { value: 30, unit: "minutes" } },
+      { name: "Reach out to a friend", icon: "ChatTeardrop", frequency: "weekly", weeklyTarget: 3, target: { value: 1, unit: "times" } },
+      { name: "Random act of kindness", icon: "Heart", frequency: "weekly", weeklyTarget: 2, target: { value: 1, unit: "times" } },
+      { name: "Quality time (no screens)", icon: "Handshake", target: { value: 30, unit: "minutes" } },
     ],
   },
   {
     id: "creative",
-    emoji: "✨",
+    Icon: Palette,
     label: "Creativity",
     description: "Writing, art, side projects",
     category: "creative",
     color: "#EC4899",
     habits: [
-      { name: "Creative practice", icon: "🎨", frequency: "weekly", weeklyTarget: 4, target: { value: 1, unit: "times" } },
-      { name: "Capture an idea", icon: "💡", target: { value: 1, unit: "times" } },
-      { name: "Work on side project", icon: "🛠️", frequency: "weekly", weeklyTarget: 3, target: { value: 1, unit: "times" } },
+      { name: "Creative practice", icon: "Palette", frequency: "weekly", weeklyTarget: 4, target: { value: 1, unit: "times" } },
+      { name: "Capture an idea", icon: "Lightbulb", target: { value: 1, unit: "times" } },
+      { name: "Work on side project", icon: "Code", frequency: "weekly", weeklyTarget: 3, target: { value: 1, unit: "times" } },
     ],
   },
 ];
 
 const TIME_OPTIONS = [
-  { id: "morning", emoji: "🌅", label: "Morning", time: "6 AM – 12 PM", description: "Start the day strong" },
-  { id: "afternoon", emoji: "☀️", label: "Afternoon", time: "12 – 5 PM", description: "Midday momentum" },
-  { id: "evening", emoji: "🌙", label: "Evening", time: "5 – 10 PM", description: "Wind down right" },
+  { id: "morning", Icon: Sun, label: "Morning", time: "6 AM – 12 PM", description: "Start the day strong" },
+  { id: "afternoon", Icon: Sun, label: "Afternoon", time: "12 – 5 PM", description: "Midday momentum" },
+  { id: "evening", Icon: Moon, label: "Evening", time: "5 – 10 PM", description: "Wind down right" },
 ];
 
 const OnboardingPage = () => {
@@ -337,7 +341,7 @@ const OnboardingPage = () => {
                   transform: isSelected ? "scale(1.02)" : "scale(1)",
                 }}
               >
-                <div className="text-2xl mb-2">{goal.emoji}</div>
+                <goal.Icon size={28} weight="duotone" className="mb-2" style={{ color: isSelected ? "#fff" : goal.color }} />
                 <h4
                   className="text-sm font-spartan font-semibold mb-0.5"
                   style={{
@@ -444,7 +448,7 @@ const OnboardingPage = () => {
                   transform: isSelected ? "scale(1.02)" : "scale(1)",
                 }}
               >
-                <span className="text-3xl block mb-2">{opt.emoji}</span>
+                <opt.Icon size={28} weight="duotone" className="block mb-2 mx-auto" />
                 <h4
                   className="text-sm font-spartan font-semibold mb-0.5"
                   style={{

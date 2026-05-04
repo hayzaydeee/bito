@@ -77,7 +77,7 @@ export const useHabitActions = ({
         id: Date.now(),
         name: newHabitName.trim(),
         color: "#6366f1",
-        icon: "✨",
+        icon: "Sparkle",
       };
       if (onAddHabit) {
         onAddHabit(newHabit);

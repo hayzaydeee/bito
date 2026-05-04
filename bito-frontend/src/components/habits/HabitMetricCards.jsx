@@ -1,6 +1,7 @@
 import React, { memo, useMemo } from "react";
 import ProgressRing from "../shared/ProgressRing";
 import CATEGORY_META from "../../data/categoryMeta";
+import { ClipboardText, CheckCircle, Fire, Tag } from "@phosphor-icons/react";
 
 /**
  * HabitMetricCards — 4 summary stat cards with gradient backgrounds & glow orbs.
@@ -57,7 +58,8 @@ const HabitMetricCards = memo(({ habits }) => {
     {
       label: "Active Habits",
       value: data.activeCount,
-      icon: "📋",
+      Icon: ClipboardText,
+      iconColor: "var(--color-brand-400)",
       gradient:
         "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(99,102,241,0.03) 100%)",
       accent: "var(--color-brand-400)",
@@ -69,7 +71,8 @@ const HabitMetricCards = memo(({ habits }) => {
     {
       label: "Avg. Completion",
       value: `${data.avgRate}%`,
-      icon: "✅",
+      Icon: CheckCircle,
+      iconColor: "#10b981",
       gradient:
         "linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(16,185,129,0.03) 100%)",
       accent: "#10b981",
@@ -79,7 +82,8 @@ const HabitMetricCards = memo(({ habits }) => {
     {
       label: "Best Streak",
       value: `${data.bestStreak}d`,
-      icon: "🔥",
+      Icon: Fire,
+      iconColor: "#f59e0b",
       gradient:
         "linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(245,158,11,0.03) 100%)",
       accent: "#f59e0b",
@@ -95,7 +99,8 @@ const HabitMetricCards = memo(({ habits }) => {
       glow: data.topCat
         ? `${data.topCat.meta.accent}1f`
         : "rgba(139,92,246,0.12)",
-      icon: "🏷️",
+      Icon: Tag,
+      iconColor: data.topCat ? data.topCat.meta.accent : "#8b5cf6",
     },
   ];
 
@@ -120,7 +125,7 @@ const HabitMetricCards = memo(({ habits }) => {
           />
 
           <div className="flex items-center justify-between relative z-10">
-            <span className="text-lg">{c.icon}</span>
+            <c.Icon size={18} weight="duotone" style={{ color: c.iconColor || c.accent }} />
             {c.ring != null && (
               <ProgressRing
                 value={c.ring}
