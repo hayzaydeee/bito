@@ -75,19 +75,37 @@ export const MicroEntryCard = memo(({ entry, onEdit, onDelete }) => {
   const touchStartRef = useRef(0);
   const lastTapRef = useRef(0);
   const longPressTimerRef = useRef(null);
+  const cardRef = useRef(null);
 
+  // Cleanup long-press timer on unmount
   useEffect(() => {
     return () => {
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current);
-      }
+      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
     };
   }, []);
+
+  // Click/touch outside to deselect
+  useEffect(() => {
+    if (!isSelected) return;
+    const handleOutside = (e) => {
+      if (cardRef.current && !cardRef.current.contains(e.target)) {
+        setIsSelected(false);
+        setShowActions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutside);
+    document.addEventListener('touchstart', handleOutside, { passive: true });
+    return () => {
+      document.removeEventListener('mousedown', handleOutside);
+      document.removeEventListener('touchstart', handleOutside);
+    };
+  }, [isSelected]);
 
   const openEditor = useCallback(() => {
     setEditText(entry.plainTextContent || '');
     setIsEditing(true);
     setIsSelected(false);
+    setShowActions(false);
   }, [entry.plainTextContent]);
 
   const clearLongPressTimer = useCallback(() => {
@@ -97,10 +115,12 @@ export const MicroEntryCard = memo(({ entry, onEdit, onDelete }) => {
     }
   }, []);
 
-  const handleTouchStart = useCallback(() => {
+  const handleTouchStart = useCallback((e) => {
     touchStartRef.current = Date.now();
     clearLongPressTimer();
     longPressTimerRef.current = setTimeout(() => {
+      // Haptic feedback on supported devices
+      if (navigator.vibrate) navigator.vibrate(30);
       setIsSelected(true);
       setShowActions(true);
     }, 450);
@@ -110,11 +130,13 @@ export const MicroEntryCard = memo(({ entry, onEdit, onDelete }) => {
     const touchDuration = Date.now() - touchStartRef.current;
     const now = Date.now();
 
-    // Treat quick successive taps as a double-tap edit gesture.
+    // Double-tap to edit: two quick taps within 320ms
     if (touchDuration < 300) {
       if (now - lastTapRef.current < 320) {
         clearLongPressTimer();
         openEditor();
+        lastTapRef.current = 0;
+        return;
       }
       lastTapRef.current = now;
     }
@@ -129,6 +151,11 @@ export const MicroEntryCard = memo(({ entry, onEdit, onDelete }) => {
     setIsEditing(false);
     setIsSelected(false);
   }, [entry._id, editText, onEdit]);
+
+  const handleDelete = useCallback(() => {
+    onDelete(entry._id);
+    setIsSelected(false);
+  }, [entry._id, onDelete]);
 
   const time = new Date(entry.createdAt).toLocaleTimeString('en-US', {
     hour: 'numeric',
@@ -161,73 +188,107 @@ export const MicroEntryCard = memo(({ entry, onEdit, onDelete }) => {
 
   return (
     <div
-      className="group flex items-start gap-3 px-3 py-2 rounded-lg transition-colors hover:bg-[var(--color-surface-hover)]"
-      onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => setShowActions(false)}
+      ref={cardRef}
+      className="group rounded-lg transition-all duration-150"
+      onMouseEnter={() => !isSelected && setShowActions(true)}
+      onMouseLeave={() => !isSelected && setShowActions(false)}
       onDoubleClick={openEditor}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       onTouchCancel={clearLongPressTimer}
       onTouchMove={clearLongPressTimer}
-      onClick={() => {
-        if (isSelected) {
-          setIsSelected(false);
-          setShowActions(false);
-        }
-      }}
       style={{
         backgroundColor: isSelected ? 'var(--color-surface-hover)' : undefined,
         border: isSelected ? '1px solid var(--color-brand-300)' : '1px solid transparent',
+        boxShadow: isSelected ? '0 0 0 2px rgba(99,102,241,0.08)' : 'none',
       }}
     >
-      {/* Bullet / timeline dot */}
-      <div className="flex-shrink-0 mt-1.5">
-        <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'var(--color-text-tertiary)' }} />
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-spartan leading-relaxed" style={{ color: 'var(--color-text-primary)' }}>
-          {entry.plainTextContent}
-        </p>
-        <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-[10px] font-spartan" style={{ color: 'var(--color-text-tertiary)' }}>
-            {time}
-          </span>
-          {entry.linkedHabitId && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-spartan px-1.5 py-0.5 rounded-full"
-              style={{ backgroundColor: 'var(--color-surface-elevated)', color: 'var(--color-text-secondary)' }}>
-              <HabitIcon icon={entry.linkedHabitId.icon || 'Star'} size={12} /> {entry.linkedHabitId.name}
-            </span>
-          )}
-          {entry.tags?.map(t => (
-            <span key={t} className="text-[10px] font-spartan px-1.5 py-0.5 rounded-full"
-              style={{ backgroundColor: 'var(--color-surface-elevated)', color: 'var(--color-text-tertiary)' }}>
-              {t}
-            </span>
-          ))}
+      {/* Main row */}
+      <div className="flex items-start gap-3 px-3 py-2">
+        {/* Bullet / timeline dot */}
+        <div className="flex-shrink-0 mt-1.5">
+          <div
+            className="w-1.5 h-1.5 rounded-full transition-colors"
+            style={{ backgroundColor: isSelected ? 'var(--color-brand-400)' : 'var(--color-text-tertiary)' }}
+          />
         </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-spartan leading-relaxed" style={{ color: 'var(--color-text-primary)' }}>
+            {entry.plainTextContent}
+          </p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-[10px] font-spartan" style={{ color: 'var(--color-text-tertiary)' }}>
+              {time}
+            </span>
+            {entry.linkedHabitId && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-spartan px-1.5 py-0.5 rounded-full"
+                style={{ backgroundColor: 'var(--color-surface-elevated)', color: 'var(--color-text-secondary)' }}>
+                <HabitIcon icon={entry.linkedHabitId.icon || 'Star'} size={12} /> {entry.linkedHabitId.name}
+              </span>
+            )}
+            {entry.tags?.map(t => (
+              <span key={t} className="text-[10px] font-spartan px-1.5 py-0.5 rounded-full"
+                style={{ backgroundColor: 'var(--color-surface-elevated)', color: 'var(--color-text-tertiary)' }}>
+                {t}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Desktop hover actions (icon buttons, top-right) */}
+        {!isSelected && (
+          <div className={`flex items-center gap-1 flex-shrink-0 transition-opacity duration-150 ${showActions ? 'opacity-100' : 'opacity-0'}`}>
+            <button
+              onClick={(e) => { e.stopPropagation(); openEditor(); }}
+              className="p-1.5 rounded-md border hover:bg-[var(--color-surface-elevated)] transition-colors"
+              style={{ color: 'var(--color-text-secondary)', borderColor: 'var(--color-border-primary)' }}
+              aria-label="Edit"
+            >
+              <Pencil1Icon className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); handleDelete(); }}
+              className="p-1.5 rounded-md border hover:bg-red-50 hover:border-red-200 transition-colors"
+              style={{ color: 'var(--color-error)', borderColor: 'var(--color-border-primary)' }}
+              aria-label="Delete"
+            >
+              <TrashIcon className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Actions */}
-      <div className={`flex items-center gap-1 flex-shrink-0 transition-opacity duration-150 ${(showActions || isSelected) ? 'opacity-100' : 'opacity-0'}`}>
-        <button
-          onClick={() => openEditor()}
-          className="p-1.5 rounded-md border hover:bg-[var(--color-surface-elevated)] transition-colors"
-          style={{ color: 'var(--color-text-secondary)', borderColor: 'var(--color-border-primary)' }}
-          aria-label="Edit"
-        >
-          <Pencil1Icon className="w-3.5 h-3.5" />
-        </button>
-        <button
-          onClick={() => onDelete(entry._id)}
-          className="p-1.5 rounded-md border hover:bg-red-50 hover:border-red-200 transition-colors"
-          style={{ color: 'var(--color-error)', borderColor: 'var(--color-border-primary)' }}
-          aria-label="Delete"
-        >
-          <TrashIcon className="w-3.5 h-3.5" />
-        </button>
-      </div>
+      {/* Selection action bar — shown after long-press (touch) */}
+      {isSelected && (
+        <div className="flex items-center gap-2 px-3 pb-2.5">
+          <button
+            onClick={(e) => { e.stopPropagation(); openEditor(); }}
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-spartan font-semibold border transition-colors"
+            style={{
+              color: 'var(--color-text-secondary)',
+              borderColor: 'var(--color-border-primary)',
+              backgroundColor: 'var(--color-surface-primary)',
+            }}
+          >
+            <Pencil1Icon className="w-3.5 h-3.5" />
+            Edit
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); handleDelete(); }}
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-spartan font-semibold border transition-colors"
+            style={{
+              color: 'var(--color-error)',
+              borderColor: 'var(--color-error)',
+              backgroundColor: 'rgba(239,68,68,0.04)',
+            }}
+          >
+            <TrashIcon className="w-3.5 h-3.5" />
+            Delete
+          </button>
+        </div>
+      )}
     </div>
   );
 });
@@ -245,10 +306,16 @@ export const MicroStack = memo(({ micros, onExpand, isExpanded, onEdit, onDelete
     <div className="space-y-0.5">
       {/* Section label */}
       <div className="flex items-center justify-between px-3 mb-1">
-        <span className="text-[10px] font-spartan font-semibold uppercase tracking-wider"
-          style={{ color: 'var(--color-text-tertiary)' }}>
-          Quick notes · {micros.length}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-spartan font-semibold uppercase tracking-wider"
+            style={{ color: 'var(--color-text-tertiary)' }}>
+            Quick notes · {micros.length}
+          </span>
+          <span className="hidden sm:inline text-[9px] font-spartan"
+            style={{ color: 'var(--color-text-tertiary)', opacity: 0.6 }}>
+            double-click to edit · hold to select
+          </span>
+        </div>
         {micros.length > 2 && (
           <button
             onClick={onExpand}
