@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useHabits } from '../contexts/HabitContext';
 import { useAuth } from '../contexts/AuthContext';
 import TimeRangePills from '../components/analytics/TimeRangePills';
@@ -37,6 +37,41 @@ const AnalyticsPage = () => {
     const diff = Date.now() - new Date(user.createdAt).getTime();
     return Math.max(1, Math.ceil(diff / 86400000));
   })();
+
+  /* ── derive effective age from actual entry data ── */
+  const effectiveAccountAgeDays = useMemo(() => {
+    let earliestMs = null;
+    habits.forEach(habit => {
+      const hEntries = entries[habit._id] || {};
+      Object.values(hEntries).forEach(entry => {
+        if (!entry?.date) return;
+        const ms = new Date(entry.date).getTime();
+        if (!isNaN(ms) && (earliestMs === null || ms < earliestMs)) earliestMs = ms;
+      });
+    });
+    if (earliestMs === null) {
+      return habits.length > 0 ? 1 : accountAgeDays;
+    }
+    const diff = Date.now() - earliestMs;
+    return Math.max(1, Math.ceil(diff / 86400000));
+  }, [habits, entries, accountAgeDays]);
+
+  const hasAnyEntries = useMemo(() => {
+    return habits.some(habit => {
+      const hEntries = entries[habit._id] || {};
+      return Object.values(hEntries).some(e => e?.completed);
+    });
+  }, [habits, entries]);
+
+  /* ── listen for analytics reset to snap to present ── */
+  useEffect(() => {
+    const handleReset = () => {
+      setTimeRange('7d');
+      try { localStorage.setItem(LS_KEY, '7d'); } catch { /* ignore */ }
+    };
+    window.addEventListener('analyticsReset', handleReset);
+    return () => window.removeEventListener('analyticsReset', handleReset);
+  }, []);
 
   /* ── fetch entries for the visible range ──── */
   useEffect(() => {
@@ -78,20 +113,29 @@ const AnalyticsPage = () => {
         <TimeRangePills value={timeRange} onChange={handleTimeRangeChange} />
       </div>
 
+      {/* ── Empty state after reset ─────────────── */}
+      {habits.length > 0 && !hasAnyEntries && (
+        <div className="rounded-xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)] p-4 text-center">
+          <p className="text-sm font-spartan text-[var(--color-text-secondary)]">
+            No completion data yet. Start checking off habits to see your stats here.
+          </p>
+        </div>
+      )}
+
       {/* ── Metric cards ───────────────────────── */}
       <div data-tour="analytics-metrics">
-      <MetricCards habits={habits} entries={entries} timeRange={timeRange} accountAgeDays={accountAgeDays} />
+      <MetricCards habits={habits} entries={entries} timeRange={timeRange} accountAgeDays={effectiveAccountAgeDays} />
       </div>
 
       {/* ── Daily completion rate: full-width row ─── */}
       <div data-tour="analytics-charts">
-        <CompletionAreaChart habits={habits} entries={entries} timeRange={timeRange} accountAgeDays={accountAgeDays} />
+        <CompletionAreaChart habits={habits} entries={entries} timeRange={timeRange} accountAgeDays={effectiveAccountAgeDays} />
       </div>
 
       {/* ── Current streaks + Top habits: 2-col ──── */}
       <div className="grid gap-4 lg:grid-cols-2" data-tour="analytics-streaks-grid">
         <StreakBarChart habits={habits} entries={entries} />
-        <TopHabitsList habits={habits} entries={entries} timeRange={timeRange} accountAgeDays={accountAgeDays} />
+        <TopHabitsList habits={habits} entries={entries} timeRange={timeRange} accountAgeDays={effectiveAccountAgeDays} />
       </div>
 
       {/* ── Activity heatmap (disabled — WeekStrip covers this) ──
@@ -108,7 +152,7 @@ const AnalyticsPage = () => {
             entries={entries}
             timeRange={timeRange}
             maxHabitsDisplayed={5}
-            accountAgeDays={accountAgeDays}
+            accountAgeDays={effectiveAccountAgeDays}
           />
         )}
       </div>

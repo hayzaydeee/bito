@@ -358,6 +358,7 @@ const SettingsPage = ({ section }) => {
       showToast(
         `Reset complete — ${habitEntriesDeleted ?? 0} entries deleted, ${habitsReset ?? 0} habits cleared`
       );
+      window.dispatchEvent(new CustomEvent('analyticsReset'));
       setResetConfirm(false);
       setResetText("");
       setResetBefore("");
