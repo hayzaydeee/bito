@@ -12,6 +12,7 @@ const Activity = require('../models/Activity');
 const User = require('../models/User');
 const Invitation = require('../models/Invitation');
 const emailService = require('../services/emailService');
+const { resetGroupAnalytics } = require('../services/analyticsResetService');
 
 
 
@@ -2781,6 +2782,65 @@ router.put('/:id/dashboard-permissions', authenticateJWT, async (req, res) => {
       success: false,
       error: 'Failed to update dashboard permissions'
     });
+  }
+});
+
+// @route   DELETE /api/groups/:groupId/analytics
+// @desc    Purge group completion data for all members (admin/owner only)
+// @access  Private — group owner or admin
+router.delete('/:groupId/analytics', authenticateJWT, async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const { confirmReset, before } = req.body;
+    const userId = req.user._id || req.user.id;
+
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ success: false, error: 'Group not found' });
+    }
+
+    const userRole = group.getMemberRole(userId);
+    if (!userRole || !['owner', 'admin'].includes(userRole)) {
+      return res.status(403).json({
+        success: false,
+        error: 'Only group owners and admins can reset group analytics',
+      });
+    }
+
+    if (confirmReset !== 'RESET_GROUP_DATA') {
+      return res.status(400).json({
+        success: false,
+        error: 'Please confirm by sending confirmReset: "RESET_GROUP_DATA"',
+      });
+    }
+
+    if (before) {
+      const beforeDate = new Date(before);
+      if (isNaN(beforeDate.getTime())) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid date format for "before". Use YYYY-MM-DD.',
+        });
+      }
+      if (beforeDate > new Date()) {
+        return res.status(400).json({
+          success: false,
+          error: '"before" date cannot be in the future.',
+        });
+      }
+    }
+
+    const summary = await resetGroupAnalytics(groupId, {
+      before: before ? new Date(before) : undefined,
+    });
+
+    res.json({ success: true, data: summary });
+  } catch (error) {
+    console.error('Group analytics reset error:', error);
+    if (error.message === 'Group not found') {
+      return res.status(404).json({ success: false, error: error.message });
+    }
+    res.status(500).json({ success: false, error: 'Failed to reset group analytics data' });
   }
 });
 

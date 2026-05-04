@@ -151,6 +151,14 @@ export const userAPI = {
       body: JSON.stringify(confirmData),
     });
   },
+
+  // Reset completion analytics (keeps habits)
+  resetAnalytics: async ({ before } = {}) => {
+    return apiRequest('/api/users/analytics', {
+      method: 'DELETE',
+      body: JSON.stringify({ confirmReset: 'RESET_MY_DATA', ...(before && { before }) }),
+    });
+  },
 };
 
 // Habits API
@@ -757,6 +765,14 @@ export const groupsAPI = {
     return apiRequest(`/api/groups/${groupId}/kudos`, {
       method: 'POST',
       body: JSON.stringify({ targetUserId, message }),
+    });
+  },
+
+  // Reset group completion analytics (admin/owner only)
+  resetGroupAnalytics: async (groupId, { before } = {}) => {
+    return apiRequest(`/api/groups/${groupId}/analytics`, {
+      method: 'DELETE',
+      body: JSON.stringify({ confirmReset: 'RESET_GROUP_DATA', ...(before && { before }) }),
     });
   },
 };

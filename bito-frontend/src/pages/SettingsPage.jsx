@@ -327,6 +327,12 @@ const SettingsPage = ({ section }) => {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleteText, setDeleteText] = useState("");
 
+  /* ── analytics reset ──────────────────── */
+  const [resetConfirm, setResetConfirm] = useState(false);
+  const [resetText, setResetText] = useState("");
+  const [resetBefore, setResetBefore] = useState("");
+  const [resetting, setResetting] = useState(false);
+
   const handleDelete = async () => {
     if (deleteText !== "DELETE") return;
     try {
@@ -338,6 +344,27 @@ const SettingsPage = ({ section }) => {
       setTimeout(() => (window.location.href = "/"), 2000);
     } catch (e) {
       showToast(e.message || "Deletion failed", "error");
+    }
+  };
+
+  const handleResetAnalytics = async () => {
+    if (resetText !== "RESET") return;
+    try {
+      setResetting(true);
+      const res = await userAPI.resetAnalytics({
+        before: resetBefore || undefined,
+      });
+      const { habitEntriesDeleted, habitsReset } = res.data || {};
+      showToast(
+        `Reset complete — ${habitEntriesDeleted ?? 0} entries deleted, ${habitsReset ?? 0} habits cleared`
+      );
+      setResetConfirm(false);
+      setResetText("");
+      setResetBefore("");
+    } catch (e) {
+      showToast(e.message || "Reset failed", "error");
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -1166,54 +1193,143 @@ const SettingsPage = ({ section }) => {
 
         {/* ═══════ 8. DANGER ZONE ═══════ */}
         <div className="mt-10 mb-20">
-          <div className="rounded-xl border border-red-500/30 p-5">
-            <h3 className="text-sm font-medium font-spartan text-red-500 mb-1">
+          <div className="rounded-xl border border-red-500/30 p-5 space-y-6">
+            <h3 className="text-sm font-medium font-spartan text-red-500">
               Danger Zone
             </h3>
-            <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mb-4">
-              Permanently delete your account and all associated data. This
-              cannot be undone.
-            </p>
 
-            {!deleteConfirm ? (
-              <button
-                onClick={() => setDeleteConfirm(true)}
-                className="h-9 px-5 rounded-xl border border-red-500/40 text-sm font-spartan font-medium text-red-500 hover:bg-red-500/10 transition-colors"
-              >
-                Delete Account
-              </button>
-            ) : (
-              <div className="space-y-3">
-                <p className="text-xs text-[var(--color-text-secondary)] font-spartan">
-                  Type <strong>DELETE</strong> to confirm:
-                </p>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                  <input
-                    value={deleteText}
-                    onChange={(e) => setDeleteText(e.target.value)}
-                    placeholder="DELETE"
-                    className="flex-1 h-9 px-3 rounded-lg border border-red-500/30 bg-transparent text-base sm:text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-red-500/30"
-                  />
-                  <button
-                    onClick={handleDelete}
-                    disabled={deleteText !== "DELETE"}
-                    className="h-9 px-5 rounded-lg bg-red-500 text-white text-sm font-spartan font-medium disabled:opacity-40 flex items-center gap-2"
-                  >
-                    <TrashIcon className="w-3.5 h-3.5" />
-                    Confirm
-                  </button>
-                  <button
-                    onClick={() => {
-                      setDeleteConfirm(false);
-                      setDeleteText("");
-                    }}
-                    className="h-9 px-3 rounded-lg text-sm font-spartan text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
-                  >
-                    Cancel
-                  </button>
+            {/* ── Reset Completion Data ── */}
+            <div className="border-t border-red-500/15 pt-4">
+              <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)] mb-1">
+                Reset Completion Data
+              </p>
+              <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mb-3">
+                Permanently deletes all your completion history. Your habits are
+                kept, but streaks, completion rates, and entry history will be
+                cleared.
+              </p>
+
+              {/* Export nudge */}
+              <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mb-3">
+                We recommend{" "}
+                <button
+                  onClick={handleExport}
+                  className="underline text-[var(--color-brand-500)] hover:text-[var(--color-brand-600)] transition-colors"
+                >
+                  exporting your data
+                </button>{" "}
+                first.
+              </p>
+
+              {!resetConfirm ? (
+                <button
+                  onClick={() => setResetConfirm(true)}
+                  className="h-9 px-5 rounded-xl border border-red-500/40 text-sm font-spartan font-medium text-red-500 hover:bg-red-500/10 transition-colors"
+                >
+                  Reset Completion Data
+                </button>
+              ) : (
+                <div className="space-y-3">
+                  {/* Optional date filter */}
+                  <div>
+                    <label className="text-xs text-[var(--color-text-secondary)] font-spartan block mb-1">
+                      Clear data before (optional — leave blank to reset all)
+                    </label>
+                    <input
+                      type="date"
+                      value={resetBefore}
+                      onChange={(e) => setResetBefore(e.target.value)}
+                      className="h-9 px-3 rounded-lg border border-[var(--color-border-primary)]/30 bg-transparent text-sm font-spartan text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-red-500/30"
+                    />
+                  </div>
+
+                  <p className="text-xs text-[var(--color-text-secondary)] font-spartan">
+                    Type <strong>RESET</strong> to confirm:
+                  </p>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <input
+                      value={resetText}
+                      onChange={(e) => setResetText(e.target.value)}
+                      placeholder="RESET"
+                      className="flex-1 h-9 px-3 rounded-lg border border-red-500/30 bg-transparent text-base sm:text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-red-500/30"
+                    />
+                    <button
+                      onClick={handleResetAnalytics}
+                      disabled={resetText !== "RESET" || resetting}
+                      className="h-9 px-5 rounded-lg bg-red-500 text-white text-sm font-spartan font-medium disabled:opacity-40 flex items-center gap-2"
+                    >
+                      {resetting ? (
+                        <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <TrashIcon className="w-3.5 h-3.5" />
+                      )}
+                      Confirm Reset
+                    </button>
+                    <button
+                      onClick={() => {
+                        setResetConfirm(false);
+                        setResetText("");
+                        setResetBefore("");
+                      }}
+                      className="h-9 px-3 rounded-lg text-sm font-spartan text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+
+            {/* ── Delete Account ── */}
+            <div className="border-t border-red-500/15 pt-4">
+              <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)] mb-1">
+                Delete Account
+              </p>
+              <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mb-3">
+                Permanently delete your account and all associated data. This
+                cannot be undone.
+              </p>
+
+              {!deleteConfirm ? (
+                <button
+                  onClick={() => setDeleteConfirm(true)}
+                  className="h-9 px-5 rounded-xl border border-red-500/40 text-sm font-spartan font-medium text-red-500 hover:bg-red-500/10 transition-colors"
+                >
+                  Delete Account
+                </button>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-xs text-[var(--color-text-secondary)] font-spartan">
+                    Type <strong>DELETE</strong> to confirm:
+                  </p>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <input
+                      value={deleteText}
+                      onChange={(e) => setDeleteText(e.target.value)}
+                      placeholder="DELETE"
+                      className="flex-1 h-9 px-3 rounded-lg border border-red-500/30 bg-transparent text-base sm:text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-red-500/30"
+                    />
+                    <button
+                      onClick={handleDelete}
+                      disabled={deleteText !== "DELETE"}
+                      className="h-9 px-5 rounded-lg bg-red-500 text-white text-sm font-spartan font-medium disabled:opacity-40 flex items-center gap-2"
+                    >
+                      <TrashIcon className="w-3.5 h-3.5" />
+                      Confirm
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDeleteConfirm(false);
+                        setDeleteText("");
+                      }}
+                      className="h-9 px-3 rounded-lg text-sm font-spartan text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -10,6 +10,7 @@ const { derivePersonality } = require('../utils/derivePersonality');
 const { clearUserCache } = require('./insights');
 const { generateKickstartInsights } = require('../services/kickstartService');
 const { upload, uploadToCloudinary } = require('../config/cloudinary');
+const { resetUserAnalytics } = require('../services/analyticsResetService');
 
 const router = express.Router();
 
@@ -656,6 +657,53 @@ router.put('/notifications/read-all', async (req, res) => {
       success: false,
       error: 'Failed to mark all notifications as read'
     });
+  }
+});
+
+// @route   DELETE /api/users/analytics
+// @desc    Purge completion history while keeping habits intact
+// @access  Private
+router.delete('/analytics', async (req, res) => {
+  try {
+    // Defensive guard — auth middleware should always set this, but protect
+    // against edge cases where userId is falsy to avoid unscoped DB queries.
+    if (!req.user?._id) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    const { confirmReset, before } = req.body;
+
+    if (confirmReset !== 'RESET_MY_DATA') {
+      return res.status(400).json({
+        success: false,
+        error: 'Please confirm by sending confirmReset: "RESET_MY_DATA"',
+      });
+    }
+
+    if (before) {
+      const beforeDate = new Date(before);
+      if (isNaN(beforeDate.getTime())) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid date format for "before". Use YYYY-MM-DD.',
+        });
+      }
+      if (beforeDate > new Date()) {
+        return res.status(400).json({
+          success: false,
+          error: '"before" date cannot be in the future.',
+        });
+      }
+    }
+
+    const summary = await resetUserAnalytics(req.user._id, {
+      before: before ? new Date(before) : undefined,
+    });
+
+    res.json({ success: true, data: summary });
+  } catch (error) {
+    console.error('Analytics reset error:', error);
+    res.status(500).json({ success: false, error: 'Failed to reset analytics data' });
   }
 });
 

@@ -154,6 +154,33 @@ const GroupSettings = () => {
     }
   };
 
+  /* ── analytics reset ────────────────── */
+  const [resetConfirm, setResetConfirm] = useState(false);
+  const [resetText, setResetText] = useState("");
+  const [resetBefore, setResetBefore] = useState("");
+  const [resetting, setResetting] = useState(false);
+
+  const handleResetGroupAnalytics = async () => {
+    if (resetText !== "RESET") return;
+    try {
+      setResetting(true);
+      const res = await groupsAPI.resetGroupAnalytics(groupId, {
+        before: resetBefore || undefined,
+      });
+      const { habitEntriesDeleted, habitsReset, membersAffected } = res.data || {};
+      notifications.success(
+        `Reset complete — ${habitEntriesDeleted ?? 0} entries deleted across ${membersAffected ?? 0} members`
+      );
+      setResetConfirm(false);
+      setResetText("");
+      setResetBefore("");
+    } catch (err) {
+      notifications.error("reset analytics", err.message || "Please try again.");
+    } finally {
+      setResetting(false);
+    }
+  };
+
   /* ── perms ──────────────────────────── */
 
   const canEdit = userRole === "owner" || userRole === "admin";
@@ -381,6 +408,76 @@ const GroupSettings = () => {
           {!isOwner && (
             <div className="py-2">
               <LeaveGroupButton group={group} isOwner={false} />
+            </div>
+          )}
+
+          {/* Reset group completion data — admin/owner only */}
+          {canEdit && (
+            <div className="px-5 py-4">
+              <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)] mb-1">
+                Reset Completion Data
+              </p>
+              <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mb-3">
+                Permanently deletes all completion history for every member of
+                this group. Group habits are kept, but streaks, completion
+                rates, and entry history will be cleared.
+              </p>
+
+              {!resetConfirm ? (
+                <button
+                  onClick={() => setResetConfirm(true)}
+                  className="h-8 px-4 border border-red-500/40 text-red-500 hover:bg-red-500/10 rounded-lg text-xs font-spartan font-medium transition-colors"
+                >
+                  Reset Completion Data
+                </button>
+              ) : (
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs text-[var(--color-text-secondary)] font-spartan block mb-1">
+                      Clear data before (optional — leave blank to reset all)
+                    </label>
+                    <input
+                      type="date"
+                      value={resetBefore}
+                      onChange={(e) => setResetBefore(e.target.value)}
+                      className="h-8 px-3 rounded-lg border border-[var(--color-border-primary)]/30 bg-transparent text-xs font-spartan text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-red-500/30"
+                    />
+                  </div>
+                  <p className="text-xs text-[var(--color-text-secondary)] font-spartan">
+                    Type <strong>RESET</strong> to confirm:
+                  </p>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <input
+                      value={resetText}
+                      onChange={(e) => setResetText(e.target.value)}
+                      placeholder="RESET"
+                      className="flex-1 h-8 px-3 rounded-lg border border-red-500/30 bg-transparent text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-red-500/30"
+                    />
+                    <button
+                      onClick={handleResetGroupAnalytics}
+                      disabled={resetText !== "RESET" || resetting}
+                      className="h-8 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-spartan font-medium disabled:opacity-40 flex items-center gap-2 transition-colors"
+                    >
+                      {resetting ? (
+                        <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <TrashIcon className="w-3 h-3" />
+                      )}
+                      Confirm Reset
+                    </button>
+                    <button
+                      onClick={() => {
+                        setResetConfirm(false);
+                        setResetText("");
+                        setResetBefore("");
+                      }}
+                      className="h-8 px-3 rounded-lg text-xs font-spartan text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
