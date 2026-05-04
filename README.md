@@ -8,8 +8,7 @@
 
 > A full-stack AI-powered habit tracking platform with collaborative groups, rich journaling, and a Compass system that converts natural-language goals into structured, phase-based habit plans.
 
-**[bito.works](https://bito.works)** — built by [Divine Eze](https://github.com/hayzaydee)
-
+**[bito.works](https://bito.works)**
 ---
 
 ## What is Bito?
