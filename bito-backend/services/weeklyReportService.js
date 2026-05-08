@@ -139,8 +139,8 @@ class WeeklyReportService {
       return;
     }
 
-    // Build per-habit breakdown
-    const habitBreakdown = this._buildHabitBreakdown(habits, entries);
+    // Build per-habit breakdown (pass period dates for activatedAt-aware denominators)
+    const habitBreakdown = this._buildHabitBreakdown(habits, entries, startStr, endStr);
 
     // Generate AI insights
     const aiInsights = await this._generateInsights(user, periodStats, habitBreakdown);
@@ -188,7 +188,7 @@ class WeeklyReportService {
 
     if (!habits.length) throw new Error('No active habits found — nothing to report');
 
-    const habitBreakdown = this._buildHabitBreakdown(habits, entries);
+    const habitBreakdown = this._buildHabitBreakdown(habits, entries, startStr, endStr);
     const aiInsights = await this._generateInsights(user, periodStats, habitBreakdown);
 
     await this._sendReport(user, {
@@ -202,20 +202,41 @@ class WeeklyReportService {
     return { startDate: startStr, endDate: endStr, habitsIncluded: habits.length };
   }
 
-  _buildHabitBreakdown(habits, entries) {
+  _buildHabitBreakdown(habits, entries, startDate, endDate) {
+    // Parse period boundaries when provided (YYYY-MM-DD strings)
+    const periodStart = startDate ? new Date(startDate + 'T00:00:00.000Z') : null;
+    const periodEnd = endDate ? new Date(endDate + 'T23:59:59.999Z') : null;
+    const periodDays = periodStart && periodEnd
+      ? Math.round((periodEnd - periodStart) / 86400000) + 1
+      : 7;
+
     return habits.map((habit) => {
       const habitEntries = entries.filter(
         (e) => e.habitId.toString() === habit._id.toString()
       );
       const completed = habitEntries.filter((e) => e.completed).length;
-      // Logged entries are useful context, but should never drive completion percentage.
       const total = habitEntries.length;
       const moods = habitEntries.filter((e) => e.mood).map((e) => e.mood);
       const avgMood = moods.length ? (moods.reduce((a, b) => a + b, 0) / moods.length).toFixed(1) : null;
 
       const isWeekly = habit.frequency === 'weekly';
       const weeklyTarget = habit.weeklyTarget || 3;
-      const completionTarget = isWeekly ? weeklyTarget : 7;
+
+      let completionTarget;
+      if (isWeekly) {
+        completionTarget = weeklyTarget;
+      } else if (habit.activatedAt && periodStart) {
+        // Respect activatedAt: only count days the habit was active in this period
+        const activatedAt = new Date(habit.activatedAt);
+        const effectiveStart = activatedAt > periodStart ? activatedAt : periodStart;
+        const effectiveDays = periodEnd
+          ? Math.max(1, Math.round((periodEnd - effectiveStart) / 86400000) + 1)
+          : periodDays;
+        completionTarget = Math.min(periodDays, effectiveDays);
+      } else {
+        completionTarget = periodDays;
+      }
+
       const rate = completionTarget > 0
         ? Math.min(100, Math.round((completed / completionTarget) * 100))
         : 0;
@@ -253,11 +274,29 @@ class WeeklyReportService {
       const systemPrompt = buildSystemPrompt(personality, 'weekly-report');
       const temperature = getTemperature(personality);
 
+      const habitsWithTarget = sanitizedHabitBreakdown.filter(h => h.completionTarget > 0);
+      const avgRate = habitsWithTarget.length > 0
+        ? Math.round(habitsWithTarget.reduce((s, h) => s + h.rate, 0) / habitsWithTarget.length)
+        : 0;
+      const sortedByRate = [...habitsWithTarget].sort((a, b) => b.rate - a.rate);
+      const topHabit = sortedByRate[0];
+      const bottomHabit = sortedByRate[sortedByRate.length - 1];
+      const noCompletionHabits = sanitizedHabitBreakdown.filter(h => h.rate === 0).map(h => h.name);
+
       const habitSummary = sanitizedHabitBreakdown
         .map((h) => h.isWeekly
           ? `- ${h.icon} ${h.name} [WEEKLY]: ${h.completed}/${h.weeklyTarget} target (${h.rate}%), weekly streak: ${h.currentStreak} weeks`
-          : `- ${h.icon} ${h.name}: ${h.completed}/7 days (${h.rate}%), streak: ${h.currentStreak}`)
+          : `- ${h.icon} ${h.name}: ${h.completed}/${h.completionTarget} days (${h.rate}%), streak: ${h.currentStreak}`)
         .join('\n');
+
+      // Ground truth anchor — prevents the AI from citing the wrong overall figure
+      const groundTruthLines = [
+        `\n\nVERIFIED COMPLETION DATA — use these exact figures:`,
+        `- True average completion rate: ${avgRate}% (avg across ${habitsWithTarget.length} habits, each scored against their scheduled days)`,
+        topHabit ? `- Best: ${topHabit.name} at ${topHabit.rate}%` : null,
+        bottomHabit && bottomHabit.name !== topHabit?.name ? `- Lowest: ${bottomHabit.name} at ${bottomHabit.rate}%` : null,
+        noCompletionHabits.length ? `- Zero completions: ${noCompletionHabits.join(', ')}` : null,
+      ].filter(Boolean).join('\n');
 
       const completion = await client.chat.completions.create({
         model,
@@ -270,9 +309,10 @@ class WeeklyReportService {
             role: 'user',
             content:
               `Weekly report for ${sanitizedFirstName}:\n` +
-              `Overall: ${stats.completedEntries}/${stats.totalEntries} entries completed` +
+              `Overall average: ${avgRate}% across ${habitsWithTarget.length} habit${habitsWithTarget.length !== 1 ? 's' : ''} (${stats.completedEntries} check-ins logged)` +
               (stats.averageMood ? `, avg mood: ${stats.averageMood.toFixed(1)}/5` : '') +
-              `\n\nHabits:\n${habitSummary}`,
+              `\n\nHabits:\n${habitSummary}` +
+              groundTruthLines,
           },
         ],
         temperature,
@@ -287,8 +327,10 @@ class WeeklyReportService {
   }
 
   _getStaticInsights(stats, habitBreakdown) {
-    const rate = stats.totalEntries > 0
-      ? Math.round((stats.completedEntries / stats.totalEntries) * 100)
+    // Use per-habit rate average (consistent with the breakdown shown in the email)
+    const habitsWithTarget = habitBreakdown.filter(h => h.completionTarget > 0);
+    const rate = habitsWithTarget.length > 0
+      ? Math.round(habitsWithTarget.reduce((s, h) => s + h.rate, 0) / habitsWithTarget.length)
       : 0;
 
     const bestHabit = habitBreakdown.reduce((best, h) => (h.rate > (best?.rate || 0) ? h : best), null);
@@ -349,8 +391,9 @@ class WeeklyReportService {
     const { startDate, endDate, periodStats, habitBreakdown, aiInsights } = data;
     const firstName = user.firstName || (user.name || 'there').split(' ')[0];
 
-    const overallRate = periodStats.totalEntries > 0
-      ? Math.round((periodStats.completedEntries / periodStats.totalEntries) * 100)
+    // Use per-habit rate average so the headline matches the breakdown table below it
+    const overallRate = habitBreakdown.length > 0
+      ? Math.round(habitBreakdown.reduce((s, h) => s + h.rate, 0) / habitBreakdown.length)
       : 0;
 
     // Format date range

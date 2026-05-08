@@ -14,6 +14,7 @@ const OpenAIModule = require('openai');
 // openai v5 may export the class as .default in CommonJS
 const OpenAI = OpenAIModule.default || OpenAIModule.OpenAI || OpenAIModule;
 const { buildSystemPrompt, getTemperature, DEFAULT_PERSONALITY } = require('../prompts/buildSystemPrompt');
+const { validateLLMSchema, buildGroundTruthAnchors, factCheckOutput, correctWithLLM } = require('./llmValidator');
 
 /** Midnight-normalised date string YYYY-MM-DD */
 const toDateKey = (d) => {
@@ -66,17 +67,26 @@ function buildDataSummary(habits, entries, journalEntries) {
   const weekStart = getWeekStart(today);
 
   // Compute per-habit stats directly from the entries array (ground truth)
+  // Use days the habit was scheduled (respects activatedAt) as denominator, not just logged entries
+  const PERIOD_DAYS = 30;
+  const periodStart = new Date(today);
+  periodStart.setDate(periodStart.getDate() - PERIOD_DAYS);
+
   const habitSummaries = habits.filter(h => h.frequency !== 'weekly').map(h => {
     const hEntries = entries.filter(e => String(e.habitId) === String(h._id));
     const completed = hEntries.filter(e => e.completed).length;
     const total = hEntries.length;
+    const activatedAt = h.activatedAt ? new Date(h.activatedAt) : null;
+    const effectiveStart = activatedAt && activatedAt > periodStart ? activatedAt : periodStart;
+    const scheduledDays = Math.max(1, Math.round((today - effectiveStart) / 86400000));
     return {
       name: h.name,
       category: h.category,
       type: 'daily',
       entriesInPeriod: total,
       completedInPeriod: completed,
-      completionRate: total > 0 ? Math.round((completed / total) * 100) : null,
+      scheduledDays,
+      completionRate: Math.round((completed / scheduledDays) * 100),
       noData: total === 0,
     };
   });
@@ -105,6 +115,28 @@ function buildDataSummary(habits, entries, journalEntries) {
     // Streak from stats
     const weeklyStreak = h.stats?.currentStreak || 0;
 
+    // Rolling 4-week history so the LLM can see trends, not just current week
+    const weekHistory = [];
+    for (let w = 0; w < 4; w++) {
+      const wStart = new Date(weekStart);
+      wStart.setUTCDate(wStart.getUTCDate() - w * 7);
+      const wEnd = new Date(wStart);
+      wEnd.setUTCDate(wEnd.getUTCDate() + 6);
+      wEnd.setUTCHours(23, 59, 59, 999);
+      const wEntries = entries.filter(e =>
+        String(e.habitId) === String(h._id) &&
+        e.completed &&
+        new Date(e.date) >= wStart &&
+        new Date(e.date) <= wEnd
+      );
+      weekHistory.push({
+        week: w === 0 ? 'this week' : w === 1 ? 'last week' : `${w} weeks ago`,
+        completed: wEntries.length,
+        target,
+        met: wEntries.length >= target,
+      });
+    }
+
     return {
       name: h.name,
       category: h.category,
@@ -115,6 +147,7 @@ function buildDataSummary(habits, entries, journalEntries) {
       met: completedThisWeek >= target,
       pacing,
       weeklyStreak,
+      weekHistory,
     };
   });
 
@@ -192,9 +225,12 @@ async function callLLM(ruleInsights, dataSummary, personality = DEFAULT_PERSONAL
   const systemPrompt = buildSystemPrompt(personality, feature);
   const temperature = getTemperature(personality);
 
+  // Tier 2: inject ground truth anchors so the model cannot contradict real numbers
+  const anchors = buildGroundTruthAnchors(dataSummary);
   const userMessage = JSON.stringify({
     ruleInsights: ruleInsights.map(i => ({ title: i.title, body: i.body })),
     data: dataSummary,
+    ...anchors,
   });
 
   try {
@@ -213,7 +249,16 @@ async function callLLM(ruleInsights, dataSummary, personality = DEFAULT_PERSONAL
 
     // Parse JSON from response (strip markdown fences if present)
     const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    return JSON.parse(cleaned);
+    const parsed = JSON.parse(cleaned);
+
+    // Tier 1: schema validation — reject malformed responses before they reach the UI
+    const schemaResult = validateLLMSchema(parsed, feature);
+    if (!schemaResult.valid) {
+      console.warn('[Insights] LLM response failed schema validation:', schemaResult.errors);
+      return null;
+    }
+
+    return parsed;
   } catch (err) {
     console.warn('[Insights] LLM call failed:', err.message, err.status || '', err.code || '');
     return null;
@@ -239,7 +284,7 @@ async function enrichWithLLM(ruleInsights, habits, entries, journalEntries, pers
 
   console.log('[Insights] Attempting LLM enrichment...');
   const dataSummary = buildDataSummary(habits, entries, journalEntries);
-  const result = await callLLM(ruleInsights, dataSummary, personality || DEFAULT_PERSONALITY, feature);
+  let result = await callLLM(ruleInsights, dataSummary, personality || DEFAULT_PERSONALITY, feature);
 
   if (!result) {
     console.log('[Insights] LLM returned no result, falling back to rule-based only');
@@ -248,6 +293,16 @@ async function enrichWithLLM(ruleInsights, habits, entries, journalEntries, pers
 
   console.log('[Insights] LLM enrichment succeeded, summary:', result.summary?.substring(0, 50));
 
+  // Tier 3 + 4: fact-check output and optionally correct violations
+  const factResult = factCheckOutput(result, dataSummary);
+  if (!factResult.valid) {
+    console.warn('[Insights] LLM output has factual violations:', factResult.violations);
+    const corrected = await correctWithLLM(result, factResult.violations, dataSummary, getClient());
+    if (corrected) {
+      result = corrected;
+      console.log('[Insights] LLM output corrected by validator');
+    }
+  }
 
   // Merge additional LLM insights (lower priority, tagged as ai-generated)
   const enrichedInsights = [...ruleInsights];

@@ -453,10 +453,21 @@ function buildAnalyticsData(habits, entries, journalEntries, rangeDays) {
       .filter(e => e.completed)
       .map(e => { const d = new Date(e.date); d.setHours(0, 0, 0, 0); return d; })
       .sort((a, b) => b - a); // newest first
-    for (const d of sortedCompleted) {
-      const diff = Math.round((today - d) / 86400000);
-      if (diff === currentStreak) currentStreak++;
-      else break;
+    if (sortedCompleted.length > 0) {
+      const firstDiff = Math.round((today - sortedCompleted[0]) / 86400000);
+      // Streak is valid if the most recent completion is today (0) or yesterday (1)
+      if (firstDiff <= 1) {
+        let expectedDiff = firstDiff;
+        for (const d of sortedCompleted) {
+          const diff = Math.round((today - d) / 86400000);
+          if (diff === expectedDiff) {
+            currentStreak++;
+            expectedDiff++;
+          } else {
+            break;
+          }
+        }
+      }
     }
 
     return {
@@ -635,7 +646,27 @@ async function generateAnalyticsReport(ruleInsights, analyticsData, rangeDays, p
     }
 
     const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    const parsed = JSON.parse(cleaned);
+    let parsed = JSON.parse(cleaned);
+
+    // Tier 1: schema validation — reject structurally invalid responses
+    const { validateLLMSchema, factCheckOutput, correctWithLLM: correctAnalytics } = require('../services/llmValidator');
+    const schemaResult = validateLLMSchema(parsed, feature);
+    if (!schemaResult.valid) {
+      console.warn('[Analytics] LLM response failed schema validation:', schemaResult.errors);
+      return buildFallbackSections(ruleInsights, analyticsData);
+    }
+
+    // Tier 3 + 4: fact-check output and optionally correct violations
+    const factResult = factCheckOutput(parsed, analyticsData);
+    if (!factResult.valid) {
+      console.warn('[Analytics] LLM output has factual violations:', factResult.violations);
+      const corrected = await correctAnalytics(parsed, factResult.violations, analyticsData, client);
+      if (corrected) {
+        parsed = corrected;
+        console.log('[Analytics] LLM output corrected by validator');
+      }
+    }
+
     parsed._llmUsed = true;
     console.log('[Analytics] LLM report generated successfully');
     return parsed;
