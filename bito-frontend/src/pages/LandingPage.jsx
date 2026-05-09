@@ -195,8 +195,8 @@ const LandingPage = () => {
     <div className="min-h-screen overflow-hidden" style={{ backgroundColor: "var(--color-bg-primary)" }}>
 
       {/* ─── Navigation ─── */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${hasScrolled ? "nav-glass" : ""}`}
-        style={{ borderBottom: hasScrolled ? "1px solid var(--color-border-primary)" : "1px solid transparent" }}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${(hasScrolled || mobileMenuOpen) ? "nav-glass" : ""}`}
+        style={{ borderBottom: (hasScrolled || mobileMenuOpen) ? "1px solid var(--color-border-primary)" : "none" }}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center h-16">
             <div className="flex-shrink-0 flex items-center gap-2.5">
@@ -215,7 +215,7 @@ const LandingPage = () => {
             </div>
             <div className="hidden md:flex items-center gap-3">
               <button onClick={() => navigate("/login")} className="px-4 py-2 text-sm font-medium font-spartan transition-colors hover:!text-[var(--color-text-primary)]" style={{ color: "var(--color-text-secondary)" }}>Sign In</button>
-              <button onClick={() => navigate("/login")} className="btn btn-primary btn-sm">Get Started</button>
+              <button onClick={() => navigate("/login")} className="liquid-glass rounded-full px-5 py-2 text-sm font-spartan font-medium transition-transform hover:scale-[1.03]" style={{ color: "var(--color-text-primary)" }}>Get Started</button>
             </div>
             <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden ml-auto p-2 rounded-lg" style={{ color: "var(--color-text-primary)" }}>
               {mobileMenuOpen ? <Cross2Icon className="w-5 h-5" /> : <HamburgerMenuIcon className="w-5 h-5" />}
@@ -238,34 +238,58 @@ const LandingPage = () => {
       </nav>
 
       {/* ─── Hero ─── */}
-      <section className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">
-        <div className="hero-gradient-mesh" />
-        <motion.div
-          className="relative z-10 max-w-4xl mx-auto text-center"
-          initial="hidden"
-          animate="visible"
-          variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.15 } } }}
+      <section className="relative min-h-screen flex items-center justify-center">
+        {/* Fullscreen video background */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover z-0"
         >
-          <motion.div className="inline-flex items-center gap-2 trust-badge mb-8" variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } } }}>
-            <RocketIcon className="w-3.5 h-3.5" style={{ color: "var(--color-brand-400)" }} />
-            <span>v2.0 is live!</span>
-          </motion.div>
-          <motion.h1 className="font-garamond font-bold mb-6 px-2" style={{ fontSize: "clamp(2.5rem, 6vw, 4.5rem)", lineHeight: 1.08, letterSpacing: "-0.03em", color: "var(--color-text-primary)" }} variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } } }}>
-            The habit app that builds<br />the plan <span className="gradient-text">with you.</span>
-          </motion.h1>
-          <motion.p className="text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-spartan px-4" style={{ color: "var(--color-text-secondary)" }} variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } } }}>
-            An AI-powered habit tracker that helps you build the life you want. Track your habits, see patterns in your behavior, and architect personalized plans for achieving specific goals.
-          </motion.p>
-          <motion.div className="flex flex-col sm:flex-row gap-3 justify-center mb-6 font-spartan px-4" variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } } }}>
-            <button onClick={() => navigate("/login")} className="btn-gradient group inline-flex items-center justify-center">
-              Start for free <ArrowRightIcon className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-            </button>
-            <button onClick={() => scrollTo(howItWorksRef)} className="btn btn-secondary btn-lg">See how it works</button>
-          </motion.div>
-          <motion.p className="text-sm font-spartan flex items-center justify-center gap-2" style={{ color: "var(--color-text-tertiary)" }} variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } } }}>
-            <CheckCircledIcon className="w-3.5 h-3.5" style={{ color: "var(--color-success)" }} /> No credit card required
-          </motion.p>
-        </motion.div>
+          <source
+            src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4"
+            type="video/mp4"
+          />
+        </video>
+
+        {/* Subtle dark veil for text legibility */}
+        <div className="absolute inset-0 z-[1]" style={{ background: "rgba(13, 10, 26, 0.3)" }} />
+
+        {/* Hero content */}
+        <div className="relative z-10 flex flex-col items-center text-center px-6 pt-[90px] pb-40">
+          <h1
+            className="animate-fade-rise font-normal max-w-5xl"
+            style={{
+              fontFamily: "'EB Garamond', serif",
+              fontSize: "clamp(3rem, 8vw, 6rem)",
+              lineHeight: 0.95,
+              letterSpacing: "-2.46px",
+              color: "var(--color-text-primary)",
+            }}
+          >
+            Build the habits that{" "}
+            <em className="not-italic" style={{ color: "var(--color-text-secondary)" }}>
+              shape who you
+            </em>{" "}
+            become.
+          </h1>
+
+          <p
+            className="animate-fade-rise-delay max-w-2xl mt-8 leading-relaxed text-base sm:text-lg font-spartan"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
+            bito is your AI-powered companion for building lasting habits. Track daily, understand your patterns, and get a personalized plan designed around how you actually live.
+          </p>
+
+          <button
+            onClick={() => navigate("/login")}
+            className="animate-fade-rise-delay-2 liquid-glass rounded-full px-14 py-5 text-base mt-12 font-spartan font-medium transition-transform hover:scale-[1.03] cursor-pointer"
+            style={{ color: "var(--color-text-primary)" }}
+          >
+            Start for free
+          </button>
+        </div>
       </section>
 
       {/* ─── Feature Showcase — Tabbed ─── */}
@@ -304,7 +328,7 @@ const LandingPage = () => {
       <hr className="section-divider" />
 
       {/* ─── Compass — Dedicated Section ─── */}
-      <section className="py-24 md:py-32 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: "var(--color-bg-secondary)" }}>
+      <section className="py-24 md:py-32 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <ScrollReveal>
             <div className="text-center mb-6">
@@ -461,7 +485,7 @@ const LandingPage = () => {
       <hr className="section-divider" />
 
       {/* ─── How It Works ─── */}
-      <section ref={howItWorksRef} id="howItWorks" className="py-24 md:py-32 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: "var(--color-bg-secondary)" }}>
+      <section ref={howItWorksRef} id="howItWorks" className="py-24 md:py-32 px-4 sm:px-6 lg:px-8">
         <ScrollReveal>
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-16">
@@ -495,7 +519,7 @@ const LandingPage = () => {
             <div className="grid md:grid-cols-3 gap-6">
               {testimonials.map((t, i) => (
                 <ScrollReveal key={i} delay={i * 0.1}>
-                  <div className="testimonial-glass">
+                  <div className="liquid-glass rounded-2xl p-8">
                     <p className="text-sm font-spartan leading-relaxed mb-6" style={{ color: "var(--color-text-secondary)" }}>{t.content}</p>
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: "linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700))" }}>{t.avatar}</div>
@@ -515,13 +539,13 @@ const LandingPage = () => {
       <hr className="section-divider" />
 
       {/* ─── Comparison Table ─── */}
-      <section className="py-24 md:py-28 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: "var(--color-bg-secondary)" }}>
+      <section className="py-24 md:py-28 px-4 sm:px-6 lg:px-8">
         <ScrollReveal>
           <div className="max-w-2xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="heading-lg font-garamond mb-4" style={{ color: "var(--color-text-primary)" }}>Why bito?</h2>
             </div>
-            <div className="rounded-xl border overflow-hidden" style={{ backgroundColor: "var(--color-surface-primary)", borderColor: "var(--color-border-primary)" }}>
+            <div className="liquid-glass rounded-xl overflow-hidden">
               <div className="grid grid-cols-3 px-5 py-3 border-b" style={{ borderColor: "var(--color-border-primary)" }}>
                 <span className="text-xs font-spartan font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-tertiary)" }}>Feature</span>
                 <span className="text-xs font-spartan font-semibold uppercase tracking-wider text-center" style={{ color: "var(--color-brand-400)" }}>Bito</span>
@@ -542,18 +566,14 @@ const LandingPage = () => {
       <hr className="section-divider" />
 
       {/* ─── Final CTA ─── */}
-      <section className="relative py-28 md:py-36 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 60% 50% at 50% 50%, var(--color-brand-950) 0%, transparent 70%)", opacity: 0.4 }} />
+      <section className="py-28 md:py-36 px-4 sm:px-6 lg:px-8">
         <ScrollReveal direction="scale">
-          <div className="relative z-10 max-w-3xl mx-auto text-center">
-            <h2 className="font-garamond font-bold mb-6" style={{ fontSize: "clamp(2rem, 5vw, 3.75rem)", lineHeight: 1.1, letterSpacing: "-0.02em", color: "var(--color-text-primary)" }}>Ready to actually stick to something?</h2>
-            <p className="text-lg font-spartan mb-10 max-w-xl mx-auto" style={{ color: "var(--color-text-secondary)" }}>Free to start. No credit card. Two minutes to set up.</p>
-            <button onClick={() => navigate("/login")} className="btn-gradient group inline-flex items-center justify-center">
-              Get started free <ArrowRightIcon className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="font-garamond font-normal mb-6" style={{ fontSize: "clamp(2.5rem, 6vw, 4.5rem)", lineHeight: 1.0, letterSpacing: "-0.03em", color: "var(--color-text-primary)" }}>Ready to build the life you keep putting off?</h2>
+            <p className="text-lg font-spartan mb-12 max-w-xl mx-auto" style={{ color: "var(--color-text-secondary)" }}>Free to start. No credit card. Two minutes to set up.</p>
+            <button onClick={() => navigate("/login")} className="liquid-glass rounded-full px-14 py-5 text-base font-spartan font-medium transition-transform hover:scale-[1.03] cursor-pointer" style={{ color: "var(--color-text-primary)" }}>
+              Get started free
             </button>
-            <p className="mt-6 text-sm font-spartan flex items-center justify-center gap-2" style={{ color: "var(--color-text-tertiary)" }}>
-              <CheckCircledIcon className="w-4 h-4" style={{ color: "var(--color-success)" }} /> No credit card required
-            </p>
           </div>
         </ScrollReveal>
       </section>
