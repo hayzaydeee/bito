@@ -1701,50 +1701,7 @@ body.onboarding-active [data-tour]:hover {
    Landing Page — Premium Styles
    ═══════════════════════════════════════════ */
 
-/* ── Hero gradient mesh ── */
-.hero-gradient-mesh {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  z-index: 0;
-}
-
-.hero-gradient-mesh::before {
-  content: '';
-  position: absolute;
-  inset: -50%;
-  background:
-    radial-gradient(ellipse 40% 50% at 20% 50%, rgba(99,102,241,0.18) 0%, transparent 70%),
-    radial-gradient(ellipse 35% 40% at 70% 30%, rgba(167,139,250,0.14) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 60% at 50% 80%, rgba(56,189,248,0.08) 0%, transparent 70%),
-    radial-gradient(ellipse 30% 30% at 80% 70%, rgba(99,102,241,0.12) 0%, transparent 70%);
-  animation: gradientShift 12s ease-in-out infinite alternate;
-}
-
-@keyframes gradientShift {
-  0%   { transform: translate(0, 0) scale(1); }
-  33%  { transform: translate(-3%, 2%) scale(1.02); }
-  66%  { transform: translate(2%, -1%) scale(0.98); }
-  100% { transform: translate(-1%, 3%) scale(1.01); }
-}
-
-/* ── Hero glow behind app preview ── */
-.hero-glow {
-  position: absolute;
-  width: 120%;
-  height: 120%;
-  top: -10%;
-  left: -10%;
-  background: radial-gradient(ellipse at center, rgba(99,102,241,0.20) 0%, transparent 60%);
-  animation: heroGlowPulse 4s ease-in-out infinite alternate;
-  pointer-events: none;
-  z-index: 0;
-}
-
-@keyframes heroGlowPulse {
-  0%   { opacity: 0.6; transform: scale(1); }
-  100% { opacity: 1; transform: scale(1.08); }
-}
+/* hero-gradient-mesh and hero-glow removed — video hero provides all depth */
 
 
 /* ── Marquee ── */

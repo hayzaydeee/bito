@@ -1,27 +1,225 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+﻿import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
-  ArrowRightIcon,
-  CheckCircledIcon,
+  motion,
+  useScroll,
+  useTransform,
+  useInView,
+  AnimatePresence,
+} from "framer-motion";
+import {
   TargetIcon,
-  BarChartIcon,
   GitHubLogoIcon,
   Cross2Icon,
   HamburgerMenuIcon,
-  CheckIcon,
-  RocketIcon,
-  LightningBoltIcon,
-  PersonIcon,
 } from "@radix-ui/react-icons";
-import {
-  Brain, ChatCircle, Ruler, PenNib, Lightning, MagnifyingGlass, Robot,
-} from "@phosphor-icons/react";
 import { useAuth } from "../contexts/AuthContext";
 import ContactModal from "../components/ui/ContactModal";
 import ScrollReveal from "../components/ui/ScrollReveal";
-import { springs } from "../utils/motion";
+import SplitText from "../components/ui/SplitText";
+import CountUp from "../components/ui/CountUp";
+import useLenis from "../hooks/useLenis";
 
+/* ─── Feature Triad data ─── */
+const features = [
+  {
+    num: "01",
+    label: "Track",
+    title: "Log in seconds. See progress instantly.",
+    desc: "One tap to complete a habit. Your streaks, rings, and weekly view update in real time. No friction between intention and action.",
+  },
+  {
+    num: "02",
+    label: "Understand",
+    title: "See patterns you'd otherwise miss.",
+    desc: "Heatmaps and charts reveal the story behind your data. AI-powered insights surface correlations you wouldn't find yourself.",
+  },
+  {
+    num: "03",
+    label: "Together",
+    title: "Accountability changes everything.",
+    desc: "Invite people into shared groups. Celebrate wins, run challenges, and build habits alongside people who keep you honest.",
+  },
+];
+
+/* ─── Redesigned cinematic feature panels ─── */
+const TrackPanel = () => (
+  <div className="liquid-glass rounded-2xl p-10 flex flex-col gap-8">
+    <div>
+      <span
+        className="font-garamond leading-none"
+        style={{
+          fontSize: "clamp(5rem, 12vw, 9rem)",
+          color: "var(--color-text-primary)",
+          fontWeight: 400,
+          letterSpacing: "-0.03em",
+          display: "block",
+        }}
+      >
+        12
+      </span>
+      <span
+        className="font-spartan text-sm uppercase tracking-widest"
+        style={{ color: "var(--color-text-tertiary)" }}
+      >
+        day streak
+      </span>
+    </div>
+    <div className="flex flex-col gap-3">
+      {[
+        { name: "Morning meditation", done: true },
+        { name: "Read 20 pages", done: true },
+        { name: "Evening run", done: false },
+        { name: "Journal", done: false },
+      ].map((h, i) => (
+        <div key={i} className="flex items-center gap-3">
+          <div
+            className="w-2 h-2 rounded-full flex-shrink-0"
+            style={{
+              backgroundColor: h.done
+                ? "var(--color-success)"
+                : "var(--color-text-tertiary)",
+              opacity: h.done ? 1 : 0.35,
+            }}
+          />
+          <span
+            className="font-spartan text-sm"
+            style={{
+              color: h.done
+                ? "var(--color-text-tertiary)"
+                : "var(--color-text-primary)",
+              textDecoration: h.done ? "line-through" : "none",
+            }}
+          >
+            {h.name}
+          </span>
+        </div>
+      ))}
+    </div>
+    <div className="space-y-1.5">
+      <div
+        className="h-[3px] rounded-full overflow-hidden"
+        style={{ backgroundColor: "rgba(255,255,255,0.07)" }}
+      >
+        <div
+          className="h-full rounded-full"
+          style={{ width: "50%", backgroundColor: "var(--color-brand-500)" }}
+        />
+      </div>
+      <span
+        className="font-spartan text-xs"
+        style={{ color: "var(--color-text-tertiary)" }}
+      >
+        2 of 4 today
+      </span>
+    </div>
+  </div>
+);
+
+const UnderstandPanel = () => {
+  const opacities = [0.08,0.12,0.2,0.08,0.35,0.5,0.2,0.6,0.15,0.3,0.7,0.4,0.1,0.55,0.8,0.25,0.45,0.9,0.6,0.3,0.15,0.7,0.5,0.35,1,0.8,0.6,0.45,0.9,0.7,0.4,0.55,0.85,0.65,0.3,0.5,0.75,0.9,0.6,0.4,0.7,0.85,0.5,0.65,0.9,0.75,0.55,0.8,0.95];
+  return (
+    <div className="liquid-glass rounded-2xl p-10 flex flex-col gap-8">
+      <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(7, 1fr)" }}>
+        {opacities.map((op, i) => (
+          <div
+            key={i}
+            className="w-3 h-3 rounded-full"
+            style={{ backgroundColor: `rgba(99, 102, 241, ${op})` }}
+          />
+        ))}
+      </div>
+      <span
+        className="font-spartan text-xs uppercase tracking-widest"
+        style={{ color: "var(--color-text-tertiary)" }}
+      >
+        Last 49 days
+      </span>
+      <div>
+        <span
+          className="font-garamond leading-none block"
+          style={{
+            fontSize: "clamp(2.5rem, 6vw, 4rem)",
+            color: "var(--color-text-primary)",
+            fontWeight: 400,
+            letterSpacing: "-0.02em",
+          }}
+        >
+          ↑ 34%
+        </span>
+        <span className="font-spartan text-sm" style={{ color: "var(--color-text-tertiary)" }}>
+          vs last month
+        </span>
+      </div>
+    </div>
+  );
+};
+
+const TogetherPanel = () => (
+  <div className="liquid-glass rounded-2xl p-10 flex flex-col gap-8">
+    <div className="relative h-20">
+      {[
+        { initials: "SN", x: "0%",  y: "0%",  from: "#6366f1", to: "#8b5cf6" },
+        { initials: "HN", x: "28%", y: "30%", from: "#4f46e5", to: "#6366f1" },
+        { initials: "DA", x: "14%", y: "55%", from: "#818cf8", to: "#a78bfa" },
+        { initials: "EM", x: "48%", y: "10%", from: "#7c3aed", to: "#6366f1" },
+      ].map((av, i) => (
+        <div
+          key={i}
+          className="absolute w-11 h-11 rounded-full flex items-center justify-center text-xs font-bold text-white"
+          style={{
+            left: av.x, top: av.y,
+            background: `linear-gradient(135deg, ${av.from}, ${av.to})`,
+            border: "2px solid var(--color-bg-primary)",
+          }}
+        >
+          {av.initials}
+        </div>
+      ))}
+    </div>
+    <div className="flex flex-col gap-2.5">
+      {[
+        { text: "Sarah hit a 7-day streak",            initials: "SN" },
+        { text: "Michael started a 30-day challenge",  initials: "HN" },
+      ].map((msg, i) => (
+        <div key={i} className="liquid-glass rounded-full flex items-center gap-3 px-4 py-2.5">
+          <div
+            className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0"
+            style={{ background: "var(--color-brand-500)" }}
+          >
+            {msg.initials[0]}
+          </div>
+          <span className="font-spartan text-xs" style={{ color: "var(--color-text-secondary)" }}>
+            {msg.text}
+          </span>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const panelComponents = [TrackPanel, UnderstandPanel, TogetherPanel];
+
+/* ─── SVG connecting line ─── */
+const SystemConnectorLine = () => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-20% 0px" });
+  return (
+    <svg ref={ref} width="100%" height="12" viewBox="0 0 800 12" preserveAspectRatio="none" fill="none">
+      <motion.line
+        x1="150" y1="6" x2="650" y2="6"
+        stroke="var(--color-border-secondary)"
+        strokeWidth="1"
+        strokeDasharray="4 4"
+        initial={{ pathLength: 0, opacity: 0 }}
+        animate={isInView ? { pathLength: 1, opacity: 1 } : {}}
+        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
+      />
+    </svg>
+  );
+};
+
+/* ─── Page component ─── */
 const LandingPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading } = useAuth();
@@ -29,175 +227,63 @@ const LandingPage = () => {
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
   const [activeFeature, setActiveFeature] = useState(0);
-  const featuresRef = useRef(null);
-  const howItWorksRef = useRef(null);
-  const testimonialsRef = useRef(null);
+
+  useLenis();
+
+  const heroRef = useRef(null);
+  const { scrollY } = useScroll();
+  const heroOpacity = useTransform(scrollY, [0, 500], [1, 0]);
+  const heroScale  = useTransform(scrollY, [0, 500], [1, 0.97]);
+
+  const triadContainerRef = useRef(null);
+  useEffect(() => {
+    function updateFeature() {
+      if (!triadContainerRef.current) return;
+      const rect = triadContainerRef.current.getBoundingClientRect();
+      const scrolled = -rect.top;
+      const scrollable = rect.height - window.innerHeight;
+      const progress = scrollable > 0 ? Math.max(0, Math.min(1, scrolled / scrollable)) : 0;
+      if (progress < 0.33)      setActiveFeature(0);
+      else if (progress < 0.66) setActiveFeature(1);
+      else                      setActiveFeature(2);
+    }
+    window.addEventListener("scroll", updateFeature, { passive: true });
+    return () => window.removeEventListener("scroll", updateFeature);
+  }, []);
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) navigate("/app");
-  }, [isAuthenticated, isLoading, navigate]);
-
-  useEffect(() => {
-    const h = () => setHasScrolled(window.scrollY > 50);
+    const h = () => setHasScrolled(window.scrollY > 60);
     window.addEventListener("scroll", h, { passive: true });
     h();
     return () => window.removeEventListener("scroll", h);
   }, []);
 
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) navigate("/app");
+  }, [isAuthenticated, isLoading, navigate]);
+
+  const ctaRef    = useRef(null);
+  const ctaInView = useInView(ctaRef, { once: true, margin: "-10% 0px" });
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "var(--color-bg-primary)" }}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-4" style={{ borderColor: "var(--color-brand-500)" }} />
-          <p style={{ color: "var(--color-text-secondary)" }}>Loading...</p>
-        </div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: "var(--color-brand-500)" }} />
       </div>
     );
   }
 
-  const scrollTo = (ref) => { ref.current?.scrollIntoView({ behavior: "smooth" }); setMobileMenuOpen(false); };
-
-  /* ─── Data ─── */
-  const features = [
-    {
-      tab: "Track",
-      title: "Log in seconds. See progress in real time.",
-      desc: "One tap to complete a habit. Your streaks, progress rings, and weekly view update instantly. No friction between the intention and the action.",
-      bullets: ["One-click daily check-ins", "Streak tracking with milestone celebrations", "Flexible schedules — daily, weekly, or custom"],
-      visual: "track",
-    },
-    {
-      tab: "Understand",
-      title: "See patterns you'd otherwise miss",
-      desc: "Beautiful charts and heatmaps reveal the story behind your data. AI-powered insights surface correlations and trends.",
-      bullets: ["Visual heatmaps and progress charts", "AI-generated insights and nudges", "Trend analysis across weeks and months"],
-      visual: "understand",
-    },
-    {
-      tab: "Together",
-      title: "Accountability changes everything",
-      desc: "Invite friends, family, or teammates into shared groups. Celebrate wins together, run challenges, and build habits as a group.",
-      bullets: ["shared groups and team habits", "Group challenges and competitions", "Encouragement and activity feeds"],
-      visual: "together",
-    },
-  ];
-
-  const steps = [
-    { num: "01", title: "Add your habits", desc: "Pick from smart templates or create your own. Set frequency, reminders, and goals in under a minute." },
-    { num: "02", title: "Check in daily", desc: "Open bito, tap to complete. Streaks, progress rings, and weekly overview update in real time." },
-    { num: "03", title: "Grow with insights", desc: "As data accumulates, bito surfaces patterns and suggestions. The longer you use bito, the more it understands you." },
-  ];
-
-  const testimonials = [
-    { name: "Stephanie Ndubuisi", role: "Student", content: "Bito completely changed how I approach personal development. The visual progress tracking keeps me motivated every single day.", avatar: "SN" },
-    { name: "Henry Nwokolo", role: "Software Engineer", content: "The analytics are incredible. I can finally see exactly which habits are driving real results in my routines.", avatar: "HN" },
-    { name: "David Arochukwu", role: "Writer", content: "Beautiful design and incredibly intuitive. Building habits has never felt this engaging and rewarding.", avatar: "DA" },
-  ];
-
-  const comparisonRows = [
-    { feature: "Habit tracking", bito: true, others: true },
-    { feature: "Team groups", bito: true, others: false },
-    { feature: "AI-powered insights", bito: true, others: false },
-    { feature: "Beautiful analytics", bito: true, others: "Basic" },
-    { feature: "Journal integration", bito: true, others: false },
-    { feature: "Generous free tier", bito: true, others: "Limited" },
-  ];
-
-  const feat = features[activeFeature];
-
-  /* ─── Feature Visual ─── */
-  const FeatureVisual = ({ type }) => {
-    const bg = "var(--color-surface-secondary)";
-    const border = "var(--color-border-primary)";
-    if (type === "track") {
-      return (
-        <div className="rounded-xl border p-6 space-y-3" style={{ backgroundColor: bg, borderColor: border }}>
-          {["Morning meditation", "Read 20 pages", "Exercise", "Journal"].map((h, i) => (
-            <div key={i} className="flex items-center gap-3 rounded-lg px-4 py-3 border" style={{ backgroundColor: "var(--color-surface-primary)", borderColor: border }}>
-              <div className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: i < 2 ? "var(--color-success)" : "var(--color-surface-hover)" }}>
-                {i < 2 && <CheckIcon className="w-3 h-3 text-white" />}
-              </div>
-              <span className="text-sm font-spartan" style={{ color: i < 2 ? "var(--color-text-tertiary)" : "var(--color-text-primary)", textDecoration: i < 2 ? "line-through" : "none" }}>{h}</span>
-              {i === 0 && <span className="ml-auto text-xs font-spartan font-medium" style={{ color: "var(--color-warning)" }}>12-day streak</span>}
-            </div>
-          ))}
-          <div className="flex items-center gap-2 pt-2">
-            <div className="h-2 flex-1 rounded-full overflow-hidden" style={{ backgroundColor: "var(--color-surface-hover)" }}>
-              <div className="h-full rounded-full" style={{ width: "50%", backgroundColor: "var(--color-brand-500)" }} />
-            </div>
-            <span className="text-xs font-spartan font-medium" style={{ color: "var(--color-text-tertiary)" }}>2 / 4 today</span>
-          </div>
-        </div>
-      );
-    }
-    if (type === "understand") {
-      return (
-        <div className="rounded-xl border p-6" style={{ backgroundColor: bg, borderColor: border }}>
-          <div className="flex items-end gap-1.5 h-28 mb-4">
-            {[40, 65, 55, 80, 70, 90, 85, 60, 95, 75, 88, 92].map((h, i) => (
-              <div key={i} className="flex-1 rounded-sm" style={{ height: `${h}%`, backgroundColor: "var(--color-brand-500)", opacity: 0.3 + (i / 12) * 0.7 }} />
-            ))}
-          </div>
-          <div className="text-xs font-spartan mb-4" style={{ color: "var(--color-text-tertiary)" }}>Completion rate — last 12 weeks</div>
-          <div className="rounded-lg px-4 py-3" style={{ backgroundColor: "var(--color-surface-primary)", borderLeft: "3px solid var(--color-secondary-400)" }}>
-            <p className="text-xs font-spartan" style={{ color: "var(--color-text-secondary)" }}>Your morning habits have a 92% completion rate — 34% higher than evening ones.</p>
-          </div>
-        </div>
-      );
-    }
-    if (type === "together") {
-      return (
-        <div className="rounded-xl border p-6 space-y-4" style={{ backgroundColor: bg, borderColor: border }}>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="flex -space-x-2">
-              {["S", "M", "E", "J"].map((l, i) => (
-                <div key={i} className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white border-2" style={{ backgroundColor: `var(--color-brand-${400 + i * 100})`, borderColor: bg }}>{l}</div>
-              ))}
-            </div>
-            <span className="text-xs font-spartan font-medium" style={{ color: "var(--color-text-tertiary)" }}>Team Fitness</span>
-          </div>
-          {[{ user: "Sarah", action: "completed Morning Run", time: "2m ago" }, { user: "Michael", action: "started 30-Day Challenge", time: "1h ago" }, { user: "Emily", action: "hit a 7-day streak!", time: "3h ago" }].map((item, i) => (
-            <div key={i} className="flex items-center gap-3 rounded-lg px-3 py-2.5 border" style={{ backgroundColor: "var(--color-surface-primary)", borderColor: border }}>
-              <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0" style={{ backgroundColor: "var(--color-brand-500)" }}>{item.user[0]}</div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-spartan truncate" style={{ color: "var(--color-text-primary)" }}><span className="font-medium">{item.user}</span>{" "}<span style={{ color: "var(--color-text-secondary)" }}>{item.action}</span></p>
-              </div>
-              <span className="text-[10px] font-spartan flex-shrink-0" style={{ color: "var(--color-text-tertiary)" }}>{item.time}</span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    // transform
-    return (
-      <div className="rounded-xl border p-6 space-y-3" style={{ backgroundColor: bg, borderColor: border }}>
-        <div className="rounded-lg px-4 py-3 border" style={{ backgroundColor: "var(--color-surface-primary)", borderColor: border }}>
-          <p className="text-xs font-spartan mb-1" style={{ color: "var(--color-text-tertiary)" }}>Your goal</p>
-          <p className="text-sm font-spartan font-medium" style={{ color: "var(--color-text-primary)" }}>"I want to become a morning person and exercise 5x a week"</p>
-        </div>
-        <div className="flex items-center gap-2 py-1">
-          <LightningBoltIcon className="w-3.5 h-3.5" style={{ color: "var(--color-brand-400)" }} />
-          <span className="text-xs font-spartan" style={{ color: "var(--color-brand-400)" }}>AI generating your plan...</span>
-        </div>
-        {["Phase 1: Wake-up Routine (Week 1–2)", "Phase 2: Movement (Week 3–4)", "Phase 3: Full Routine (Week 5+)"].map((p, i) => (
-          <div key={i} className="flex items-center gap-3 rounded-lg px-4 py-2.5 border" style={{ backgroundColor: "var(--color-surface-primary)", borderColor: border }}>
-            <div className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold" style={{ backgroundColor: i === 0 ? "var(--color-success)" : "var(--color-surface-hover)", color: i === 0 ? "white" : "var(--color-text-tertiary)" }}>{i + 1}</div>
-            <span className="text-xs font-spartan" style={{ color: "var(--color-text-primary)" }}>{p}</span>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-
+  const ActivePanel = panelComponents[activeFeature];
 
   return (
-    <div className="min-h-screen overflow-hidden" style={{ backgroundColor: "var(--color-bg-primary)" }}>
+    <div data-theme="dark" className="min-h-screen" style={{ backgroundColor: "#0D0A1A", overflowX: "clip" }}>
 
       {/* ─── Navigation ─── */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${(hasScrolled || mobileMenuOpen) ? "nav-glass" : ""}`}
-        style={{ borderBottom: (hasScrolled || mobileMenuOpen) ? "1px solid var(--color-border-primary)" : "none" }}>
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <nav
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${(hasScrolled || mobileMenuOpen) ? "nav-glass" : ""}`}
+        style={{ borderBottom: (hasScrolled || mobileMenuOpen) ? "1px solid var(--color-border-primary)" : "none" }}
+      >
+        <div className="max-w-7xl mx-auto px-6 sm:px-8">
           <div className="flex items-center h-16">
             <div className="flex-shrink-0 flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: "var(--color-brand-600)" }}>
@@ -205,31 +291,47 @@ const LandingPage = () => {
               </div>
               <span className="text-lg font-bold font-garamond" style={{ color: "var(--color-text-primary)" }}>bito</span>
             </div>
-            <div className="hidden md:flex flex-1 justify-center items-center">
+
+            <div className="hidden md:flex flex-1 justify-center">
               <div className="flex items-center gap-8">
-                {[{ label: "Features", ref: featuresRef }, { label: "How It Works", ref: howItWorksRef }, { label: "Testimonials", ref: testimonialsRef }].map((item) => (
-                  <button key={item.label} onClick={() => scrollTo(item.ref)} className="text-sm font-medium font-spartan transition-colors hover:!text-[var(--color-text-primary)]" style={{ color: "var(--color-text-secondary)" }}>{item.label}</button>
+                {[["Features", "features"], ["How It Works", "how-it-works"], ["Testimonials", "testimonials"]].map(([label, id]) => (
+                  <button key={id} onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })}
+                    className="text-sm font-spartan font-medium transition-colors hover:text-white" style={{ color: "var(--color-text-secondary)" }}>
+                    {label}
+                  </button>
                 ))}
-                <button onClick={() => setContactModalOpen(true)} className="text-sm font-medium font-spartan transition-colors hover:!text-[var(--color-text-primary)]" style={{ color: "var(--color-text-secondary)" }}>Contact</button>
+                <button onClick={() => setContactModalOpen(true)}
+                  className="text-sm font-spartan font-medium transition-colors hover:text-white" style={{ color: "var(--color-text-secondary)" }}>
+                  Contact
+                </button>
               </div>
             </div>
+
             <div className="hidden md:flex items-center gap-3">
-              <button onClick={() => navigate("/login")} className="px-4 py-2 text-sm font-medium font-spartan transition-colors hover:!text-[var(--color-text-primary)]" style={{ color: "var(--color-text-secondary)" }}>Sign In</button>
-              <button onClick={() => navigate("/login")} className="liquid-glass rounded-full px-5 py-2 text-sm font-spartan font-medium transition-transform hover:scale-[1.03]" style={{ color: "var(--color-text-primary)" }}>Get Started</button>
+              <button onClick={() => navigate("/login")} className="px-4 py-2 text-sm font-spartan font-medium transition-colors hover:text-white" style={{ color: "var(--color-text-secondary)" }}>
+                Sign In
+              </button>
+              <button onClick={() => navigate("/login")} className="liquid-glass rounded-full px-5 py-2 text-sm font-spartan font-medium transition-transform hover:scale-[1.03]" style={{ color: "var(--color-text-primary)" }}>
+                Get Started
+              </button>
             </div>
+
             <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden ml-auto p-2 rounded-lg" style={{ color: "var(--color-text-primary)" }}>
               {mobileMenuOpen ? <Cross2Icon className="w-5 h-5" /> : <HamburgerMenuIcon className="w-5 h-5" />}
             </button>
           </div>
+
           {mobileMenuOpen && (
             <div className="md:hidden py-4 border-t" style={{ borderColor: "var(--color-border-primary)" }}>
               <div className="flex flex-col gap-4 font-spartan">
-                <button onClick={() => scrollTo(featuresRef)} className="text-left text-sm font-medium" style={{ color: "var(--color-text-secondary)" }}>Features</button>
-                <button onClick={() => scrollTo(howItWorksRef)} className="text-left text-sm font-medium" style={{ color: "var(--color-text-secondary)" }}>How It Works</button>
+                {[["features", "Features"], ["how-it-works", "How It Works"], ["testimonials", "Testimonials"]].map(([id, label]) => (
+                  <button key={id} onClick={() => { document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); setMobileMenuOpen(false); }}
+                    className="text-left text-sm font-medium" style={{ color: "var(--color-text-secondary)" }}>{label}</button>
+                ))}
                 <button onClick={() => { setContactModalOpen(true); setMobileMenuOpen(false); }} className="text-left text-sm font-medium" style={{ color: "var(--color-text-secondary)" }}>Contact</button>
                 <div className="pt-4 border-t flex flex-col gap-3" style={{ borderColor: "var(--color-border-primary)" }}>
                   <button onClick={() => navigate("/login")} className="text-left text-sm font-medium" style={{ color: "var(--color-text-secondary)" }}>Sign In</button>
-                  <button onClick={() => navigate("/login")} className="btn btn-primary btn-sm text-center">Get Started</button>
+                  <button onClick={() => navigate("/login")} className="liquid-glass rounded-full px-5 py-2.5 text-sm font-medium text-center" style={{ color: "var(--color-text-primary)" }}>Get Started</button>
                 </div>
               </div>
             </div>
@@ -237,27 +339,19 @@ const LandingPage = () => {
         </div>
       </nav>
 
-      {/* ─── Hero ─── */}
-      <section className="relative min-h-screen flex items-center justify-center">
-        {/* Fullscreen video background */}
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover z-0"
-        >
-          <source
-            src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4"
-            type="video/mp4"
-          />
+      {/* ══════════════════════════════════════
+          1. HERO
+      ══════════════════════════════════════ */}
+      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center">
+        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover z-0">
+          <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4" type="video/mp4" />
         </video>
-
-        {/* Subtle dark veil for text legibility */}
         <div className="absolute inset-0 z-[1]" style={{ background: "rgba(13, 10, 26, 0.3)" }} />
 
-        {/* Hero content */}
-        <div className="relative z-10 flex flex-col items-center text-center px-6 pt-[90px] pb-40">
+        <motion.div
+          className="relative z-10 flex flex-col items-center text-center px-6 pt-24 pb-40"
+          style={{ opacity: heroOpacity, scale: heroScale }}
+        >
           <h1
             className="animate-fade-rise font-normal max-w-5xl"
             style={{
@@ -269,19 +363,12 @@ const LandingPage = () => {
             }}
           >
             Build the habits that{" "}
-            <em className="not-italic" style={{ color: "var(--color-text-secondary)" }}>
-              shape who you
-            </em>{" "}
+            <em className="not-italic" style={{ color: "var(--color-text-secondary)" }}>shape who you</em>{" "}
             become.
           </h1>
-
-          <p
-            className="animate-fade-rise-delay max-w-2xl mt-8 leading-relaxed text-base sm:text-lg font-spartan"
-            style={{ color: "var(--color-text-secondary)" }}
-          >
+          <p className="animate-fade-rise-delay max-w-2xl mt-8 leading-relaxed text-base sm:text-lg font-spartan" style={{ color: "var(--color-text-secondary)" }}>
             bito is your AI-powered companion for building lasting habits. Track daily, understand your patterns, and get a personalized plan designed around how you actually live.
           </p>
-
           <button
             onClick={() => navigate("/login")}
             className="animate-fade-rise-delay-2 liquid-glass rounded-full px-14 py-5 text-base mt-12 font-spartan font-medium transition-transform hover:scale-[1.03] cursor-pointer"
@@ -289,306 +376,256 @@ const LandingPage = () => {
           >
             Start for free
           </button>
+        </motion.div>
+      </section>
+
+      {/* ══════════════════════════════════════
+          2. STATEMENT BRIDGE
+      ══════════════════════════════════════ */}
+      <section className="min-h-screen flex flex-col items-center justify-center px-6 py-32">
+        <div className="w-24 h-px mb-16 mx-auto" style={{ background: "linear-gradient(to right, transparent, var(--color-border-primary), transparent)" }} />
+        <div className="max-w-4xl mx-auto text-center">
+          <SplitText
+            text="Your habits are the infrastructure of who you're becoming."
+            style={{
+              fontFamily: "'EB Garamond', serif",
+              fontSize: "clamp(2rem, 5vw, 3.75rem)",
+              lineHeight: 1.15,
+              letterSpacing: "-0.025em",
+              color: "var(--color-text-primary)",
+              fontWeight: 400,
+            }}
+            stagger={0.065}
+          />
+          <ScrollReveal delay={0.8}>
+            <p className="font-spartan text-sm uppercase tracking-widest mt-10" style={{ color: "var(--color-text-tertiary)" }}>
+              Built for people serious about the long game.
+            </p>
+          </ScrollReveal>
         </div>
       </section>
 
-      {/* ─── Feature Showcase — Tabbed ─── */}
-      <section ref={featuresRef} id="features" className="py-24 md:py-32 px-4 sm:px-6 lg:px-8">
-        <ScrollReveal>
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="heading-lg font-garamond mb-4" style={{ color: "var(--color-text-primary)" }}>A system that works like you do.</h2>
-              <p className="text-base font-spartan max-w-xl mx-auto" style={{ color: "var(--color-text-secondary)" }}>Track your habits. Understand your patterns. Build alongside people who keep you accountable.</p>
-            </div>
-            <div className="flex justify-center gap-1 mb-12 flex-wrap" style={{ borderBottom: "1px solid var(--color-border-primary)" }}>
-              {features.map((f, i) => (
-                <button key={f.tab} onClick={() => setActiveFeature(i)} className={`feature-tab ${i === activeFeature ? "feature-tab-active" : ""}`}>{f.tab}</button>
-              ))}
-            </div>
-            <motion.div key={activeFeature} className="grid md:grid-cols-2 gap-12 md:gap-16 items-center" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}>
-              <div>
-                <span className="text-xs font-spartan font-semibold uppercase tracking-widest mb-3 inline-block" style={{ color: "var(--color-brand-400)" }}>{feat.tab}</span>
-                <h3 className="heading-lg font-garamond mb-4" style={{ color: "var(--color-text-primary)" }}>{feat.title}</h3>
-                <p className="text-base leading-relaxed font-spartan mb-6" style={{ color: "var(--color-text-secondary)" }}>{feat.desc}</p>
-                <ul className="space-y-3">
-                  {feat.bullets.map((b, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <CheckCircledIcon className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "var(--color-success)" }} />
-                      <span className="text-sm font-spartan" style={{ color: "var(--color-text-secondary)" }}>{b}</span>
-                    </li>
-                  ))}
-                </ul>
+      {/* ══════════════════════════════════════
+          3. FEATURE TRIAD — pinned walkthrough
+      ══════════════════════════════════════ */}
+      <section id="features" ref={triadContainerRef} style={{ minHeight: "300vh", position: "relative" }}>
+        <div className="sticky top-0 h-screen flex items-center overflow-hidden">
+          <div className="max-w-7xl mx-auto px-6 sm:px-8 w-full grid md:grid-cols-2 gap-16 items-center">
+
+            {/* Left: label + headline + desc */}
+            <div>
+              <div className="flex gap-2 mb-8">
+                {features.map((_, i) => (
+                  <div key={i} className="transition-all duration-500 rounded-full"
+                    style={{
+                      width: i === activeFeature ? "24px" : "6px",
+                      height: "6px",
+                      backgroundColor: i === activeFeature ? "var(--color-brand-400)" : "var(--color-text-tertiary)",
+                      opacity: i === activeFeature ? 1 : 0.3,
+                    }}
+                  />
+                ))}
               </div>
-              <div><FeatureVisual type={feat.visual} /></div>
-            </motion.div>
+
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeFeature}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <span className="font-spartan text-xs uppercase tracking-widest mb-4 inline-block" style={{ color: "var(--color-brand-400)" }}>
+                    {features[activeFeature].num} — {features[activeFeature].label}
+                  </span>
+                  <h2 className="font-garamond font-normal mb-5"
+                    style={{ fontSize: "clamp(1.75rem, 4vw, 3rem)", lineHeight: 1.1, letterSpacing: "-0.025em", color: "var(--color-text-primary)" }}>
+                    {features[activeFeature].title}
+                  </h2>
+                  <p className="font-spartan text-base leading-relaxed max-w-sm" style={{ color: "var(--color-text-secondary)" }}>
+                    {features[activeFeature].desc}
+                  </p>
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Mobile feature tabs */}
+              <div className="flex gap-3 mt-10 md:hidden">
+                {features.map((f, i) => (
+                  <button key={i} onClick={() => setActiveFeature(i)}
+                    className="text-xs font-spartan uppercase tracking-wider transition-colors"
+                    style={{ color: i === activeFeature ? "var(--color-text-primary)" : "var(--color-text-tertiary)" }}>
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Right: panel crossfade */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeFeature}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <ActivePanel />
+              </motion.div>
+            </AnimatePresence>
           </div>
-        </ScrollReveal>
+        </div>
       </section>
 
-      <hr className="section-divider" />
-
-      {/* ─── Compass — Dedicated Section ─── */}
-      <section className="py-24 md:py-32 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
+      {/* ══════════════════════════════════════
+          4. THE SYSTEM
+      ══════════════════════════════════════ */}
+      <section id="how-it-works" className="py-32 px-6 sm:px-8">
+        <div className="max-w-7xl mx-auto">
           <ScrollReveal>
-            <div className="text-center mb-6">
-              <span className="text-xs font-spartan font-semibold uppercase tracking-widest mb-3 inline-block" style={{ color: "var(--color-brand-400)" }}>Compass</span>
-              <h2 className="font-garamond font-bold mb-4" style={{ fontSize: "clamp(1.75rem, 4vw, 2.5rem)", color: "var(--color-text-primary)", letterSpacing: "-0.02em" }}>Tell us your goal.{" "}<span className="gradient-text">We'll build the plan.</span></h2>
-              <p className="text-base md:text-lg font-spartan max-w-2xl mx-auto leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
-                Type what you want to become. Compass reads your existing habits, your streaks, your patterns — and builds a plan around how you actually live. Not a generic template. A plan that fits you.
-              </p>
+            <div className="text-center mb-20">
+              <h2 className="font-garamond font-normal"
+                style={{ fontSize: "clamp(2.25rem, 5vw, 4rem)", lineHeight: 1.05, letterSpacing: "-0.025em", color: "var(--color-text-primary)" }}>
+                The system behind the streak.
+              </h2>
             </div>
           </ScrollReveal>
-          <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center mt-12">
-            <ScrollReveal direction="left">
-              <div className="space-y-6">
-                {[
-                  { icon: Brain,      title: "Knows your routine", desc: "It looks at what you're already doing so the plan doesn't fight your life \u2014 it fits it." },
-                  { icon: ChatCircle, title: "Refine with conversation", desc: "Not quite right? Tell it what to change. Swap a habit, shift the schedule, make it harder \u2014 it adjusts instantly." },
-                  { icon: Ruler,      title: "Starts easy, builds up", desc: "Plans begin with simple wins and escalate when you're ready \u2014 not before." },
-                ].map((item, i) => (
-                  <div key={i} className="flex gap-4">
-                    <span className="flex-shrink-0 mt-0.5 text-[var(--color-text-tertiary)]"><item.icon size={22} weight="duotone" /></span>
-                    <div>
-                      <h4 className="text-sm font-spartan font-bold mb-1" style={{ color: "var(--color-text-primary)" }}>{item.title}</h4>
-                      <p className="text-sm font-spartan leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </ScrollReveal>
-            <ScrollReveal direction="right">
-              <div className="rounded-xl border p-6 space-y-3" style={{ backgroundColor: "var(--color-surface-secondary)", borderColor: "var(--color-border-primary)" }}>
-                <div className="rounded-lg px-4 py-3 border" style={{ backgroundColor: "var(--color-surface-primary)", borderColor: "var(--color-border-primary)" }}>
-                  <p className="text-xs font-spartan mb-1" style={{ color: "var(--color-text-tertiary)" }}>Your goal</p>
-                  <p className="text-sm font-spartan font-medium" style={{ color: "var(--color-text-primary)" }}>"I want to become a morning person and exercise 5x a week"</p>
+
+          <div className="grid md:grid-cols-3 gap-0 relative">
+            <div className="absolute top-6 left-0 right-0 hidden md:block pointer-events-none" style={{ zIndex: 0 }}>
+              <SystemConnectorLine />
+            </div>
+
+            {[
+              { num: "01", title: "Set your goal", desc: "Tell bito what you want to achieve. It reads your existing patterns and builds a plan around your real life — not a generic template." },
+              { num: "02", title: "Check in daily",  desc: "One tap. Your streak, progress, and weekly view update instantly. No friction between intention and action." },
+              { num: "03", title: "Grow with it",    desc: "As data builds, bito surfaces patterns and insights. The longer you use it, the sharper it gets." },
+            ].map((step, i) => (
+              <ScrollReveal key={step.num} delay={i * 0.15}>
+                <div className="relative z-10 flex flex-col items-start md:items-center text-left md:text-center px-6 md:px-10 py-8">
+                  <span className="font-garamond mb-4 block"
+                    style={{ fontSize: "clamp(2.5rem, 5vw, 3.5rem)", color: "var(--color-brand-500)", opacity: 0.25, lineHeight: 1, fontWeight: 400 }}>
+                    {step.num}
+                  </span>
+                  <h3 className="font-garamond font-normal mb-3" style={{ fontSize: "1.375rem", color: "var(--color-text-primary)" }}>
+                    {step.title}
+                  </h3>
+                  <p className="font-spartan text-sm leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
+                    {step.desc}
+                  </p>
                 </div>
-                <div className="flex items-center gap-2 py-1">
-                  <LightningBoltIcon className="w-3.5 h-3.5" style={{ color: "var(--color-brand-400)" }} />
-                  <span className="text-xs font-spartan" style={{ color: "var(--color-brand-400)" }}>AI analyzing your routines and generating plan...</span>
-                </div>
-                {[
-                  { phase: "Foundation", label: "Week 1–2", habits: ["Wake up at 7:30 AM", "10-min morning stretch"], status: "active" },
-                  { phase: "Building", label: "Week 3–4", habits: ["Wake up at 6:30 AM", "30-min jog (Mon/Wed/Fri)", "Evening meal prep (Sun)"], status: "upcoming" },
-                  { phase: "Mastery", label: "Week 5+", habits: ["Wake up at 6 AM", "45-min gym session (5x/week)", "Morning journaling"], status: "upcoming" },
-                ].map((p, i) => (
-                  <div key={i} className="rounded-lg border px-4 py-3" style={{ backgroundColor: "var(--color-surface-primary)", borderColor: "var(--color-border-primary)" }}>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold" style={{ backgroundColor: p.status === "active" ? "var(--color-success)" : "var(--color-surface-hover)", color: p.status === "active" ? "white" : "var(--color-text-tertiary)" }}>{i + 1}</div>
-                        <span className="text-xs font-spartan font-bold" style={{ color: "var(--color-text-primary)" }}>{p.phase}</span>
-                      </div>
-                      <span className="text-[10px] font-spartan" style={{ color: "var(--color-text-tertiary)" }}>{p.label}</span>
-                    </div>
-                    <div className="space-y-1 pl-7">
-                      {p.habits.map((h, j) => (
-                        <p key={j} className="text-[11px] font-spartan" style={{ color: "var(--color-text-secondary)" }}>• {h}</p>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-                <div className="rounded-lg px-4 py-2.5" style={{ backgroundColor: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.15)" }}>
-                  <p className="text-[11px] font-spartan" style={{ color: "var(--color-brand-400)" }}>"Building on your existing evening reading habit and 79% weekly completion rate — this plan starts easy and escalates."</p>
-                </div>
-              </div>
-            </ScrollReveal>
+              </ScrollReveal>
+            ))}
           </div>
         </div>
       </section>
 
       <hr className="section-divider" />
 
-      {/* ─── Journal — Dedicated Section ─── */}
-      <section className="py-24 md:py-32 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
+      {/* ══════════════════════════════════════
+          5. SOCIAL PROOF
+      ══════════════════════════════════════ */}
+      <section id="testimonials" className="py-32 px-6 sm:px-8">
+        <div className="max-w-7xl mx-auto">
+
+          {/* Stat counters */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-24">
+            {[
+              { target: 2847, suffix: "",  label: "habits tracked today" },
+              { target: 91,   suffix: "%", label: "average weekly completion" },
+              { target: 14,   suffix: "",  label: "day average streak" },
+            ].map((stat, i) => (
+              <ScrollReveal key={i} delay={i * 0.1}>
+                <div className="liquid-glass rounded-2xl p-8 text-center">
+                  <div className="font-garamond font-normal mb-1"
+                    style={{ fontSize: "clamp(2.5rem, 5vw, 3.5rem)", color: "var(--color-text-primary)", lineHeight: 1.1, letterSpacing: "-0.025em" }}>
+                    <CountUp target={stat.target} suffix={stat.suffix} duration={1600} />
+                  </div>
+                  <span className="font-spartan text-sm uppercase tracking-widest" style={{ color: "var(--color-text-tertiary)" }}>
+                    {stat.label}
+                  </span>
+                </div>
+              </ScrollReveal>
+            ))}
+          </div>
+
+          {/* Testimonials */}
           <ScrollReveal>
-            <div className="text-center mb-6">
-              <span className="text-xs font-spartan font-semibold uppercase tracking-widest mb-3 inline-block" style={{ color: "var(--color-secondary-400)" }}>Rich Journaling</span>
-              <h2 className="font-garamond font-bold mb-4" style={{ fontSize: "clamp(1.75rem, 4vw, 2.5rem)", color: "var(--color-text-primary)", letterSpacing: "-0.02em" }}>Your habits tell part of the story.{" "}<span className="gradient-text">Your journal tells the rest.</span></h2>
-              <p className="text-base md:text-lg font-spartan max-w-2xl mx-auto leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
-                A writing space that lives alongside your habits — and an AI that connects what you write to how you actually perform. Quick notes or deep reflections. Both in one place.
-              </p>
-            </div>
+            <h2 className="font-garamond font-normal text-center mb-16"
+              style={{ fontSize: "clamp(1.75rem, 4vw, 2.75rem)", letterSpacing: "-0.02em", color: "var(--color-text-primary)" }}>
+              From the people using it every day.
+            </h2>
           </ScrollReveal>
-          <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center mt-12">
-            <ScrollReveal direction="left">
-              <div className="rounded-xl border overflow-hidden" style={{ backgroundColor: "var(--color-surface-secondary)", borderColor: "var(--color-border-primary)" }}>
-                {/* Mini journal UI mockup */}
-                <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: "var(--color-border-primary)" }}>
-                  <h4 className="text-sm font-garamond font-bold" style={{ color: "var(--color-text-primary)" }}>Journal</h4>
-                  <div className="flex items-center gap-2">
-                    <div className="px-2 py-0.5 rounded text-[9px] font-spartan font-semibold text-white" style={{ backgroundColor: "var(--color-brand-500)" }}>Intelligence</div>
-                    <div className="flex rounded border p-0.5" style={{ borderColor: "var(--color-border-primary)" }}>
-                      <div className="px-1.5 py-0.5 rounded text-[9px] font-spartan" style={{ backgroundColor: "var(--color-surface-elevated)", color: "var(--color-text-primary)" }}>Day</div>
-                      <div className="px-1.5 py-0.5 rounded text-[9px] font-spartan" style={{ color: "var(--color-text-tertiary)" }}>List</div>
+
+          <div className="grid md:grid-cols-3 gap-5">
+            {[
+              { name: "Stephanie Ndubuisi", role: "Student",           avatar: "SN", content: "Bito completely changed how I approach personal development. The visual progress tracking keeps me motivated every single day." },
+              { name: "Henry Nwokolo",      role: "Software Engineer", avatar: "HN", content: "The analytics are incredible. I can finally see exactly which habits are driving real results in my routines." },
+              { name: "David Arochukwu",    role: "Writer",            avatar: "DA", content: "Beautiful design and incredibly intuitive. Building habits has never felt this engaging and rewarding." },
+            ].map((t, i) => (
+              <ScrollReveal key={i} delay={i * 0.1}>
+                <div className="liquid-glass rounded-2xl p-8">
+                  <p className="font-spartan text-sm leading-relaxed mb-8" style={{ color: "var(--color-text-secondary)" }}>{t.content}</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                      style={{ background: "linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700))" }}>
+                      {t.avatar}
                     </div>
-                  </div>
-                </div>
-                {/* Week strip */}
-                <div className="flex gap-1 px-5 py-2 border-b overflow-hidden" style={{ borderColor: "var(--color-border-primary)" }}>
-                  {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d, i) => (
-                    <div key={d} className="flex-1 text-center py-1 rounded" style={{ backgroundColor: i === 4 ? "var(--color-brand-600)" : "transparent" }}>
-                      <p className="text-[8px] font-spartan" style={{ color: i === 4 ? "white" : "var(--color-text-tertiary)" }}>{d}</p>
-                      <p className="text-[10px] font-spartan font-bold" style={{ color: i === 4 ? "white" : "var(--color-text-secondary)" }}>{i + 3}</p>
-                      {(i === 1 || i === 2 || i === 4) && <div className="w-1 h-1 rounded-full mx-auto mt-0.5" style={{ backgroundColor: i === 4 ? "white" : "var(--color-brand-400)" }} />}
-                    </div>
-                  ))}
-                </div>
-                {/* Editor area */}
-                <div className="p-5 space-y-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[10px] font-spartan px-2 py-0.5 rounded-full" style={{ backgroundColor: "rgba(99,102,241,0.1)", color: "var(--color-brand-500)" }}>longform</span>
-                    <span className="text-[10px] font-spartan" style={{ color: "var(--color-text-tertiary)" }}>Friday, March 7</span>
-                  </div>
-                  <p className="text-sm font-garamond leading-relaxed" style={{ color: "var(--color-text-primary)" }}>Had a breakthrough today during the morning run — finally hit the 5K without stopping. The consistency is paying off.</p>
-                  <p className="text-sm font-garamond leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>Noticed that I've been sleeping better on days I journal before bed. Want to explore that pattern more...</p>
-                  <div className="flex gap-2 pt-2">
-                    <span className="text-[10px] font-spartan px-2 py-0.5 rounded-full" style={{ backgroundColor: "var(--color-surface-hover)", color: "var(--color-text-tertiary)" }}>fitness</span>
-                    <span className="text-[10px] font-spartan px-2 py-0.5 rounded-full" style={{ backgroundColor: "var(--color-surface-hover)", color: "var(--color-text-tertiary)" }}>good</span>
-                    <span className="text-[10px] font-spartan px-2 py-0.5 rounded-full" style={{ backgroundColor: "var(--color-surface-hover)", color: "var(--color-text-tertiary)" }}>high energy</span>
-                  </div>
-                  <hr style={{ borderColor: "var(--color-border-primary)" }} />
-                  <div className="space-y-2">
-                    <p className="text-[10px] font-spartan font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-tertiary)" }}>Quick entries</p>
-                    {["Drank 2L water today", "Meditation felt deeper than usual"].map((m, i) => (
-                      <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg border" style={{ backgroundColor: "var(--color-surface-primary)", borderColor: "var(--color-border-primary)" }}>
-                        <span className="text-[10px] font-spartan px-1.5 py-0.5 rounded-full" style={{ backgroundColor: "var(--color-surface-hover)", color: "var(--color-text-tertiary)" }}>micro</span>
-                        <p className="text-xs font-spartan" style={{ color: "var(--color-text-secondary)" }}>{m}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </ScrollReveal>
-            <ScrollReveal direction="right">
-              <div className="space-y-6">
-                {[
-                  { icon: PenNib,           title: "Rich editor", desc: "Headings, lists, images, callouts \u2014 write however you think. Everything auto-saves." },
-                  { icon: Lightning,         title: "Quick notes & deep entries", desc: "Tap out a one-liner or write a full page. Both live on the same timeline." },
-                  { icon: MagnifyingGlass,   title: "Search everything", desc: "Find any entry instantly. That insight from three weeks ago is one search away." },
-                  { icon: Robot,             title: "AI that reads between the lines", desc: "Opt in to surface patterns between what you write and how your habits perform. Privacy-first \u2014 you choose what the AI sees." },
-                ].map((item, i) => (
-                  <div key={i} className="flex gap-4">
-                    <span className="flex-shrink-0 mt-0.5 text-[var(--color-text-tertiary)]"><item.icon size={22} weight="duotone" /></span>
                     <div>
-                      <h4 className="text-sm font-spartan font-bold mb-1" style={{ color: "var(--color-text-primary)" }}>{item.title}</h4>
-                      <p className="text-sm font-spartan leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>{item.desc}</p>
+                      <p className="font-spartan text-sm font-medium" style={{ color: "var(--color-text-primary)" }}>{t.name}</p>
+                      <p className="font-spartan text-xs" style={{ color: "var(--color-text-tertiary)" }}>{t.role}</p>
                     </div>
                   </div>
-                ))}
-              </div>
-            </ScrollReveal>
+                </div>
+              </ScrollReveal>
+            ))}
           </div>
         </div>
       </section>
 
       <hr className="section-divider" />
 
-      {/* ─── How It Works ─── */}
-      <section ref={howItWorksRef} id="howItWorks" className="py-24 md:py-32 px-4 sm:px-6 lg:px-8">
-        <ScrollReveal>
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="heading-lg font-garamond mb-4" style={{ color: "var(--color-text-primary)" }}>Three steps. That's it.</h2>
-              <p className="text-base font-spartan max-w-xl mx-auto" style={{ color: "var(--color-text-secondary)" }}>No complex setup, no learning curve. You'll be tracking habits in under two minutes.</p>
-            </div>
-            <div className="grid md:grid-cols-3 gap-8">
-              {steps.map((s, i) => (
-                <ScrollReveal key={s.num} delay={i * 0.12}>
-                  <div className="text-center md:text-left">
-                    <span className="text-5xl font-garamond font-bold mb-4 inline-block" style={{ color: "var(--color-brand-500)", opacity: 0.3 }}>{s.num}</span>
-                    <h3 className="heading-sm font-garamond mb-3" style={{ color: "var(--color-text-primary)" }}>{s.title}</h3>
-                    <p className="text-sm font-spartan leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>{s.desc}</p>
-                  </div>
-                </ScrollReveal>
-              ))}
-            </div>
-          </div>
-        </ScrollReveal>
-      </section>
-
-      <hr className="section-divider" />
-
-      {/* ─── Testimonials ─── */}
-      <section ref={testimonialsRef} id="testimonials" className="py-24 md:py-32 px-4 sm:px-6 lg:px-8">
-        <ScrollReveal>
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="heading-lg font-garamond mb-4" style={{ color: "var(--color-text-primary)" }}>From the people using it every day.</h2>
-            </div>
-            <div className="grid md:grid-cols-3 gap-6">
-              {testimonials.map((t, i) => (
-                <ScrollReveal key={i} delay={i * 0.1}>
-                  <div className="liquid-glass rounded-2xl p-8">
-                    <p className="text-sm font-spartan leading-relaxed mb-6" style={{ color: "var(--color-text-secondary)" }}>{t.content}</p>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: "linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700))" }}>{t.avatar}</div>
-                      <div>
-                        <p className="text-sm font-spartan font-medium" style={{ color: "var(--color-text-primary)" }}>{t.name}</p>
-                        <p className="text-xs font-spartan" style={{ color: "var(--color-text-tertiary)" }}>{t.role}</p>
-                      </div>
-                    </div>
-                  </div>
-                </ScrollReveal>
-              ))}
-            </div>
-          </div>
-        </ScrollReveal>
-      </section>
-
-      <hr className="section-divider" />
-
-      {/* ─── Comparison Table ─── */}
-      <section className="py-24 md:py-28 px-4 sm:px-6 lg:px-8">
-        <ScrollReveal>
-          <div className="max-w-2xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="heading-lg font-garamond mb-4" style={{ color: "var(--color-text-primary)" }}>Why bito?</h2>
-            </div>
-            <div className="liquid-glass rounded-xl overflow-hidden">
-              <div className="grid grid-cols-3 px-5 py-3 border-b" style={{ borderColor: "var(--color-border-primary)" }}>
-                <span className="text-xs font-spartan font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-tertiary)" }}>Feature</span>
-                <span className="text-xs font-spartan font-semibold uppercase tracking-wider text-center" style={{ color: "var(--color-brand-400)" }}>Bito</span>
-                <span className="text-xs font-spartan font-semibold uppercase tracking-wider text-center" style={{ color: "var(--color-text-tertiary)" }}>Others</span>
-              </div>
-              {comparisonRows.map((row, i) => (
-                <div key={i} className="comparison-row grid grid-cols-3 px-5 py-3 border-b last:border-b-0" style={{ borderColor: "var(--color-border-primary)" }}>
-                  <span className="text-sm font-spartan" style={{ color: "var(--color-text-primary)" }}>{row.feature}</span>
-                  <div className="flex justify-center">{row.bito === true ? <CheckCircledIcon className="w-4 h-4" style={{ color: "var(--color-success)" }} /> : <span className="text-sm font-spartan" style={{ color: "var(--color-text-secondary)" }}>{row.bito}</span>}</div>
-                  <div className="flex justify-center">{row.others === true ? <CheckCircledIcon className="w-4 h-4" style={{ color: "var(--color-success)" }} /> : row.others === false ? <span className="text-sm font-spartan" style={{ color: "var(--color-text-tertiary)" }}>—</span> : <span className="text-sm font-spartan" style={{ color: "var(--color-text-tertiary)" }}>{row.others}</span>}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </ScrollReveal>
-      </section>
-
-      <hr className="section-divider" />
-
-      {/* ─── Final CTA ─── */}
-      <section className="py-28 md:py-36 px-4 sm:px-6 lg:px-8">
-        <ScrollReveal direction="scale">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="font-garamond font-normal mb-6" style={{ fontSize: "clamp(2.5rem, 6vw, 4.5rem)", lineHeight: 1.0, letterSpacing: "-0.03em", color: "var(--color-text-primary)" }}>Ready to build the life you keep putting off?</h2>
-            <p className="text-lg font-spartan mb-12 max-w-xl mx-auto" style={{ color: "var(--color-text-secondary)" }}>Free to start. No credit card. Two minutes to set up.</p>
-            <button onClick={() => navigate("/login")} className="liquid-glass rounded-full px-14 py-5 text-base font-spartan font-medium transition-transform hover:scale-[1.03] cursor-pointer" style={{ color: "var(--color-text-primary)" }}>
+      {/* ══════════════════════════════════════
+          6. FINAL CTA — clip-path curtain reveal
+      ══════════════════════════════════════ */}
+      <section className="py-36 px-6 sm:px-8">
+        <div ref={ctaRef} className="max-w-3xl mx-auto text-center">
+          <motion.div
+            animate={{ clipPath: ctaInView ? "inset(0 0 0% 0)" : "inset(0 0 100% 0)" }}
+            transition={{ duration: 0.9, ease: [0.76, 0, 0.24, 1] }}
+          >
+            <h2 className="font-garamond font-normal mb-6"
+              style={{ fontSize: "clamp(2.5rem, 6vw, 4.5rem)", lineHeight: 1.0, letterSpacing: "-0.03em", color: "var(--color-text-primary)" }}>
+              Ready to build the life you keep putting off?
+            </h2>
+            <p className="font-spartan text-lg mb-12 max-w-xl mx-auto" style={{ color: "var(--color-text-secondary)" }}>
+              Free to start. No credit card. Two minutes to set up.
+            </p>
+            <button onClick={() => navigate("/login")}
+              className="liquid-glass rounded-full px-14 py-5 text-base font-spartan font-medium transition-transform hover:scale-[1.03] cursor-pointer"
+              style={{ color: "var(--color-text-primary)" }}>
               Get started free
             </button>
-          </div>
-        </ScrollReveal>
+          </motion.div>
+        </div>
       </section>
 
       {/* ─── Footer ─── */}
-      <footer className="py-10 px-4 sm:px-6 lg:px-8 border-t" style={{ borderColor: "var(--color-border-primary)" }}>
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+      <footer className="py-10 px-6 sm:px-8 border-t" style={{ borderColor: "var(--color-border-primary)" }}>
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ backgroundColor: "var(--color-brand-600)" }}><TargetIcon className="w-4 h-4 text-white" /></div>
+            <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ backgroundColor: "var(--color-brand-600)" }}>
+              <TargetIcon className="w-4 h-4 text-white" />
+            </div>
             <span className="text-base font-bold font-garamond" style={{ color: "var(--color-text-primary)" }}>bito</span>
           </div>
           <div className="flex items-center gap-6 font-spartan text-sm">
-            <button onClick={() => scrollTo(featuresRef)} className="transition-colors hover:!text-[var(--color-text-primary)]" style={{ color: "var(--color-text-tertiary)" }}>Features</button>
-            <button onClick={() => setContactModalOpen(true)} className="transition-colors hover:!text-[var(--color-text-primary)]" style={{ color: "var(--color-text-tertiary)" }}>Contact</button>
-            <a href="https://github.com/hayzaydeee/bito" className="transition-colors hover:!text-[var(--color-text-primary)]" style={{ color: "var(--color-text-tertiary)" }}><GitHubLogoIcon className="w-4 h-4" /></a>
+            <button onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
+              className="transition-colors hover:text-white" style={{ color: "var(--color-text-tertiary)" }}>Features</button>
+            <button onClick={() => setContactModalOpen(true)}
+              className="transition-colors hover:text-white" style={{ color: "var(--color-text-tertiary)" }}>Contact</button>
+            <a href="https://github.com/hayzaydeee/bito" className="transition-colors hover:text-white" style={{ color: "var(--color-text-tertiary)" }}>
+              <GitHubLogoIcon className="w-4 h-4" />
+            </a>
           </div>
           <p className="text-xs font-spartan" style={{ color: "var(--color-text-tertiary)" }}>&copy; 2025 hayzaydee</p>
         </div>
