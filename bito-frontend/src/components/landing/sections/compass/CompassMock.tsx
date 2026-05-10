@@ -183,7 +183,7 @@ export function CompassMock({ start }: CompassMockProps) {
                 {card.phase}
               </span>
               <h4
-                className="font-garamond mt-1 text-[18px] font-semibold"
+                className="font-garamond mt-1 text-[18px]"
                 style={{ color: 'var(--color-text-primary)', margin: '4px 0 0 0' }}
               >
                 {card.subtitle}

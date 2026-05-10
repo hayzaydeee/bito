@@ -78,9 +78,7 @@
    Liquid glass utility (scoped)
    -------------------------------------------------------------------------- */
 [data-landing] .liquid-glass {
-  background: rgba(26, 21, 53, 0.55);
-  backdrop-filter: blur(12px) saturate(130%);
-  -webkit-backdrop-filter: blur(12px) saturate(130%);
+  background: rgba(20, 16, 42, 0.92);
   border: 1px solid var(--color-border-primary);
 }
 
