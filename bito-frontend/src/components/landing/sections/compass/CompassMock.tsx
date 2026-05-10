@@ -45,9 +45,9 @@ const PLAN_CARDS: PlanCard[] = [
 ]
 
 const CARD_FINAL_STATES: { rotate: number; x: number; y: number }[] = [
-  { rotate: -4, x: -200, y: 16 },
-  { rotate: 0, x: 0, y: -8 },
-  { rotate: 4, x: 200, y: 16 },
+  { rotate: 0, x: -210, y: 0 },
+  { rotate: 0, x: 0,    y: 0 },
+  { rotate: 0, x: 210,  y: 0 },
 ]
 
 interface CompassMockProps {
@@ -209,7 +209,7 @@ export function CompassMock({ start }: CompassMockProps) {
                   {card.phase}
                 </span>
                 <h4
-                  className="font-garamond mt-1 text-[18px]"
+                  className="font-garamond mt-1 text-[18px] font-semibold"
                   style={{ color: 'var(--color-text-primary)', margin: '4px 0 0 0' }}
                 >
                   {card.subtitle}
