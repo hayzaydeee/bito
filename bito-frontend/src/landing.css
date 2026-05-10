@@ -1,0 +1,182 @@
+/* ==========================================================================
+   landing.css — scoped styles for the bito landing page
+   Imported only by LandingPage.tsx. All token overrides and animation
+   utilities are scoped to [data-landing] on <body> to prevent conflicts
+   with the main app's CSS custom properties and utility classes.
+   ========================================================================== */
+
+/* Font imports — load the typefaces used by landing sections */
+@import '@fontsource/eb-garamond/400.css';
+@import '@fontsource/eb-garamond/500.css';
+@import '@fontsource/eb-garamond/600.css';
+@import '@fontsource/eb-garamond/400-italic.css';
+@import '@fontsource/league-spartan/400.css';
+@import '@fontsource/league-spartan/500.css';
+@import '@fontsource/league-spartan/600.css';
+
+/* Design token overrides — scoped to [data-landing] on <body>
+   These shadow the app's :root tokens while the landing page is mounted.
+   -------------------------------------------------------------------------- */
+[data-landing] {
+  /* Surfaces & background */
+  --color-bg-primary:       #0D0A1A;
+  --color-surface-primary:  #14102A;
+  --color-surface-secondary:#1A1535;
+  --color-surface-hover:    #221C42;
+
+  /* Text */
+  --color-text-primary:     #F4F1FF;
+  --color-text-secondary:   rgba(244, 241, 255, 0.62);
+  --color-text-tertiary:    rgba(244, 241, 255, 0.38);
+
+  /* Brand */
+  --color-brand-400: #6366F1;
+  --color-brand-500: #4F46E5;
+  --color-brand-600: #4338CA;
+  --color-brand-700: #3730A3;
+
+  /* Borders & status */
+  --color-border-primary: rgba(255, 255, 255, 0.08);
+  --color-success:        #22C55E;
+  --color-warning:        #F59E0B;
+
+  /* Easing references */
+  --ease-out-expo:   cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-in-out:     cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* Page-level reset for landing */
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  overflow-x: hidden;
+
+  /* Lenis controls smoothing — disable native smooth scroll to prevent conflict */
+  scroll-behavior: auto;
+}
+
+/* Tailwind theme tokens mapped to landing's CSS variables */
+@theme {
+  --font-garamond: "EB Garamond", "Times New Roman", serif;
+  --font-spartan: "League Spartan", "Inter", sans-serif;
+  --color-bg-primary: var(--color-bg-primary);
+  --color-surface-primary: var(--color-surface-primary);
+  --color-surface-secondary: var(--color-surface-secondary);
+  --color-surface-hover: var(--color-surface-hover);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-tertiary: var(--color-text-tertiary);
+  --color-brand-400: var(--color-brand-400);
+  --color-brand-500: var(--color-brand-500);
+  --color-brand-600: var(--color-brand-600);
+  --color-brand-700: var(--color-brand-700);
+  --color-border-primary: var(--color-border-primary);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+}
+
+/* --------------------------------------------------------------------------
+   Liquid glass utility (scoped)
+   -------------------------------------------------------------------------- */
+[data-landing] .liquid-glass {
+  background: rgba(26, 21, 53, 0.55);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid var(--color-border-primary);
+}
+
+/* --------------------------------------------------------------------------
+   Gradient text (scoped — landing variant uses brand-400 → brand-700)
+   -------------------------------------------------------------------------- */
+[data-landing] .gradient-text {
+  background: linear-gradient(135deg, var(--color-brand-400), var(--color-brand-700));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* --------------------------------------------------------------------------
+   Splitting.js word animation primitives (scoped)
+   -------------------------------------------------------------------------- */
+[data-landing] .split-words .word {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(18px);
+  animation: landing-word-rise 0.65s var(--ease-out-expo) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes landing-word-rise {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+[data-landing] .split-words .whitespace { white-space: pre; }
+
+/* --------------------------------------------------------------------------
+   Hero idle float
+   -------------------------------------------------------------------------- */
+@keyframes landing-hero-card-float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
+}
+
+[data-landing] .hero-card-float {
+  animation: landing-hero-card-float 5.5s ease-in-out infinite;
+  animation-delay: 1.8s;
+}
+
+/* --------------------------------------------------------------------------
+   CTA shimmer
+   -------------------------------------------------------------------------- */
+[data-landing] .cta-shimmer { position: relative; overflow: hidden; }
+
+[data-landing] .cta-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.18) 50%,
+    transparent 60%
+  );
+  background-size: 200% 100%;
+  background-position: 200% center;
+  opacity: 0;
+  transition: opacity 200ms;
+}
+
+[data-landing] .cta-shimmer:hover::after {
+  opacity: 1;
+  animation: landing-shimmer-sweep 600ms ease forwards;
+}
+
+@keyframes landing-shimmer-sweep {
+  from { background-position: 200% center; }
+  to   { background-position: -200% center; }
+}
+
+/* --------------------------------------------------------------------------
+   Reduced motion (scoped)
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  [data-landing] *,
+  [data-landing] *::before,
+  [data-landing] *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  [data-landing] .split-words .word {
+    opacity: 1;
+    transform: none;
+  }
+
+  [data-landing] .hero-card-float { animation: none; }
+}

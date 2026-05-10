@@ -1,8 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Theme } from "@radix-ui/themes";
 import { AnimatePresence } from "framer-motion";
+import { lazy, Suspense } from "react";
 import Layout from "./components/layout/Layout";
-import LandingPage from "./pages/LandingPage";
+const LandingPage = lazy(() => import("./pages/LandingPage").then(m => ({ default: m.LandingPage })));
 import AuthPage from "./pages/AuthPage";
 import MagicLinkVerify from "./pages/MagicLinkVerify";
 import OAuthCallback from "./pages/OAuthCallback";
@@ -71,7 +72,11 @@ const AnimatedRoutes = () => {
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           {/* Landing page without layout */}
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={
+            <Suspense fallback={<div className="min-h-screen bg-[#0D0A1A]" />}>
+              <LandingPage />
+            </Suspense>
+          } />
 
           {/* Auth routes without layout */}
           <Route path="/login" element={<AuthPage />} />
