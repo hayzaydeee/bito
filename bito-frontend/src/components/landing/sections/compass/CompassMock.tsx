@@ -7,7 +7,6 @@ import { EASE_OUT_SPRING, reduceMotion } from '../../../../lib/landing/motion'
  *
  * Card data matches production
  * (bito-frontend/src/components/landingPage/CompassSection.jsx CARDS).
- * X offsets widened to +/-200 to match production rotations and span.
  */
 
 const GOAL_TEXT = 'I want to become a morning person'
@@ -42,12 +41,6 @@ const PLAN_CARDS: PlanCard[] = [
     period: 'Week 5+',
     habits: ['Meditation 15 min', 'No phone first 30 min'],
   },
-]
-
-const CARD_FINAL_STATES: { rotate: number; x: number; y: number }[] = [
-  { rotate: 0, x: -210, y: 0 },
-  { rotate: 0, x: 0,    y: 0 },
-  { rotate: 0, x: 210,  y: 0 },
 ]
 
 interface CompassMockProps {
@@ -160,85 +153,65 @@ export function CompassMock({ start }: CompassMockProps) {
         )}
       </AnimatePresence>
 
-      {/* Card deal area - reserved space so layout doesn't shift.
-          Increased min-width on the relative container so cards at +/-200
-          have headroom to land without clipping. */}
-      <div
-        className="relative mt-12 w-full"
-        style={{ minHeight: '300px', maxWidth: '600px' }}
-      >
+      {/* Card row - flex layout guarantees horizontal alignment */}
+      <div className="mt-12 flex w-full gap-3">
         {showCards &&
-          PLAN_CARDS.map((card, i) => {
-            const target = CARD_FINAL_STATES[i]
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, scale: 0.82, rotate: 0, x: 0, y: 0 }}
-                animate={{
-                  opacity: 1,
-                  scale: 1,
-                  rotate: target.rotate,
-                  x: target.x,
-                  y: target.y,
-                }}
-                transition={{
-                  duration: reduceMotion ? 0 : 0.7,
-                  delay: reduceMotion ? 0 : i * 0.12,
-                  ease: EASE_OUT_SPRING,
-                }}
-                className="liquid-glass absolute"
-                style={{
-                  top: 0,
-                  left: '50%',
-                  marginLeft: '-100px',
-                  width: '200px',
-                  minHeight: '240px',
-                  padding: '18px 16px',
-                  borderRadius: '14px',
-                  zIndex: i === 1 ? 2 : 1,
-                  boxShadow:
-                    i === 1
-                      ? '0 20px 50px rgba(0, 0, 0, 0.4)'
-                      : '0 12px 30px rgba(0, 0, 0, 0.3)',
-                }}
+          PLAN_CARDS.map((card, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, scale: 0.88, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{
+                duration: reduceMotion ? 0 : 0.6,
+                delay: reduceMotion ? 0 : i * 0.12,
+                ease: EASE_OUT_SPRING,
+              }}
+              className="liquid-glass min-w-0 flex-1"
+              style={{
+                padding: '18px 16px',
+                borderRadius: '14px',
+                boxShadow:
+                  i === 1
+                    ? '0 20px 50px rgba(0, 0, 0, 0.4)'
+                    : '0 12px 30px rgba(0, 0, 0, 0.3)',
+              }}
+            >
+              <span
+                className="font-spartan text-[11px] font-medium uppercase tracking-[0.16em]"
+                style={{ color: 'var(--color-brand-400)' }}
               >
-                <span
-                  className="font-spartan text-[11px] font-medium uppercase tracking-[0.16em]"
-                  style={{ color: 'var(--color-brand-400)' }}
-                >
-                  {card.phase}
-                </span>
-                <h4
-                  className="font-garamond mt-1 text-[18px] font-semibold"
-                  style={{ color: 'var(--color-text-primary)', margin: '4px 0 0 0' }}
-                >
-                  {card.subtitle}
-                </h4>
-                <span
-                  className="font-spartan text-[11px]"
-                  style={{ color: 'var(--color-text-tertiary)' }}
-                >
-                  {card.period}
-                </span>
-                <ul className="mt-4 flex flex-col gap-2">
-                  {card.habits.map((habit) => (
-                    <li
-                      key={habit}
-                      className="font-spartan flex items-start gap-2 text-[12px]"
-                      style={{ color: 'var(--color-text-secondary)' }}
-                    >
-                      <span
-                        aria-hidden
-                        className="mt-1.5 flex h-1.5 w-1.5 shrink-0 rounded-full"
-                        style={{ background: 'var(--color-brand-500)' }}
-                      />
-                      {habit}
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            )
-          })}
+                {card.phase}
+              </span>
+              <h4
+                className="font-garamond mt-1 text-[18px] font-semibold"
+                style={{ color: 'var(--color-text-primary)', margin: '4px 0 0 0' }}
+              >
+                {card.subtitle}
+              </h4>
+              <span
+                className="font-spartan text-[11px]"
+                style={{ color: 'var(--color-text-tertiary)' }}
+              >
+                {card.period}
+              </span>
+              <ul className="mt-4 flex flex-col gap-2">
+                {card.habits.map((habit) => (
+                  <li
+                    key={habit}
+                    className="font-spartan flex items-start gap-2 text-[12px]"
+                    style={{ color: 'var(--color-text-secondary)' }}
+                  >
+                    <span
+                      aria-hidden
+                      className="mt-1.5 flex h-1.5 w-1.5 shrink-0 rounded-full"
+                      style={{ background: 'var(--color-brand-500)' }}
+                    />
+                    {habit}
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          ))}
       </div>
     </div>
   )
