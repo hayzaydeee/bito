@@ -9,8 +9,13 @@ import HabitCreationWizard from "../ui/HabitCreationWizard";
 import { useAuth, withAuth } from "../../contexts/AuthContext";
 import { useHabits } from "../../contexts/HabitContext";
 
+const readNavCollapsed = () => {
+  try { return localStorage.getItem('bito:nav-collapsed') === 'true'; }
+  catch { return false; }
+};
+
 const Layout = () => {
-  const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
+  const [isMenuCollapsed, setIsMenuCollapsed] = useState(readNavCollapsed);
   const [isMobile, setIsMobile] = useState(false);
   const [addHabitModalOpen, setAddHabitModalOpen] = useState(false);
   const { user } = useAuth();
@@ -42,6 +47,12 @@ const Layout = () => {
     window.addEventListener("addHabit", handler);
     return () => window.removeEventListener("addHabit", handler);
   }, []);
+
+  // Persist collapsed state across remounts
+  useEffect(() => {
+    try { localStorage.setItem('bito:nav-collapsed', isMenuCollapsed); }
+    catch { /* localStorage unavailable — state won't persist */ }
+  }, [isMenuCollapsed]);
 
   // Detect mobile screen size
   useEffect(() => {
