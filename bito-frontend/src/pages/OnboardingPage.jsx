@@ -15,6 +15,7 @@ import {
 import { useNotifications } from "../contexts/NotificationContext";
 import { userAPI } from "../services/api";
 import useMotionSafe from "../hooks/useMotionSafe";
+import { AXES } from "../data/personalityOptions";
 import AnimatedList from "../components/ui/AnimatedList";
 import {
   listItemVariants,
@@ -124,10 +125,16 @@ const OnboardingPage = () => {
   const { showError, showSuccess } = useNotifications();
   const { getVariants, prefersReduced } = useMotionSafe();
   const shouldAnimate = typeof motion !== "undefined" && !prefersReduced;
-  const [step, setStep] = useState(0); // 0=welcome, 1=goals, 2=time, 3=done
+  const [step, setStep] = useState(0); // 0=welcome, 1=goals, 2=time, 3=voice, 4=done
   const [direction, setDirection] = useState(1); // 1=forward, -1=back
   const [selectedGoals, setSelectedGoals] = useState([]);
   const [preferredTimes, setPreferredTimes] = useState([]);
+  const [selectedPersonality, setSelectedPersonality] = useState({
+    tone: null,
+    focus: null,
+    verbosity: null,
+    accountability: null,
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
@@ -159,6 +166,13 @@ const OnboardingPage = () => {
     );
   };
 
+  const togglePersonality = (axis, value) => {
+    setSelectedPersonality((prev) => ({
+      ...prev,
+      [axis]: prev[axis] === value ? null : value,
+    }));
+  };
+
   const goNext = () => {
     setSubmitError("");
     setDirection(1);
@@ -175,12 +189,22 @@ const OnboardingPage = () => {
     setSubmitError("");
     setIsSubmitting(true);
     try {
+      const hasPersonality = Object.values(selectedPersonality).some((v) => v !== null);
+      const personalityPayload = hasPersonality
+        ? {
+            aiPersonality: Object.fromEntries(
+              Object.entries(selectedPersonality).filter(([, v]) => v !== null)
+            ),
+            personalityCustomized: true,
+          }
+        : {};
       await userAPI.updateProfile({
         onboardingComplete: true,
         onboardingData: {
           goals: selectedGoals,
           preferredTimes,
         },
+        ...personalityPayload,
       });
       updateUser({ onboardingComplete: true });
       showSuccess("Welcome aboard. Your setup has been saved.");
@@ -518,12 +542,141 @@ const OnboardingPage = () => {
       </div>
     ),
 
-    /* ── Step 3: Done ── */
+    /* ── Step 3: AI Voice ── */
     3: (
+      <div className="max-w-2xl mx-auto">
+        <div className="text-center mb-10">
+          <h2
+            className="heading-lg font-garamond mb-3"
+            style={{ color: "var(--color-text-primary)" }}
+          >
+            How should Bito talk to you?
+          </h2>
+          <p
+            className="text-base font-spartan"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
+            Choose your preferences — or skip, and we'll figure it out from your goals.
+          </p>
+        </div>
+
+        <div className="space-y-8 mb-10">
+          {AXES.map((axis) => {
+            const cols =
+                axis.options.length === 2
+                  ? "grid-cols-2"
+                  : axis.options.length === 3
+                  ? "grid-cols-3"
+                  : "grid-cols-2 sm:grid-cols-4";
+            return (
+              <div key={axis.key}>
+                <p
+                  className="text-sm font-spartan font-semibold mb-3"
+                  style={{ color: "var(--color-text-secondary)" }}
+                >
+                  {axis.title}
+                </p>
+                <AnimatedList className={`grid ${cols} gap-3`}>
+                  {axis.options.map((opt, i) => {
+                    const isSelected = selectedPersonality[axis.key] === opt.value;
+                    return (
+                      <motion.div key={opt.value} variants={getVariants(listItemVariants)} custom={i}>
+                        <motion.button
+                          onClick={() => togglePersonality(axis.key, opt.value)}
+                          className="text-left rounded-xl border p-4 transition-all duration-150 w-full h-full"
+                          whileHover={prefersReduced ? {} : { y: -2, scale: isSelected ? 1.02 : 1.01 }}
+                          whileTap={prefersReduced ? {} : buttonTap}
+                          style={{
+                            backgroundColor: isSelected
+                              ? "var(--color-brand-600)"
+                              : "var(--color-surface-primary)",
+                            borderColor: isSelected
+                              ? "var(--color-brand-500)"
+                              : "var(--color-border-primary)",
+                          }}
+                        >
+                          <opt.Icon
+                            size={28}
+                            weight="duotone"
+                            className="mb-2"
+                            style={{ color: isSelected ? "#fff" : "var(--color-brand-500)" }}
+                          />
+                          <h4
+                            className="text-sm font-spartan font-semibold mb-1"
+                            style={{ color: isSelected ? "#fff" : "var(--color-text-primary)" }}
+                          >
+                            {opt.label}
+                          </h4>
+                          <p
+                            className="text-xs font-spartan italic leading-relaxed"
+                            style={{
+                              color: isSelected
+                                ? "rgba(255,255,255,0.7)"
+                                : "var(--color-text-tertiary)",
+                            }}
+                          >
+                            {opt.example}
+                          </p>
+                          {isSelected && (
+                            <div className="mt-2 flex justify-end">
+                              <motion.div
+                                className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center"
+                                initial={prefersReduced ? false : { scale: 0.4, opacity: 0 }}
+                                animate={prefersReduced ? {} : { scale: 1, opacity: 1 }}
+                                transition={{ ...springs.bouncy, duration: 0.3 }}
+                              >
+                                <CheckIcon className="w-3 h-3 text-white" />
+                              </motion.div>
+                            </div>
+                          )}
+                        </motion.button>
+                      </motion.div>
+                    );
+                  })}
+                </AnimatedList>
+              </div>
+            );
+          })}
+        </div>
+
+        <p
+          className="text-center text-xs font-spartan mb-8"
+          style={{ color: "var(--color-text-tertiary)" }}
+        >
+          Pick any or all — or skip to continue
+        </p>
+
+        <div className="flex items-center justify-between">
+          <motion.button
+            onClick={goBack}
+            className="flex items-center gap-2 text-sm font-spartan transition-colors"
+            style={{ color: "var(--color-text-secondary)" }}
+            whileTap={prefersReduced ? {} : buttonTap}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-text-primary)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-secondary)")}
+          >
+            <ArrowLeftIcon className="w-4 h-4" />
+            Back
+          </motion.button>
+          <motion.button
+            onClick={goNext}
+            className="btn btn-primary btn-md group"
+            whileHover={prefersReduced ? {} : buttonHover}
+            whileTap={prefersReduced ? {} : buttonTap}
+          >
+            Continue
+            <ArrowRightIcon className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+          </motion.button>
+        </div>
+      </div>
+    ),
+
+    /* ── Step 4: Done ── */
+    4: (
       <div className="text-center max-w-lg mx-auto relative">
         {/* Celebration emoji */}
         <AnimatePresence>
-          {step === 3 && !prefersReduced && (
+          {step === 4 && !prefersReduced && (
             <motion.div
               key="confetti"
               className="absolute inset-0 pointer-events-none"
@@ -676,7 +829,7 @@ const OnboardingPage = () => {
 
         {/* Step dots */}
         <div className="flex items-center gap-2">
-          {[0, 1, 2, 3].map((s) => (
+          {[0, 1, 2, 3, 4].map((s) => (
             <motion.div
               key={s}
               className="h-1.5 rounded-full"

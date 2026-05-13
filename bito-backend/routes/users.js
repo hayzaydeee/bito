@@ -227,8 +227,14 @@ router.put('/profile', validateUserUpdate, async (req, res) => {
       };
     }
 
-    // Auto-derive personality from onboarding data (unless user has manually customized)
-    if (req.body.onboardingData && !req.user.personalityCustomized && !req.body.personalityCustomized) {
+    // Auto-derive personality from onboarding data (unless user has manually customized).
+    // Use the incoming personalityCustomized value when explicitly provided (e.g. reset flow
+    // sends personalityCustomized: false while the DB still shows true from the last edit).
+    const effectivelyCustomized = Object.prototype.hasOwnProperty.call(req.body, 'personalityCustomized')
+      ? req.body.personalityCustomized
+      : req.user.personalityCustomized;
+
+    if (req.body.onboardingData && !effectivelyCustomized && !req.body.aiPersonality) {
       const derived = derivePersonality(req.body.onboardingData);
       updates.aiPersonality = derived;
     }
