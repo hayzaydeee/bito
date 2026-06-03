@@ -78,7 +78,8 @@ export function LandingNav() {
               {[
                 { label: 'Features', selector: '#features' },
                 { label: 'Compass', selector: '#section-compass' },
-                { label: 'Pricing', selector: '#section-pricing' },
+                { label: 'Journaling', selector: '#section-journaling' },
+                { label: 'Testimonials', selector: '#section-testimonials' },
               ].map((link) => (
                 <li key={link.selector}>
                   <a
@@ -149,7 +150,8 @@ export function LandingNav() {
               {[
                 { label: 'Features', selector: '#features' },
                 { label: 'Compass', selector: '#section-compass' },
-                { label: 'Pricing', selector: '#section-pricing' },
+                { label: 'Journaling', selector: '#section-journaling' },
+                { label: 'Testimonials', selector: '#section-testimonials' },
               ].map((link) => (
                 <a
                   key={link.selector}
