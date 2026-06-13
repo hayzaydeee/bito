@@ -149,7 +149,7 @@ const FeedTab = ({
             </p>
           </div>
         ) : (
-          <div className={density === "compact" ? "space-y-0.5" : density === "timeline" ? "space-y-0" : "space-y-2"}>
+          <div className={density === "compact" ? "space-y-0" : density === "timeline" ? "space-y-0" : "space-y-3"}>
             {activities.map((a, idx) => (
               <FeedCard
                 key={a._id}

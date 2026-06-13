@@ -317,9 +317,16 @@ const FeedCard = ({
   if (density === "compact") {
     return (
       <div
-        className="flex items-center gap-3 px-3 py-2.5 hover:bg-[var(--color-surface-elevated)]/40 transition-colors border-l-2"
-        style={{ borderLeftColor: accentColor(a.type) }}
+        className={`relative flex items-center gap-3 pl-5 pr-3 py-3 hover:bg-[var(--color-surface-elevated)]/40 transition-colors ${
+          !isLast ? "border-b border-[var(--color-border-primary)]/10" : ""
+        }`}
       >
+        {/* Rounded accent bar */}
+        <span
+          className="absolute left-1.5 top-1/2 -translate-y-1/2 w-1 h-7 rounded-full"
+          style={{ backgroundColor: accentColor(a.type) }}
+        />
+
         {/* Avatar — no icon badge */}
         <MemberAvatar user={userInfo} size="sm" type={a.type} />
 
@@ -489,30 +496,33 @@ const FeedCard = ({
   // Kudos: inverted — quote body first, attribution at bottom
   if (isKudos) {
     return (
-      <div className="rounded-2xl border border-[var(--color-border-primary)]/10 bg-[var(--color-surface-elevated)]/60 hover:border-[var(--color-border-primary)]/20 transition-colors px-4 py-4">
-        {/* Quote */}
-        {a.data?.message && (
-          <p className="text-sm font-spartan italic text-[var(--color-text-secondary)] leading-relaxed mb-3">
-            "{a.data.message}"
-          </p>
-        )}
-        {/* Attribution row */}
-        <div className="flex items-center gap-2">
-          <MemberAvatar user={userInfo} size="sm" type={a.type} />
-          <span className="text-sm font-spartan font-semibold text-[var(--color-text-primary)]">{userName}</span>
-          {a.data?.targetUserName && (
-            <span className="text-xs font-spartan text-[var(--color-text-tertiary)]">to {a.data.targetUserName}</span>
+      <div className="rounded-2xl border border-[var(--color-border-primary)]/10 bg-[var(--color-surface-elevated)]/60 hover:border-[var(--color-border-primary)]/20 transition-colors overflow-hidden">
+        {/* Body: quote + attribution */}
+        <div className="px-5 pt-4 pb-4">
+          {/* Quote */}
+          {a.data?.message && (
+            <p className="text-base font-garamond italic text-[var(--color-text-secondary)] leading-relaxed mb-3">
+              "{a.data.message}"
+            </p>
           )}
-          <span className="text-xs font-spartan text-[var(--color-text-quaternary)]">· {timeAgo(a.createdAt)}</span>
-          {label && (
-            <span className={`ml-auto text-[10px] font-spartan font-semibold px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 ${badgeStyle(a.type)}`}>
-              {activityIcon(a.type, 10)}
-              {label}
-            </span>
-          )}
+          {/* Attribution row */}
+          <div className="flex items-center gap-2">
+            <MemberAvatar user={userInfo} size="sm" type={a.type} />
+            <span className="text-sm font-spartan font-semibold text-[var(--color-text-primary)]">{userName}</span>
+            {a.data?.targetUserName && (
+              <span className="text-xs font-spartan text-[var(--color-text-tertiary)]">to {a.data.targetUserName}</span>
+            )}
+            <span className="text-xs font-spartan text-[var(--color-text-quaternary)]">· {timeAgo(a.createdAt)}</span>
+            {label && (
+              <span className={`ml-auto text-[10px] font-spartan font-semibold px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 ${badgeStyle(a.type)}`}>
+                {activityIcon(a.type, 10)}
+                {label}
+              </span>
+            )}
+          </div>
         </div>
-        {/* Reactions */}
-        <div className="mt-3">
+        {/* Footer band: reactions (segmented by divider) */}
+        <div className="px-5 py-3 border-t border-[var(--color-border-primary)]/10 bg-[var(--color-bg-primary)]/20">
           <ReactionPicker reactions={reactions} myReaction={myReaction} onReact={onReact} />
         </div>
       </div>
@@ -521,46 +531,51 @@ const FeedCard = ({
 
   // Standard cozy card
   return (
-    <div className="rounded-2xl border border-[var(--color-border-primary)]/10 bg-[var(--color-surface-elevated)]/60 hover:border-[var(--color-border-primary)]/20 transition-colors px-4 py-4">
-      {/* Header: avatar + name · time + badge */}
-      <div className="flex items-center gap-2 mb-3">
-        <MemberAvatar user={userInfo} size="sm" type={a.type} />
-        <span className="text-sm font-spartan font-semibold text-[var(--color-text-primary)]">{userName}</span>
-        <span className="text-xs font-spartan text-[var(--color-text-quaternary)]">· {timeAgo(a.createdAt)}</span>
-        {label && (
-          <span className={`ml-auto text-[10px] font-spartan font-semibold px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 ${badgeStyle(a.type)}`}>
-            {activityIcon(a.type, 10)}
-            {label}
-          </span>
-        )}
+    <div className="rounded-2xl border border-[var(--color-border-primary)]/10 bg-[var(--color-surface-elevated)]/60 hover:border-[var(--color-border-primary)]/20 transition-colors overflow-hidden">
+      {/* Body: header + large title */}
+      <div className="px-5 pt-4 pb-4">
+        {/* Header: avatar + name · time + badge */}
+        <div className="flex items-center gap-2">
+          <MemberAvatar user={userInfo} size="sm" type={a.type} />
+          <span className="text-sm font-spartan font-semibold text-[var(--color-text-primary)]">{userName}</span>
+          <span className="text-xs font-spartan text-[var(--color-text-quaternary)]">· {timeAgo(a.createdAt)}</span>
+          {label && (
+            <span className={`ml-auto text-[10px] font-spartan font-semibold px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 ${badgeStyle(a.type)}`}>
+              {activityIcon(a.type, 10)}
+              {label}
+            </span>
+          )}
+        </div>
+
+        {/* Large bold title */}
+        <p className="text-[26px] font-garamond font-bold text-[var(--color-text-primary)] leading-tight mt-3">
+          {activityTitle(a)}
+        </p>
       </div>
 
-      {/* Large bold title */}
-      <p className="text-[22px] font-spartan font-bold text-[var(--color-text-primary)] leading-tight mb-3">
-        {activityTitle(a)}
-      </p>
+      {/* Footer band: reactions + kudos CTA (segmented by divider) */}
+      <div className="px-5 py-3 border-t border-[var(--color-border-primary)]/10 bg-[var(--color-bg-primary)]/20">
+        <div className="flex items-center gap-3 flex-wrap">
+          <ReactionPicker reactions={reactions} myReaction={myReaction} onReact={onReact} />
+          {showKudosCTA && !kudosOpen && (
+            <button
+              onClick={() => setKudosOpen(true)}
+              className="ml-auto flex items-center gap-1.5 text-xs font-spartan font-medium px-3 py-1.5 rounded-full border border-[var(--color-border-primary)]/25 text-[var(--color-text-secondary)] hover:border-rose-500/30 hover:text-rose-400 transition-colors"
+            >
+              <Heart size={12} weight="regular" />
+              Give kudos
+            </button>
+          )}
+        </div>
 
-      {/* Reactions + kudos CTA */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <ReactionPicker reactions={reactions} myReaction={myReaction} onReact={onReact} />
-        {showKudosCTA && !kudosOpen && (
-          <button
-            onClick={() => setKudosOpen(true)}
-            className="ml-auto flex items-center gap-1.5 text-xs font-spartan font-medium px-3 py-1 rounded-full border border-[var(--color-border-primary)]/25 text-[var(--color-text-secondary)] hover:border-rose-500/30 hover:text-rose-400 transition-colors"
-          >
-            <Heart size={12} weight="regular" />
-            Give kudos
-          </button>
+        {kudosOpen && (
+          <KudosInput
+            onSend={handleSendKudos}
+            onCancel={() => setKudosOpen(false)}
+            sending={sending}
+          />
         )}
       </div>
-
-      {kudosOpen && (
-        <KudosInput
-          onSend={handleSendKudos}
-          onCancel={() => setKudosOpen(false)}
-          sending={sending}
-        />
-      )}
     </div>
   );
 };
