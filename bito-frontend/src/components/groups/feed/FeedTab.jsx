@@ -149,8 +149,8 @@ const FeedTab = ({
             </p>
           </div>
         ) : (
-          <div className={density === "compact" ? "space-y-0.5" : "space-y-2"}>
-            {activities.map((a) => (
+          <div className={density === "compact" ? "space-y-0.5" : density === "timeline" ? "space-y-0" : "space-y-2"}>
+            {activities.map((a, idx) => (
               <FeedCard
                 key={a._id}
                 activity={a}
@@ -164,6 +164,7 @@ const FeedTab = ({
                 alreadySentKudos={sentKudosTo.has(
                   (a.userId?._id || a.userId)?.toString()
                 )}
+                isLast={idx === activities.length - 1}
               />
             ))}
           </div>
