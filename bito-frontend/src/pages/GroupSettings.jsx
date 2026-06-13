@@ -19,6 +19,7 @@ import { groupsAPI } from "../services/api";
 import { useAppNotifications } from "../hooks/useAppNotifications";
 import LeaveGroupButton from "../components/settingsPage/LeaveGroupButton";
 import SkeletonTransition from "../components/ui/SkeletonTransition";
+import IntensitySelector from "../components/groups/IntensitySelector";
 
 /* ================================================================
    GroupSettings — sectioned list layout (no widget grid)
@@ -70,6 +71,7 @@ const GroupSettings = () => {
               ws.settings?.allowMemberHabitCreation !== false,
             defaultHabitVisibility:
               ws.settings?.defaultHabitVisibility || "progress-only",
+            intensity: ws.settings?.intensity || "accountable",
           });
 
           const uid = user?.id || user?._id;
@@ -107,6 +109,7 @@ const GroupSettings = () => {
           privacyLevel: settings.privacyLevel,
           allowMemberHabitCreation: settings.allowMemberHabitCreation,
           defaultHabitVisibility: settings.defaultHabitVisibility,
+          intensity: settings.intensity,
         },
       });
       if (res.success) {
@@ -397,6 +400,17 @@ const GroupSettings = () => {
               ]}
             />
           </SettingRow>
+        </Section>
+
+        {/* ── Intensity ─────────────── */}
+        <Section title="Group Intensity" icon={<GearIcon className="w-4 h-4" />}>
+          <div className="px-5 py-4">
+            <IntensitySelector
+              value={settings.intensity || "accountable"}
+              onChange={canEdit ? (v) => set("intensity", v) : undefined}
+              readOnly={!canEdit}
+            />
+          </div>
         </Section>
 
         {/* ── Danger Zone ─────────────── */}

@@ -58,6 +58,11 @@ const groupSchema = new mongoose.Schema({
       type: String,
       enum: ['public', 'progress-only', 'streaks-only', 'private'],
       default: 'progress-only'
+    },
+    intensity: {
+      type: String,
+      enum: ['supportive', 'accountable', 'sharp'],
+      default: 'accountable'
     }
   },
   

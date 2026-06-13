@@ -1,23 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import {
-  PlusIcon,
-  ChevronRightIcon,
-} from "@radix-ui/react-icons";
-import { Users, Handshake, Barbell, BookOpen, Globe } from "@phosphor-icons/react";
+import { PlusIcon } from "@radix-ui/react-icons";
+import { Users } from "@phosphor-icons/react";
 import { groupsAPI } from "../services/api";
-import { useAuth } from "../contexts/AuthContext";
 import GroupCreationModal from "../components/ui/GroupCreationModal";
-import AvatarStack from "../components/shared/AvatarStack";
+import GroupCard from "../components/groups/GroupCard";
 import SkeletonTransition from "../components/ui/SkeletonTransition";
 import AnimatedList from "../components/ui/AnimatedList";
-import { motion } from "framer-motion";
-import { listItemVariants } from "../utils/motion";
 
 const GroupSelection = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
   const [groups, setGroups] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -92,6 +85,7 @@ const GroupSelection = () => {
         settings: {
           isPublic: !formData.isPrivate,
           privacyLevel: formData.isPrivate ? "invite-only" : "open",
+          intensity: formData.intensity || "accountable",
         },
       });
       if (res.success) {
@@ -101,16 +95,6 @@ const GroupSelection = () => {
     } catch (err) {
       console.error("Error creating group:", err);
     }
-  };
-
-  /* ── type → icon map ─────────────── */
-
-  const typeIcon = {
-    family:    <Users     size={28} weight="duotone" />,
-    team:      <Handshake size={28} weight="duotone" />,
-    fitness:   <Barbell   size={28} weight="duotone" />,
-    study:     <BookOpen  size={28} weight="duotone" />,
-    community: <Globe     size={28} weight="duotone" />,
   };
 
   /* ── derived stats ──────────────────── */
@@ -125,12 +109,6 @@ const GroupSelection = () => {
   );
 
   /* ── recently active check — glass treatment for groups updated in last 24h ── */
-  const isRecentlyActive = (group) => {
-    if (!group.updatedAt) return false;
-    const elapsed = Date.now() - new Date(group.updatedAt).getTime();
-    return elapsed < 24 * 60 * 60 * 1000;
-  };
-
   /* ── loading skeleton ───────────────── */
 
   const groupsSkeleton = (
@@ -201,79 +179,11 @@ const GroupSelection = () => {
         ) : (
           /* grid cards */
           <AnimatedList className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {groups.map((group, i) => {
-              const color = group.color || "#4f46e5";
-              const memberCount = group.members?.length || 0;
-              const featured = isRecentlyActive(group);
-
-              return (
-                <motion.div key={group._id} variants={listItemVariants} custom={i}>
-                <button
-                  onClick={() => navigate(`/app/groups/${group._id}`)}
-                  className={`relative overflow-hidden rounded-2xl border text-left transition-all duration-200 min-h-[160px] flex flex-col group w-full ${
-                    featured
-                      ? "glass-card-minimal hover:shadow-lg hover:shadow-[var(--color-brand-500)]/5"
-                      : "bg-[var(--color-surface-elevated)] border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40 hover:shadow-md"
-                  }`}
-                >
-                  {/* Color gradient stripe */}
-                  <div
-                    className="h-1.5 w-full"
-                    style={{
-                      background: `linear-gradient(to right, ${color}40, ${color}10)`,
-                    }}
-                  />
-
-                  {/* Main content */}
-                  <div className="flex-1 p-5 flex flex-col">
-                    {/* Top: icon + name */}
-                    <div className="flex items-start gap-4 mb-3">
-                      <span
-                        className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
-                        style={{ backgroundColor: `${color}18` }}
-                      >
-                        {typeIcon[group.type] || <Handshake size={28} weight="duotone" />}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-garamond font-bold text-[var(--color-text-primary)] truncate">
-                          {group.name}
-                        </h3>
-                        {group.description && (
-                          <p className="text-sm text-[var(--color-text-secondary)] font-spartan mt-0.5 line-clamp-2">
-                            {group.description}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Spacer */}
-                    <div className="flex-1" />
-
-                    {/* Bottom row: avatar stack + stats + chevron */}
-                    <div className="flex items-center gap-3 pt-3 border-t border-[var(--color-border-primary)]/10">
-                      {/* Avatar stack */}
-                      {memberCount > 0 && (
-                        <AvatarStack
-                          members={group.members || []}
-                          max={4}
-                          size="sm"
-                        />
-                      )}
-
-                      {/* Stats */}
-                      <div className="flex-1 flex items-center gap-4 text-xs text-[var(--color-text-tertiary)] font-spartan">
-                        <span>{memberCount} member{memberCount !== 1 && "s"}</span>
-                        <span>{group.habitCount ?? 0} habit{(group.habitCount ?? 0) !== 1 && "s"}</span>
-                      </div>
-
-                      {/* Chevron */}
-                      <ChevronRightIcon className="w-4 h-4 text-[var(--color-text-tertiary)] group-hover:text-[var(--color-text-secondary)] flex-shrink-0 transition-colors" />
-                    </div>
-                  </div>
-                </button>
-                </motion.div>
-              );
-            })}
+            {groups.map((group) => (
+              <div key={group._id}>
+                <GroupCard group={group} />
+              </div>
+            ))}
           </AnimatedList>
         )}
       </div>

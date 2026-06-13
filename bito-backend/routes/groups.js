@@ -233,10 +233,34 @@ router.get('/:id', authenticateJWT, async (req, res) => {
       }}
     ]);
     
+    // Enrich members with isActiveToday (has logged any habit today)
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const memberIds = group.members
+      .filter((m) => m.status === 'active')
+      .map((m) => m.userId?._id || m.userId);
+
+    const activeToday = await HabitEntry.distinct('userId', {
+      userId: { $in: memberIds },
+      date: { $gte: todayStart, $lte: todayEnd },
+      completed: true,
+    });
+
+    const activeTodaySet = new Set(activeToday.map(String));
+
+    const enrichedMembers = group.toObject().members.map((m) => ({
+      ...m,
+      isActiveToday: activeTodaySet.has(String(m.userId?._id || m.userId)),
+    }));
+
     res.json({
       success: true,
       group: {
         ...group.toObject(),
+        members: enrichedMembers,
         userRole,
         habits: groupHabits,
         stats: stats[0] || { totalHabits: 0, totalCompletions: 0, activeMemberCount: 0 }

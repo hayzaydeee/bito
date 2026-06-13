@@ -294,7 +294,12 @@ export const workspacesAPILegacy = {
   getGroupMembers: async (groupId) => {
     return apiRequest(`/api/groups/${groupId}/members`);
   },
-  
+
+  // Get current user's adopted habits in a group (personal habit objects)
+  getMemberHabits: async (groupId) => {
+    return apiRequest(`/api/groups/${groupId}/member-habits`);
+  },
+
   // Leave a group (self-service member exit)
   leaveGroup: async (groupId) => {
     return apiRequest(`/api/groups/${groupId}/leave`, {

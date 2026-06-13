@@ -12,6 +12,7 @@ import {
   InfoCircledIcon,
 } from "@radix-ui/react-icons";
 import AnimatedModal from "./AnimatedModal";
+import IntensitySelector from "../groups/IntensitySelector";
 
 // Predefined color options for group (matching HabitEditModal)
 const colorOptions = [
@@ -77,6 +78,7 @@ const GroupCreationModal = ({ isOpen, onClose, onSave }) => {
     color: "#4f46e5", // Default color
     type: "team", // Default type - using a valid value from backend enum
     isPrivate: false,
+    intensity: "accountable",
   });
 
   const handleChange = (e) => {
@@ -218,6 +220,17 @@ const GroupCreationModal = ({ isOpen, onClose, onSave }) => {
                 onClick={() => setActiveSection('settings')}
               >
                 Settings
+              </button>
+              <button
+                type="button"
+                className={`py-2 px-1 text-sm font-medium border-b-2 transition-colors ${
+                  activeSection === 'intensity' 
+                    ? 'border-[var(--color-brand-500)] text-[var(--color-text-primary)]' 
+                    : 'border-transparent text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]'
+                }`}
+                onClick={() => setActiveSection('intensity')}
+              >
+                Intensity
               </button>
             </div>
           </div>
@@ -386,6 +399,16 @@ const GroupCreationModal = ({ isOpen, onClose, onSave }) => {
                     )}
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Intensity Section */}
+            {activeSection === 'intensity' && (
+              <div className="space-y-4">
+                <IntensitySelector
+                  value={formData.intensity}
+                  onChange={(v) => setFormData((p) => ({ ...p, intensity: v }))}
+                />
               </div>
             )}
 
