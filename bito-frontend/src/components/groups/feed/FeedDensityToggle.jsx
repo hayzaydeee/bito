@@ -47,20 +47,23 @@ const OPTIONS = [
  */
 const FeedDensityToggle = ({ density, onChange }) => (
   <div className="flex items-center gap-0.5 bg-[var(--color-surface-elevated)] rounded-lg p-0.5 border border-[var(--color-border-primary)]/20">
-    {OPTIONS.map(({ id, label, Icon }) => (
-      <button
-        key={id}
-        onClick={() => onChange(id)}
-        className={`flex items-center gap-1.5 h-6 px-2.5 rounded-md text-xs font-spartan font-medium transition-colors ${
-          density === id
-            ? "bg-[var(--color-surface-hover)] text-[var(--color-text-primary)]"
-            : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
-        }`}
-      >
-        <Icon size={12} />
-        {label}
-      </button>
-    ))}
+    {OPTIONS.map(({ id, label, Icon }) => {
+      const isActive = density === id;
+      return (
+        <button
+          key={id}
+          onClick={() => onChange(id)}
+          className={`flex items-center gap-1.5 h-6 px-2.5 rounded-md text-xs font-spartan font-medium transition-colors ${
+            isActive
+              ? "bg-[var(--color-surface-hover)] text-[var(--color-text-primary)]"
+              : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
+          }`}
+        >
+          <Icon size={12} className={isActive ? "text-[var(--color-brand-400)]" : ""} />
+          {label}
+        </button>
+      );
+    })}
   </div>
 );
 

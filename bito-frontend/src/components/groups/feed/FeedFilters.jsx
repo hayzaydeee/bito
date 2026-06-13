@@ -33,10 +33,10 @@ const FeedFilters = ({ active, onChange }) => (
       <button
         key={id}
         onClick={() => onChange(id)}
-        className={`h-7 px-3.5 rounded-full text-xs font-spartan font-medium transition-colors ${
+        className={`h-7 px-3.5 rounded-full text-xs font-spartan font-medium transition-colors border ${
           active === id
-            ? "bg-[var(--color-surface-hover)] text-[var(--color-text-primary)]"
-            : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
+            ? "bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] border-[var(--color-border-primary)]/30"
+            : "text-[var(--color-text-tertiary)] border-[var(--color-border-primary)]/15 hover:text-[var(--color-text-secondary)] hover:border-[var(--color-border-primary)]/25"
         }`}
       >
         {label}

@@ -63,7 +63,7 @@ function badgeStyle(type) {
   const map = {
     habit_completed:     "bg-emerald-500/12 text-emerald-400 border-emerald-500/20",
     streak_milestone:    "bg-orange-500/12 text-orange-400 border-orange-500/20",
-    member_joined:       "bg-sky-500/12 text-sky-400 border-sky-500/20",
+    member_joined:       "bg-fuchsia-500/12 text-fuchsia-400 border-fuchsia-500/20",
     kudos:               "bg-rose-500/12 text-rose-400 border-rose-500/20",
     challenge_joined:    "bg-teal-500/12 text-teal-400 border-teal-500/20",
     challenge_started:   "bg-amber-500/12 text-amber-400 border-amber-500/20",
@@ -546,9 +546,10 @@ const FeedCard = ({
         {showKudosCTA && !kudosOpen && (
           <button
             onClick={() => setKudosOpen(true)}
-            className="ml-auto text-xs font-spartan font-semibold px-3 py-1.5 rounded-full border border-teal-500/30 text-teal-400 hover:bg-teal-500/10 transition-colors"
+            className="ml-auto flex items-center gap-1.5 text-xs font-spartan font-medium px-3 py-1 rounded-full border border-[var(--color-border-primary)]/25 text-[var(--color-text-secondary)] hover:border-rose-500/30 hover:text-rose-400 transition-colors"
           >
-            Kudos sent ✓
+            <Heart size={12} weight="regular" />
+            Give kudos
           </button>
         )}
       </div>
