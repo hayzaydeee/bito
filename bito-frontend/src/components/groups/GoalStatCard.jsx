@@ -17,7 +17,7 @@ const GoalStatCard = ({ teamGoalChallenge, onCreateChallenge }) => {
   if (!teamGoalChallenge) {
     return (
       <div
-        className="flex-1 min-w-0 rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-surface-elevated)] px-4 py-3.5 flex flex-col gap-1 cursor-pointer transition-colors hover:border-[var(--color-border-primary)]/60 relative overflow-hidden"
+        className="flex-1 min-w-0 rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-surface-elevated)]/60 px-4 py-3.5 flex flex-col gap-1 cursor-pointer transition-colors hover:border-[var(--color-border-primary)]/60 relative overflow-hidden"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         onClick={onCreateChallenge}
@@ -63,7 +63,7 @@ const GoalStatCard = ({ teamGoalChallenge, onCreateChallenge }) => {
     : null;
 
   return (
-    <div className="flex-1 min-w-0 rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-surface-elevated)] px-4 py-3.5 flex flex-col gap-1.5">
+    <div className="flex-1 min-w-0 rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-surface-elevated)]/60 px-4 py-3.5 flex flex-col gap-1.5">
       <div className="flex items-center justify-between">
         <p className="text-xs text-[var(--color-text-tertiary)] font-spartan truncate pr-2">
           {teamGoalChallenge.title || "Team goal"}

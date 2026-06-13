@@ -34,7 +34,7 @@ const MemberCard = ({ member, groupId, isYou, onEncourage }) => {
   const roleLabel = role ? role.charAt(0).toUpperCase() + role.slice(1) : "";
 
   return (
-    <div className="flex items-center gap-3 p-4 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/15 hover:border-[var(--color-border-primary)]/35 transition-all group/card">
+    <div className="flex items-center gap-3 p-4 rounded-2xl bg-[var(--color-surface-elevated)]/60 border border-[var(--color-border-primary)]/15 hover:border-[var(--color-border-primary)]/35 transition-all group/card">
       {/* Avatar + presence dot */}
       <div className="relative flex-shrink-0">
         {info.avatar ? (

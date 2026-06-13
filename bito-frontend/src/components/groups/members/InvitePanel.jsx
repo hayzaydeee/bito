@@ -88,7 +88,7 @@ const InvitePanel = ({ groupId, group }) => {
   };
 
   return (
-    <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)] p-5 space-y-5">
+    <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60 p-5 space-y-5">
       <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)]">
         Invite people
       </p>

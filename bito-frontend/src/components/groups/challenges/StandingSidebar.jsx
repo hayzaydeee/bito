@@ -89,7 +89,7 @@ const StandingSidebar = ({ activeChallenges = [], allChallenges = [], currentUse
   return (
     <div className="space-y-4">
       {/* Your standing */}
-      <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)] p-5">
+      <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60 p-5">
         <div className="flex items-center gap-2 mb-3">
           <p className="text-xs font-spartan font-semibold text-[var(--color-text-primary)] uppercase tracking-wide flex-1">
             Your standing
@@ -154,7 +154,7 @@ const StandingSidebar = ({ activeChallenges = [], allChallenges = [], currentUse
       </div>
 
       {/* All time */}
-      <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)] p-5">
+      <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60 p-5">
         <p className="text-xs font-spartan font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wide mb-3">
           All time
         </p>

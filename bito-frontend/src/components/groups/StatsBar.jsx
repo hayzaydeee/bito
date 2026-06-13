@@ -19,7 +19,7 @@ const StatsBar = ({ overview, members, teamGoalChallenge, onCreateChallenge }) =
   return (
     <div className="flex gap-3 mb-6">
       {/* Active today */}
-      <div className="flex-1 min-w-0 rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-surface-elevated)] px-4 py-3.5 flex flex-col gap-1">
+      <div className="flex-1 min-w-0 rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-surface-elevated)]/60 px-4 py-3.5 flex flex-col gap-1">
         <p className="text-xs text-[var(--color-text-tertiary)] font-spartan">
           Active today
         </p>
@@ -32,7 +32,7 @@ const StatsBar = ({ overview, members, teamGoalChallenge, onCreateChallenge }) =
       </div>
 
       {/* Completions */}
-      <div className="flex-1 min-w-0 rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-surface-elevated)] px-4 py-3.5 flex flex-col gap-1">
+      <div className="flex-1 min-w-0 rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-surface-elevated)]/60 px-4 py-3.5 flex flex-col gap-1">
         <p className="text-xs text-[var(--color-text-tertiary)] font-spartan">
           Completions
         </p>

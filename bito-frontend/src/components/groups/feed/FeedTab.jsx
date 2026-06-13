@@ -173,7 +173,7 @@ const FeedTab = ({
       {/* ── Sidebar ── */}
       <aside className="w-64 flex-shrink-0 space-y-4 hidden lg:block">
         {/* Members summary */}
-        <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)] p-4">
+        <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60 p-4">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-spartan font-semibold text-[var(--color-text-primary)] uppercase tracking-wide">
               Members
@@ -213,7 +213,7 @@ const FeedTab = ({
 
         {/* Active challenge */}
         {(activeChallenge || teamGoalChallenge) && (
-          <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)] p-4">
+          <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60 p-4">
             <div className="flex items-center gap-1.5 mb-2">
               <p className="text-xs font-spartan font-semibold text-[var(--color-text-primary)] uppercase tracking-wide flex-1">
                 Active challenge
@@ -259,7 +259,7 @@ const FeedTab = ({
 
         {/* Goal progress */}
         {teamGoalChallenge && goalPct !== null && (
-          <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)] p-4">
+          <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60 p-4">
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs font-spartan font-semibold text-[var(--color-text-primary)] uppercase tracking-wide truncate pr-2">
                 {teamGoalChallenge.title}

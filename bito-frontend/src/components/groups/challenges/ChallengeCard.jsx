@@ -181,7 +181,7 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
   /* Consistency / Streak: leaderboard layout */
   if (c.type === "consistency" || c.type === "streak") {
     return (
-      <div className="p-5 rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]">
+      <div className="p-5 rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60">
         <div className="flex items-start justify-between gap-3 mb-1">
           <div className="min-w-0">
             <p className="text-base font-garamond font-bold text-[var(--color-text-primary)] truncate">
@@ -234,7 +234,7 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
     ) || 0;
 
     return (
-      <div className="p-5 rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]">
+      <div className="p-5 rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60">
         <div className="flex items-start justify-between gap-3 mb-1">
           <div className="min-w-0">
             <p className="text-base font-garamond font-bold text-[var(--color-text-primary)] truncate">
@@ -303,7 +303,7 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
 
   /* Default / cumulative / head-to-head */
   return (
-    <div className="p-5 rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]">
+    <div className="p-5 rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60">
       <div className="flex items-start justify-between gap-3 mb-2">
         <div className="min-w-0">
           <p className="text-base font-garamond font-bold text-[var(--color-text-primary)] truncate">

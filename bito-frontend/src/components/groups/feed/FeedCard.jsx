@@ -218,7 +218,7 @@ const FeedCard = ({
 
   if (density === "compact") {
     return (
-      <div className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-[var(--color-surface-elevated)] transition-colors group/item">
+      <div className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-[var(--color-surface-elevated)]/60 transition-colors group/item">
         {/* Avatar with icon badge */}
         <div className="relative flex-shrink-0">
           <MemberAvatar user={userInfo} size="sm" />
@@ -261,7 +261,7 @@ const FeedCard = ({
   /* ── Cozy layout ─────────────────────────────────────────────── */
 
   return (
-    <div className="flex items-start gap-3.5 px-4 py-4 rounded-2xl border border-[var(--color-border-primary)]/10 bg-[var(--color-surface-elevated)] hover:border-[var(--color-border-primary)]/20 transition-colors">
+    <div className="flex items-start gap-3.5 px-4 py-4 rounded-2xl border border-[var(--color-border-primary)]/10 bg-[var(--color-surface-elevated)]/60 hover:border-[var(--color-border-primary)]/20 transition-colors">
       {/* Avatar */}
       <MemberAvatar user={userInfo} size="lg" />
 

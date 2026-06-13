@@ -59,7 +59,7 @@ const HabitsSidebar = ({
   return (
     <div className="space-y-4">
       {/* Your habit(s) card */}
-      <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)] p-5">
+      <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60 p-5">
         <p className="text-xs font-spartan font-semibold text-[var(--color-text-primary)] uppercase tracking-wide mb-3">
           Your habit here
         </p>
@@ -159,7 +159,7 @@ const HabitsSidebar = ({
       </div>
 
       {/* Group adoption */}
-      <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)] p-5">
+      <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60 p-5">
         <div className="flex items-center justify-between mb-2">
           <p className="text-xs font-spartan font-semibold text-[var(--color-text-primary)] uppercase tracking-wide">
             Group adoption

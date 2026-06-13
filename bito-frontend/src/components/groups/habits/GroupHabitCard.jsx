@@ -32,7 +32,7 @@ const GroupHabitCard = ({ habit, totalMembers, adopted, canEdit, onAdopt, onEdit
       className={`flex flex-col rounded-2xl border transition-all ${
         adopted
           ? "bg-emerald-500/5 border-emerald-500/15"
-          : "bg-[var(--color-surface-elevated)] border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40"
+          : "bg-[var(--color-surface-elevated)]/60 border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40"
       }`}
     >
       <div className="flex items-start gap-4 p-5 pb-4">

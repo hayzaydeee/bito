@@ -20,7 +20,7 @@ const GroupCard = ({ group }) => {
   return (
     <button
       onClick={() => navigate(`/app/groups/${group._id}`)}
-      className="group relative w-full text-left rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)] hover:border-[var(--color-border-primary)]/40 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/10 transition-all duration-200 overflow-hidden p-5 flex flex-col min-h-[160px]"
+      className="group relative w-full text-left rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60 hover:border-[var(--color-border-primary)]/40 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/10 transition-all duration-200 overflow-hidden p-5 flex flex-col min-h-[160px]"
     >
       {/* icon — top left */}
       <span
