@@ -17,7 +17,7 @@ const GoalStatCard = ({ teamGoalChallenge, onCreateChallenge }) => {
   if (!teamGoalChallenge) {
     return (
       <div
-        className="flex-1 min-w-0 rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)] px-6 py-5 flex flex-col gap-1 cursor-pointer transition-colors hover:border-[var(--color-border-primary)]/40 relative overflow-hidden"
+        className="flex-1 min-w-0 rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-surface-elevated)] px-4 py-3.5 flex flex-col gap-1 cursor-pointer transition-colors hover:border-[var(--color-border-primary)]/60 relative overflow-hidden"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         onClick={onCreateChallenge}
@@ -63,18 +63,18 @@ const GoalStatCard = ({ teamGoalChallenge, onCreateChallenge }) => {
     : null;
 
   return (
-    <div className="flex-1 min-w-0 rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)] px-6 py-5 flex flex-col gap-2">
+    <div className="flex-1 min-w-0 rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-surface-elevated)] px-4 py-3.5 flex flex-col gap-1.5">
       <div className="flex items-center justify-between">
         <p className="text-xs text-[var(--color-text-tertiary)] font-spartan truncate pr-2">
           {teamGoalChallenge.title || "Team goal"}
         </p>
-        <span className="text-[2rem] leading-none font-garamond font-bold text-[var(--color-text-primary)] flex-shrink-0">
+        <span className="text-xl leading-none font-garamond font-bold text-[var(--color-text-primary)] flex-shrink-0">
           {pct}%
         </span>
       </div>
 
       {/* progress bar */}
-      <div className="h-2 rounded-full bg-[var(--color-surface-hover)] overflow-hidden">
+      <div className="h-1.5 rounded-full bg-[var(--color-surface-hover)] overflow-hidden">
         <div
           className="h-full rounded-full bg-emerald-500 transition-all duration-500"
           style={{ width: `${pct}%` }}

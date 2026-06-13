@@ -32,7 +32,7 @@ const GroupDetailHeader = ({ group, groupId, members }) => {
     .join(" · ");
 
   return (
-    <div className="flex items-center justify-between gap-4 mb-6">
+    <div className="flex items-center justify-between gap-4 mb-5">
       {/* left: back + icon + name */}
       <div className="flex items-center gap-4 min-w-0">
         <button
@@ -44,14 +44,14 @@ const GroupDetailHeader = ({ group, groupId, members }) => {
         </button>
 
         <span
-          className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: `${color}20` }}
+          className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: `${color}25` }}
         >
-          <Icon size={22} weight="duotone" style={{ color }} />
+          <Icon size={28} weight="duotone" style={{ color }} />
         </span>
 
         <div className="min-w-0">
-          <h1 className="text-xl font-garamond font-bold text-[var(--color-text-primary)] truncate leading-tight">
+          <h1 className="text-2xl sm:text-3xl font-garamond font-bold text-[var(--color-text-primary)] truncate leading-tight">
             {group?.name}
           </h1>
           <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mt-0.5 truncate">

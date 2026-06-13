@@ -351,7 +351,7 @@ const GroupOverview = () => {
         />
 
         {/* ── Tab bar ─────────────────────── */}
-        <div className="flex border-b border-[var(--color-border-primary)]/15 mb-8">
+        <div className="flex justify-center border-b border-[var(--color-border-primary)]/15 mb-8">
           {TABS.map((tab) => {
             const active = activeTab === tab.id;
             return (
