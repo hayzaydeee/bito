@@ -687,6 +687,124 @@ router.get('/:id/invitations', authenticateJWT, async (req, res) => {
   }
 });
 
+// @route   GET /api/groups/code/:code
+// @desc    Get public group preview for an invite code (for landing page)
+// @access  Public
+router.get('/code/:code', async (req, res) => {
+  try {
+    const group = await Group.findByInviteCode(req.params.code);
+    if (!group) {
+      return res.status(404).json({ success: false, error: 'Invalid invite code.' });
+    }
+    if (!group.settings.allowInvites) {
+      return res.status(403).json({ success: false, error: 'This group is not accepting new members.' });
+    }
+    return res.json({
+      success: true,
+      group: {
+        id: group._id,
+        name: group.name,
+        description: group.description,
+        type: group.type,
+        color: group.color,
+        memberCount: group.members.filter((m) => m.status === 'active').length,
+        inviteCode: group.inviteCode,
+        ownedBy: group.ownerId?.name || 'the owner',
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching group by invite code:', error);
+    res.status(500).json({ success: false, error: 'Failed to load group details' });
+  }
+});
+
+// @route   POST /api/groups/join
+// @desc    Join a group by invite code (instant, authenticated)
+// @access  Private
+router.post('/join', authenticateJWT, async (req, res) => {
+  try {
+    const { code } = req.body;
+    if (!code || typeof code !== 'string') {
+      return res.status(400).json({ success: false, error: 'Invite code is required' });
+    }
+
+    const group = await Group.findByInviteCode(code.trim());
+    if (!group) {
+      return res.status(404).json({ success: false, error: 'Invalid invite code. Double-check and try again.' });
+    }
+
+    if (!group.settings.allowInvites) {
+      return res.status(403).json({ success: false, error: 'This group is not accepting new members.' });
+    }
+
+    const userId = req.user._id || req.user.id;
+
+    // Already a member?
+    const existingMember = group.members.find(
+      (m) => m.userId.toString() === userId.toString() && m.status === 'active'
+    );
+    if (existingMember) {
+      return res.status(400).json({ success: false, error: 'You are already a member of this group.', group: { id: group._id, name: group.name } });
+    }
+
+    // Add user as member
+    group.members.push({
+      userId: new mongoose.Types.ObjectId(userId),
+      role: 'member',
+      status: 'active',
+      joinedAt: new Date(),
+      permissions: group.getDefaultPermissions('member'),
+    });
+    group.stats.totalMembers = group.members.length;
+    group.stats.activeMembers = group.members.filter((m) => m.status === 'active').length;
+    await group.save();
+
+    // Activity log
+    await new Activity({
+      groupId: group._id,
+      userId,
+      type: 'member_joined',
+      data: { groupName: group.name, memberName: req.user.name || req.user.email, role: 'member' },
+      visibility: 'group',
+    }).save();
+
+    return res.json({
+      success: true,
+      message: `Welcome to ${group.name}!`,
+      group: { id: group._id, name: group.name, type: group.type },
+    });
+  } catch (error) {
+    console.error('Error joining group by code:', error);
+    res.status(500).json({ success: false, error: 'Failed to join group' });
+  }
+});
+
+// @route   POST /api/groups/:id/invite-code/regenerate
+// @desc    Regenerate the permanent invite code for a group
+// @access  Private (owner/admin)
+router.post('/:id/invite-code/regenerate', authenticateJWT, async (req, res) => {
+  try {
+    const group = await Group.findById(req.params.id);
+    if (!group) {
+      return res.status(404).json({ success: false, error: 'Group not found' });
+    }
+
+    const userId = req.user._id || req.user.id;
+    if (!group.canUserAccess(userId, 'invite')) {
+      return res.status(403).json({ success: false, error: 'You do not have permission to regenerate the invite code' });
+    }
+
+    // Force a new code by clearing the existing one
+    group.inviteCode = undefined;
+    await group.save(); // Pre-save hook will assign a new unique code
+
+    return res.json({ success: true, inviteCode: group.inviteCode });
+  } catch (error) {
+    console.error('Error regenerating invite code:', error);
+    res.status(500).json({ success: false, error: 'Failed to regenerate invite code' });
+  }
+});
+
 // @route   GET /api/groups/invitations/:token
 // @desc    Get invitation details by token
 // @access  Public

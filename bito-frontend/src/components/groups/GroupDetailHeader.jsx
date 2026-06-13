@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Gear } from "@phosphor-icons/react";
+import { ArrowLeft, Gear, QrCode, Copy, X } from "@phosphor-icons/react";
 import AvatarStack from "../shared/AvatarStack";
 import { getGroupTypeConfig } from "./groupTypeConfig";
 
@@ -30,49 +31,125 @@ const GroupDetailHeader = ({ group, groupId, members }) => {
     .filter(Boolean)
     .join(" · ");
 
+  const [showQR, setShowQR] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const inviteCode = group?.inviteCode;
+  const inviteUrl = inviteCode
+    ? `${window.location.origin}/invite/${inviteCode}`
+    : null;
+  const qrSrc = inviteUrl
+    ? `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(inviteUrl)}&size=220x220&margin=2&bgcolor=ffffff&color=000000`
+    : null;
+
+  const handleCopy = () => {
+    if (!inviteUrl) return;
+    navigator.clipboard.writeText(inviteUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   return (
-    <div className="flex items-center justify-between gap-4 mb-5">
-      {/* left: back + icon + name */}
-      <div className="flex items-center gap-4 min-w-0">
-        <button
-          onClick={() => navigate("/app/groups")}
-          className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors flex-shrink-0"
-          aria-label="Back to groups"
-        >
-          <ArrowLeft size={16} weight="bold" />
-        </button>
+    <>
+      <div className="flex items-center justify-between gap-4 mb-5">
+        {/* left: back + icon + name */}
+        <div className="flex items-center gap-4 min-w-0">
+          <button
+            onClick={() => navigate("/app/groups")}
+            className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors flex-shrink-0"
+            aria-label="Back to groups"
+          >
+            <ArrowLeft size={16} weight="bold" />
+          </button>
 
-        <span
-          className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: `${color}25` }}
-        >
-          <Icon size={28} weight="duotone" style={{ color }} />
-        </span>
+          <span
+            className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: `${color}25` }}
+          >
+            <Icon size={28} weight="duotone" style={{ color }} />
+          </span>
 
-        <div className="min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-garamond font-bold text-[var(--color-text-primary)] truncate leading-tight">
-            {group?.name}
-          </h1>
-          <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mt-0.5 truncate">
-            {subtitle}
-          </p>
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-garamond font-bold text-[var(--color-text-primary)] truncate leading-tight">
+              {group?.name}
+            </h1>
+            <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mt-0.5 truncate">
+              {subtitle}
+            </p>
+          </div>
+        </div>
+
+        {/* right: avatar stack + QR + settings */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {members.length > 0 && (
+            <AvatarStack members={members} max={5} size="sm" />
+          )}
+          {inviteCode && (
+            <button
+              onClick={() => setShowQR(true)}
+              className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+              aria-label="Show QR invite code"
+              title="Invite via QR code"
+            >
+              <QrCode size={16} weight="bold" />
+            </button>
+          )}
+          <button
+            onClick={() => navigate(`/app/groups/${groupId}/settings`)}
+            className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+            aria-label="Group settings"
+          >
+            <Gear size={16} weight="bold" />
+          </button>
         </div>
       </div>
 
-      {/* right: avatar stack + settings */}
-      <div className="flex items-center gap-3 flex-shrink-0">
-        {members.length > 0 && (
-          <AvatarStack members={members} max={5} size="sm" />
-        )}
-        <button
-          onClick={() => navigate(`/app/groups/${groupId}/settings`)}
-          className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
-          aria-label="Group settings"
+      {/* QR Modal */}
+      {showQR && qrSrc && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={() => setShowQR(false)}
         >
-          <Gear size={16} weight="bold" />
-        </button>
-      </div>
-    </div>
+          <div
+            className="relative bg-white rounded-2xl p-6 shadow-2xl flex flex-col items-center gap-4 max-w-[300px] w-full mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowQR(false)}
+              className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full bg-black/5 text-black/50 hover:bg-black/10 transition-colors"
+            >
+              <X size={14} />
+            </button>
+            <div className="text-center">
+              <p className="text-sm font-spartan font-semibold text-black/80">
+                {group?.name}
+              </p>
+              <p className="text-xs font-spartan text-black/40 mt-0.5">Scan to join</p>
+            </div>
+            <img
+              src={qrSrc}
+              alt={`QR code to join ${group?.name}`}
+              className="w-[220px] h-[220px] rounded-lg"
+              loading="lazy"
+            />
+            <div className="text-center">
+              <p className="text-xs font-spartan text-black/40">Or share code</p>
+              <p className="text-xl font-mono font-bold tracking-widest text-black/80 mt-1">
+                {inviteCode}
+              </p>
+            </div>
+            <button
+              onClick={handleCopy}
+              className="w-full h-9 rounded-xl border border-black/10 text-xs font-spartan font-medium text-black/60 hover:bg-black/5 transition-colors flex items-center justify-center gap-1.5"
+            >
+              <Copy size={13} />
+              {copied ? "Copied!" : "Copy Invite Link"}
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

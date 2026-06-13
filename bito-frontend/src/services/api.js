@@ -439,6 +439,26 @@ export const groupsAPI = {
     });
   },
 
+  // Join group by permanent invite code
+  joinByCode: async (code) => {
+    return apiRequest('/api/groups/join', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    });
+  },
+
+  // Get public group info by invite code (for landing page)
+  getGroupByInviteCode: async (code) => {
+    return apiRequest(`/api/groups/code/${code}`);
+  },
+
+  // Regenerate the permanent invite code for a group
+  regenerateInviteCode: async (groupId) => {
+    return apiRequest(`/api/groups/${groupId}/invite-code/regenerate`, {
+      method: 'POST',
+    });
+  },
+
   // Update member role
   updateMemberRole: async (groupId, userId, roleData) => {
     return apiRequest(`/api/groups/${groupId}/members/${userId}`, {

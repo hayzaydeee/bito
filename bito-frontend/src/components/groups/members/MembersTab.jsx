@@ -110,7 +110,15 @@ const MembersTab = ({
       {/* ── Sidebar ── */}
       <aside className="w-64 flex-shrink-0 hidden lg:block">
         {canManage ? (
-          <InvitePanel groupId={groupId} group={group} />
+          <InvitePanel
+            groupId={groupId}
+            group={group}
+            isOwner={
+              currentUserId &&
+              (group?.ownerId?.toString() === currentUserId?.toString() ||
+                group?.ownerId?._id?.toString() === currentUserId?.toString())
+            }
+          />
         ) : (
           /* Read-only panel for regular members */
           <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60 p-5">

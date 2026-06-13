@@ -95,6 +95,13 @@ const groupSchema = new mongoose.Schema({
     }
   }],
   
+  // Permanent invite code for code-based joining (e.g. XK4F9A)
+  inviteCode: {
+    type: String,
+    unique: true,
+    sparse: true, // Allow null for existing groups until first save
+  },
+
   // Group statistics
   stats: {
     totalMembers: { type: Number, default: 0 },
@@ -127,6 +134,34 @@ groupSchema.index({ ownerId: 1 });
 groupSchema.index({ 'members.userId': 1 });
 groupSchema.index({ type: 1, 'settings.isPublic': 1 });
 groupSchema.index({ createdAt: -1 });
+groupSchema.index({ inviteCode: 1 }, { unique: true, sparse: true });
+
+// Generate a unique 6-character invite code (alphanumeric, no ambiguous chars)
+const INVITE_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function generateInviteCode() {
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += INVITE_CODE_CHARS[Math.floor(Math.random() * INVITE_CODE_CHARS.length)];
+  }
+  return code;
+}
+
+// Pre-save: ensure every group has an invite code
+groupSchema.pre('save', async function(next) {
+  if (!this.inviteCode) {
+    let code;
+    let attempts = 0;
+    do {
+      code = generateInviteCode();
+      attempts++;
+      if (attempts > 20) {
+        return next(new Error('Failed to generate unique invite code'));
+      }
+    } while (await mongoose.model('Group').exists({ inviteCode: code, _id: { $ne: this._id } }));
+    this.inviteCode = code;
+  }
+  next();
+});
 
 // Virtual for member count
 groupSchema.virtual('memberCount').get(function() {
@@ -219,6 +254,12 @@ groupSchema.statics.getPublicGroups = function(limit = 20) {
   .populate('ownerId', 'name avatar')
   .limit(limit)
   .sort({ 'stats.activeMembers': -1 });
+};
+
+groupSchema.statics.findByInviteCode = function(code) {
+  return this.findOne({ inviteCode: code.toUpperCase() })
+    .populate('ownerId', 'name email avatar')
+    .populate('members.userId', 'name email avatar');
 };
 
 module.exports = mongoose.model('Group', groupSchema);

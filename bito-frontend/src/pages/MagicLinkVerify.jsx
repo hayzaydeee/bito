@@ -39,10 +39,18 @@ const MagicLinkVerify = () => {
       const result = await verifyMagicLink(token);
 
       if (result.success) {
+        // Check if we need to return to an invite page after login
+        const returnUrl = sessionStorage.getItem('bito_invite_return_url');
+        if (returnUrl) {
+          sessionStorage.removeItem('bito_invite_return_url');
+        }
+
         if (result.isNewUser || !result.user?.profileComplete) {
           navigate("/profile-setup");
         } else if (!result.user?.onboardingComplete) {
           navigate("/onboarding");
+        } else if (returnUrl) {
+          navigate(returnUrl);
         } else {
           navigate("/app");
         }
