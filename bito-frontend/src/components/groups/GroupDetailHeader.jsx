@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Gear } from "@phosphor-icons/react";
 import AvatarStack from "../shared/AvatarStack";
-import ThemeSwitcher from "../ui/ThemeSwitcher";
 import { getGroupTypeConfig } from "./groupTypeConfig";
 
 /**
@@ -60,7 +59,7 @@ const GroupDetailHeader = ({ group, groupId, members }) => {
         </div>
       </div>
 
-      {/* right: avatar stack + settings + theme */}
+      {/* right: avatar stack + settings */}
       <div className="flex items-center gap-3 flex-shrink-0">
         {members.length > 0 && (
           <AvatarStack members={members} max={5} size="sm" />
@@ -72,7 +71,6 @@ const GroupDetailHeader = ({ group, groupId, members }) => {
         >
           <Gear size={16} weight="bold" />
         </button>
-        <ThemeSwitcher compact />
       </div>
     </div>
   );
