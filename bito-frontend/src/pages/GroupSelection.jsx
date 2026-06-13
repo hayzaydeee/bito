@@ -182,13 +182,15 @@ const GroupSelection = () => {
               <UserPlus size={15} />
               Join a Group
             </button>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="btn btn-primary btn-sm flex items-center gap-2 h-10 px-5 rounded-xl font-spartan"
-            >
-              <PlusIcon className="w-4 h-4" />
-              New Group
-            </button>
+            {groups.length > 0 && (
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="btn btn-primary btn-sm flex items-center gap-2 h-10 px-5 rounded-xl font-spartan"
+              >
+                <PlusIcon className="w-4 h-4" />
+                New Group
+              </button>
+            )}
           </div>
         </div>
 
@@ -211,13 +213,6 @@ const GroupSelection = () => {
               >
                 <PlusIcon className="w-4 h-4" />
                 Create Group
-              </button>
-              <button
-                onClick={openJoinModal}
-                className="btn btn-ghost btn-sm flex items-center gap-2 h-10 px-4 rounded-xl font-spartan text-sm"
-              >
-                <UserPlus size={15} />
-                Join a Group
               </button>
             </div>
           </div>
