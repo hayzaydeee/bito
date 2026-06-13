@@ -351,17 +351,17 @@ const GroupOverview = () => {
         />
 
         {/* ── Tab bar ─────────────────────── */}
-        <div className="flex gap-1 mb-8 bg-[var(--color-surface-elevated)] p-1.5 rounded-xl border border-[var(--color-border-primary)]/20">
+        <div className="flex border-b border-[var(--color-border-primary)]/15 mb-8">
           {TABS.map((tab) => {
             const active = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 h-9 rounded-lg text-sm font-spartan font-medium transition-colors ${
+                className={`px-6 h-11 text-sm font-spartan font-medium transition-all border-b-2 -mb-px ${
                   active
-                    ? "bg-[var(--color-brand-600)] text-white"
-                    : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]"
+                    ? "text-[var(--color-brand-400)] border-[var(--color-brand-500)]"
+                    : "text-[var(--color-text-secondary)] border-transparent hover:text-[var(--color-text-primary)]"
                 }`}
               >
                 {tab.label}

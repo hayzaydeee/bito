@@ -155,7 +155,7 @@ const StandingSidebar = ({ activeChallenges = [], allChallenges = [], currentUse
 
       {/* All time */}
       <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)] p-5">
-        <p className="text-xs font-spartan font-semibold text-[var(--color-text-primary)] uppercase tracking-wide mb-3">
+        <p className="text-xs font-spartan font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wide mb-3">
           All time
         </p>
         <div className="grid grid-cols-3 gap-2">

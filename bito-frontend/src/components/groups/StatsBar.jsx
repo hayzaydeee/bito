@@ -19,24 +19,24 @@ const StatsBar = ({ overview, members, teamGoalChallenge, onCreateChallenge }) =
   return (
     <div className="flex gap-3 mb-8">
       {/* Active today */}
-      <div className="flex-1 min-w-0 rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)] p-5 flex flex-col gap-1">
-        <p className="text-xs text-[var(--color-text-tertiary)] font-spartan uppercase tracking-wide">
+      <div className="flex-1 min-w-0 rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)] px-6 py-5 flex flex-col gap-1.5">
+        <p className="text-xs text-[var(--color-text-tertiary)] font-spartan">
           Active today
         </p>
-        <p className="text-2xl font-garamond font-bold text-[var(--color-text-primary)]">
+        <p className="text-[2rem] leading-none font-garamond font-bold text-[var(--color-text-primary)]">
           {activeMembers}
-          <span className="text-sm font-spartan font-normal text-[var(--color-text-tertiary)] ml-1">
+          <span className="text-base font-spartan font-normal text-[var(--color-text-tertiary)] ml-1.5">
             of {totalMembers}
           </span>
         </p>
       </div>
 
       {/* Completions */}
-      <div className="flex-1 min-w-0 rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)] p-5 flex flex-col gap-1">
-        <p className="text-xs text-[var(--color-text-tertiary)] font-spartan uppercase tracking-wide">
+      <div className="flex-1 min-w-0 rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)] px-6 py-5 flex flex-col gap-1.5">
+        <p className="text-xs text-[var(--color-text-tertiary)] font-spartan">
           Completions
         </p>
-        <p className="text-2xl font-garamond font-bold text-[var(--color-text-primary)]">
+        <p className="text-[2rem] leading-none font-garamond font-bold text-[var(--color-text-primary)]">
           {completions}
         </p>
       </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Copy, Envelope } from "@phosphor-icons/react";
+import { Copy, QrCode, Envelope } from "@phosphor-icons/react";
 import { groupsAPI } from "../../../services/api";
 
 /**
@@ -20,6 +20,8 @@ const InvitePanel = ({ groupId, group }) => {
   // Derive invite URL — prefer group inviteLink, fall back to generated URL
   const inviteToken = group?.inviteToken || group?._id;
   const inviteUrl = `${window.location.origin}/invite/${inviteToken}`;
+  // Short display path
+  const inviteShort = `bito.works/invite/${inviteToken?.toString().slice(-6) || ""}`;
 
   useEffect(() => {
     fetchPending();
@@ -93,22 +95,30 @@ const InvitePanel = ({ groupId, group }) => {
 
       {/* Invite link */}
       <div className="space-y-2">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/15">
+        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/15">
           <span className="flex-1 text-xs font-spartan text-[var(--color-text-secondary)] truncate">
-            {inviteUrl}
+            {inviteShort}
           </span>
         </div>
-        <button
-          onClick={handleCopy}
-          className={`w-full h-8 rounded-xl text-xs font-spartan font-medium transition-colors flex items-center justify-center gap-1.5 ${
-            copied
-              ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20"
-              : "bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] border border-[var(--color-border-primary)]/20 hover:text-[var(--color-text-primary)]"
-          }`}
-        >
-          <Copy size={12} />
-          {copied ? "Copied!" : "Copy link"}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleCopy}
+            className={`flex-1 h-9 rounded-xl text-xs font-spartan font-medium transition-colors flex items-center justify-center gap-1.5 ${
+              copied
+                ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20"
+                : "bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] border border-[var(--color-border-primary)]/20 hover:text-[var(--color-text-primary)]"
+            }`}
+          >
+            <Copy size={13} />
+            {copied ? "Copied!" : "Copy"}
+          </button>
+          <button
+            title="QR code — coming soon"
+            className="w-9 h-9 flex items-center justify-center rounded-xl bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/20 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] transition-colors flex-shrink-0"
+          >
+            <QrCode size={15} />
+          </button>
+        </div>
       </div>
 
       {/* Email invite */}

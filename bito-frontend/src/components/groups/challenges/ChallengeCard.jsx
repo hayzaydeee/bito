@@ -12,11 +12,11 @@ import {
 /* ── type metadata ──────────────────────────────────── */
 
 const TYPE_META = {
-  streak:       { Icon: Fire,         label: "Streak",      color: "text-orange-500" },
-  cumulative:   { Icon: TrendUp,      label: "Cumulative",  color: "text-blue-500" },
-  consistency:  { Icon: CalendarBlank,label: "Consistency", color: "text-indigo-500" },
-  team_goal:    { Icon: Handshake,    label: "Team Goal",   color: "text-teal-500" },
-  head_to_head: { Icon: Sword,        label: "Head to Head",color: "text-rose-500" },
+  streak:       { Icon: Fire,         label: "Streak",       color: "text-orange-500",  badge: "bg-orange-500/12 text-orange-400 border-orange-500/20" },
+  cumulative:   { Icon: TrendUp,      label: "Cumulative",   color: "text-blue-500",    badge: "bg-blue-500/12 text-blue-400 border-blue-500/20" },
+  consistency:  { Icon: CalendarBlank,label: "Consistency",  color: "text-violet-500",  badge: "bg-violet-500/12 text-violet-400 border-violet-500/20" },
+  team_goal:    { Icon: Handshake,    label: "Team goal",    color: "text-teal-500",    badge: "bg-teal-500/12 text-teal-400 border-teal-500/20" },
+  head_to_head: { Icon: Sword,        label: "Head to Head", color: "text-rose-500",    badge: "bg-rose-500/12 text-rose-400 border-rose-500/20" },
 };
 
 const STATUS_BADGE = {
@@ -60,23 +60,23 @@ function LeaderboardRow({ rank, participant, targetValue }) {
   ));
 
   return (
-    <div className="flex items-center gap-3">
-      <span className="w-5 text-xs font-spartan text-[var(--color-text-tertiary)] text-center flex-shrink-0">
+    <div className="flex items-center gap-3 py-2">
+      <span className="w-4 text-xs font-spartan font-medium text-[var(--color-text-tertiary)] text-right flex-shrink-0">
         {rank}
       </span>
-      <div className="w-6 h-6 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center text-white text-[10px] font-spartan font-bold flex-shrink-0">
+      <div className="w-7 h-7 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center text-white text-[11px] font-spartan font-bold flex-shrink-0">
         {name.charAt(0).toUpperCase()}
       </div>
-      <span className="flex-1 text-xs font-spartan text-[var(--color-text-primary)] truncate min-w-0">
-        {name}
+      <span className="w-20 text-sm font-spartan text-[var(--color-text-primary)] truncate flex-shrink-0">
+        {name.split(" ")[0]}
       </span>
-      <div className="flex-1 max-w-[80px] h-1 rounded-full bg-[var(--color-surface-hover)] overflow-hidden">
+      <div className="flex-1 h-1.5 rounded-full bg-[var(--color-surface-hover)] overflow-hidden">
         <div
           className="h-full rounded-full bg-emerald-500"
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span className="text-xs font-spartan font-semibold text-[var(--color-text-primary)] w-10 text-right flex-shrink-0">
+      <span className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] w-10 text-right flex-shrink-0">
         {pct}%
       </span>
     </div>
@@ -157,21 +157,19 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
   /* Upcoming card */
   if (c.status === "upcoming") {
     return (
-      <div className="p-5 rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)] opacity-75">
-        <div className="flex items-start gap-3">
-          <Clock size={18} className="text-[var(--color-text-tertiary)] mt-0.5 flex-shrink-0" />
+      <div className="p-5 rounded-2xl border border-[var(--color-border-primary)]/15 bg-[var(--color-surface-elevated)]/60">
+        <div className="flex items-center gap-3">
+          <Clock size={16} className="text-[var(--color-text-tertiary)] flex-shrink-0" />
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap mb-1">
-              <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] truncate">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] truncate flex-1">
                 {c.title}
               </p>
-              <span className={`text-[10px] font-spartan font-medium px-2 py-0.5 rounded-full border ${
-                TYPE_META[c.type]?.color?.replace("text-", "border-") + "/20 bg-" + TYPE_META[c.type]?.color?.split("-")[1] + "-500/10 " + TYPE_META[c.type]?.color
-              } border-[var(--color-border-primary)]/20 bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)]`}>
+              <span className={`flex-shrink-0 text-[10px] font-spartan font-medium px-2 py-0.5 rounded-full border ${meta.badge}`}>
                 {meta.label}
               </span>
             </div>
-            <p className="text-xs font-spartan text-[var(--color-text-tertiary)]">
+            <p className="text-xs font-spartan text-[var(--color-text-tertiary)] mt-0.5">
               Starts in {startsIn ?? "?"} day{startsIn !== 1 ? "s" : ""} · {participantCount} joined
             </p>
           </div>
@@ -184,38 +182,36 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
   if (c.type === "consistency" || c.type === "streak") {
     return (
       <div className="p-5 rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]">
-        <div className="flex items-start gap-3 mb-4">
-          <Icon size={18} weight="duotone" className={`${meta.color} mt-0.5 flex-shrink-0`} />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] truncate">
-                {c.title}
-              </p>
-              <span className={`text-[10px] font-spartan font-medium px-2 py-0.5 rounded-full border ${STATUS_BADGE[c.status]}`}>
-                {meta.label}
-              </span>
-            </div>
+        <div className="flex items-start justify-between gap-3 mb-1">
+          <div className="min-w-0">
+            <p className="text-base font-garamond font-bold text-[var(--color-text-primary)] truncate">
+              {c.title}
+            </p>
             <p className="text-xs font-spartan text-[var(--color-text-tertiary)] mt-0.5">
               {c.description || `Hit ${c.rules?.targetValue || "—"}% of days`}
               {remaining !== null && ` · ${remaining} days left`}
               {participantCount > 0 && ` · ${participantCount} joined`}
             </p>
           </div>
-
-          {!isParticipant && (
-            <button
-              onClick={() => onJoin(c._id)}
-              disabled={isLoading}
-              className="flex-shrink-0 h-8 px-3 rounded-xl bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white text-xs font-spartan font-medium transition-colors disabled:opacity-50"
-            >
-              {isLoading ? "…" : "Join"}
-            </button>
-          )}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {!isParticipant && (
+              <button
+                onClick={() => onJoin(c._id)}
+                disabled={isLoading}
+                className="h-7 px-3 rounded-lg border border-[var(--color-border-primary)]/30 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] text-xs font-spartan transition-colors disabled:opacity-50"
+              >
+                {isLoading ? "…" : "Join"}
+              </button>
+            )}
+            <span className={`text-[10px] font-spartan font-medium px-2 py-0.5 rounded-full border ${meta.badge}`}>
+              {meta.label}
+            </span>
+          </div>
         </div>
 
         {/* Leaderboard */}
         {sortedParticipants.length > 0 && (
-          <div className="space-y-2">
+          <div className="mt-3 space-y-0.5">
             {sortedParticipants.slice(0, 5).map((p, i) => (
               <LeaderboardRow
                 key={(p.userId?._id || p.userId)?.toString() || i}
@@ -239,45 +235,47 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
 
     return (
       <div className="p-5 rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]">
-        <div className="flex items-start gap-3 mb-3">
-          <Icon size={18} weight="duotone" className={`${meta.color} mt-0.5 flex-shrink-0`} />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] truncate">
-                {c.title}
-              </p>
-              <span className={`text-[10px] font-spartan font-medium px-2 py-0.5 rounded-full border ${STATUS_BADGE[c.status]}`}>
-                {meta.label}
-              </span>
-            </div>
+        <div className="flex items-start justify-between gap-3 mb-1">
+          <div className="min-w-0">
+            <p className="text-base font-garamond font-bold text-[var(--color-text-primary)] truncate">
+              {c.title}
+            </p>
             <p className="text-xs font-spartan text-[var(--color-text-tertiary)] mt-0.5">
               {totalValue.toLocaleString()} of {Number(c.rules?.targetValue || 0).toLocaleString()} {c.rules?.targetUnit || ""}
               {remaining !== null && ` · ${remaining} days left`}
               {participantCount > 0 && ` · ${participantCount} joined`}
             </p>
           </div>
+          <span className={`flex-shrink-0 text-[10px] font-spartan font-medium px-2 py-0.5 rounded-full border ${meta.badge}`}>
+            {meta.label}
+          </span>
         </div>
 
         {/* Progress bar */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between text-xs font-spartan text-[var(--color-text-tertiary)] mb-1.5">
-            <span>{pct}%</span>
-          </div>
+        <div className="mt-3 mb-4">
           <div className="h-2 rounded-full bg-[var(--color-surface-hover)] overflow-hidden">
             <div
               className="h-full rounded-full bg-emerald-500 transition-all duration-500"
               style={{ width: `${pct}%` }}
             />
           </div>
+          <p className="text-right text-xs font-spartan text-[var(--color-text-tertiary)] mt-1">{pct}%</p>
         </div>
 
         {/* Join section */}
         {!isParticipant && myHabits.length > 0 && (
           <div>
+            <button
+              onClick={() => onJoin(c._id, selectedHabitId ? [selectedHabitId] : [])}
+              disabled={isLoading}
+              className="h-9 px-5 rounded-xl border border-[var(--color-border-primary)]/30 text-sm font-spartan font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-colors disabled:opacity-50 mb-4"
+            >
+              {isLoading ? "Joining…" : "Join challenge"}
+            </button>
             <p className="text-xs font-spartan text-[var(--color-text-secondary)] mb-2">
               Pick the habit you'll compete with
             </p>
-            <div className="space-y-1 mb-3">
+            <div className="space-y-1">
               {myHabits.slice(0, 3).map((h) => (
                 <HabitMatchRow
                   key={h._id || h.habitId}
@@ -287,13 +285,6 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
                 />
               ))}
             </div>
-            <button
-              onClick={() => onJoin(c._id, selectedHabitId ? [selectedHabitId] : [])}
-              disabled={isLoading}
-              className="w-full h-9 rounded-xl bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white text-xs font-spartan font-medium transition-colors disabled:opacity-50"
-            >
-              {isLoading ? "Joining…" : "Join challenge"}
-            </button>
           </div>
         )}
 
@@ -313,45 +304,44 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
   /* Default / cumulative / head-to-head */
   return (
     <div className="p-5 rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]">
-      <div className="flex items-start gap-3 mb-3">
-        <Icon size={18} weight="duotone" className={`${meta.color} mt-0.5 flex-shrink-0`} />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] truncate">
-              {c.title}
-            </p>
-            <span className={`text-[10px] font-spartan font-medium px-2 py-0.5 rounded-full border ${STATUS_BADGE[c.status]}`}>
-              {meta.label}
-            </span>
-          </div>
+      <div className="flex items-start justify-between gap-3 mb-2">
+        <div className="min-w-0">
+          <p className="text-base font-garamond font-bold text-[var(--color-text-primary)] truncate">
+            {c.title}
+          </p>
           {c.description && (
-            <p className="text-xs font-spartan text-[var(--color-text-tertiary)] mt-0.5 line-clamp-2">
+            <p className="text-xs font-spartan text-[var(--color-text-tertiary)] mt-0.5 line-clamp-1">
               {c.description}
             </p>
           )}
-          <p className="text-xs font-spartan text-[var(--color-text-tertiary)] mt-1">
+          <p className="text-xs font-spartan text-[var(--color-text-tertiary)] mt-0.5">
             {remaining !== null && `${remaining} days left`}
             {participantCount > 0 && ` · ${participantCount} joined`}
           </p>
         </div>
 
-        {!isParticipant ? (
-          <button
-            onClick={() => onJoin(c._id)}
-            disabled={isLoading}
-            className="flex-shrink-0 h-8 px-3 rounded-xl bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white text-xs font-spartan font-medium transition-colors disabled:opacity-50"
-          >
-            {isLoading ? "…" : "Join"}
-          </button>
-        ) : (
-          <button
-            onClick={() => onLeave(c._id)}
-            disabled={isLoading}
-            className="flex-shrink-0 text-xs font-spartan text-[var(--color-text-tertiary)] hover:text-red-500 transition-colors"
-          >
-            Leave
-          </button>
-        )}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {!isParticipant ? (
+            <button
+              onClick={() => onJoin(c._id)}
+              disabled={isLoading}
+              className="h-7 px-3 rounded-lg border border-[var(--color-border-primary)]/30 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] text-xs font-spartan transition-colors disabled:opacity-50"
+            >
+              {isLoading ? "…" : "Join"}
+            </button>
+          ) : (
+            <button
+              onClick={() => onLeave(c._id)}
+              disabled={isLoading}
+              className="text-xs font-spartan text-[var(--color-text-tertiary)] hover:text-red-500 transition-colors"
+            >
+              Leave
+            </button>
+          )}
+          <span className={`text-[10px] font-spartan font-medium px-2 py-0.5 rounded-full border ${meta.badge}`}>
+            {meta.label}
+          </span>
+        </div>
       </div>
 
       {isParticipant && (

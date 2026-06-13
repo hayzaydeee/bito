@@ -72,10 +72,10 @@ const GroupHabitCard = ({ habit, totalMembers, adopted, canEdit, onAdopt, onEdit
         <button
           onClick={() => !adopted && onAdopt?.()}
           disabled={adopted}
-          className={`flex-shrink-0 text-xs font-spartan font-medium px-3 py-1 rounded-lg transition-colors ${
+          className={`flex-shrink-0 text-xs font-spartan font-medium px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 ${
             adopted
-              ? "bg-emerald-500/12 text-emerald-600 cursor-default flex items-center gap-1"
-              : "bg-[var(--color-brand-600)]/12 text-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)]/20"
+              ? "bg-emerald-500 text-white cursor-default"
+              : "border border-[var(--color-border-primary)]/30 text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]"
           }`}
         >
           {adopted ? (
@@ -93,7 +93,7 @@ const GroupHabitCard = ({ habit, totalMembers, adopted, canEdit, onAdopt, onEdit
 
       {/* Progress bar + adoption count */}
       <div className="px-5 pb-4 space-y-1.5">
-        <div className="h-1 rounded-full bg-[var(--color-surface-hover)] overflow-hidden">
+        <div className="h-1.5 rounded-full bg-[var(--color-surface-hover)] overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-500 ${adopted ? "bg-emerald-500" : "bg-[var(--color-brand-500)]"}`}
             style={{ width: `${adoptionPct}%` }}

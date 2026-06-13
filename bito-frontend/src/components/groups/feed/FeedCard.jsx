@@ -261,69 +261,52 @@ const FeedCard = ({
   /* ── Cozy layout ─────────────────────────────────────────────── */
 
   return (
-    <div className="flex items-start gap-3 px-4 py-4 rounded-2xl border border-[var(--color-border-primary)]/10 bg-[var(--color-surface-elevated)] hover:border-[var(--color-border-primary)]/25 transition-all group/item">
-      {/* Avatar with icon badge */}
-      <div className="relative flex-shrink-0 mt-0.5">
-        <MemberAvatar user={userInfo} size="lg" />
-        <span className="absolute -bottom-1 -right-1 text-xs leading-none">
-          {activityIcon(a.type)}
-        </span>
-      </div>
+    <div className="flex items-start gap-3.5 px-4 py-4 rounded-2xl border border-[var(--color-border-primary)]/10 bg-[var(--color-surface-elevated)] hover:border-[var(--color-border-primary)]/20 transition-colors">
+      {/* Avatar */}
+      <MemberAvatar user={userInfo} size="lg" />
 
       <div className="flex-1 min-w-0">
-        {/* Name + badge + time */}
-        <div className="flex items-center gap-2 flex-wrap mb-1">
-          <span className="text-sm font-spartan font-semibold text-[var(--color-text-primary)]">
-            {userInfo?.name || "A member"}
-          </span>
-          <span className="text-xs text-[var(--color-text-tertiary)] font-spartan">
-            {timeAgo(a.createdAt)}
-          </span>
+        {/* Full description + inline type badge */}
+        <div className="flex items-start gap-2 mb-1">
+          <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] leading-snug flex-1">
+            {activityDescription(a)}
+          </p>
           {label && (
-            <span className={`ml-auto text-[10px] font-spartan font-medium px-2.5 py-0.5 rounded-full border ${badgeStyle(a.type)}`}>
+            <span className={`flex-shrink-0 mt-0.5 text-[10px] font-spartan font-medium px-2 py-0.5 rounded-full border ${badgeStyle(a.type)}`}>
               {label}
             </span>
           )}
         </div>
 
-        {/* Primary content line */}
-        {isMilestone ? (
-          <div className="mb-2">
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-spartan font-medium px-2 py-0.5 rounded-full bg-orange-500/12 text-orange-500 border border-orange-500/20 mb-1.5">
+        {/* Streak badge for milestones — inline pill below description */}
+        {isMilestone && streakCount && (
+          <div className="mb-1">
+            <span className="inline-flex items-center gap-1 text-[11px] font-spartan font-medium px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-400 border border-orange-500/20">
               🔥 {streakCount}-day streak
             </span>
-            <p className="text-sm font-spartan text-[var(--color-text-primary)]">
-              on <span className="font-semibold">{a.data?.habitName || "a habit"}</span>
-            </p>
           </div>
-        ) : (
-          <p className="text-sm font-spartan text-[var(--color-text-primary)] mb-1.5">
-            {activityDescription(a)}
-          </p>
         )}
 
         {/* Kudos quoted message */}
         {isKudos && a.data?.message && (
-          <blockquote className="text-sm font-spartan italic text-[var(--color-text-secondary)] border-l-2 border-[var(--color-border-primary)]/30 pl-3 mb-2">
+          <p className="text-sm font-spartan italic text-[var(--color-text-secondary)] mb-1">
             "{a.data.message}"
-          </blockquote>
-        )}
-
-        {/* Member joined — prompt */}
-        {a.type === "member_joined" && (
-          <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mb-2">
-            Welcome them to the group.
           </p>
         )}
 
+        {/* Timestamp */}
+        <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mb-2">
+          {timeAgo(a.createdAt)}
+        </p>
+
         {/* Reactions row */}
-        <div className="flex items-center gap-3 mt-2">
+        <div className="flex items-center gap-3">
           <ReactionPicker reactions={reactions} myReaction={myReaction} onReact={onReact} />
 
           {showKudosCTA && !kudosOpen && (
             <button
               onClick={() => setKudosOpen(true)}
-              className="ml-auto text-xs font-spartan text-[var(--color-text-tertiary)] hover:text-[var(--color-brand-500)] transition-colors"
+              className="ml-auto text-xs font-spartan text-[var(--color-text-tertiary)] hover:text-[var(--color-brand-400)] transition-colors"
             >
               Give kudos
             </button>

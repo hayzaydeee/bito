@@ -35,8 +35,8 @@ const FeedFilters = ({ active, onChange }) => (
         onClick={() => onChange(id)}
         className={`h-7 px-3.5 rounded-full text-xs font-spartan font-medium transition-colors ${
           active === id
-            ? "bg-[var(--color-brand-600)] text-white"
-            : "bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] border border-[var(--color-border-primary)]/20"
+            ? "bg-[var(--color-surface-hover)] text-[var(--color-text-primary)]"
+            : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
         }`}
       >
         {label}
