@@ -317,46 +317,62 @@ const FeedCard = ({
   if (density === "compact") {
     return (
       <div
-        className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--color-surface-elevated)]/60 transition-colors group/item border-l-2"
+        className="flex items-center gap-3 px-3 py-2.5 hover:bg-[var(--color-surface-elevated)]/40 transition-colors border-l-2"
         style={{ borderLeftColor: accentColor(a.type) }}
       >
-        {/* Avatar */}
-        <div className="relative flex-shrink-0">
-          <MemberAvatar user={userInfo} size="sm" type={a.type} />
-          <span className="absolute -bottom-0.5 -right-0.5 leading-none">
-            {activityIcon(a.type, 10)}
-          </span>
+        {/* Avatar — no icon badge */}
+        <MemberAvatar user={userInfo} size="sm" type={a.type} />
+
+        {/* Content — two lines */}
+        <div className="flex-1 min-w-0">
+          {isKudos ? (
+            <>
+              {/* Line 1: Josh → Sarah  6h ago */}
+              <p className="text-[13px] font-spartan font-semibold text-[var(--color-text-primary)] leading-snug">
+                {userName}
+                {a.data?.targetUserName && (
+                  <span className="font-normal text-[var(--color-text-secondary)]"> → {a.data.targetUserName}</span>
+                )}
+                <span className="ml-2 text-[11px] font-normal text-[var(--color-text-quaternary)]">{timeAgo(a.createdAt)}</span>
+              </p>
+              {/* Line 2: italic quote */}
+              {a.data?.message && (
+                <p className="text-[12px] font-spartan italic text-[var(--color-text-tertiary)] leading-snug mt-0.5 truncate">
+                  "{a.data.message}"
+                </p>
+              )}
+            </>
+          ) : (
+            <>
+              {/* Line 1: bold description + optional inline streak pill */}
+              <p className="text-[13px] font-spartan font-semibold text-[var(--color-text-primary)] leading-snug flex items-center gap-2 flex-wrap">
+                {activityDescription(a)}
+                {isMilestone && streakCount && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-400 border border-orange-500/25">
+                    🔥 {streakCount}-day streak
+                  </span>
+                )}
+              </p>
+              {/* Line 2: timestamp */}
+              <p className="text-[11px] font-spartan text-[var(--color-text-quaternary)] mt-0.5">
+                {timeAgo(a.createdAt)}
+              </p>
+            </>
+          )}
         </div>
 
-        {/* Main text — name · time · description */}
-        <p className="flex-1 min-w-0 text-[13px] font-spartan text-[var(--color-text-secondary)] truncate">
-          <span className="font-semibold text-[var(--color-text-primary)]">{userName}</span>
-          <span className="text-[var(--color-text-quaternary)]"> · </span>
-          {activityDescription(a).replace(new RegExp(`^${userName}\\s+`), "")}
-          {isKudos && a.data?.message && (
-            <span className="text-[var(--color-text-tertiary)]"> · "{a.data.message}"</span>
-          )}
-          {isMilestone && streakCount && (
-            <span className="ml-1.5 text-[11px] text-orange-400 font-medium">🔥 {streakCount}d</span>
-          )}
-        </p>
-
-        {/* Reactions — always visible */}
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+        {/* Right: reactions + optional Kudos label */}
+        <div className="flex items-center gap-2 flex-shrink-0">
           <ReactionPicker reactions={reactions} myReaction={myReaction} onReact={onReact} />
+          {showKudosCTA && !kudosOpen && (
+            <button
+              onClick={() => setKudosOpen(true)}
+              className="text-xs font-spartan font-semibold text-teal-400 hover:text-teal-300 transition-colors"
+            >
+              Kudos
+            </button>
+          )}
         </div>
-
-        {/* Badge */}
-        {label && (
-          <span className={`flex-shrink-0 text-[10px] font-spartan font-medium px-2 py-0.5 rounded-full border ${badgeStyle(a.type)}`}>
-            {label}
-          </span>
-        )}
-
-        {/* Time */}
-        <span className="flex-shrink-0 text-[11px] text-[var(--color-text-quaternary)] font-spartan">
-          {timeAgo(a.createdAt)}
-        </span>
       </div>
     );
   }
@@ -470,75 +486,80 @@ const FeedCard = ({
 
   /* ── Cozy layout ─────────────────────────────────────────────── */
 
-  return (
-    <div className="flex items-start gap-3.5 px-4 py-4 rounded-2xl border border-[var(--color-border-primary)]/10 bg-[var(--color-surface-elevated)]/60 hover:border-[var(--color-border-primary)]/20 transition-colors">
-      {/* Avatar */}
-      <MemberAvatar user={userInfo} size="lg" type={a.type} />
-
-      <div className="flex-1 min-w-0">
-        {/* Description + badge */}
-        <div className="flex items-start gap-2 mb-1">
-          <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] leading-snug flex-1">
-            {activityDescription(a)}
+  // Kudos: inverted — quote body first, attribution at bottom
+  if (isKudos) {
+    return (
+      <div className="rounded-2xl border border-[var(--color-border-primary)]/10 bg-[var(--color-surface-elevated)]/60 hover:border-[var(--color-border-primary)]/20 transition-colors px-4 py-4">
+        {/* Quote */}
+        {a.data?.message && (
+          <p className="text-sm font-spartan italic text-[var(--color-text-secondary)] leading-relaxed mb-3">
+            "{a.data.message}"
           </p>
+        )}
+        {/* Attribution row */}
+        <div className="flex items-center gap-2">
+          <MemberAvatar user={userInfo} size="sm" type={a.type} />
+          <span className="text-sm font-spartan font-semibold text-[var(--color-text-primary)]">{userName}</span>
+          {a.data?.targetUserName && (
+            <span className="text-xs font-spartan text-[var(--color-text-tertiary)]">to {a.data.targetUserName}</span>
+          )}
+          <span className="text-xs font-spartan text-[var(--color-text-quaternary)]">· {timeAgo(a.createdAt)}</span>
           {label && (
-            <span className={`flex-shrink-0 mt-0.5 text-[10px] font-spartan font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1 ${badgeStyle(a.type)}`}>
+            <span className={`ml-auto text-[10px] font-spartan font-semibold px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 ${badgeStyle(a.type)}`}>
               {activityIcon(a.type, 10)}
               {label}
             </span>
           )}
         </div>
-
-        {/* Streak pill */}
-        {isMilestone && streakCount && (
-          <div className="mb-1.5">
-            <span className="inline-flex items-center gap-1 text-[11px] font-spartan font-semibold px-2.5 py-0.5 rounded-full bg-orange-500/15 text-orange-400 border border-orange-500/25">
-              🔥 {streakCount}-day streak
-            </span>
-          </div>
-        )}
-
-        {/* Kudos quoted message */}
-        {isKudos && a.data?.message && (
-          <p className="text-sm font-spartan italic text-[var(--color-text-secondary)] mb-1">
-            "{a.data.message}"
-          </p>
-        )}
-
-        {/* Timestamp */}
-        <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mb-2.5">
-          {timeAgo(a.createdAt)}
-        </p>
-
-        {/* Reactions row */}
-        <div className="flex items-center gap-3 flex-wrap">
+        {/* Reactions */}
+        <div className="mt-3">
           <ReactionPicker reactions={reactions} myReaction={myReaction} onReact={onReact} />
-
-          {showKudosCTA && !kudosOpen && (
-            <button
-              onClick={() => setKudosOpen(true)}
-              className="ml-auto text-xs font-spartan font-semibold text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1"
-            >
-              Sent ✓
-            </button>
-          )}
-
-          {isKudos && (
-            <span className="ml-auto text-xs font-spartan font-semibold text-emerald-400 flex items-center gap-1">
-              Sent ✓
-            </span>
-          )}
         </div>
+      </div>
+    );
+  }
 
-        {/* Inline kudos input */}
-        {kudosOpen && (
-          <KudosInput
-            onSend={handleSendKudos}
-            onCancel={() => setKudosOpen(false)}
-            sending={sending}
-          />
+  // Standard cozy card
+  return (
+    <div className="rounded-2xl border border-[var(--color-border-primary)]/10 bg-[var(--color-surface-elevated)]/60 hover:border-[var(--color-border-primary)]/20 transition-colors px-4 py-4">
+      {/* Header: avatar + name · time + badge */}
+      <div className="flex items-center gap-2 mb-3">
+        <MemberAvatar user={userInfo} size="sm" type={a.type} />
+        <span className="text-sm font-spartan font-semibold text-[var(--color-text-primary)]">{userName}</span>
+        <span className="text-xs font-spartan text-[var(--color-text-quaternary)]">· {timeAgo(a.createdAt)}</span>
+        {label && (
+          <span className={`ml-auto text-[10px] font-spartan font-semibold px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 ${badgeStyle(a.type)}`}>
+            {activityIcon(a.type, 10)}
+            {label}
+          </span>
         )}
       </div>
+
+      {/* Large bold title */}
+      <p className="text-[22px] font-spartan font-bold text-[var(--color-text-primary)] leading-tight mb-3">
+        {activityTitle(a)}
+      </p>
+
+      {/* Reactions + kudos CTA */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <ReactionPicker reactions={reactions} myReaction={myReaction} onReact={onReact} />
+        {showKudosCTA && !kudosOpen && (
+          <button
+            onClick={() => setKudosOpen(true)}
+            className="ml-auto text-xs font-spartan font-semibold px-3 py-1.5 rounded-full border border-teal-500/30 text-teal-400 hover:bg-teal-500/10 transition-colors"
+          >
+            Kudos sent ✓
+          </button>
+        )}
+      </div>
+
+      {kudosOpen && (
+        <KudosInput
+          onSend={handleSendKudos}
+          onCancel={() => setKudosOpen(false)}
+          sending={sending}
+        />
+      )}
     </div>
   );
 };
