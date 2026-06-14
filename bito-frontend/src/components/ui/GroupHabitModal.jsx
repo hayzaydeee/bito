@@ -49,7 +49,7 @@ const GroupHabitModal = ({
   return (
     <FormModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-lg"
       title={isEditing ? "Edit Habit" : "Add Group Habit"}
-      icon={<Target size={18} className="text-[var(--color-brand-400)]" />}>
+      icon={<Target size={18} className="text-[var(--signal)]" />}>
       <form onSubmit={handleSubmit}>
         <FormTabs tabs={TABS} active={activeTab} onChange={setActiveTab} />
 
@@ -136,8 +136,8 @@ const GroupHabitModal = ({
 
         {activeTab === "manage" && isEditing && (
           <div className="space-y-4">
-            <div className="rounded-xl border border-[var(--color-border-primary)]/15 bg-[var(--color-surface-elevated)]/40 p-4">
-              <p className="text-xs font-spartan text-[var(--color-text-tertiary)]">
+            <div className="rounded-[12px] border border-[var(--rose)]/25 bg-[var(--rose)]/5 p-4">
+              <p className="text-xs text-[var(--ink-2)] leading-relaxed">
                 Deleting this habit will remove it from the group. Members who have adopted it will keep their personal copies.
               </p>
             </div>

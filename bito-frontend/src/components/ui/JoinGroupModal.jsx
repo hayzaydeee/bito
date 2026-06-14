@@ -155,20 +155,20 @@ const JoinGroupModal = ({ isOpen, onClose, onJoin, joining, joinError }) => {
 
   return (
     <AnimatedModal isOpen={isOpen} onClose={handleClose} maxWidth="max-w-sm">
-      <div className="bg-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)]/20 p-6">
+      <div className="grp bg-[var(--surface)] rounded-[16px] border border-[var(--line-2)] p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2.5">
-            <span className="w-8 h-8 rounded-lg bg-[var(--color-brand-600)]/15 flex items-center justify-center">
-              <UserPlus size={16} className="text-[var(--color-brand-400)]" />
+            <span className="w-8 h-8 rounded-[9px] bg-[var(--signal)]/15 flex items-center justify-center">
+              <UserPlus size={16} className="text-[var(--signal)]" />
             </span>
-            <h2 className="text-lg font-garamond font-bold text-[var(--color-text-primary)]">
+            <h2 className="grp-display text-xl font-bold text-[var(--ink)]">
               Join a Group
             </h2>
           </div>
           <button
             onClick={handleClose}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-[9px] text-[var(--ink-3)] hover:text-[var(--ink)] hover:bg-[var(--surface-2)] transition-colors"
           >
             <X size={14} weight="bold" />
           </button>
@@ -177,7 +177,7 @@ const JoinGroupModal = ({ isOpen, onClose, onJoin, joining, joinError }) => {
         {scanning ? (
           /* ── Camera scanner view ── */
           <div className="space-y-4">
-            <div className="relative rounded-xl overflow-hidden bg-black aspect-square">
+            <div className="relative rounded-[12px] overflow-hidden bg-black aspect-square">
               <video
                 ref={videoRef}
                 className="w-full h-full object-cover"
@@ -186,16 +186,13 @@ const JoinGroupModal = ({ isOpen, onClose, onJoin, joining, joinError }) => {
               />
               {/* Targeting overlay */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-44 h-44 border-2 border-white/60 rounded-xl" />
+                <div className="w-44 h-44 border-2 border-[var(--signal)]/70 rounded-[12px]" />
               </div>
             </div>
-            <p className="text-xs text-center font-spartan text-[var(--color-text-tertiary)]">
+            <p className="grp-mono text-[10px] text-center text-[var(--ink-3)] uppercase tracking-wider">
               Aim the camera at the invite QR code
             </p>
-            <button
-              onClick={stopScanner}
-              className="btn btn-ghost btn-sm w-full rounded-xl h-10 font-spartan text-sm"
-            >
+            <button onClick={stopScanner} className="grp-btn w-full">
               Cancel scan
             </button>
           </div>
@@ -203,44 +200,35 @@ const JoinGroupModal = ({ isOpen, onClose, onJoin, joining, joinError }) => {
           /* ── Invite code input view ── */
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-spartan text-[var(--color-text-tertiary)] mb-2">
-                Invite code
-              </label>
+              <label className="grp-kicker block mb-2">Invite code</label>
               <input
                 ref={inputRef}
                 value={code}
                 onChange={handleCodeChange}
                 onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-                placeholder="Enter invite code"
+                placeholder="ENTER CODE"
                 spellCheck={false}
                 autoComplete="off"
                 autoCorrect="off"
                 autoCapitalize="characters"
-                className={`w-full h-11 px-4 rounded-xl text-base font-spartan tracking-[0.2em] text-center bg-[var(--color-surface-elevated)]/60 border transition-colors focus:outline-none ${
-                  joinError
-                    ? "border-red-500/50 text-red-400"
-                    : "border-[var(--color-border-primary)]/20 focus:border-[var(--color-brand-500)]/50 text-[var(--color-text-primary)]"
+                className={`grp-input h-12 grp-mono text-lg tracking-[0.3em] text-center font-bold ${
+                  joinError ? "border-[var(--rose)] text-[var(--rose)]" : "text-[var(--signal)]"
                 }`}
               />
               {joinError && (
-                <p className="mt-1.5 text-xs font-spartan text-red-400">
-                  {joinError}
-                </p>
+                <p className="mt-1.5 grp-mono text-[11px] text-[var(--rose)]">{joinError}</p>
               )}
             </div>
 
             {/* QR scan button — shown only on touch/mobile */}
             {isMobileDevice &&
               (cameraError ? (
-                <p className="text-xs font-spartan text-[var(--color-text-tertiary)] text-center px-2">
+                <p className="grp-mono text-[10px] text-[var(--ink-3)] text-center px-2 uppercase tracking-wider">
                   {cameraError}
                 </p>
               ) : (
-                <button
-                  onClick={startScanner}
-                  className="w-full h-10 flex items-center justify-center gap-2 rounded-xl border border-[var(--color-border-primary)]/20 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-border-primary)]/40 text-sm font-spartan transition-colors"
-                >
-                  <QrCode size={15} />
+                <button onClick={startScanner} className="grp-btn w-full">
+                  <QrCode size={15} weight="bold" />
                   Scan QR Code
                 </button>
               ))}
@@ -248,7 +236,7 @@ const JoinGroupModal = ({ isOpen, onClose, onJoin, joining, joinError }) => {
             <button
               onClick={handleSubmit}
               disabled={!code.trim() || joining}
-              className="btn btn-primary btn-md w-full rounded-xl h-11 font-spartan text-sm disabled:opacity-40 disabled:pointer-events-none"
+              className="grp-btn grp-btn--signal w-full disabled:opacity-40 disabled:pointer-events-none"
             >
               {joining ? "Joining…" : "Join"}
             </button>

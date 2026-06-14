@@ -44,7 +44,7 @@ const GroupCreationModal = ({ isOpen, onClose, onSave }) => {
 
   return (
     <FormModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-md" title="New Group"
-      icon={<UsersThree size={18} className="text-[var(--color-brand-400)]" />}>
+      icon={<UsersThree size={18} className="text-[var(--signal)]" />}>
       <form onSubmit={handleSubmit}>
         <FormTabs tabs={TABS} active={tab} onChange={setTab} />
 
@@ -65,9 +65,9 @@ const GroupCreationModal = ({ isOpen, onClose, onSave }) => {
                   const GIcon = gtype.Icon;
                   return (
                     <button key={gtype.id} type="button" onClick={() => set("type", gtype.id)}
-                      className={"flex items-center gap-2.5 px-3 h-11 rounded-xl text-sm font-spartan font-medium border transition-colors text-left " +
-                        (active ? "bg-[var(--color-brand-600)]/12 border-[var(--color-brand-500)]/40 text-[var(--color-brand-400)]"
-                                : "bg-[var(--color-surface-elevated)]/40 border-[var(--color-border-primary)]/15 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]")}>
+                      className={"flex items-center gap-2.5 px-3 h-11 rounded-[10px] text-sm font-medium border transition-colors text-left " +
+                        (active ? "bg-[var(--signal)]/12 border-[var(--signal)]/45 text-[var(--signal)]"
+                                : "bg-[var(--bg-2)] border-[var(--line-2)] text-[var(--ink-2)] hover:text-[var(--ink)]")}>
                       <GIcon size={15} weight="duotone" />{gtype.label}
                     </button>
                   );
@@ -82,15 +82,15 @@ const GroupCreationModal = ({ isOpen, onClose, onSave }) => {
             <FormField label="Color">
               <ColorPicker value={formData.color} onChange={(c) => set("color", c)} />
             </FormField>
-            <div className="rounded-xl px-4 py-3 flex items-center gap-3"
+            <div className="rounded-[12px] px-4 py-3 flex items-center gap-3"
               style={{ backgroundColor: formData.color + "20", border: "1px solid " + formData.color + "40" }}>
-              <span className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+              <span className="w-8 h-8 rounded-[9px] flex items-center justify-center flex-shrink-0"
                 style={{ backgroundColor: formData.color + "30" }}>
             {(() => { const cfg = GROUP_TYPE_CONFIG[formData.type]; if (!cfg) return null; const PIcon = cfg.Icon; return <PIcon size={16} weight="duotone" style={{ color: formData.color }} />; })()}
               </span>
               <div className="min-w-0">
-                <p className="text-sm font-garamond font-bold text-[var(--color-text-primary)] truncate">{formData.name || "Your group name"}</p>
-                <p className="text-xs font-spartan text-[var(--color-text-tertiary)] truncate">{formData.description || "Description"}</p>
+                <p className="grp-display text-base font-bold text-[var(--ink)] truncate">{formData.name || "Your group name"}</p>
+                <p className="grp-mono text-[10px] text-[var(--ink-3)] truncate uppercase tracking-wider">{formData.description || "Description"}</p>
               </div>
             </div>
           </div>

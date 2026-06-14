@@ -32,40 +32,40 @@ const HabitAdoptModal = ({
     <AnimatedModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-md">
       <div
         ref={modalRef}
-        className="bg-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)] p-6 max-h-[90vh] overflow-y-auto"
+        className="grp bg-[var(--surface)] rounded-[16px] border border-[var(--line-2)] p-6 max-h-[90vh] overflow-y-auto"
       >
         <div className="flex items-center justify-between mb-6">
-          <div className="text-xl font-dmSerif font-bold text-[var(--color-text-primary)]">
+          <div className="grp-display text-xl font-bold text-[var(--ink)]">
             Adopt "{habit.name}"
           </div>
-          <button 
-            className="p-1 rounded-lg hover:bg-[var(--color-surface-hover)] text-[var(--color-text-tertiary)]"
+          <button
+            className="w-8 h-8 flex items-center justify-center rounded-[9px] hover:bg-[var(--surface-2)] text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors"
             onClick={onClose}
           >
-            <Cross2Icon className="w-5 h-5" />
+            <Cross2Icon className="w-4 h-4" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="bg-[var(--color-surface-elevated)] rounded-lg p-4">
+          <div className="bg-[var(--bg-2)] border border-[var(--line)] rounded-[12px] p-4">
             <div className="flex items-center gap-3 mb-3">
-              <div 
-                className="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
-                style={{ backgroundColor: habit.color || '#4f46e5' }}
+              <div
+                className="w-10 h-10 rounded-[10px] flex items-center justify-center text-lg border"
+                style={{ backgroundColor: (habit.color || '#a78bfa') + '1f', borderColor: (habit.color || '#a78bfa') + '55' }}
               >
                 <HabitIcon icon={habit.icon || 'Target'} size={18} />
               </div>
               <div>
-                <h3 className="font-medium text-[var(--color-text-primary)] font-outfit">
+                <h3 className="grp-display font-bold text-[var(--ink)]">
                   {habit.name}
                 </h3>
-                <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
-                  {habit.category} • Target: {habit.defaultTarget?.value || 1} {habit.defaultTarget?.unit || 'times'}
+                <p className="grp-mono text-[10px] text-[var(--ink-3)] uppercase tracking-wider mt-0.5">
+                  {habit.category} • {habit.defaultTarget?.value || 1} {habit.defaultTarget?.unit || 'times'}
                 </p>
               </div>
             </div>
             {habit.description && (
-              <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
+              <p className="text-sm text-[var(--ink-2)] leading-relaxed">
                 {habit.description}
               </p>
             )}
@@ -73,30 +73,26 @@ const HabitAdoptModal = ({
 
           <div className="space-y-3">
             {habit.isRequired && (
-              <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-                <ExclamationTriangleIcon className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
-                <div className="text-xs text-amber-700 dark:text-amber-300 font-outfit">
+              <div className="flex items-start gap-2 p-3 bg-[var(--ember)]/10 border border-[var(--ember)]/30 rounded-[12px]">
+                <ExclamationTriangleIcon className="w-4 h-4 text-[var(--ember)] mt-0.5 flex-shrink-0" />
+                <div className="text-xs text-[var(--ink-2)] leading-relaxed">
                   This is a required habit for all group members. Your participation helps the team's overall success.
                 </div>
               </div>
             )}
           </div>
 
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 rounded-lg border border-[var(--color-border-primary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-all duration-200 font-outfit text-sm"
-            >
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="grp-btn grp-btn--sm flex-1">
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 px-4 py-2 rounded-lg bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white transition-all duration-200 font-outfit text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="grp-btn grp-btn--signal grp-btn--sm flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
-                "Adopting..."
+                "Adopting…"
               ) : (
                 <>
                   <CheckIcon className="w-4 h-4" />

@@ -54,10 +54,8 @@ const IntensitySelector = ({ value = "accountable", onChange, readOnly = false }
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] mb-1">
-          Group intensity
-        </p>
-        <p className="text-xs font-spartan text-[var(--color-text-tertiary)]">
+        <p className="grp-kicker mb-1.5">Group intensity</p>
+        <p className="text-xs text-[var(--ink-2)] leading-relaxed">
           Controls how much pressure this group applies. Changed by admins, applied to everyone.
         </p>
       </div>
@@ -71,10 +69,10 @@ const IntensitySelector = ({ value = "accountable", onChange, readOnly = false }
             <button
               key={mode.id}
               onClick={() => onChange?.(mode.id)}
-              className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-spartan font-medium border transition-all ${
+              className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-[10px] grp-mono text-[11px] font-bold uppercase tracking-wider border transition-all ${
                 value === mode.id
-                  ? "bg-[var(--color-brand-600)] text-white border-[var(--color-brand-600)]"
-                  : "bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40 hover:text-[var(--color-text-primary)]"
+                  ? "bg-[var(--signal)] text-[var(--signal-ink)] border-[var(--signal)]"
+                  : "bg-[var(--surface)] text-[var(--ink-3)] border-[var(--line-2)] hover:border-[var(--line-3)] hover:text-[var(--ink)]"
               }`}
             >
               <ModeIcon size={14} weight="duotone" />
@@ -87,32 +85,28 @@ const IntensitySelector = ({ value = "accountable", onChange, readOnly = false }
 
       {/* Read-only active display */}
       {readOnly && (
-        <div className="flex items-center gap-2 text-sm font-spartan font-medium text-[var(--color-text-primary)]">
-          <SelectedIcon size={16} weight="duotone" className="text-[var(--color-brand-500)]" />
+        <div className="flex items-center gap-2 text-sm font-semibold text-[var(--ink)]">
+          <SelectedIcon size={16} weight="duotone" className="text-[var(--signal)]" />
           {selected.label}
         </div>
       )}
 
       {/* Description */}
-      <p className="text-xs font-spartan text-[var(--color-text-secondary)]">
-        {selected.description}
-      </p>
+      <p className="text-xs text-[var(--ink-2)] leading-relaxed">{selected.description}</p>
 
       {/* Details grid */}
-      <div className="rounded-xl border border-[var(--color-border-primary)]/15 bg-[var(--color-surface-hover)] overflow-hidden">
+      <div className="rounded-[12px] border border-[var(--line-2)] bg-[var(--bg-2)] overflow-hidden">
         {Object.entries(selected.details).map(([key, val], i) => (
           <div
             key={key}
             className={`flex items-start justify-between gap-4 px-4 py-3 ${
-              i > 0 ? "border-t border-[var(--color-border-primary)]/10" : ""
+              i > 0 ? "border-t border-[var(--line)]" : ""
             }`}
           >
-            <span className="text-xs font-spartan text-[var(--color-text-tertiary)] flex-shrink-0">
+            <span className="grp-mono text-[10px] text-[var(--ink-3)] flex-shrink-0 uppercase tracking-wider">
               {key}
             </span>
-            <span className="text-xs font-spartan font-medium text-[var(--color-text-primary)] text-right">
-              {val}
-            </span>
+            <span className="text-xs font-medium text-[var(--ink)] text-right">{val}</span>
           </div>
         ))}
       </div>

@@ -94,28 +94,28 @@ const EncouragementModal = ({
 
   return (
     <AnimatedModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-md">
-      <div className="bg-[var(--color-surface-primary)] rounded-xl border border-[var(--color-border-primary)] w-full max-h-[90vh] overflow-y-auto">
+      <div className="grp bg-[var(--surface)] rounded-[16px] border border-[var(--line-2)] w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="p-6 border-b border-[var(--color-border-primary)]">
+        <div className="p-6 border-b border-[var(--line-2)]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-brand-500)] to-[var(--color-brand-600)] flex items-center justify-center">
-                <HeartIcon className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-[10px] bg-[var(--rose)]/15 flex items-center justify-center">
+                <HeartIcon className="w-5 h-5 text-[var(--rose)]" />
               </div>
               <div>
-                <h2 className="text-xl font-dmSerif gradient-text">
+                <h2 className="grp-display text-xl font-bold text-[var(--ink)]">
                   Send Encouragement
                 </h2>
-                <p className="text-sm text-[var(--color-text-secondary)] font-outfit">
+                <p className="grp-mono text-[10px] text-[var(--ink-3)] uppercase tracking-wider mt-0.5">
                   To {targetUser.name}
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-lg hover:bg-[var(--color-surface-hover)] flex items-center justify-center transition-colors"
+              className="w-8 h-8 rounded-[9px] hover:bg-[var(--surface-2)] flex items-center justify-center transition-colors text-[var(--ink-3)] hover:text-[var(--ink)]"
             >
-              <CrossCircledIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
+              <CrossCircledIcon className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -124,23 +124,21 @@ const EncouragementModal = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Encouragement Type */}
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] font-outfit mb-3">
-              Encouragement Type
-            </label>
+            <label className="grp-kicker block mb-3">Encouragement Type</label>
             <div className="grid grid-cols-2 gap-2">
               {encouragementTypes.map((typeOption) => (
                 <button
                   key={typeOption.value}
                   type="button"
                   onClick={() => setType(typeOption.value)}
-                  className={`p-3 rounded-xl border text-sm font-medium transition-all ${
+                  className={`p-3 rounded-[10px] border text-sm font-medium transition-all ${
                     type === typeOption.value
-                      ? 'border-[var(--color-brand-500)] bg-[var(--color-brand-500)]/10 text-[var(--color-brand-600)]'
-                      : 'border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40 text-[var(--color-text-secondary)]'
+                      ? 'border-[var(--signal)]/45 bg-[var(--signal)]/10 text-[var(--signal)]'
+                      : 'border-[var(--line-2)] hover:border-[var(--line-3)] text-[var(--ink-2)]'
                   }`}
                 >
                   <div className="text-lg mb-1">{typeOption.icon}</div>
-                  <div className="font-outfit">{typeOption.label}</div>
+                  <div>{typeOption.label}</div>
                 </button>
               ))}
             </div>
@@ -148,19 +146,17 @@ const EncouragementModal = ({
 
           {/* Reaction */}
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] font-outfit mb-3">
-              Reaction
-            </label>
+            <label className="grp-kicker block mb-3">Reaction</label>
             <div className="flex gap-2 flex-wrap">
               {reactionOptions.map((reactionOption) => (
                 <button
                   key={reactionOption}
                   type="button"
                   onClick={() => setReaction(reactionOption)}
-                  className={`w-10 h-10 rounded-lg border text-lg transition-all ${
+                  className={`w-10 h-10 rounded-[9px] border text-lg transition-all ${
                     reaction === reactionOption
-                      ? 'border-[var(--color-brand-500)] bg-[var(--color-brand-500)]/10'
-                      : 'border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40'
+                      ? 'border-[var(--signal)]/45 bg-[var(--signal)]/10'
+                      : 'border-[var(--line-2)] hover:border-[var(--line-3)]'
                   }`}
                 >
                   {reactionOption}
@@ -171,16 +167,14 @@ const EncouragementModal = ({
 
           {/* Quick Messages */}
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] font-outfit mb-3">
-              Quick Messages
-            </label>
+            <label className="grp-kicker block mb-3">Quick Messages</label>
             <div className="space-y-2">
               {quickMessages.map((quickMsg, index) => (
                 <button
                   key={index}
                   type="button"
                   onClick={() => handleQuickMessage(quickMsg)}
-                  className="w-full text-left p-3 rounded-lg border border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40 text-sm text-[var(--color-text-secondary)] font-outfit transition-all hover:bg-[var(--color-surface-hover)]"
+                  className="w-full text-left p-3 rounded-[10px] border border-[var(--line-2)] hover:border-[var(--line-3)] text-sm text-[var(--ink-2)] transition-all hover:bg-[var(--surface-2)]"
                 >
                   {quickMsg}
                 </button>
@@ -190,20 +184,18 @@ const EncouragementModal = ({
 
           {/* Message */}
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] font-outfit mb-3">
-              Your Message
-            </label>
+            <label className="grp-kicker block mb-3">Your Message</label>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Write your encouragement message..."
               rows={4}
               maxLength={500}
-              className="w-full p-4 rounded-xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-primary)] text-[var(--color-text-primary)] font-outfit focus:border-[var(--color-brand-500)] focus:outline-none resize-none"
+              className="w-full p-4 rounded-[11px] border border-[var(--line-2)] bg-[var(--bg-2)] text-[var(--ink)] placeholder:text-[var(--ink-3)] focus:border-[var(--signal)] focus:outline-none resize-none transition-colors"
               required
             />
             <div className="flex justify-between items-center mt-2">
-              <p className="text-xs text-[var(--color-text-tertiary)] font-outfit">
+              <p className="grp-mono text-[10px] text-[var(--ink-3)] uppercase tracking-wider">
                 {message.length}/500 characters
               </p>
             </div>
@@ -211,27 +203,23 @@ const EncouragementModal = ({
 
           {/* Error */}
           {error && (
-            <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-              <p className="text-sm text-red-600 dark:text-red-400 font-outfit">{error}</p>
+            <div className="p-3 rounded-[10px] bg-[var(--rose)]/10 border border-[var(--rose)]/25">
+              <p className="grp-mono text-[11px] text-[var(--rose)]">{error}</p>
             </div>
           )}
 
           {/* Submit */}
           <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-3 px-4 rounded-xl border border-[var(--color-border-primary)]/20 text-[var(--color-text-secondary)] font-outfit font-medium hover:bg-[var(--color-surface-hover)] transition-all"
-            >
+            <button type="button" onClick={onClose} className="grp-btn flex-1">
               Cancel
             </button>
             <button
               type="submit"
               disabled={!message.trim() || isSubmitting}
-              className="flex-1 py-3 px-4 rounded-xl bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] text-white font-outfit font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="grp-btn grp-btn--signal flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
               ) : (
                 <>
                   <PaperPlaneIcon className="w-4 h-4" />
