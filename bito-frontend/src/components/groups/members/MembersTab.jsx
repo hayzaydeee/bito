@@ -65,25 +65,25 @@ const MembersTab = ({
   });
 
   return (
-    <div className="flex gap-6">
+    <div className="flex gap-8">
       {/* ── Main member list ── */}
       <div className="flex-1 min-w-0">
         {/* Search */}
         <div className="relative mb-5">
           <MagnifyingGlass
-            size={14}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)]"
+            size={15}
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--ink-3)]"
           />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search members"
-            className="w-full h-9 pl-8 pr-4 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-quaternary)] focus:outline-none focus:border-[var(--color-brand-500)]/50 transition-colors"
+            className="grp-input pl-10"
           />
         </div>
 
-        <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mb-3">
-          Members ({filtered.length})
+        <p className="grp-kicker mb-3">
+          Roster — {String(filtered.length).padStart(2, "0")}
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -121,11 +121,9 @@ const MembersTab = ({
           />
         ) : (
           /* Read-only panel for regular members */
-          <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60 p-5">
-            <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] mb-2">
-              Group members
-            </p>
-            <p className="text-xs text-[var(--color-text-tertiary)] font-spartan">
+          <div className="grp-card p-5">
+            <p className="grp-kicker mb-2">Group members</p>
+            <p className="text-xs text-[var(--ink-2)] leading-relaxed">
               Only admins and owners can invite new members.
             </p>
           </div>

@@ -1,20 +1,5 @@
 import { useState } from "react";
 import { Trophy, Plus, CaretDown } from "@phosphor-icons/react";
-import {
-  Fire,
-  TrendUp,
-  CalendarBlank,
-  Handshake,
-  Sword,
-} from "@phosphor-icons/react";
-
-const TYPE_META = {
-  streak:       { Icon: Fire,          label: "Streak" },
-  cumulative:   { Icon: TrendUp,       label: "Cumulative" },
-  consistency:  { Icon: CalendarBlank, label: "Consistency" },
-  team_goal:    { Icon: Handshake,     label: "Team Goal" },
-  head_to_head: { Icon: Sword,         label: "Head to Head" },
-};
 
 /**
  * StandingSidebar
@@ -87,20 +72,16 @@ const StandingSidebar = ({ activeChallenges = [], allChallenges = [], currentUse
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Your standing */}
-      <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60 p-5">
+      <div className="grp-card p-5">
         <div className="flex items-center gap-2 mb-3">
-          <p className="text-xs font-spartan font-semibold text-[var(--color-text-primary)] uppercase tracking-wide flex-1">
-            Your standing
-          </p>
-          <Trophy size={16} className="text-amber-500" />
+          <p className="grp-kicker flex-1">Your standing</p>
+          <Trophy size={15} weight="fill" className="text-[var(--ember)]" />
         </div>
 
         {myActiveChallenges.length === 0 ? (
-          <p className="text-xs font-spartan text-[var(--color-text-tertiary)]">
-            Join a challenge to see your standing.
-          </p>
+          <p className="text-xs text-[var(--ink-2)]">Join a challenge to see your standing.</p>
         ) : (
           <>
             {/* Challenge selector */}
@@ -109,68 +90,53 @@ const StandingSidebar = ({ activeChallenges = [], allChallenges = [], currentUse
                 <select
                   value={selectedIdx}
                   onChange={(e) => setSelectedIdx(Number(e.target.value))}
-                  className="w-full h-8 pl-3 pr-8 rounded-xl bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/20 text-xs font-spartan text-[var(--color-text-primary)] appearance-none focus:outline-none focus:border-[var(--color-brand-500)]/50 transition-colors cursor-pointer"
+                  className="grp-input h-8 pr-8 text-xs appearance-none cursor-pointer"
                 >
                   {myActiveChallenges.map((c, i) => (
-                    <option key={c._id} value={i}>
-                      {c.title}
-                    </option>
+                    <option key={c._id} value={i}>{c.title}</option>
                   ))}
                 </select>
                 <CaretDown
                   size={12}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)] pointer-events-none"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--ink-3)] pointer-events-none"
                 />
               </div>
             )}
 
             {standing ? (
               <>
-                <p className="text-xs font-spartan text-[var(--color-text-tertiary)] mb-1 truncate">
+                <p className="grp-mono text-[10px] text-[var(--ink-3)] mb-1 truncate uppercase tracking-wider">
                   in {selectedChallenge?.title}
                 </p>
-                <p className="text-2xl font-garamond font-bold text-[var(--color-text-primary)] mb-0.5">
-                  #{standing.rank}
-                </p>
+                <p className="grp-num text-[44px] text-[var(--ink)] mb-1">#{standing.rank}</p>
                 {standing.pointsBehind !== null && (
-                  <p className="text-xs font-spartan text-[var(--color-text-tertiary)] mb-3">
-                    {standing.pointsBehind} point{standing.pointsBehind !== 1 ? "s" : ""} behind {ordinal(standing.aboveRank)}
+                  <p className="grp-mono text-[10px] text-[var(--ink-3)] mb-3 uppercase tracking-wider">
+                    {standing.pointsBehind} pt{standing.pointsBehind !== 1 ? "s" : ""} behind {ordinal(standing.aboveRank)}
                   </p>
                 )}
-                <div className="h-1 rounded-full bg-[var(--color-surface-hover)] overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-emerald-500 transition-all"
-                    style={{ width: `${standing.myPct}%` }}
-                  />
+                <div className="grp-meter">
+                  <i style={{ width: `${standing.myPct}%`, transition: "width .4s ease" }} />
                 </div>
               </>
             ) : (
-              <p className="text-xs font-spartan text-[var(--color-text-tertiary)]">
-                No progress recorded yet.
-              </p>
+              <p className="text-xs text-[var(--ink-2)]">No progress recorded yet.</p>
             )}
           </>
         )}
       </div>
 
       {/* All time */}
-      <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60 p-5">
-        <p className="text-xs font-spartan font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wide mb-3">
-          All time
-        </p>
-        <div className="grid grid-cols-3 gap-2">
+      <div className="grp-card p-5">
+        <p className="grp-kicker mb-3">All time</p>
+        <div className="grid grid-cols-3 divide-x divide-[var(--line-2)]">
           {[
-            { label: "Active",    value: totalActive },
-            { label: "Upcoming",  value: totalUpcoming },
-            { label: "Won",       value: totalWon },
+            { label: "Active",   value: totalActive },
+            { label: "Upcoming", value: totalUpcoming },
+            { label: "Won",      value: totalWon },
           ].map(({ label, value }) => (
-            <div key={label} className="text-center">
-              <p className="text-lg font-garamond font-bold text-[var(--color-text-primary)]">
-                {value}
-              </p>
-              <p className="text-[10px] text-[var(--color-text-tertiary)] font-spartan">
-                {label}
-              </p>
+            <div key={label} className="text-center px-1">
+              <p className="grp-num text-[26px] text-[var(--ink)]">{value}</p>
+              <p className="grp-mono text-[9px] text-[var(--ink-3)] uppercase tracking-wider mt-1">{label}</p>
             </div>
           ))}
         </div>
@@ -179,9 +145,9 @@ const StandingSidebar = ({ activeChallenges = [], allChallenges = [], currentUse
       {/* Create challenge */}
       <button
         onClick={onCreateChallenge}
-        className="w-full h-10 rounded-2xl border border-dashed border-[var(--color-border-primary)]/30 flex items-center justify-center gap-2 text-xs font-spartan text-[var(--color-text-tertiary)] hover:text-[var(--color-brand-500)] hover:border-[var(--color-brand-500)]/40 transition-colors"
+        className="w-full h-10 rounded-[4px] border border-dashed border-[var(--line-2)] flex items-center justify-center gap-2 grp-mono text-[11px] font-bold uppercase tracking-wider text-[var(--ink-3)] hover:text-[var(--ember)] hover:border-[var(--ember)]/50 transition-colors"
       >
-        <Plus size={13} />
+        <Plus size={13} weight="bold" />
         Create challenge
       </button>
     </div>

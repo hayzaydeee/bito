@@ -68,14 +68,14 @@ const ChallengesTab = ({
   };
 
   return (
-    <div className="flex gap-6">
+    <div className="flex gap-8">
       {/* ── Main list ── */}
-      <div className="flex-1 min-w-0 space-y-6">
+      <div className="flex-1 min-w-0 space-y-7">
         {/* Active */}
         {active.length > 0 && (
           <section>
-            <p className="text-xs font-spartan text-[var(--color-text-tertiary)] uppercase tracking-wide mb-3">
-              Active ({active.length})
+            <p className="grp-kicker mb-3">
+              Active — {String(active.length).padStart(2, "0")}
             </p>
             <div className="space-y-3">
               {active.map((c) => (
@@ -96,8 +96,8 @@ const ChallengesTab = ({
         {/* Upcoming */}
         {upcoming.length > 0 && (
           <section>
-            <p className="text-xs font-spartan text-[var(--color-text-tertiary)] uppercase tracking-wide mb-3">
-              Upcoming ({upcoming.length})
+            <p className="grp-kicker mb-3">
+              Upcoming — {String(upcoming.length).padStart(2, "0")}
             </p>
             <div className="space-y-3">
               {upcoming.map((c) => (
@@ -120,14 +120,14 @@ const ChallengesTab = ({
           <section>
             <button
               onClick={() => setCompletedOpen((v) => !v)}
-              className="flex items-center gap-2 text-xs font-spartan text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] transition-colors uppercase tracking-wide mb-3"
+              className="grp-kicker flex items-center gap-2 hover:text-[var(--ink-2)] transition-colors mb-3"
             >
               {completedOpen ? (
-                <CaretDown size={11} />
+                <CaretDown size={11} weight="bold" />
               ) : (
-                <CaretRight size={11} />
+                <CaretRight size={11} weight="bold" />
               )}
-              Completed ({completed.length})
+              Completed — {String(completed.length).padStart(2, "0")}
             </button>
 
             {completedOpen && (
@@ -150,16 +150,19 @@ const ChallengesTab = ({
 
         {/* Empty state */}
         {challenges.length === 0 && (
-          <div className="text-center py-20">
-            <div className="flex justify-center mb-4">
-              <Trophy size={40} weight="duotone" className="text-[var(--color-text-tertiary)]" />
-            </div>
-            <h3 className="text-lg font-garamond font-bold text-[var(--color-text-primary)] mb-1">
+          <div className="grp-card text-center py-14 px-6 relative overflow-hidden">
+            <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-[var(--ember)]/8 blur-3xl pointer-events-none" />
+            <Trophy size={40} weight="duotone" className="mx-auto mb-4 text-[var(--ember)] relative" />
+            <h3 className="grp-display text-2xl font-bold text-[var(--ink)] mb-2 relative">
               No challenges yet
             </h3>
-            <p className="text-sm text-[var(--color-text-secondary)] font-spartan max-w-sm mx-auto">
+            <p className="text-sm text-[var(--ink-2)] max-w-sm mx-auto mb-7 relative">
               Create a streak, team goal, or consistency challenge to motivate your group.
             </p>
+            <button onClick={() => openCreateWithPreset(null)} className="grp-btn grp-btn--ember mx-auto relative">
+              <Trophy size={14} weight="fill" />
+              Create challenge
+            </button>
           </div>
         )}
       </div>

@@ -116,15 +116,13 @@ const InvitePanel = ({ groupId, group, isOwner }) => {
 
   return (
     <>
-      <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60 p-5 space-y-5">
-        <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)]">
-          Invite people
-        </p>
+      <div className="grp-card p-5 space-y-5">
+        <p className="grp-kicker">Invite people</p>
 
         {/* Invite link */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/15">
-            <span className="flex-1 text-xs text-[var(--color-text-secondary)] truncate font-mono tracking-wider">
+          <div className="flex items-center gap-2 px-3 py-2.5 rounded-[4px] bg-[var(--bg-2)] border border-[var(--line-2)]">
+            <span className="flex-1 grp-mono text-[13px] font-bold text-[var(--signal)] truncate tracking-[0.2em]">
               {inviteCode ?? "—"}
             </span>
           </div>
@@ -132,10 +130,8 @@ const InvitePanel = ({ groupId, group, isOwner }) => {
             <button
               onClick={handleCopy}
               disabled={!inviteUrl}
-              className={`flex-1 h-9 rounded-xl text-xs font-spartan font-medium transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 ${
-                copied
-                  ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20"
-                  : "bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] border border-[var(--color-border-primary)]/20 hover:text-[var(--color-text-primary)]"
+              className={`grp-btn grp-btn--sm flex-1 disabled:opacity-40 ${
+                copied ? "border-[var(--signal)] text-[var(--signal)]" : ""
               }`}
             >
               <Copy size={13} />
@@ -145,7 +141,7 @@ const InvitePanel = ({ groupId, group, isOwner }) => {
               onClick={() => setShowQR(true)}
               disabled={!qrSrc}
               title="Show QR code"
-              className="w-9 h-9 flex items-center justify-center rounded-xl bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/20 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors flex-shrink-0 disabled:opacity-40"
+              className="w-9 h-9 flex items-center justify-center rounded-[4px] bg-[var(--surface)] border border-[var(--line-2)] text-[var(--ink-2)] hover:text-[var(--ink)] hover:border-[var(--line-3)] transition-colors flex-shrink-0 disabled:opacity-40"
             >
               <QrCode size={15} />
             </button>
@@ -154,7 +150,7 @@ const InvitePanel = ({ groupId, group, isOwner }) => {
                 onClick={handleRegenerate}
                 disabled={regenerating}
                 title="Regenerate code (invalidates old link)"
-                className="w-9 h-9 flex items-center justify-center rounded-xl bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/20 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] transition-colors flex-shrink-0 disabled:opacity-40"
+                className="w-9 h-9 flex items-center justify-center rounded-[4px] bg-[var(--surface)] border border-[var(--line-2)] text-[var(--ink-3)] hover:text-[var(--ink)] hover:border-[var(--line-3)] transition-colors flex-shrink-0 disabled:opacity-40"
               >
                 <ArrowClockwise size={14} className={regenerating ? "animate-spin" : ""} />
               </button>
@@ -170,49 +166,47 @@ const InvitePanel = ({ groupId, group, isOwner }) => {
             onChange={(e) => setEmail(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
             placeholder="email@example.com"
-            className="w-full h-9 px-3 rounded-xl bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/15 text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-quaternary)] focus:outline-none focus:border-[var(--color-brand-500)]/50 transition-colors"
+            className="grp-input h-9 text-sm"
           />
           <button
             onClick={handleSend}
             disabled={!email.trim() || sending}
-            className="w-full h-9 rounded-xl bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white text-xs font-spartan font-medium transition-colors disabled:opacity-40 flex items-center justify-center gap-1.5"
+            className="grp-btn grp-btn--signal grp-btn--sm w-full disabled:opacity-40"
           >
             <Envelope size={13} />
             {sent ? "Sent!" : sending ? "Sending…" : "Send invite"}
           </button>
           {error && (
-            <p className="text-[11px] text-red-500 font-spartan">{error}</p>
+            <p className="grp-mono text-[11px] text-[var(--rose)]">{error}</p>
           )}
         </div>
 
         {/* Pending invites */}
         {pendingInvites.length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs font-spartan text-[var(--color-text-tertiary)] uppercase tracking-wide flex items-center justify-between">
+            <p className="grp-kicker flex items-center justify-between">
               Pending
-              <span className="normal-case text-[var(--color-text-quaternary)]">{pendingInvites.length}</span>
+              <span className="text-[var(--ink-3)]">{pendingInvites.length}</span>
             </p>
             <ul className="space-y-2">
               {pendingInvites.map((inv) => (
-                <li key={inv._id} className="flex items-start gap-2 py-2 border-t border-[var(--color-border-primary)]/10 first:border-0">
-                  <Envelope size={13} className="text-[var(--color-text-tertiary)] mt-0.5 flex-shrink-0" />
+                <li key={inv._id} className="flex items-start gap-2 py-2 border-t border-[var(--line)] first:border-0">
+                  <Envelope size={13} className="text-[var(--ink-3)] mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-spartan text-[var(--color-text-secondary)] truncate">
-                      {inv.email}
-                    </p>
-                    <p className="text-[10px] text-[var(--color-text-quaternary)] font-spartan">
+                    <p className="text-xs text-[var(--ink-2)] truncate">{inv.email}</p>
+                    <p className="grp-mono text-[10px] text-[var(--ink-3)] uppercase tracking-wider">
                       Invited {daysAgo(inv.createdAt)}
                     </p>
-                    <div className="flex items-center gap-3 mt-1">
+                    <div className="flex items-center gap-3 mt-1.5">
                       <button
                         onClick={() => handleResend(inv._id, inv.email)}
-                        className="text-[11px] font-spartan text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+                        className="grp-mono text-[10px] font-bold uppercase tracking-wider text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors"
                       >
                         Resend
                       </button>
                       <button
                         onClick={() => handleRevoke(inv._id)}
-                        className="text-[11px] font-spartan text-red-500 hover:text-red-400 transition-colors"
+                        className="grp-mono text-[10px] font-bold uppercase tracking-wider text-[var(--rose)] hover:brightness-125 transition-colors"
                       >
                         Revoke
                       </button>

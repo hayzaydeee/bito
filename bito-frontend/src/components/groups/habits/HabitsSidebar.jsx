@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus } from "@phosphor-icons/react";
+import { Plus, Check, Fire } from "@phosphor-icons/react";
 import HabitIcon from "../../shared/HabitIcon";
 import { habitsAPI } from "../../../services/api";
 
@@ -10,14 +10,11 @@ import { habitsAPI } from "../../../services/api";
  * group adoption stats, and + Create group habit CTA.
  *
  * Props:
- *   groupId        — string
  *   groupHabits    — all group habits[]
  *   adoptedHabits  — the current user's adopted habit objects[]
  *   totalMembers   — number
  *   canManage      — boolean (admin/owner)
  *   onAddHabit     — () => void  (opens GroupHabitModal)
- *   onRefresh      — () => void  (re-fetches all group data)
- *   isAdopted      — (habit) => boolean
  */
 const HabitsSidebar = ({
   groupHabits = [],
@@ -35,6 +32,8 @@ const HabitsSidebar = ({
   const groupAdoptionPct = totalSlots > 0
     ? Math.round((totalAdopted / totalSlots) * 100)
     : 0;
+
+  const noGroupHabits = groupHabits.length === 0;
 
   // Today's date ISO string
   const todayStr = new Date().toISOString().split("T")[0];
@@ -57,18 +56,16 @@ const HabitsSidebar = ({
   const multi = adoptedHabits.length > 1;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Your habit(s) card */}
-      <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60 p-5">
-        <p className="text-xs font-spartan font-semibold text-[var(--color-text-primary)] uppercase tracking-wide mb-3">
-          Your habit here
-        </p>
+      <div className="grp-card p-5">
+        <p className="grp-kicker mb-3">Your habit</p>
 
         {hasAdopted ? (
           <>
             {multi ? (
               /* Multiple: checkbox list */
-              <ul className="space-y-2">
+              <ul className="space-y-2.5">
                 {adoptedHabits.map((h) => {
                   const ls = logStates[h._id] || "idle";
                   const done = ls === "done";
@@ -77,25 +74,19 @@ const HabitsSidebar = ({
                       <button
                         onClick={() => !done && handleLog(h._id)}
                         disabled={ls === "logging"}
-                        className={`w-5 h-5 rounded-md border flex-shrink-0 flex items-center justify-center transition-colors ${
+                        className={`w-5 h-5 rounded-[3px] border flex-shrink-0 flex items-center justify-center transition-colors ${
                           done
-                            ? "bg-emerald-500 border-emerald-500"
+                            ? "bg-[var(--signal)] border-[var(--signal)] text-[var(--signal-ink)]"
                             : ls === "logging"
-                            ? "border-[var(--color-border-primary)]/30 opacity-50"
-                            : "border-[var(--color-border-primary)]/30 hover:border-[var(--color-brand-500)] hover:bg-[var(--color-brand-500)]/10"
+                            ? "border-[var(--line-2)] opacity-50"
+                            : "border-[var(--line-2)] hover:border-[var(--signal)] hover:bg-[var(--signal)]/10"
                         }`}
                       >
-                        {done && (
-                          <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor">
-                            <path d="M10 3L5 8.5 2 5.5l-1 1L5 10.5l6-7z" />
-                          </svg>
-                        )}
+                        {done && <Check size={12} weight="bold" />}
                       </button>
                       <span className="flex items-center gap-1.5 flex-1 min-w-0">
                         <HabitIcon icon={h.icon} size={13} />
-                        <span className="text-xs font-spartan text-[var(--color-text-primary)] truncate">
-                          {h.name}
-                        </span>
+                        <span className="text-xs text-[var(--ink)] truncate">{h.name}</span>
                       </span>
                     </li>
                   );
@@ -112,27 +103,23 @@ const HabitsSidebar = ({
                   <div>
                     <div className="flex items-center gap-2 mb-3">
                       <HabitIcon icon={h.icon} size={16} />
-                      <span className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] truncate flex-1">
+                      <span className="text-sm font-semibold text-[var(--ink)] truncate flex-1">
                         {h.name}
                       </span>
                       {streakCount > 0 && (
-                        <span className="text-[11px] font-spartan text-orange-400 flex-shrink-0">
-                          🔥 {streakCount}-day streak
+                        <span className="grp-mono text-[10px] text-[var(--ember)] flex-shrink-0 inline-flex items-center gap-1">
+                          <Fire size={10} weight="fill" /> {streakCount}D
                         </span>
                       )}
                     </div>
                     <button
                       onClick={() => !done && handleLog(h._id)}
                       disabled={ls === "logging" || done}
-                      className={`w-full h-9 rounded-xl text-xs font-spartan font-medium transition-colors ${
-                        done
-                          ? "bg-emerald-500/12 text-emerald-600 cursor-default"
-                          : ls === "logging"
-                          ? "bg-[var(--color-surface-hover)] text-[var(--color-text-tertiary)] opacity-50"
-                          : "bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white"
-                      }`}
+                      className={`grp-btn grp-btn--sm w-full ${
+                        done ? "border-[var(--signal)] text-[var(--signal)]" : "grp-btn--signal"
+                      } ${ls === "logging" ? "opacity-50" : ""}`}
                     >
-                      {done ? "✓ Logged!" : ls === "logging" ? "Logging…" : "Log today"}
+                      {done ? "✓ Logged" : ls === "logging" ? "Logging…" : "Log today"}
                     </button>
                   </div>
                 );
@@ -141,41 +128,35 @@ const HabitsSidebar = ({
           </>
         ) : (
           /* Empty state */
-          <div className="text-center py-4">
-            <p className="text-xs text-[var(--color-text-tertiary)] font-spartan">
-              No habit adopted yet.
+          <div className="text-center py-3">
+            <p className="text-xs text-[var(--ink-2)] mb-2">
+              {noGroupHabits ? "No group habits to adopt yet." : "No habit adopted yet."}
             </p>
-            <button
-              onClick={() => {
-                // Scroll to the habit list (user should adopt from there)
-                document.querySelector("[data-group-habits-list]")?.scrollIntoView({ behavior: "smooth" });
-              }}
-              className="mt-2 text-xs font-spartan text-[var(--color-brand-500)] hover:text-[var(--color-brand-400)] transition-colors"
-            >
-              Adopt a habit from the list →
-            </button>
+            {!noGroupHabits && (
+              <button
+                onClick={() => {
+                  document.querySelector("[data-group-habits-list]")?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="grp-mono text-[11px] font-bold uppercase tracking-wider text-[var(--signal)] hover:text-[var(--signal-2)] transition-colors"
+              >
+                Adopt from the list →
+              </button>
+            )}
           </div>
         )}
       </div>
 
       {/* Group adoption */}
-      <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60 p-5">
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-spartan font-semibold text-[var(--color-text-primary)] uppercase tracking-wide">
-            Group adoption
-          </p>
-          <span className="text-xs font-spartan font-semibold text-[var(--color-text-primary)]">
-            {groupAdoptionPct}%
-          </span>
+      <div className="grp-card p-5">
+        <div className="flex items-center justify-between mb-2.5">
+          <p className="grp-kicker">Group adoption</p>
+          <span className="grp-mono text-[11px] font-bold text-[var(--signal)]">{groupAdoptionPct}%</span>
         </div>
-        <div className="h-1.5 rounded-full bg-[var(--color-surface-hover)] overflow-hidden mb-1.5">
-          <div
-            className="h-full rounded-full bg-[var(--color-brand-500)] transition-all duration-500"
-            style={{ width: `${groupAdoptionPct}%` }}
-          />
+        <div className="grp-meter mb-2">
+          <i style={{ width: `${groupAdoptionPct}%`, transition: "width .5s ease" }} />
         </div>
-        <p className="text-[11px] text-[var(--color-text-tertiary)] font-spartan">
-          {totalAdopted} of {totalSlots} habit slots filled across {totalMembers} member{totalMembers !== 1 ? "s" : ""}
+        <p className="grp-mono text-[10px] text-[var(--ink-3)] uppercase tracking-wider leading-relaxed">
+          {totalAdopted} / {totalSlots} slots filled across {totalMembers} member{totalMembers !== 1 ? "s" : ""}
         </p>
       </div>
 
@@ -183,9 +164,9 @@ const HabitsSidebar = ({
       {canManage && (
         <button
           onClick={onAddHabit}
-          className="w-full h-10 rounded-2xl border border-dashed border-[var(--color-border-primary)]/30 flex items-center justify-center gap-2 text-xs font-spartan text-[var(--color-text-tertiary)] hover:text-[var(--color-brand-500)] hover:border-[var(--color-brand-500)]/40 transition-colors"
+          className="w-full h-10 rounded-[4px] border border-dashed border-[var(--line-2)] flex items-center justify-center gap-2 grp-mono text-[11px] font-bold uppercase tracking-wider text-[var(--ink-3)] hover:text-[var(--signal)] hover:border-[var(--signal)]/50 transition-colors"
         >
-          <Plus size={13} />
+          <Plus size={13} weight="bold" />
           Create group habit
         </button>
       )}

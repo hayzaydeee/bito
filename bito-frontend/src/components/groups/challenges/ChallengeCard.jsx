@@ -12,19 +12,21 @@ import {
 /* ── type metadata ──────────────────────────────────── */
 
 const TYPE_META = {
-  streak:       { Icon: Fire,         label: "Streak",       color: "text-orange-500",  badge: "bg-orange-500/12 text-orange-400 border-orange-500/20" },
-  cumulative:   { Icon: TrendUp,      label: "Cumulative",   color: "text-blue-500",    badge: "bg-blue-500/12 text-blue-400 border-blue-500/20" },
-  consistency:  { Icon: CalendarBlank,label: "Consistency",  color: "text-violet-500",  badge: "bg-violet-500/12 text-violet-400 border-violet-500/20" },
-  team_goal:    { Icon: Handshake,    label: "Team goal",    color: "text-teal-500",    badge: "bg-teal-500/12 text-teal-400 border-teal-500/20" },
-  head_to_head: { Icon: Sword,        label: "Head to Head", color: "text-rose-500",    badge: "bg-rose-500/12 text-rose-400 border-rose-500/20" },
+  streak:       { Icon: Fire,          label: "Streak",       color: "#ff7a3c" },
+  cumulative:   { Icon: TrendUp,       label: "Cumulative",   color: "#6f9bff" },
+  consistency:  { Icon: CalendarBlank, label: "Consistency",  color: "#a78bfa" },
+  team_goal:    { Icon: Handshake,     label: "Team goal",    color: "#36d6c3" },
+  head_to_head: { Icon: Sword,         label: "Head to Head", color: "#ff5d73" },
 };
 
-const STATUS_BADGE = {
-  upcoming:  "bg-blue-500/10 text-blue-500 border-blue-500/20",
-  active:    "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-  completed: "bg-[var(--color-surface-hover)] text-[var(--color-text-tertiary)] border-[var(--color-border-primary)]/15",
-  cancelled: "bg-red-500/10 text-red-500 border-red-500/20",
-};
+function TypeTag({ type }) {
+  const meta = TYPE_META[type] || { label: type, color: "var(--ink-3)" };
+  return (
+    <span className="grp-tag flex-shrink-0" style={{ color: meta.color, borderColor: `${meta.color}55` }}>
+      {meta.label}
+    </span>
+  );
+}
 
 /* ── helpers ─────────────────────────────────────────── */
 
@@ -61,22 +63,19 @@ function LeaderboardRow({ rank, participant, targetValue }) {
 
   return (
     <div className="flex items-center gap-3 py-2">
-      <span className="w-4 text-xs font-spartan font-medium text-[var(--color-text-tertiary)] text-right flex-shrink-0">
-        {rank}
+      <span className="grp-mono w-5 text-[11px] font-bold text-[var(--ink-3)] text-right flex-shrink-0">
+        {String(rank).padStart(2, "0")}
       </span>
-      <div className="w-7 h-7 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center text-white text-[11px] font-spartan font-bold flex-shrink-0">
+      <div className="w-7 h-7 rounded-[3px] bg-[var(--surface-2)] flex items-center justify-center text-[var(--ink)] text-[11px] grp-display font-bold flex-shrink-0">
         {name.charAt(0).toUpperCase()}
       </div>
-      <span className="w-20 text-sm font-spartan text-[var(--color-text-primary)] truncate flex-shrink-0">
+      <span className="w-20 text-sm text-[var(--ink)] truncate flex-shrink-0">
         {name.split(" ")[0]}
       </span>
-      <div className="flex-1 h-1.5 rounded-full bg-[var(--color-surface-hover)] overflow-hidden">
-        <div
-          className="h-full rounded-full bg-emerald-500"
-          style={{ width: `${pct}%` }}
-        />
+      <div className="grp-meter flex-1">
+        <i style={{ width: `${pct}%` }} />
       </div>
-      <span className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] w-10 text-right flex-shrink-0">
+      <span className="grp-mono text-[11px] font-bold text-[var(--ink)] w-10 text-right flex-shrink-0">
         {pct}%
       </span>
     </div>
@@ -90,29 +89,25 @@ function HabitMatchRow({ habit, selected, onSelect }) {
   return (
     <div
       onClick={onSelect}
-      className={`flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer transition-colors ${
+      className={`flex items-center gap-3 px-3 py-2 rounded-[4px] cursor-pointer transition-colors border ${
         selected
-          ? "bg-[var(--color-brand-600)]/10 border border-[var(--color-brand-600)]/20"
-          : "hover:bg-[var(--color-surface-hover)] border border-transparent"
+          ? "bg-[var(--signal)]/10 border-[var(--signal)]/40"
+          : "hover:bg-[var(--surface-2)] border-transparent"
       }`}
     >
-      <span className="text-sm flex-shrink-0">
-        {habit.icon || "🎯"}
-      </span>
-      <span className="flex-1 text-xs font-spartan text-[var(--color-text-primary)] truncate">
-        {habit.name}
-      </span>
+      <span className="text-sm flex-shrink-0">{habit.icon || "🎯"}</span>
+      <span className="flex-1 text-xs text-[var(--ink)] truncate">{habit.name}</span>
       {matchScore !== undefined && (
-        <span className="text-[10px] font-spartan text-[var(--color-brand-500)] bg-[var(--color-brand-600)]/10 px-2 py-0.5 rounded-full flex-shrink-0">
+        <span className="grp-mono text-[10px] text-[var(--signal)] flex-shrink-0">
           {Math.round(matchScore)}% match
         </span>
       )}
       <button
         onClick={(e) => { e.stopPropagation(); onSelect(); }}
-        className={`text-[11px] font-spartan px-2.5 py-0.5 rounded-lg transition-colors flex-shrink-0 ${
+        className={`grp-mono text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-[3px] transition-colors flex-shrink-0 ${
           selected
-            ? "bg-[var(--color-brand-600)] text-white"
-            : "bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+            ? "bg-[var(--signal)] text-[var(--signal-ink)]"
+            : "bg-[var(--surface-2)] text-[var(--ink-2)] hover:text-[var(--ink)]"
         }`}
       >
         {selected ? "Selected" : "Select"}
@@ -123,19 +118,8 @@ function HabitMatchRow({ habit, selected, onSelect }) {
 
 /* ── ChallengeCard ───────────────────────────────────────── */
 
-/**
- * Props:
- *   challenge      — challenge object
- *   currentUserId  — string
- *   myHabits       — user's habits[] (for joining team_goal)
- *   onJoin         — (challengeId, linkedHabitIds) => void
- *   onLeave        — (challengeId) => void
- *   actionLoading  — string | null (challengeId being acted on)
- */
 const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onLeave, actionLoading }) => {
   const [selectedHabitId, setSelectedHabitId] = useState(null);
-  const meta = TYPE_META[c.type] || { Icon: Trophy, label: c.type, color: "text-amber-500" };
-  const { Icon } = meta;
 
   const isParticipant = c.participants?.some(
     (p) => (p.userId?._id || p.userId)?.toString() === currentUserId?.toString()
@@ -154,22 +138,20 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
     (a, b) => (b.progress?.currentValue || 0) - (a.progress?.currentValue || 0)
   );
 
+  const metaLine = "grp-mono text-[10px] text-[var(--ink-3)] mt-1 uppercase tracking-wider";
+
   /* Upcoming card */
   if (c.status === "upcoming") {
     return (
-      <div className="p-5 rounded-2xl border border-[var(--color-border-primary)]/15 bg-[var(--color-surface-elevated)]/60">
+      <div className="grp-card p-5">
         <div className="flex items-center gap-3">
-          <Clock size={16} className="text-[var(--color-text-tertiary)] flex-shrink-0" />
+          <Clock size={16} className="text-[var(--ink-3)] flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] truncate flex-1">
-                {c.title}
-              </p>
-              <span className={`flex-shrink-0 text-[10px] font-spartan font-medium px-2 py-0.5 rounded-full border ${meta.badge}`}>
-                {meta.label}
-              </span>
+              <p className="text-sm font-semibold text-[var(--ink)] truncate flex-1">{c.title}</p>
+              <TypeTag type={c.type} />
             </div>
-            <p className="text-xs font-spartan text-[var(--color-text-tertiary)] mt-0.5">
+            <p className={metaLine}>
               Starts in {startsIn ?? "?"} day{startsIn !== 1 ? "s" : ""} · {participantCount} joined
             </p>
           </div>
@@ -181,31 +163,23 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
   /* Consistency / Streak: leaderboard layout */
   if (c.type === "consistency" || c.type === "streak") {
     return (
-      <div className="p-5 rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60">
+      <div className="grp-card grp-card-hover p-5">
         <div className="flex items-start justify-between gap-3 mb-1">
           <div className="min-w-0">
-            <p className="text-base font-garamond font-bold text-[var(--color-text-primary)] truncate">
-              {c.title}
-            </p>
-            <p className="text-xs font-spartan text-[var(--color-text-tertiary)] mt-0.5">
+            <p className="grp-display text-[17px] font-bold text-[var(--ink)] truncate">{c.title}</p>
+            <p className={metaLine}>
               {c.description || `Hit ${c.rules?.targetValue || "—"}% of days`}
-              {remaining !== null && ` · ${remaining} days left`}
+              {remaining !== null && ` · ${remaining}d left`}
               {participantCount > 0 && ` · ${participantCount} joined`}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             {!isParticipant && (
-              <button
-                onClick={() => onJoin(c._id)}
-                disabled={isLoading}
-                className="h-7 px-3 rounded-lg border border-[var(--color-border-primary)]/30 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] text-xs font-spartan transition-colors disabled:opacity-50"
-              >
+              <button onClick={() => onJoin(c._id)} disabled={isLoading} className="grp-btn grp-btn--sm">
                 {isLoading ? "…" : "Join"}
               </button>
             )}
-            <span className={`text-[10px] font-spartan font-medium px-2 py-0.5 rounded-full border ${meta.badge}`}>
-              {meta.label}
-            </span>
+            <TypeTag type={c.type} />
           </div>
         </div>
 
@@ -234,32 +208,25 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
     ) || 0;
 
     return (
-      <div className="p-5 rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60">
+      <div className="grp-card grp-card-hover p-5">
         <div className="flex items-start justify-between gap-3 mb-1">
           <div className="min-w-0">
-            <p className="text-base font-garamond font-bold text-[var(--color-text-primary)] truncate">
-              {c.title}
-            </p>
-            <p className="text-xs font-spartan text-[var(--color-text-tertiary)] mt-0.5">
-              {totalValue.toLocaleString()} of {Number(c.rules?.targetValue || 0).toLocaleString()} {c.rules?.targetUnit || ""}
-              {remaining !== null && ` · ${remaining} days left`}
+            <p className="grp-display text-[17px] font-bold text-[var(--ink)] truncate">{c.title}</p>
+            <p className={metaLine}>
+              {totalValue.toLocaleString()} / {Number(c.rules?.targetValue || 0).toLocaleString()} {c.rules?.targetUnit || ""}
+              {remaining !== null && ` · ${remaining}d left`}
               {participantCount > 0 && ` · ${participantCount} joined`}
             </p>
           </div>
-          <span className={`flex-shrink-0 text-[10px] font-spartan font-medium px-2 py-0.5 rounded-full border ${meta.badge}`}>
-            {meta.label}
-          </span>
+          <TypeTag type={c.type} />
         </div>
 
-        {/* Progress bar */}
+        {/* Progress meter */}
         <div className="mt-3 mb-4">
-          <div className="h-2 rounded-full bg-[var(--color-surface-hover)] overflow-hidden">
-            <div
-              className="h-full rounded-full bg-emerald-500 transition-all duration-500"
-              style={{ width: `${pct}%` }}
-            />
+          <div className="grp-meter" style={{ height: "8px" }}>
+            <i style={{ width: `${pct}%`, transition: "width .5s ease" }} />
           </div>
-          <p className="text-right text-xs font-spartan text-[var(--color-text-tertiary)] mt-1">{pct}%</p>
+          <p className="grp-mono text-right text-[11px] font-bold text-[var(--signal)] mt-1.5">{pct}%</p>
         </div>
 
         {/* Join section */}
@@ -268,13 +235,11 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
             <button
               onClick={() => onJoin(c._id, selectedHabitId ? [selectedHabitId] : [])}
               disabled={isLoading}
-              className="h-9 px-5 rounded-xl border border-[var(--color-border-primary)]/30 text-sm font-spartan font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-colors disabled:opacity-50 mb-4"
+              className="grp-btn grp-btn--signal grp-btn--sm mb-4"
             >
               {isLoading ? "Joining…" : "Join challenge"}
             </button>
-            <p className="text-xs font-spartan text-[var(--color-text-secondary)] mb-2">
-              Pick the habit you'll compete with
-            </p>
+            <p className="grp-kicker mb-2">Pick your habit</p>
             <div className="space-y-1">
               {myHabits.slice(0, 3).map((h) => (
                 <HabitMatchRow
@@ -292,7 +257,7 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
           <button
             onClick={() => onLeave(c._id)}
             disabled={isLoading}
-            className="text-xs font-spartan text-[var(--color-text-tertiary)] hover:text-red-500 transition-colors"
+            className="grp-mono text-[10px] font-bold uppercase tracking-wider text-[var(--ink-3)] hover:text-[var(--rose)] transition-colors"
           >
             {isLoading ? "…" : "Leave"}
           </button>
@@ -303,58 +268,45 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
 
   /* Default / cumulative / head-to-head */
   return (
-    <div className="p-5 rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60">
+    <div className="grp-card grp-card-hover p-5">
       <div className="flex items-start justify-between gap-3 mb-2">
         <div className="min-w-0">
-          <p className="text-base font-garamond font-bold text-[var(--color-text-primary)] truncate">
-            {c.title}
-          </p>
+          <p className="grp-display text-[17px] font-bold text-[var(--ink)] truncate">{c.title}</p>
           {c.description && (
-            <p className="text-xs font-spartan text-[var(--color-text-tertiary)] mt-0.5 line-clamp-1">
-              {c.description}
-            </p>
+            <p className="text-xs text-[var(--ink-2)] mt-1 line-clamp-1">{c.description}</p>
           )}
-          <p className="text-xs font-spartan text-[var(--color-text-tertiary)] mt-0.5">
-            {remaining !== null && `${remaining} days left`}
+          <p className={metaLine}>
+            {remaining !== null && `${remaining}d left`}
             {participantCount > 0 && ` · ${participantCount} joined`}
           </p>
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
           {!isParticipant ? (
-            <button
-              onClick={() => onJoin(c._id)}
-              disabled={isLoading}
-              className="h-7 px-3 rounded-lg border border-[var(--color-border-primary)]/30 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] text-xs font-spartan transition-colors disabled:opacity-50"
-            >
+            <button onClick={() => onJoin(c._id)} disabled={isLoading} className="grp-btn grp-btn--sm">
               {isLoading ? "…" : "Join"}
             </button>
           ) : (
             <button
               onClick={() => onLeave(c._id)}
               disabled={isLoading}
-              className="text-xs font-spartan text-[var(--color-text-tertiary)] hover:text-red-500 transition-colors"
+              className="grp-mono text-[10px] font-bold uppercase tracking-wider text-[var(--ink-3)] hover:text-[var(--rose)] transition-colors"
             >
               Leave
             </button>
           )}
-          <span className={`text-[10px] font-spartan font-medium px-2 py-0.5 rounded-full border ${meta.badge}`}>
-            {meta.label}
-          </span>
+          <TypeTag type={c.type} />
         </div>
       </div>
 
       {isParticipant && (
         <div>
-          <div className="flex items-center justify-between text-xs font-spartan text-[var(--color-text-tertiary)] mb-1">
+          <div className="flex items-center justify-between grp-mono text-[10px] text-[var(--ink-3)] uppercase tracking-wider mb-1.5">
             <span>Progress</span>
-            <span>{pct}%</span>
+            <span className="text-[var(--signal)]">{pct}%</span>
           </div>
-          <div className="h-1.5 rounded-full bg-[var(--color-surface-hover)] overflow-hidden">
-            <div
-              className="h-full rounded-full bg-emerald-500 transition-all duration-500"
-              style={{ width: `${pct}%` }}
-            />
+          <div className="grp-meter">
+            <i style={{ width: `${pct}%`, transition: "width .5s ease" }} />
           </div>
         </div>
       )}
