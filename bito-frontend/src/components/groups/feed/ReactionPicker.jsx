@@ -55,8 +55,8 @@ const ReactionPicker = ({ reactions = {}, myReaction = null, onReact }) => {
         onClick={() => onReact("heart")}
         className={`flex items-center gap-1 h-6 px-2 rounded-full text-xs font-spartan transition-all ${
           hasHeart
-            ? "bg-rose-500/15 text-rose-500 border border-rose-500/25"
-            : "bg-[var(--color-surface-elevated)] text-[var(--color-text-tertiary)] border border-[var(--color-border-primary)]/20 hover:border-rose-500/30 hover:text-rose-400"
+            ? "bg-rose-500/15 text-rose-500 border border-rose-500/40"
+            : "bg-[var(--color-surface-elevated)] text-[var(--color-text-tertiary)] border border-[var(--color-border-primary)]/40 hover:border-rose-500/50 hover:text-rose-400"
         }`}
       >
         <Heart size={11} weight={hasHeart ? "fill" : "regular"} />
@@ -75,8 +75,8 @@ const ReactionPicker = ({ reactions = {}, myReaction = null, onReact }) => {
             aria-label={rxn.label}
             className={`flex items-center gap-1 h-6 px-2 rounded-full text-xs font-spartan transition-all border ${
               mine
-                ? "bg-[var(--color-brand-600)]/15 text-[var(--color-brand-500)] border-[var(--color-brand-500)]/25"
-                : "bg-[var(--color-surface-elevated)] text-[var(--color-text-tertiary)] border-[var(--color-border-primary)]/20 hover:text-[var(--color-text-primary)]"
+                ? "bg-[var(--color-brand-600)]/15 text-[var(--color-brand-500)] border-[var(--color-brand-500)]/40"
+                : "bg-[var(--color-surface-elevated)] text-[var(--color-text-tertiary)] border-[var(--color-border-primary)]/40 hover:text-[var(--color-text-primary)]"
             }`}
           >
             <RIcon size={11} weight={mine ? "fill" : "regular"} />
@@ -89,7 +89,7 @@ const ReactionPicker = ({ reactions = {}, myReaction = null, onReact }) => {
       <div className="relative">
         <button
           onClick={() => setOpen((v) => !v)}
-          className="w-6 h-6 rounded-full flex items-center justify-center bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-border-primary)]/40 transition-colors"
+          className="w-6 h-6 rounded-full flex items-center justify-center bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/40 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-border-primary)]/60 transition-colors"
           aria-label="More reactions"
         >
           <Plus size={10} weight="bold" />
