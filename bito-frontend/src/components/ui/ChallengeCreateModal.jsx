@@ -35,7 +35,7 @@ function nextWeek() {
 }
 
 const inputClass =
-  "w-full h-10 px-3 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 rounded-xl text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:border-[var(--color-brand-600)]/40";
+  "w-full h-10 px-3 bg-[var(--bg-2)] border border-[var(--line-2)] rounded-[10px] text-sm text-[var(--ink)] placeholder:text-[var(--ink-3)] focus:outline-none focus:border-[var(--signal)] transition-colors";
 
 /* ── component ── */
 
@@ -146,14 +146,14 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
 
   return (
     <AnimatedModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-lg">
-      <div className="relative w-full bg-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)]/20 max-h-[85vh] overflow-y-auto">
+      <div className="grp relative w-full bg-[var(--surface)] rounded-[16px] border border-[var(--line-2)] max-h-[85vh] overflow-y-auto">
         {/* header */}
-        <div className="flex items-center justify-between p-5 border-b border-[var(--color-border-primary)]/10">
-          <h2 className="text-lg font-garamond font-bold text-[var(--color-text-primary)]">
+        <div className="flex items-center justify-between p-5 border-b border-[var(--line-2)]">
+          <h2 className="grp-display text-xl font-bold text-[var(--ink)]">
             {step === 1 ? "Choose Challenge Type" : "Challenge Details"}
           </h2>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--color-surface-hover)] transition-colors">
-            <Cross2Icon className="w-4 h-4 text-[var(--color-text-secondary)]" />
+          <button onClick={onClose} className="w-8 h-8 rounded-[9px] flex items-center justify-center hover:bg-[var(--surface-2)] transition-colors text-[var(--ink-3)] hover:text-[var(--ink)]">
+            <Cross2Icon className="w-4 h-4" />
           </button>
         </div>
 
@@ -166,21 +166,21 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
                   <button
                     key={t.value}
                     onClick={() => setForm((p) => ({ ...p, type: t.value }))}
-                    className={`p-4 rounded-xl border text-left transition-colors ${
+                    className={`p-4 rounded-[12px] border text-left transition-colors ${
                       form.type === t.value
-                        ? "border-[var(--color-brand-600)] bg-[var(--color-brand-600)]/5"
-                        : "border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40"
+                        ? "border-[var(--signal)]/55 bg-[var(--signal)]/8"
+                        : "border-[var(--line-2)] hover:border-[var(--line-3)]"
                     }`}
                   >
-                    <t.Icon size={22} weight="duotone" className="text-[var(--color-brand-400)]" />
-                    <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] mt-2">{t.label}</p>
-                    <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mt-0.5">{t.desc}</p>
+                    <t.Icon size={22} weight="duotone" className="text-[var(--signal)]" />
+                    <p className="grp-display text-base font-bold text-[var(--ink)] mt-2">{t.label}</p>
+                    <p className="grp-mono text-[10px] text-[var(--ink-3)] mt-1 uppercase tracking-wider">{t.desc}</p>
                   </button>
                 ))}
               </div>
               <button
                 onClick={() => setStep(2)}
-                className="w-full h-10 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white rounded-xl text-sm font-spartan font-medium transition-colors"
+                className="grp-btn grp-btn--signal w-full"
               >
                 Continue with {selectedType?.label}
               </button>
@@ -192,34 +192,34 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
             <>
               <button
                 onClick={() => setStep(1)}
-                className="flex items-center gap-2 text-xs font-spartan text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+                className="flex items-center gap-2 grp-mono text-[11px] font-bold uppercase tracking-wider text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors"
               >
                 ← Back ·{" "}
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--color-brand-600)]/10 text-[var(--color-brand-600)] font-medium">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] bg-[var(--signal)]/12 text-[var(--signal)]">
                   {selectedType?.Icon && <selectedType.Icon size={13} weight="duotone" />} {selectedType?.label}
                 </span>
               </button>
 
               {/* name */}
               <div>
-                <label className="block text-xs font-spartan font-medium text-[var(--color-text-secondary)] mb-1">Name *</label>
+                <label className="grp-kicker block mb-1.5">Name *</label>
                 <input value={form.name} onChange={set("name")} placeholder="e.g. 7-Day Meditation Streak" className={inputClass} />
               </div>
 
               {/* description */}
               <div>
-                <label className="block text-xs font-spartan font-medium text-[var(--color-text-secondary)] mb-1">Description</label>
+                <label className="grp-kicker block mb-1.5">Description</label>
                 <textarea value={form.description} onChange={set("description")} rows={2} placeholder="Optional details…" className={`${inputClass} h-auto py-2 resize-none`} />
               </div>
 
               {/* dates */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-spartan font-medium text-[var(--color-text-secondary)] mb-1">Start *</label>
+                  <label className="grp-kicker block mb-1.5">Start *</label>
                   <input type="date" value={form.startDate} onChange={set("startDate")} className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-xs font-spartan font-medium text-[var(--color-text-secondary)] mb-1">End *</label>
+                  <label className="grp-kicker block mb-1.5">End *</label>
                   <input type="date" value={form.endDate} onChange={set("endDate")} className={inputClass} />
                 </div>
               </div>
@@ -227,11 +227,11 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
               {/* target */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-spartan font-medium text-[var(--color-text-secondary)] mb-1">Target</label>
+                  <label className="grp-kicker block mb-1.5">Target</label>
                   <input type="number" min={1} value={form.targetValue} onChange={set("targetValue")} className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-xs font-spartan font-medium text-[var(--color-text-secondary)] mb-1">Unit</label>
+                  <label className="grp-kicker block mb-1.5">Unit</label>
                   <select value={form.targetUnit} onChange={set("targetUnit")} className={inputClass}>
                     {TARGET_UNITS.map((u) => (
                       <option key={u.value} value={u.value}>{u.label}</option>
@@ -243,7 +243,7 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
               {/* linked habit */}
               {habits.length > 0 && (
                 <div>
-                  <label className="block text-xs font-spartan font-medium text-[var(--color-text-secondary)] mb-1">Link to Habit (optional)</label>
+                  <label className="grp-kicker block mb-1.5">Link to Habit (optional)</label>
                   <select value={form.linkedHabitId} onChange={set("linkedHabitId")} className={inputClass}>
                     <option value="">Any habit</option>
                     {habits.map((h) => (
@@ -255,7 +255,7 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
 
               {/* habit slot description */}
               <div>
-                <label className="block text-xs font-spartan font-medium text-[var(--color-text-secondary)] mb-1">
+                <label className="grp-kicker block mb-1.5">
                   Habit Slot <span className="text-[var(--color-text-tertiary)]">(describe qualifying habits)</span>
                 </label>
                 <input
@@ -269,7 +269,7 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
 
               {/* habit match mode */}
               <div>
-                <label className="block text-xs font-spartan font-medium text-[var(--color-text-secondary)] mb-1">Habit Match Mode</label>
+                <label className="grp-kicker block mb-1.5">Habit Match Mode</label>
                 <select value={form.habitMatchMode} onChange={set("habitMatchMode")} className={inputClass}>
                   <option value="single">Single — one habit tracks progress</option>
                   <option value="any">Any — complete any linked habit to count</option>
@@ -281,7 +281,7 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
               {/* minimum count (only if mode=minimum) */}
               {form.habitMatchMode === "minimum" && (
                 <div>
-                  <label className="block text-xs font-spartan font-medium text-[var(--color-text-secondary)] mb-1">Minimum habits per day</label>
+                  <label className="grp-kicker block mb-1.5">Minimum habits per day</label>
                   <input type="number" min={1} value={form.habitMatchMinimum} onChange={set("habitMatchMinimum")} className={inputClass} />
                 </div>
               )}
@@ -289,27 +289,27 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
               {/* settings */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={form.allowLateJoin} onChange={set("allowLateJoin")} className="rounded" />
-                  <span className="text-sm font-spartan text-[var(--color-text-primary)]">Allow late join</span>
+                  <input type="checkbox" checked={form.allowLateJoin} onChange={set("allowLateJoin")} className="rounded accent-[var(--signal)]" />
+                  <span className="text-sm text-[var(--ink)]">Allow late join</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={form.showLeaderboard} onChange={set("showLeaderboard")} className="rounded" />
-                  <span className="text-sm font-spartan text-[var(--color-text-primary)]">Show leaderboard</span>
+                  <input type="checkbox" checked={form.showLeaderboard} onChange={set("showLeaderboard")} className="rounded accent-[var(--signal)]" />
+                  <span className="text-sm text-[var(--ink)]">Show leaderboard</span>
                 </label>
               </div>
 
               {/* max participants */}
               <div>
-                <label className="block text-xs font-spartan font-medium text-[var(--color-text-secondary)] mb-1">Max Participants (empty = unlimited)</label>
+                <label className="grp-kicker block mb-1.5">Max Participants (empty = unlimited)</label>
                 <input type="number" min={2} value={form.maxParticipants} onChange={set("maxParticipants")} placeholder="Unlimited" className={inputClass} />
               </div>
 
-              {error && <p className="text-xs text-red-500 font-spartan">{error}</p>}
+              {error && <p className="grp-mono text-[11px] text-[var(--rose)]">{error}</p>}
 
               <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className="w-full h-10 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] disabled:opacity-50 text-white rounded-xl text-sm font-spartan font-medium transition-colors"
+                className="grp-btn grp-btn--signal w-full disabled:opacity-50"
               >
                 {loading ? "Creating…" : "Create Challenge"}
               </button>

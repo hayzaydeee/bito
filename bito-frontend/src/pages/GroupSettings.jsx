@@ -20,6 +20,7 @@ import { useAppNotifications } from "../hooks/useAppNotifications";
 import LeaveGroupButton from "../components/settingsPage/LeaveGroupButton";
 import SkeletonTransition from "../components/ui/SkeletonTransition";
 import IntensitySelector from "../components/groups/IntensitySelector";
+import "../components/groups/groups-theme.css";
 
 /* ================================================================
    GroupSettings — sectioned list layout (no widget grid)
@@ -192,16 +193,13 @@ const GroupSettings = () => {
   /* ── skeleton ────────────────────────── */
 
   const settingsSkeleton = (
-    <div className="min-h-screen page-container px-4 sm:px-6 py-10">
+    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-7 sm:py-12">
       <div className="max-w-2xl mx-auto space-y-4">
-        <div className="h-8 w-48 rounded-lg bg-[var(--color-surface-elevated)] animate-pulse" />
-        <div className="h-5 w-64 rounded bg-[var(--color-surface-elevated)] animate-pulse" />
+        <div className="h-8 w-48 bg-[var(--surface-2)] animate-pulse" />
+        <div className="h-5 w-64 bg-[var(--surface-2)] animate-pulse" />
         <div className="mt-8 space-y-6">
           {[...Array(4)].map((_, i) => (
-            <div
-              key={i}
-              className="h-24 rounded-2xl bg-[var(--color-surface-elevated)] animate-pulse"
-            />
+            <div key={i} className="h-24 grp-card animate-pulse" />
           ))}
         </div>
       </div>
@@ -212,12 +210,12 @@ const GroupSettings = () => {
 
   if (error && !group) {
     return (
-      <div className="min-h-screen page-container px-4 sm:px-6 py-10 flex items-center justify-center">
+      <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-10 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-sm text-red-500 font-spartan mb-4">{error}</p>
+          <p className="grp-mono text-[12px] text-[var(--rose)] mb-4">{error}</p>
           <button
             onClick={() => navigate(`/app/groups/${groupId}`)}
-            className="h-9 px-4 bg-[var(--color-brand-600)] text-white rounded-lg text-sm font-spartan"
+            className="grp-btn grp-btn--signal mx-auto"
           >
             Go Back
           </button>
@@ -230,22 +228,23 @@ const GroupSettings = () => {
 
   return (
     <SkeletonTransition isLoading={loading} skeleton={settingsSkeleton}>
-    <div className="min-h-screen page-container px-4 sm:px-6 py-10">
+    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-7 sm:py-12">
       <div className="max-w-2xl mx-auto">
         {/* header */}
-        <div className="flex items-center justify-between mb-10">
+        <div className="flex items-center justify-between mb-10 pb-7 border-b border-[var(--line-2)]">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate(`/app/groups/${groupId}`)}
-              className="w-10 h-10 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 flex items-center justify-center hover:bg-[var(--color-surface-hover)] transition-colors"
+              className="w-10 h-10 rounded-[10px] bg-[var(--surface)] border border-[var(--line-2)] flex items-center justify-center hover:bg-[var(--surface-2)] hover:border-[var(--line-3)] transition-colors text-[var(--ink-2)] hover:text-[var(--ink)]"
             >
-              <ArrowLeftIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
+              <ArrowLeftIcon className="w-4 h-4" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold font-garamond text-[var(--color-text-primary)]">
+              <p className="grp-kicker mb-1">Group — Configuration</p>
+              <h1 className="grp-display text-3xl font-bold text-[var(--ink)] leading-none">
                 Settings
               </h1>
-              <p className="text-sm text-[var(--color-text-secondary)] font-spartan">
+              <p className="grp-mono text-[11px] text-[var(--ink-3)] mt-1.5 uppercase tracking-wider">
                 {group?.name}
               </p>
             </div>
@@ -255,7 +254,7 @@ const GroupSettings = () => {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-2 h-9 px-4 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] disabled:opacity-60 text-white rounded-xl text-sm font-spartan font-medium transition-colors"
+              className="grp-btn grp-btn--signal disabled:opacity-60"
             >
               {saving ? (
                 <>
@@ -428,10 +427,10 @@ const GroupSettings = () => {
           {/* Reset group completion data — admin/owner only */}
           {canEdit && (
             <div className="px-5 py-4">
-              <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)] mb-1">
+              <p className="text-sm font-semibold text-[var(--ink)] mb-1">
                 Reset Completion Data
               </p>
-              <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mb-3">
+              <p className="text-xs text-[var(--ink-3)] mb-3 leading-relaxed">
                 Permanently deletes all completion history for every member of
                 this group. Group habits are kept, but streaks, completion
                 rates, and entry history will be cleared.
@@ -440,44 +439,44 @@ const GroupSettings = () => {
               {!resetConfirm ? (
                 <button
                   onClick={() => setResetConfirm(true)}
-                  className="h-8 px-4 border border-red-500/40 text-red-500 hover:bg-red-500/10 rounded-lg text-xs font-spartan font-medium transition-colors"
+                  className="grp-btn grp-btn--sm text-[var(--rose)] border-[var(--rose)]/40 hover:bg-[var(--rose)]/10"
                 >
                   Reset Completion Data
                 </button>
               ) : (
                 <div className="space-y-3">
                   <div>
-                    <label className="text-xs text-[var(--color-text-secondary)] font-spartan block mb-1">
-                      Clear data before (optional — leave blank to reset all)
+                    <label className="grp-kicker block mb-1.5">
+                      Clear data before (optional)
                     </label>
                     <input
                       type="date"
                       value={resetBefore}
                       onChange={(e) => setResetBefore(e.target.value)}
-                      className="h-8 px-3 rounded-lg border border-[var(--color-border-primary)]/30 bg-transparent text-xs font-spartan text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-red-500/30"
+                      className="h-9 px-3 rounded-[9px] border border-[var(--line-2)] bg-[var(--bg-2)] text-xs text-[var(--ink)] focus:outline-none focus:border-[var(--rose)]"
                     />
                   </div>
-                  <p className="text-xs text-[var(--color-text-secondary)] font-spartan">
-                    Type <strong>RESET</strong> to confirm:
+                  <p className="grp-mono text-[10px] text-[var(--ink-3)] uppercase tracking-wider">
+                    Type <strong className="text-[var(--rose)]">RESET</strong> to confirm
                   </p>
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                     <input
                       value={resetText}
                       onChange={(e) => setResetText(e.target.value)}
                       placeholder="RESET"
-                      className="flex-1 h-8 px-3 rounded-lg border border-red-500/30 bg-transparent text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-red-500/30"
+                      className="flex-1 h-9 px-3 rounded-[9px] border border-[var(--rose)]/30 bg-[var(--bg-2)] grp-mono text-sm tracking-widest text-[var(--ink)] placeholder:text-[var(--ink-3)] focus:outline-none focus:border-[var(--rose)]"
                     />
                     <button
                       onClick={handleResetGroupAnalytics}
                       disabled={resetText !== "RESET" || resetting}
-                      className="h-8 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-spartan font-medium disabled:opacity-40 flex items-center gap-2 transition-colors"
+                      className="grp-btn grp-btn--sm bg-[var(--rose)] border-[var(--rose)] text-[#1a0509] hover:brightness-110 disabled:opacity-40"
                     >
                       {resetting ? (
-                        <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
                       ) : (
                         <TrashIcon className="w-3 h-3" />
                       )}
-                      Confirm Reset
+                      Confirm
                     </button>
                     <button
                       onClick={() => {
@@ -485,7 +484,7 @@ const GroupSettings = () => {
                         setResetText("");
                         setResetBefore("");
                       }}
-                      className="h-8 px-3 rounded-lg text-xs font-spartan text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+                      className="grp-btn grp-btn--sm"
                     >
                       Cancel
                     </button>
@@ -502,7 +501,7 @@ const GroupSettings = () => {
             >
               <button
                 onClick={handleDelete}
-                className="h-8 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-spartan font-medium transition-colors"
+                className="grp-btn grp-btn--sm bg-[var(--rose)] border-[var(--rose)] text-[#1a0509] hover:brightness-110"
               >
                 Delete
               </button>
@@ -521,32 +520,18 @@ const GroupSettings = () => {
 
 function Section({ title, icon, danger = false, children }) {
   return (
-    <section className="mb-8">
-      <div className="flex items-center gap-2 mb-4">
-        <span
-          className={
-            danger
-              ? "text-red-500"
-              : "text-[var(--color-text-tertiary)]"
-          }
-        >
+    <section className="mb-7">
+      <div className="flex items-center gap-2 mb-3">
+        <span className={danger ? "text-[var(--rose)]" : "text-[var(--ink-3)]"}>
           {icon}
         </span>
-        <h2
-          className={`text-sm font-spartan font-semibold uppercase tracking-wider ${
-            danger
-              ? "text-red-500"
-              : "text-[var(--color-text-secondary)]"
-          }`}
-        >
+        <h2 className={`grp-kicker ${danger ? "text-[var(--rose)]" : ""}`}>
           {title}
         </h2>
       </div>
       <div
-        className={`rounded-2xl border divide-y divide-[var(--color-border-primary)]/15 ${
-          danger
-            ? "border-red-500/20 bg-red-500/[0.03]"
-            : "border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]"
+        className={`grp-card divide-y divide-[var(--line)] overflow-hidden ${
+          danger ? "border-[var(--rose)]/25 bg-[var(--rose)]/[0.03]" : ""
         }`}
       >
         {children}
@@ -559,13 +544,9 @@ function SettingRow({ label, description, children }) {
   return (
     <div className="flex items-center justify-between gap-4 px-5 py-4">
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-spartan font-medium text-[var(--color-text-primary)]">
-          {label}
-        </p>
+        <p className="text-sm font-semibold text-[var(--ink)]">{label}</p>
         {description && (
-          <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mt-0.5">
-            {description}
-          </p>
+          <p className="text-xs text-[var(--ink-3)] mt-0.5">{description}</p>
         )}
       </div>
       <div className="flex-shrink-0">{children}</div>
@@ -586,7 +567,7 @@ function TextInput({ value, onChange, disabled, multiline = false }) {
         <Tag
           value={temp}
           onChange={(e) => setTemp(e.target.value)}
-          className="px-2.5 py-1.5 bg-[var(--color-surface-primary)] border border-[var(--color-border-primary)]/30 rounded-lg text-base sm:text-sm font-spartan w-full sm:w-44 resize-none"
+          className="px-2.5 py-1.5 bg-[var(--bg-2)] border border-[var(--line-2)] rounded-[9px] text-base sm:text-sm w-full sm:w-44 resize-none text-[var(--ink)] focus:outline-none focus:border-[var(--signal)]"
           rows={multiline ? 2 : undefined}
           autoFocus
         />
@@ -595,7 +576,7 @@ function TextInput({ value, onChange, disabled, multiline = false }) {
             onChange(temp);
             setEditing(false);
           }}
-          className="w-7 h-7 rounded-md bg-[var(--color-brand-600)] text-white flex items-center justify-center"
+          className="w-7 h-7 rounded-[7px] bg-[var(--signal)] text-[var(--signal-ink)] flex items-center justify-center"
         >
           <CheckIcon className="w-3 h-3" />
         </button>
@@ -604,9 +585,9 @@ function TextInput({ value, onChange, disabled, multiline = false }) {
             setTemp(value);
             setEditing(false);
           }}
-          className="w-7 h-7 rounded-md bg-[var(--color-surface-hover)] flex items-center justify-center"
+          className="w-7 h-7 rounded-[7px] bg-[var(--surface-2)] flex items-center justify-center text-[var(--ink-2)]"
         >
-          <Cross2Icon className="w-3 h-3 text-[var(--color-text-secondary)]" />
+          <Cross2Icon className="w-3 h-3" />
         </button>
       </div>
     );
@@ -614,8 +595,8 @@ function TextInput({ value, onChange, disabled, multiline = false }) {
 
   return (
     <div
-      className={`text-sm font-spartan px-3 py-1.5 rounded-lg border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-primary)] min-w-0 sm:min-w-[10rem] truncate ${
-        disabled ? "opacity-50" : "cursor-pointer hover:bg-[var(--color-surface-hover)]"
+      className={`text-sm px-3 py-1.5 rounded-[9px] border border-[var(--line-2)] bg-[var(--bg-2)] text-[var(--ink)] min-w-0 sm:min-w-[10rem] truncate ${
+        disabled ? "opacity-50" : "cursor-pointer hover:border-[var(--line-3)]"
       }`}
       onClick={() => !disabled && setEditing(true)}
     >
@@ -628,15 +609,15 @@ function SelectInput({ value, onChange, disabled, options }) {
   return (
     <Select.Root value={value} onValueChange={disabled ? undefined : onChange}>
       <Select.Trigger
-        className="w-full sm:w-44 h-9 px-3 bg-[var(--color-surface-primary)] border border-[var(--color-border-primary)]/20 rounded-lg font-spartan text-base sm:text-sm"
+        className="w-full sm:w-44 h-9 px-3 bg-[var(--bg-2)] border border-[var(--line-2)] rounded-[9px] text-base sm:text-sm text-[var(--ink)]"
         disabled={disabled}
       />
-      <Select.Content className="font-spartan bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 rounded-lg shadow-xl z-50">
+      <Select.Content className="bg-[var(--surface-2)] border border-[var(--line-3)] rounded-[10px] shadow-xl z-50">
         {options.map((o) => (
           <Select.Item
             key={o.value}
             value={o.value}
-            className="px-3 py-2 hover:bg-[var(--color-surface-hover)] font-spartan cursor-pointer text-sm"
+            className="px-3 py-2 hover:bg-[var(--surface)] cursor-pointer text-sm text-[var(--ink)]"
           >
             {o.label}
           </Select.Item>
