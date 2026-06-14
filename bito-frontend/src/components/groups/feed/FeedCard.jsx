@@ -59,69 +59,55 @@ function activityLabel(type) {
   return map[type] || null;
 }
 
-function badgeStyle(type) {
-  const map = {
-    habit_completed:     "bg-emerald-500/12 text-emerald-400 border-emerald-500/20",
-    streak_milestone:    "bg-orange-500/12 text-orange-400 border-orange-500/20",
-    member_joined:       "bg-fuchsia-500/12 text-fuchsia-400 border-fuchsia-500/20",
-    kudos:               "bg-rose-500/12 text-rose-400 border-rose-500/20",
-    challenge_joined:    "bg-teal-500/12 text-teal-400 border-teal-500/20",
-    challenge_started:   "bg-amber-500/12 text-amber-400 border-amber-500/20",
-    challenge_milestone: "bg-amber-500/12 text-amber-400 border-amber-500/20",
-    habit_adopted:       "bg-blue-500/12 text-blue-400 border-blue-500/20",
-  };
-  return map[type] || "bg-[var(--color-surface-hover)] text-[var(--color-text-tertiary)] border-[var(--color-border-primary)]/20";
-}
-
-/** Left accent colour per activity type (used in compact mode border) */
+/** Left accent colour per activity type */
 function accentColor(type) {
   const map = {
-    habit_completed:     "#10b981",
-    streak_milestone:    "#f97316",
-    member_joined:       "#f59e0b",
-    kudos:               "#f43f5e",
-    challenge_joined:    "#14b8a6",
-    challenge_started:   "#f59e0b",
-    challenge_milestone: "#f59e0b",
-    habit_adopted:       "#3b82f6",
-    habit_created:       "#6366f1",
-    habit_deleted:       "#f87171",
+    habit_completed:     "#c8f135",
+    streak_milestone:    "#ff7a3c",
+    member_joined:       "#6f9bff",
+    kudos:               "#ff5d73",
+    challenge_joined:    "#36d6c3",
+    challenge_started:   "#ffc24b",
+    challenge_milestone: "#ffc24b",
+    habit_adopted:       "#6f9bff",
+    habit_created:       "#a78bfa",
+    habit_deleted:       "#ff7a7a",
   };
-  return map[type] || "#6b7280";
+  return map[type] || "#79766e";
 }
 
 /** Avatar background colour per type (for timeline nodes) */
 function avatarBg(type) {
   const map = {
-    habit_completed:     "linear-gradient(135deg,#059669,#10b981)",
-    streak_milestone:    "linear-gradient(135deg,#ea580c,#f97316)",
-    member_joined:       "linear-gradient(135deg,#d97706,#f59e0b)",
-    kudos:               "linear-gradient(135deg,#e11d48,#f43f5e)",
-    challenge_joined:    "linear-gradient(135deg,#0d9488,#14b8a6)",
-    challenge_started:   "linear-gradient(135deg,#b45309,#f59e0b)",
-    challenge_milestone: "linear-gradient(135deg,#b45309,#f59e0b)",
-    habit_adopted:       "linear-gradient(135deg,#2563eb,#3b82f6)",
-    habit_created:       "linear-gradient(135deg,#4f46e5,#6366f1)",
-    habit_deleted:       "linear-gradient(135deg,#dc2626,#f87171)",
+    habit_completed:     "linear-gradient(135deg,#9bbf1f,#c8f135)",
+    streak_milestone:    "linear-gradient(135deg,#ea580c,#ff7a3c)",
+    member_joined:       "linear-gradient(135deg,#3b6fd6,#6f9bff)",
+    kudos:               "linear-gradient(135deg,#e11d48,#ff5d73)",
+    challenge_joined:    "linear-gradient(135deg,#0d9488,#36d6c3)",
+    challenge_started:   "linear-gradient(135deg,#b45309,#ffc24b)",
+    challenge_milestone: "linear-gradient(135deg,#b45309,#ffc24b)",
+    habit_adopted:       "linear-gradient(135deg,#3b6fd6,#6f9bff)",
+    habit_created:       "linear-gradient(135deg,#7c3aed,#a78bfa)",
+    habit_deleted:       "linear-gradient(135deg,#dc2626,#ff7a7a)",
   };
-  return map[type] || "linear-gradient(135deg,#4b5563,#6b7280)";
+  return map[type] || "linear-gradient(135deg,#4b5563,#79766e)";
 }
 
 function activityIcon(type, size = 12) {
-  const props = { size, weight: "fill" };
+  const props = { size, weight: "fill", style: { color: accentColor(type) } };
   const map = {
-    habit_completed:     <CheckCircle {...props} className="text-emerald-400" />,
-    habit_adopted:       <PlusCircle  {...props} className="text-blue-400" />,
-    streak_milestone:    <Fire        {...props} className="text-orange-400" />,
-    member_joined:       <HandWaving  {...props} className="text-yellow-400" />,
-    habit_created:       <Target      {...props} className="text-indigo-400" />,
-    habit_deleted:       <Trash       {...props} className="text-red-400" />,
-    challenge_started:   <Trophy      {...props} className="text-amber-400" />,
-    challenge_joined:    <Handshake   {...props} className="text-teal-400" />,
-    challenge_milestone: <Star        {...props} className="text-yellow-400" />,
-    kudos:               <Heart       {...props} className="text-rose-400" />,
+    habit_completed:     <CheckCircle {...props} />,
+    habit_adopted:       <PlusCircle  {...props} />,
+    streak_milestone:    <Fire        {...props} />,
+    member_joined:       <HandWaving  {...props} />,
+    habit_created:       <Target      {...props} />,
+    habit_deleted:       <Trash       {...props} />,
+    challenge_started:   <Trophy      {...props} />,
+    challenge_joined:    <Handshake   {...props} />,
+    challenge_milestone: <Star        {...props} />,
+    kudos:               <Heart       {...props} />,
   };
-  return map[type] || <MapPin {...props} className="text-[var(--color-text-tertiary)]" />;
+  return map[type] || <MapPin {...props} />;
 }
 
 function activityDescription(a) {
@@ -154,7 +140,7 @@ function activityDescription(a) {
   }
 }
 
-/** Short title for timeline card heading (bold, prominent) */
+/** Short title for cozy/timeline card heading (bold, prominent) */
 function activityTitle(a) {
   switch (a.type) {
     case "habit_completed":
@@ -178,6 +164,18 @@ function activityTitle(a) {
   }
 }
 
+/* ── Badge (mono tag, type-coloured) ───────────────────────── */
+
+function TypeBadge({ type, label }) {
+  const c = accentColor(type);
+  return (
+    <span className="grp-tag" style={{ color: c, borderColor: `${c}55` }}>
+      {activityIcon(type, 10)}
+      {label}
+    </span>
+  );
+}
+
 /* ── Avatar ─────────────────────────────────────────────────── */
 
 function MemberAvatar({ user, size = "md", type }) {
@@ -191,20 +189,20 @@ function MemberAvatar({ user, size = "md", type }) {
     xl:  "w-10 h-10 text-sm",
   }[size] || "w-8 h-8 text-xs";
 
-  const bg = type ? avatarBg(type) : "linear-gradient(135deg,#4f46e5,#6366f1)";
+  const bg = type ? avatarBg(type) : "linear-gradient(135deg,#9bbf1f,#c8f135)";
 
   if (user?.avatar) {
     return (
       <img
         src={user.avatar}
         alt={name}
-        className={`${sizeClass} rounded-full object-cover flex-shrink-0`}
+        className={`${sizeClass} rounded-[4px] object-cover flex-shrink-0`}
       />
     );
   }
   return (
     <div
-      className={`${sizeClass} rounded-full flex items-center justify-center text-white font-spartan font-bold flex-shrink-0`}
+      className={`${sizeClass} rounded-[4px] flex items-center justify-center text-[#0a0a0c] grp-display font-bold flex-shrink-0`}
       style={{ background: bg }}
     >
       {initial}
@@ -217,26 +215,23 @@ function MemberAvatar({ user, size = "md", type }) {
 function KudosInput({ onSend, onCancel, sending }) {
   const [msg, setMsg] = useState("");
   return (
-    <div className="flex items-center gap-2 mt-2">
+    <div className="flex items-center gap-2 mt-3">
       <input
         autoFocus
         value={msg}
         onChange={(e) => setMsg(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && onSend(msg)}
         placeholder="Add a message (optional)"
-        className="flex-1 h-8 px-3 rounded-xl bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/20 text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-quaternary)] focus:outline-none focus:border-[var(--color-brand-500)]/50 transition-colors"
+        className="grp-input flex-1 h-9 text-sm"
       />
       <button
         onClick={() => onSend(msg)}
         disabled={sending}
-        className="h-8 px-4 rounded-xl bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white text-xs font-spartan font-medium transition-colors disabled:opacity-50"
+        className="grp-btn grp-btn--signal grp-btn--sm disabled:opacity-50"
       >
         {sending ? "…" : "Send"}
       </button>
-      <button
-        onClick={onCancel}
-        className="h-8 px-3 rounded-xl text-xs font-spartan text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] transition-colors"
-      >
+      <button onClick={onCancel} className="grp-btn grp-btn--sm">
         Cancel
       </button>
     </div>
@@ -245,21 +240,6 @@ function KudosInput({ onSend, onCancel, sending }) {
 
 /* ── FeedCard ───────────────────────────────────────────────── */
 
-/**
- * FeedCard
- *
- * Props:
- *   activity      — activity object
- *   density       — 'cozy' | 'compact' | 'timeline'
- *   reactions     — { [type]: count }
- *   myReaction    — current user's reaction type or null
- *   onReact       — (type) => void
- *   groupId       — string
- *   currentUserId — string
- *   onKudosSent   — (newActivity) => void
- *   alreadySentKudos — boolean
- *   isLast        — boolean (for timeline connector)
- */
 const FeedCard = ({
   activity: a,
   density = "cozy",
@@ -312,13 +292,19 @@ const FeedCard = ({
     }
   };
 
+  const streakPill = (
+    <span className="grp-tag" style={{ color: "var(--ember)", borderColor: "rgba(255,122,60,0.4)" }}>
+      <Fire size={11} weight="fill" /> {streakCount}-day streak
+    </span>
+  );
+
   /* ── Compact layout ─────────────────────────────────────────── */
 
   if (density === "compact") {
     return (
       <div
-        className={`relative flex items-center gap-3 pl-5 pr-3 py-3 hover:bg-[var(--color-surface-elevated)]/40 transition-colors ${
-          !isLast ? "border-b border-[var(--color-border-primary)]/30" : ""
+        className={`relative flex items-center gap-3 pl-5 pr-3 py-3 hover:bg-[var(--surface)] transition-colors ${
+          !isLast ? "border-b border-[var(--line)]" : ""
         }`}
       >
         {/* Rounded accent bar */}
@@ -327,41 +313,32 @@ const FeedCard = ({
           style={{ backgroundColor: accentColor(a.type) }}
         />
 
-        {/* Avatar — no icon badge */}
         <MemberAvatar user={userInfo} size="sm" type={a.type} />
 
         {/* Content — two lines */}
         <div className="flex-1 min-w-0">
           {isKudos ? (
             <>
-              {/* Line 1: Josh → Sarah  6h ago */}
-              <p className="text-[13px] font-spartan font-semibold text-[var(--color-text-primary)] leading-snug">
+              <p className="text-[13px] font-semibold text-[var(--ink)] leading-snug">
                 {userName}
                 {a.data?.targetUserName && (
-                  <span className="font-normal text-[var(--color-text-secondary)]"> → {a.data.targetUserName}</span>
+                  <span className="font-normal text-[var(--ink-2)]"> → {a.data.targetUserName}</span>
                 )}
-                <span className="ml-2 text-[11px] font-normal text-[var(--color-text-quaternary)]">{timeAgo(a.createdAt)}</span>
+                <span className="grp-mono ml-2 text-[10px] font-normal text-[var(--ink-3)] uppercase tracking-wider">{timeAgo(a.createdAt)}</span>
               </p>
-              {/* Line 2: italic quote */}
               {a.data?.message && (
-                <p className="text-[12px] font-spartan italic text-[var(--color-text-tertiary)] leading-snug mt-0.5 truncate">
+                <p className="grp-display text-[13px] italic text-[var(--ink-2)] leading-snug mt-0.5 truncate">
                   "{a.data.message}"
                 </p>
               )}
             </>
           ) : (
             <>
-              {/* Line 1: bold description + optional inline streak pill */}
-              <p className="text-[13px] font-spartan font-semibold text-[var(--color-text-primary)] leading-snug flex items-center gap-2 flex-wrap">
+              <p className="text-[13px] font-semibold text-[var(--ink)] leading-snug flex items-center gap-2 flex-wrap">
                 {activityDescription(a)}
-                {isMilestone && streakCount && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-400 border border-orange-500/25">
-                    🔥 {streakCount}-day streak
-                  </span>
-                )}
+                {isMilestone && streakCount && streakPill}
               </p>
-              {/* Line 2: timestamp */}
-              <p className="text-[11px] font-spartan text-[var(--color-text-quaternary)] mt-0.5">
+              <p className="grp-mono text-[10px] text-[var(--ink-3)] mt-0.5 uppercase tracking-wider">
                 {timeAgo(a.createdAt)}
               </p>
             </>
@@ -374,7 +351,7 @@ const FeedCard = ({
           {showKudosCTA && !kudosOpen && (
             <button
               onClick={() => setKudosOpen(true)}
-              className="text-xs font-spartan font-semibold text-teal-400 hover:text-teal-300 transition-colors"
+              className="grp-mono text-[11px] font-bold uppercase tracking-wider text-[var(--signal)] hover:text-[var(--signal-2)] transition-colors"
             >
               Kudos
             </button>
@@ -391,99 +368,70 @@ const FeedCard = ({
       <div className="flex gap-4 relative">
         {/* Timeline column */}
         <div className="flex flex-col items-center flex-shrink-0 w-10">
-          {/* Avatar node */}
           <div
-            className="relative z-10 rounded-full ring-2 ring-[var(--color-bg-primary)] flex-shrink-0"
+            className="relative z-10 rounded-[4px] ring-2 ring-[var(--bg)] flex-shrink-0"
             style={{ background: avatarBg(a.type) }}
           >
             <MemberAvatar user={userInfo} size="lg" type={a.type} />
           </div>
-          {/* Connector line */}
           {!isLast && (
             <div
               className="w-px flex-1 mt-1 min-h-8"
-              style={{ background: `linear-gradient(to bottom, ${accentColor(a.type)}40, transparent)` }}
+              style={{ background: `linear-gradient(to bottom, ${accentColor(a.type)}55, transparent)` }}
             />
           )}
         </div>
 
         {/* Card */}
         <div className="flex-1 min-w-0 pb-6">
-          {/* Header: name · time · badge */}
           <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <span className="text-sm font-spartan font-semibold text-[var(--color-text-primary)]">
-              {userName}
-            </span>
+            <span className="text-sm font-semibold text-[var(--ink)]">{userName}</span>
             {isKudos && a.data?.targetUserName && (
-              <span className="text-sm font-spartan text-[var(--color-text-tertiary)]">
-                to {a.data.targetUserName}
-              </span>
+              <span className="text-sm text-[var(--ink-3)]">to {a.data.targetUserName}</span>
             )}
-            <span className="text-xs font-spartan text-[var(--color-text-quaternary)]">
-              · {timeAgo(a.createdAt)}
+            <span className="grp-mono text-[10px] text-[var(--ink-3)] uppercase tracking-wider">
+              {timeAgo(a.createdAt)}
             </span>
-            {label && (
-              <span
-                className={`ml-auto text-[10px] font-spartan font-semibold px-2.5 py-0.5 rounded-full border flex items-center gap-1 ${badgeStyle(a.type)}`}
-              >
-                {activityIcon(a.type, 10)}
-                {label}
-              </span>
-            )}
+            {label && <span className="ml-auto"><TypeBadge type={a.type} label={label} /></span>}
           </div>
 
-          {/* Main card body */}
-          <div className="rounded-2xl border border-[var(--color-border-primary)]/12 bg-[var(--color-surface-elevated)]/50 px-4 py-3 hover:border-[var(--color-border-primary)]/25 transition-colors">
-            {/* Title */}
+          <div className="grp-card grp-card-hover px-4 py-3">
             {!isKudos && (
-              <p className="text-[15px] font-spartan font-bold text-[var(--color-text-primary)] mb-2 leading-snug">
+              <p className="grp-display text-[16px] font-bold text-[var(--ink)] mb-2 leading-snug">
                 {activityTitle(a)}
               </p>
             )}
 
-            {/* Streak pill */}
-            {isMilestone && streakCount && (
-              <div className="mb-2">
-                <span className="inline-flex items-center gap-1 text-[11px] font-spartan font-semibold px-2.5 py-1 rounded-full bg-orange-500/15 text-orange-400 border border-orange-500/25">
-                  🔥 {streakCount}-day streak
-                </span>
-              </div>
-            )}
+            {isMilestone && streakCount && <div className="mb-2">{streakPill}</div>}
 
-            {/* Kudos message */}
             {isKudos && a.data?.message && (
-              <p className="text-sm font-spartan italic text-[var(--color-text-secondary)] mb-2 leading-relaxed">
+              <p className="grp-display text-sm italic text-[var(--ink-2)] mb-2 leading-relaxed">
                 "{a.data.message}"
               </p>
             )}
 
-            {/* Reactions row + kudos CTA */}
             <div className="flex items-center gap-3 flex-wrap">
               <ReactionPicker reactions={reactions} myReaction={myReaction} onReact={onReact} />
 
               {showKudosCTA && !kudosOpen && (
                 <button
                   onClick={() => setKudosOpen(true)}
-                  className="ml-auto text-xs font-spartan font-semibold text-[var(--color-brand-400)] hover:text-[var(--color-brand-300)] transition-colors flex items-center gap-1"
+                  className="ml-auto grp-mono text-[11px] font-bold uppercase tracking-wider text-[var(--signal)] hover:text-[var(--signal-2)] transition-colors flex items-center gap-1"
                 >
                   <Heart size={12} weight="fill" />
-                  Kudos sent ✓
+                  Give kudos
                 </button>
               )}
 
               {isKudos && (
-                <span className="ml-auto text-xs font-spartan font-semibold text-teal-400 flex items-center gap-1">
-                  Kudos sent ✓
+                <span className="ml-auto grp-mono text-[11px] font-bold uppercase tracking-wider text-[var(--rose)]">
+                  Kudos sent
                 </span>
               )}
             </div>
 
             {kudosOpen && (
-              <KudosInput
-                onSend={handleSendKudos}
-                onCancel={() => setKudosOpen(false)}
-                sending={sending}
-              />
+              <KudosInput onSend={handleSendKudos} onCancel={() => setKudosOpen(false)} sending={sending} />
             )}
           </div>
         </div>
@@ -496,33 +444,24 @@ const FeedCard = ({
   // Kudos: inverted — quote body first, attribution at bottom
   if (isKudos) {
     return (
-      <div className="rounded-2xl border border-[var(--color-border-primary)]/25 bg-[var(--color-surface-elevated)]/60 hover:border-[var(--color-border-primary)]/40 transition-colors overflow-hidden">
-        {/* Body: quote + attribution */}
+      <div className="grp-card grp-card-hover overflow-hidden">
         <div className="px-5 pt-4 pb-4">
-          {/* Quote */}
           {a.data?.message && (
-            <p className="text-base font-garamond italic text-[var(--color-text-secondary)] leading-relaxed mb-3">
+            <p className="grp-display text-base italic text-[var(--ink-2)] leading-relaxed mb-3">
               "{a.data.message}"
             </p>
           )}
-          {/* Attribution row */}
           <div className="flex items-center gap-2">
             <MemberAvatar user={userInfo} size="sm" type={a.type} />
-            <span className="text-sm font-spartan font-semibold text-[var(--color-text-primary)]">{userName}</span>
+            <span className="text-sm font-semibold text-[var(--ink)]">{userName}</span>
             {a.data?.targetUserName && (
-              <span className="text-xs font-spartan text-[var(--color-text-tertiary)]">to {a.data.targetUserName}</span>
+              <span className="text-xs text-[var(--ink-3)]">to {a.data.targetUserName}</span>
             )}
-            <span className="text-xs font-spartan text-[var(--color-text-quaternary)]">· {timeAgo(a.createdAt)}</span>
-            {label && (
-              <span className={`ml-auto text-[10px] font-spartan font-semibold px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 ${badgeStyle(a.type)}`}>
-                {activityIcon(a.type, 10)}
-                {label}
-              </span>
-            )}
+            <span className="grp-mono text-[10px] text-[var(--ink-3)] uppercase tracking-wider">{timeAgo(a.createdAt)}</span>
+            {label && <span className="ml-auto"><TypeBadge type={a.type} label={label} /></span>}
           </div>
         </div>
-        {/* Footer band: reactions (segmented by divider) */}
-        <div className="px-5 py-3 border-t border-[var(--color-border-primary)]/25 bg-[var(--color-bg-primary)]/20">
+        <div className="px-5 py-3 border-t border-[var(--line-2)] bg-[var(--bg-2)]/40">
           <ReactionPicker reactions={reactions} myReaction={myReaction} onReact={onReact} />
         </div>
       </div>
@@ -531,36 +470,27 @@ const FeedCard = ({
 
   // Standard cozy card
   return (
-    <div className="rounded-2xl border border-[var(--color-border-primary)]/25 bg-[var(--color-surface-elevated)]/60 hover:border-[var(--color-border-primary)]/40 transition-colors overflow-hidden">
-      {/* Body: header + large title */}
+    <div className="grp-card grp-card-hover overflow-hidden">
       <div className="px-5 pt-4 pb-4">
-        {/* Header: avatar + name · time + badge */}
         <div className="flex items-center gap-2">
           <MemberAvatar user={userInfo} size="sm" type={a.type} />
-          <span className="text-sm font-spartan font-semibold text-[var(--color-text-primary)]">{userName}</span>
-          <span className="text-xs font-spartan text-[var(--color-text-quaternary)]">· {timeAgo(a.createdAt)}</span>
-          {label && (
-            <span className={`ml-auto text-[10px] font-spartan font-semibold px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 ${badgeStyle(a.type)}`}>
-              {activityIcon(a.type, 10)}
-              {label}
-            </span>
-          )}
+          <span className="text-sm font-semibold text-[var(--ink)]">{userName}</span>
+          <span className="grp-mono text-[10px] text-[var(--ink-3)] uppercase tracking-wider">{timeAgo(a.createdAt)}</span>
+          {label && <span className="ml-auto"><TypeBadge type={a.type} label={label} /></span>}
         </div>
 
-        {/* Large bold title */}
-        <p className="text-[26px] font-garamond font-bold text-[var(--color-text-primary)] leading-tight mt-3">
+        <p className="grp-display text-[26px] font-bold text-[var(--ink)] leading-tight mt-3">
           {activityTitle(a)}
         </p>
       </div>
 
-      {/* Footer band: reactions + kudos CTA (segmented by divider) */}
-      <div className="px-5 py-3 border-t border-[var(--color-border-primary)]/25 bg-[var(--color-bg-primary)]/20">
+      <div className="px-5 py-3 border-t border-[var(--line-2)] bg-[var(--bg-2)]/40">
         <div className="flex items-center gap-3 flex-wrap">
           <ReactionPicker reactions={reactions} myReaction={myReaction} onReact={onReact} />
           {showKudosCTA && !kudosOpen && (
             <button
               onClick={() => setKudosOpen(true)}
-              className="ml-auto flex items-center gap-1.5 text-xs font-spartan font-medium px-3 py-1.5 rounded-full border border-[var(--color-border-primary)]/40 text-[var(--color-text-secondary)] hover:border-rose-500/50 hover:text-rose-400 transition-colors"
+              className="ml-auto grp-btn grp-btn--sm"
             >
               <Heart size={12} weight="regular" />
               Give kudos
@@ -569,11 +499,7 @@ const FeedCard = ({
         </div>
 
         {kudosOpen && (
-          <KudosInput
-            onSend={handleSendKudos}
-            onCancel={() => setKudosOpen(false)}
-            sending={sending}
-          />
+          <KudosInput onSend={handleSendKudos} onCancel={() => setKudosOpen(false)} sending={sending} />
         )}
       </div>
     </div>

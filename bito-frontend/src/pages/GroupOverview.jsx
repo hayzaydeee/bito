@@ -17,6 +17,7 @@ import EncouragementModal from "../components/shared/EncouragementModal";
 import GroupHabitModal from "../components/ui/GroupHabitModal";
 import HabitAdoptModal from "../components/ui/HabitAdoptModal";
 import SkeletonTransition from "../components/ui/SkeletonTransition";
+import "../components/groups/groups-theme.css";
 
 /* ================================================================
    Tabs (new order)
@@ -273,18 +274,18 @@ const GroupOverview = () => {
   /* ── skeleton ────────────────────────── */
 
   const overviewSkeleton = (
-    <div className="min-h-screen page-container px-4 sm:px-6 py-6">
-      <div className="max-w-5xl mx-auto space-y-4">
-        <div className="h-14 rounded-2xl bg-[var(--color-surface-elevated)] animate-pulse" />
-        <div className="flex gap-3">
+    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-8">
+      <div className="max-w-6xl mx-auto space-y-5">
+        <div className="h-16 grp-card animate-pulse" />
+        <div className="grid grid-cols-3 gap-3">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="flex-1 h-24 rounded-2xl bg-[var(--color-surface-elevated)] animate-pulse" />
+            <div key={i} className="h-28 grp-card animate-pulse" />
           ))}
         </div>
-        <div className="h-12 rounded-xl bg-[var(--color-surface-elevated)] animate-pulse" />
-        <div className="space-y-3">
+        <div className="h-12 bg-[var(--surface-2)] animate-pulse" />
+        <div className="space-y-2">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-16 rounded-xl bg-[var(--color-surface-elevated)] animate-pulse" />
+            <div key={i} className="h-16 grp-card animate-pulse" />
           ))}
         </div>
       </div>
@@ -295,18 +296,16 @@ const GroupOverview = () => {
 
   if (!group && !loading) {
     return (
-      <div className="min-h-screen page-container px-4 sm:px-6 py-10">
-        <div className="max-w-5xl mx-auto text-center py-20">
-          <h1 className="text-2xl font-garamond font-bold text-[var(--color-text-primary)] mb-3">
+      <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-10">
+        <div className="max-w-6xl mx-auto text-center py-24">
+          <p className="grp-kicker mb-3">Error — 404</p>
+          <h1 className="grp-display text-3xl font-bold text-[var(--ink)] mb-3">
             Group not found
           </h1>
-          <p className="text-sm text-[var(--color-text-secondary)] font-spartan mb-6">
+          <p className="text-sm text-[var(--ink-2)] mb-8">
             This group doesn't exist or you don't have access.
           </p>
-          <button
-            onClick={() => navigate("/app/groups")}
-            className="h-10 px-5 bg-[var(--color-brand-600)] text-white rounded-xl text-sm font-spartan font-medium"
-          >
+          <button onClick={() => navigate("/app/groups")} className="grp-btn grp-btn--signal mx-auto">
             Back to Groups
           </button>
         </div>
@@ -329,6 +328,13 @@ const GroupOverview = () => {
         )
     ) || null;
 
+  const TAB_COUNTS = {
+    feed: null,
+    members: members.length,
+    habits: groupHabits.length,
+    challenges: challenges.length,
+  };
+
   /* ================================================================
      RENDER
      ================================================================ */
@@ -336,8 +342,8 @@ const GroupOverview = () => {
   return (
     <SkeletonTransition isLoading={loading} skeleton={overviewSkeleton}>
     {group ? (
-    <div className="min-h-screen page-container px-4 sm:px-6 py-6">
-      <div className="max-w-5xl mx-auto">
+    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-8">
+      <div className="max-w-6xl mx-auto">
 
         {/* ── Header ──────────────────────── */}
         <GroupDetailHeader group={group} groupId={groupId} members={members} />
@@ -350,21 +356,19 @@ const GroupOverview = () => {
           onCreateChallenge={() => setActiveTab("challenges")}
         />
 
-        {/* ── Tab bar ─────────────────────── */}
-        <div className="flex justify-center border-b border-[var(--color-border-primary)]/15 mb-8">
+        {/* ── Tab bar (scoreboard index) ──── */}
+        <div className="flex items-center gap-7 border-b border-[var(--line-2)] mb-8 overflow-x-auto">
           {TABS.map((tab) => {
             const active = activeTab === tab.id;
+            const count = TAB_COUNTS[tab.id];
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 h-11 text-sm font-spartan font-medium transition-all border-b-2 -mb-px ${
-                  active
-                    ? "text-[var(--color-brand-400)] border-[var(--color-brand-500)]"
-                    : "text-[var(--color-text-secondary)] border-transparent hover:text-[var(--color-text-primary)]"
-                }`}
+                className={`grp-tab whitespace-nowrap ${active ? "grp-tab--active" : ""}`}
               >
                 {tab.label}
+                {count != null && <span className="grp-tab__n">{count}</span>}
               </button>
             );
           })}

@@ -50,31 +50,34 @@ const GroupDetailHeader = ({ group, groupId, members }) => {
     });
   };
 
+  const iconBtn =
+    "w-9 h-9 rounded-[4px] flex items-center justify-center bg-[var(--surface)] border border-[var(--line-2)] hover:border-[var(--line-3)] hover:bg-[var(--surface-2)] text-[var(--ink-2)] hover:text-[var(--ink)] transition-colors";
+
   return (
     <>
-      <div className="flex items-center justify-between gap-4 mb-5">
+      <div className="flex items-center justify-between gap-4 mb-7">
         {/* left: back + icon + name */}
         <div className="flex items-center gap-4 min-w-0">
           <button
             onClick={() => navigate("/app/groups")}
-            className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors flex-shrink-0"
+            className={`${iconBtn} flex-shrink-0`}
             aria-label="Back to groups"
           >
             <ArrowLeft size={16} weight="bold" />
           </button>
 
           <span
-            className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: `${color}25` }}
+            className="w-14 h-14 rounded-[5px] flex items-center justify-center flex-shrink-0 border"
+            style={{ backgroundColor: `${color}1f`, borderColor: `${color}55` }}
           >
             <Icon size={28} weight="duotone" style={{ color }} />
           </span>
 
           <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-garamond font-bold text-[var(--color-text-primary)] truncate leading-tight">
+            <h1 className="grp-display text-[28px] sm:text-[34px] font-bold text-[var(--ink)] truncate leading-[0.95]">
               {group?.name}
             </h1>
-            <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mt-0.5 truncate">
+            <p className="grp-mono text-[11px] text-[var(--ink-3)] mt-1 truncate uppercase tracking-wider">
               {subtitle}
             </p>
           </div>
@@ -88,7 +91,7 @@ const GroupDetailHeader = ({ group, groupId, members }) => {
           {inviteCode && (
             <button
               onClick={() => setShowQR(true)}
-              className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+              className={iconBtn}
               aria-label="Show QR invite code"
               title="Invite via QR code"
             >
@@ -97,7 +100,7 @@ const GroupDetailHeader = ({ group, groupId, members }) => {
           )}
           <button
             onClick={() => navigate(`/app/groups/${groupId}/settings`)}
-            className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+            className={iconBtn}
             aria-label="Group settings"
           >
             <Gear size={16} weight="bold" />

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Envelope } from "@phosphor-icons/react";
+import { Envelope, Trophy } from "@phosphor-icons/react";
 import FeedCard from "./FeedCard";
 import FeedFilters, { filterToTypes } from "./FeedFilters";
 import FeedDensityToggle, { useFeedDensity } from "./FeedDensityToggle";
@@ -121,11 +121,11 @@ const FeedTab = ({
     : null;
 
   return (
-    <div className="flex gap-6">
+    <div className="flex gap-8">
       {/* ── Main feed ── */}
       <div className="flex-1 min-w-0">
         {/* toolbar */}
-        <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+        <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
           <FeedFilters active={filter} onChange={handleFilterChange} />
           <FeedDensityToggle density={density} onChange={setDensity} />
         </div>
@@ -133,23 +133,22 @@ const FeedTab = ({
         {loading ? (
           <div className="space-y-2">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-16 rounded-2xl bg-[var(--color-surface-elevated)] animate-pulse" />
+              <div key={i} className="h-16 grp-card animate-pulse" />
             ))}
           </div>
         ) : activities.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="flex justify-center mb-4 text-[var(--color-text-quaternary)]">
-              <Envelope size={48} weight="thin" />
-            </div>
-            <h3 className="text-lg font-garamond font-bold text-[var(--color-text-primary)] mb-1">
+          <div className="grp-card text-center py-16 px-6">
+            <Envelope size={44} weight="thin" className="mx-auto mb-4 text-[var(--ink-3)]" />
+            <p className="grp-kicker mb-2">Empty log</p>
+            <h3 className="grp-display text-xl font-bold text-[var(--ink)] mb-1">
               No activity yet
             </h3>
-            <p className="text-sm text-[var(--color-text-secondary)] font-spartan">
+            <p className="text-sm text-[var(--ink-2)]">
               Start tracking habits to see team activity here.
             </p>
           </div>
         ) : (
-          <div className={density === "compact" ? "space-y-0" : density === "timeline" ? "space-y-0" : "space-y-3"}>
+          <div className={density === "cozy" ? "space-y-3" : "space-y-0"}>
             {activities.map((a, idx) => (
               <FeedCard
                 key={a._id}
@@ -172,16 +171,14 @@ const FeedTab = ({
       </div>
 
       {/* ── Sidebar ── */}
-      <aside className="w-64 flex-shrink-0 space-y-4 hidden lg:block">
+      <aside className="w-64 flex-shrink-0 space-y-3 hidden lg:block">
         {/* Members summary */}
-        <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60 p-4">
+        <div className="grp-card p-4">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-spartan font-semibold text-[var(--color-text-primary)] uppercase tracking-wide">
-              Members
-            </p>
-            <span className="text-xs font-spartan text-[var(--color-text-tertiary)]">{totalMembers}</span>
+            <p className="grp-kicker">Members</p>
+            <span className="grp-mono text-[11px] text-[var(--signal)] font-bold">{String(totalMembers).padStart(2, "0")}</span>
           </div>
-          <div className="flex -space-x-1.5 mb-2">
+          <div className="flex -space-x-1.5 mb-3">
             {members.slice(0, 7).map((m, i) => {
               const info = m.userId || m.user || m;
               const name = info.name || info.email || "?";
@@ -190,50 +187,46 @@ const FeedTab = ({
                   key={i}
                   src={info.avatar}
                   alt={name}
-                  className="w-7 h-7 rounded-full border-2 border-[var(--color-bg-primary)] object-cover"
+                  className="w-7 h-7 rounded-[4px] border border-[var(--bg)] object-cover"
                 />
               ) : (
                 <div
                   key={i}
-                  className="w-7 h-7 rounded-full border-2 border-[var(--color-bg-primary)] bg-[var(--color-brand-600)] flex items-center justify-center text-white text-[10px] font-spartan font-bold"
+                  className="w-7 h-7 rounded-[4px] border border-[var(--bg)] bg-[var(--surface-2)] flex items-center justify-center text-[var(--ink-2)] text-[10px] grp-display font-bold"
                 >
                   {name.charAt(0).toUpperCase()}
                 </div>
               );
             })}
             {totalMembers > 7 && (
-              <div className="w-7 h-7 rounded-full border-2 border-[var(--color-bg-primary)] bg-[var(--color-surface-hover)] flex items-center justify-center text-[10px] font-spartan text-[var(--color-text-tertiary)]">
+              <div className="w-7 h-7 rounded-[4px] border border-[var(--bg)] bg-[var(--surface-2)] flex items-center justify-center text-[10px] grp-mono text-[var(--ink-3)]">
                 +{totalMembers - 7}
               </div>
             )}
           </div>
-          <p className="text-xs font-spartan text-[var(--color-text-tertiary)]">
+          <p className="grp-mono text-[10px] text-[var(--ink-3)] uppercase tracking-wider">
             {activeToday} active today
           </p>
         </div>
 
         {/* Active challenge */}
         {(activeChallenge || teamGoalChallenge) && (
-          <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60 p-4">
-            <div className="flex items-center gap-1.5 mb-2">
-              <p className="text-xs font-spartan font-semibold text-[var(--color-text-primary)] uppercase tracking-wide flex-1">
-                Active challenge
-              </p>
-              <span className="text-base">🏆</span>
+          <div className="grp-card p-4">
+            <div className="flex items-center gap-1.5 mb-2.5">
+              <p className="grp-kicker flex-1">Active challenge</p>
+              <Trophy size={14} weight="fill" className="text-[var(--ember)]" />
             </div>
-            <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] mb-1">
+            <p className="grp-display text-base font-bold text-[var(--ink)] mb-2 leading-tight">
               {challengeSidebarTitle}
             </p>
             {challengeLeaderName && (
               <>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <div className="w-5 h-5 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center text-white text-[10px] font-spartan font-bold flex-shrink-0">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-5 h-5 rounded-[3px] bg-[var(--surface-2)] flex items-center justify-center text-[var(--ink-2)] text-[10px] grp-display font-bold flex-shrink-0">
                     {challengeLeaderName.charAt(0).toUpperCase()}
                   </div>
-                  <span className="text-xs font-spartan text-[var(--color-text-secondary)]">
-                    {challengeLeaderName} leads
-                  </span>
-                  <span className="ml-auto text-xs font-spartan font-semibold text-emerald-500">
+                  <span className="text-xs text-[var(--ink-2)]">{challengeLeaderName} leads</span>
+                  <span className="ml-auto grp-mono text-[11px] font-bold text-[var(--signal)]">
                     {Math.round(
                       ((challengeLeader.progress?.currentValue || 0) /
                         (activeChallenge?.rules?.targetValue ||
@@ -241,17 +234,12 @@ const FeedTab = ({
                     )}%
                   </span>
                 </div>
-                <div className="h-1 rounded-full bg-[var(--color-surface-hover)] overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-emerald-500"
-                    style={{
-                      width: `${Math.min(100, Math.round(
-                        ((challengeLeader.progress?.currentValue || 0) /
-                          (activeChallenge?.rules?.targetValue ||
-                            teamGoalChallenge?.rules?.targetValue || 1)) * 100
-                      ))}%`,
-                    }}
-                  />
+                <div className="grp-meter">
+                  <i style={{ width: `${Math.min(100, Math.round(
+                    ((challengeLeader.progress?.currentValue || 0) /
+                      (activeChallenge?.rules?.targetValue ||
+                        teamGoalChallenge?.rules?.targetValue || 1)) * 100
+                  ))}%` }} />
                 </div>
               </>
             )}
@@ -260,24 +248,17 @@ const FeedTab = ({
 
         {/* Goal progress */}
         {teamGoalChallenge && goalPct !== null && (
-          <div className="rounded-2xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]/60 p-4">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-spartan font-semibold text-[var(--color-text-primary)] uppercase tracking-wide truncate pr-2">
-                {teamGoalChallenge.title}
-              </p>
-              <span className="text-xs font-spartan font-semibold text-[var(--color-text-primary)] flex-shrink-0">
-                {goalPct}%
-              </span>
+          <div className="grp-card p-4">
+            <div className="flex items-center justify-between mb-2.5">
+              <p className="grp-kicker truncate pr-2">{teamGoalChallenge.title}</p>
+              <span className="grp-mono text-[11px] font-bold text-[var(--signal)] flex-shrink-0">{goalPct}%</span>
             </div>
-            <div className="h-1 rounded-full bg-[var(--color-surface-hover)] overflow-hidden mb-1.5">
-              <div
-                className="h-full rounded-full bg-[var(--color-brand-500)]"
-                style={{ width: `${goalPct}%` }}
-              />
+            <div className="grp-meter mb-2">
+              <i style={{ width: `${goalPct}%` }} />
             </div>
-            <p className="text-[11px] text-[var(--color-text-tertiary)] font-spartan">
+            <p className="grp-mono text-[10px] text-[var(--ink-3)] uppercase tracking-wider">
               {teamGoalChallenge.participants?.reduce((s, p) => s + (p.progress?.currentValue || 0), 0).toLocaleString()}
-              {" of "}
+              {" / "}
               {Number(teamGoalChallenge.rules?.targetValue || 0).toLocaleString()} {teamGoalChallenge.rules?.targetUnit || ""}
             </p>
           </div>

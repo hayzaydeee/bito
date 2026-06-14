@@ -1,9 +1,7 @@
 import GoalStatCard from "./GoalStatCard";
 
 /**
- * StatsBar
- *
- * Three stat cards: Active today, Completions, Team goal progress.
+ * StatsBar — a scoreboard strip: Active today · Completions · Team goal.
  *
  * Props:
  *   overview             — overview object from groupsAPI.getGroupOverview()
@@ -17,28 +15,22 @@ const StatsBar = ({ overview, members, teamGoalChallenge, onCreateChallenge }) =
   const completions = overview?.teamStats?.totalCompletions ?? 0;
 
   return (
-    <div className="flex gap-3 mb-6">
+    <div className="grp-card mb-8 grid grid-cols-3 divide-x divide-[var(--line-2)] overflow-hidden">
       {/* Active today */}
-      <div className="flex-1 min-w-0 rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-surface-elevated)]/60 px-4 py-3.5 flex flex-col gap-1">
-        <p className="text-xs text-[var(--color-text-tertiary)] font-spartan">
-          Active today
-        </p>
-        <p className="text-xl leading-none font-garamond font-bold text-[var(--color-text-primary)]">
+      <div className="px-5 py-4 flex flex-col gap-2">
+        <p className="grp-kicker">Active today</p>
+        <p className="grp-num text-[34px] text-[var(--ink)]">
           {activeMembers}
-          <span className="text-sm font-spartan font-normal text-[var(--color-text-tertiary)] ml-1">
-            of {totalMembers}
+          <span className="grp-mono text-[12px] font-normal text-[var(--ink-3)] ml-1.5 align-middle">
+            / {totalMembers}
           </span>
         </p>
       </div>
 
       {/* Completions */}
-      <div className="flex-1 min-w-0 rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-surface-elevated)]/60 px-4 py-3.5 flex flex-col gap-1">
-        <p className="text-xs text-[var(--color-text-tertiary)] font-spartan">
-          Completions
-        </p>
-        <p className="text-xl leading-none font-garamond font-bold text-[var(--color-text-primary)]">
-          {completions}
-        </p>
+      <div className="px-5 py-4 flex flex-col gap-2">
+        <p className="grp-kicker">Completions</p>
+        <p className="grp-num text-[34px] text-[var(--ink)]">{completions}</p>
       </div>
 
       {/* Goal */}

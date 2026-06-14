@@ -46,20 +46,20 @@ const OPTIONS = [
  *   onChange — (v: string) => void
  */
 const FeedDensityToggle = ({ density, onChange }) => (
-  <div className="flex items-center gap-1 bg-[var(--color-surface-elevated)] rounded-xl p-1 border border-[var(--color-border-primary)]/20">
+  <div className="flex items-center gap-0.5 bg-[var(--bg-2)] rounded-[4px] p-1 border border-[var(--line-2)]">
     {OPTIONS.map(({ id, label, Icon }) => {
       const isActive = density === id;
       return (
         <button
           key={id}
           onClick={() => onChange(id)}
-          className={`flex items-center gap-1.5 h-7 px-3 rounded-lg text-[13px] font-spartan font-medium transition-colors ${
+          className={`flex items-center gap-1.5 h-7 px-2.5 rounded-[3px] grp-mono text-[11px] font-bold uppercase tracking-wider transition-colors ${
             isActive
-              ? "bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] shadow-sm shadow-black/20"
-              : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
+              ? "bg-[var(--surface-2)] text-[var(--ink)]"
+              : "text-[var(--ink-3)] hover:text-[var(--ink-2)]"
           }`}
         >
-          <Icon size={13} className={isActive ? "text-[var(--color-brand-400)]" : ""} />
+          <Icon size={13} weight="bold" className={isActive ? "text-[var(--signal)]" : ""} />
           {label}
         </button>
       );

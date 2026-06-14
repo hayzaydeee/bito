@@ -28,15 +28,15 @@ export function filterToTypes(filterId) {
 }
 
 const FeedFilters = ({ active, onChange }) => (
-  <div className="flex items-center gap-2">
+  <div className="flex items-center gap-2 flex-wrap">
     {FILTERS.map(({ id, label }) => (
       <button
         key={id}
         onClick={() => onChange(id)}
-        className={`h-8 px-4 rounded-full text-[13px] font-spartan font-medium transition-colors border ${
+        className={`grp-mono text-[11px] font-bold uppercase tracking-[0.12em] h-8 px-3.5 rounded-[3px] border transition-colors ${
           active === id
-            ? "bg-[var(--color-brand-600)] text-white border-transparent shadow-sm shadow-[var(--color-brand-600)]/20"
-            : "bg-transparent text-[var(--color-text-tertiary)] border-[var(--color-border-primary)]/40 hover:text-[var(--color-text-secondary)] hover:border-[var(--color-border-primary)]/60"
+            ? "bg-[var(--signal)] text-[var(--signal-ink)] border-[var(--signal)]"
+            : "bg-transparent text-[var(--ink-3)] border-[var(--line-2)] hover:text-[var(--ink)] hover:border-[var(--line-3)]"
         }`}
       >
         {label}

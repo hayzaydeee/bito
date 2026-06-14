@@ -8,6 +8,7 @@ import JoinGroupModal from "../components/ui/JoinGroupModal";
 import GroupCard from "../components/groups/GroupCard";
 import SkeletonTransition from "../components/ui/SkeletonTransition";
 import AnimatedList from "../components/ui/AnimatedList";
+import "../components/groups/groups-theme.css";
 
 const GroupSelection = () => {
   const navigate = useNavigate();
@@ -138,16 +139,14 @@ const GroupSelection = () => {
   /* ── loading skeleton ───────────────── */
 
   const groupsSkeleton = (
-    <div className="min-h-screen page-container px-4 sm:px-6 py-10">
-      <div className="max-w-5xl mx-auto space-y-4">
-        <div className="h-10 w-48 rounded-lg bg-[var(--color-surface-elevated)] animate-pulse" />
-        <div className="h-5 w-72 rounded bg-[var(--color-surface-elevated)] animate-pulse" />
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <div
-              key={i}
-              className="h-[180px] rounded-2xl bg-[var(--color-surface-elevated)] animate-pulse"
-            />
+    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-12">
+      <div className="max-w-6xl mx-auto space-y-4">
+        <div className="h-3 w-40 bg-[var(--surface-2)] animate-pulse" />
+        <div className="h-12 w-64 bg-[var(--surface-2)] animate-pulse" />
+        <div className="h-4 w-80 bg-[var(--surface-2)] animate-pulse" />
+        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-[180px] grp-card animate-pulse" />
           ))}
         </div>
       </div>
@@ -158,35 +157,38 @@ const GroupSelection = () => {
 
   return (
     <SkeletonTransition isLoading={isLoading} skeleton={groupsSkeleton}>
-    <div className="min-h-screen page-container px-4 sm:px-6 py-10">
-      <div className="max-w-5xl mx-auto">
+    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-12">
+      <div className="max-w-6xl mx-auto">
 
         {/* header */}
-        <div className="flex items-start justify-between mb-10">
-          <div>
-            <h1 className="text-3xl font-bold font-garamond text-[var(--color-text-primary)] mb-1">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between mb-10 pb-8 border-b border-[var(--line-2)]">
+          <div className="grp-rise" style={{ animationDelay: "40ms" }}>
+            <p className="grp-kicker mb-3">The Collective — Ledger</p>
+            <h1 className="grp-display text-[clamp(2.75rem,7vw,4.5rem)] font-black leading-[0.9] text-[var(--ink)]">
               Groups
             </h1>
-            <p className="text-sm text-[var(--color-text-tertiary)] font-spartan">
-              {groups.length > 0
-                ? `${groups.length} group${groups.length !== 1 ? "s" : ""} · ${totalMembers} member${totalMembers !== 1 ? "s" : ""} · ${totalHabits} shared habit${totalHabits !== 1 ? "s" : ""}`
-                : "Track habits together with your team, family, or friends"}
+            <p className="grp-mono text-[12px] text-[var(--ink-3)] mt-4 tracking-wide">
+              {groups.length > 0 ? (
+                <>
+                  <span className="text-[var(--signal)]">{String(groups.length).padStart(2, "0")}</span> ACTIVE
+                  {"  ·  "}
+                  <span className="text-[var(--ink-2)]">{totalMembers}</span> MEMBERS
+                  {"  ·  "}
+                  <span className="text-[var(--ink-2)]">{totalHabits}</span> SHARED HABITS
+                </>
+              ) : (
+                "TRACK HABITS TOGETHER — TEAM · FAMILY · FRIENDS"
+              )}
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={openJoinModal}
-              className="btn btn-secondary btn-sm flex items-center gap-2 h-10 px-4 rounded-xl font-spartan"
-            >
-              <UserPlus size={15} />
-              Join a Group
+          <div className="flex items-center gap-2 grp-rise" style={{ animationDelay: "120ms" }}>
+            <button onClick={openJoinModal} className="grp-btn">
+              <UserPlus size={15} weight="bold" />
+              Join
             </button>
             {groups.length > 0 && (
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="btn btn-primary btn-sm flex items-center gap-2 h-10 px-5 rounded-xl font-spartan"
-              >
+              <button onClick={() => setShowCreateModal(true)} className="grp-btn grp-btn--signal">
                 <PlusIcon className="w-4 h-4" />
                 New Group
               </button>
@@ -196,32 +198,38 @@ const GroupSelection = () => {
 
         {/* empty state */}
         {groups.length === 0 ? (
-          <div className="text-center max-w-md mx-auto py-16">
-            <div className="mb-6 flex justify-center">
-              <Users size={56} weight="duotone" className="text-[var(--color-brand-400)]/40" />
-            </div>
-            <h2 className="text-2xl font-garamond font-bold text-[var(--color-text-primary)] mb-2">
-              No groups yet
-            </h2>
-            <p className="text-sm text-[var(--color-text-secondary)] font-spartan max-w-xs mx-auto mb-10">
-              Start one from scratch, or enter an invite code to join a group someone shared with you.
-            </p>
-            <div className="flex flex-col items-center gap-3">
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="btn btn-primary btn-md flex items-center justify-center gap-2 h-12 px-8 rounded-xl font-spartan w-full max-w-[220px]"
-              >
-                <PlusIcon className="w-4 h-4" />
-                Create Group
-              </button>
+          <div className="grp-rise max-w-xl mx-auto py-16 grp-card relative overflow-hidden" style={{ animationDelay: "160ms" }}>
+            <div className="absolute -top-10 -right-10 w-44 h-44 rounded-full bg-[var(--signal)]/10 blur-3xl pointer-events-none" />
+            <div className="px-8 py-4 text-center relative">
+              <Users size={48} weight="duotone" className="mx-auto mb-6 text-[var(--signal)]" />
+              <p className="grp-kicker mb-3">No groups on record</p>
+              <h2 className="grp-display text-3xl font-bold text-[var(--ink)] mb-3">
+                Start the ledger
+              </h2>
+              <p className="text-sm text-[var(--ink-2)] max-w-xs mx-auto mb-8 leading-relaxed">
+                Spin up a group from scratch, or punch in an invite code to join one someone shared with you.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="grp-btn grp-btn--signal w-full sm:w-auto"
+                >
+                  <PlusIcon className="w-4 h-4" />
+                  Create Group
+                </button>
+                <button onClick={openJoinModal} className="grp-btn w-full sm:w-auto">
+                  <UserPlus size={15} weight="bold" />
+                  Join With Code
+                </button>
+              </div>
             </div>
           </div>
         ) : (
           /* grid cards */
-          <AnimatedList className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {groups.map((group) => (
-              <div key={group._id}>
-                <GroupCard group={group} />
+          <AnimatedList className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {groups.map((group, i) => (
+              <div key={group._id} className="grp-rise" style={{ animationDelay: `${160 + i * 60}ms` }}>
+                <GroupCard group={group} index={i} />
               </div>
             ))}
           </AnimatedList>

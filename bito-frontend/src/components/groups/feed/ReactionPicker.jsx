@@ -48,18 +48,21 @@ const ReactionPicker = ({ reactions = {}, myReaction = null, onReact }) => {
   const heartCount = reactions["heart"] || 0;
   const hasHeart = myReaction === "heart";
 
+  const pill =
+    "flex items-center gap-1.5 h-7 px-2.5 rounded-[3px] grp-mono text-[11px] font-bold transition-colors border";
+
   return (
-    <div ref={ref} className="flex items-center gap-1 relative">
+    <div ref={ref} className="flex items-center gap-1.5 relative">
       {/* Heart — always visible */}
       <button
         onClick={() => onReact("heart")}
-        className={`flex items-center gap-1 h-6 px-2 rounded-full text-xs font-spartan transition-all ${
+        className={`${pill} ${
           hasHeart
-            ? "bg-rose-500/15 text-rose-500 border border-rose-500/40"
-            : "bg-[var(--color-surface-elevated)] text-[var(--color-text-tertiary)] border border-[var(--color-border-primary)]/40 hover:border-rose-500/50 hover:text-rose-400"
+            ? "bg-[var(--rose)]/15 text-[var(--rose)] border-[var(--rose)]/45"
+            : "bg-[var(--surface)] text-[var(--ink-3)] border-[var(--line-2)] hover:border-[var(--rose)]/50 hover:text-[var(--rose)]"
         }`}
       >
-        <Heart size={11} weight={hasHeart ? "fill" : "regular"} />
+        <Heart size={12} weight={hasHeart ? "fill" : "regular"} />
         {heartCount > 0 && <span>{heartCount}</span>}
       </button>
 
@@ -73,13 +76,13 @@ const ReactionPicker = ({ reactions = {}, myReaction = null, onReact }) => {
             key={rxn.type}
             onClick={() => onReact(rxn.type)}
             aria-label={rxn.label}
-            className={`flex items-center gap-1 h-6 px-2 rounded-full text-xs font-spartan transition-all border ${
+            className={`${pill} ${
               mine
-                ? "bg-[var(--color-brand-600)]/15 text-[var(--color-brand-500)] border-[var(--color-brand-500)]/40"
-                : "bg-[var(--color-surface-elevated)] text-[var(--color-text-tertiary)] border-[var(--color-border-primary)]/40 hover:text-[var(--color-text-primary)]"
+                ? "bg-[var(--signal)]/15 text-[var(--signal)] border-[var(--signal)]/45"
+                : "bg-[var(--surface)] text-[var(--ink-3)] border-[var(--line-2)] hover:text-[var(--ink)]"
             }`}
           >
-            <RIcon size={11} weight={mine ? "fill" : "regular"} />
+            <RIcon size={12} weight={mine ? "fill" : "regular"} />
             {count > 0 && <span>{count}</span>}
           </button>
         );
@@ -89,34 +92,34 @@ const ReactionPicker = ({ reactions = {}, myReaction = null, onReact }) => {
       <div className="relative">
         <button
           onClick={() => setOpen((v) => !v)}
-          className="w-6 h-6 rounded-full flex items-center justify-center bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/40 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-border-primary)]/60 transition-colors"
+          className="w-7 h-7 rounded-[3px] flex items-center justify-center bg-[var(--surface)] border border-[var(--line-2)] text-[var(--ink-3)] hover:text-[var(--ink)] hover:border-[var(--line-3)] transition-colors"
           aria-label="More reactions"
         >
-          <Plus size={10} weight="bold" />
+          <Plus size={11} weight="bold" />
         </button>
 
         {open && (
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 flex items-center gap-1 p-1.5 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/30 shadow-lg shadow-black/20 z-50">
-              {REACTIONS.map((rxn) => {
-                const PIcon = rxn.Icon;
-                return (
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 flex items-center gap-1 p-1.5 rounded-[4px] bg-[var(--surface-2)] border border-[var(--line-3)] shadow-lg shadow-black/40 z-50">
+            {REACTIONS.map((rxn) => {
+              const PIcon = rxn.Icon;
+              return (
                 <button
-                key={rxn.type}
-                onClick={() => {
-                  onReact(rxn.type);
-                  setOpen(false);
-                }}
-                aria-label={rxn.label}
-                className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--color-surface-hover)] ${
-                  myReaction === rxn.type
-                    ? "text-[var(--color-brand-500)]"
-                    : "text-[var(--color-text-secondary)]"
-                }`}
-              >
-                <PIcon size={14} weight={myReaction === rxn.type ? "fill" : "regular"} />
-              </button>
-                );
-              })}
+                  key={rxn.type}
+                  onClick={() => {
+                    onReact(rxn.type);
+                    setOpen(false);
+                  }}
+                  aria-label={rxn.label}
+                  className={`w-7 h-7 rounded-[3px] flex items-center justify-center transition-colors hover:bg-[var(--surface)] ${
+                    myReaction === rxn.type
+                      ? "text-[var(--signal)]"
+                      : "text-[var(--ink-2)]"
+                  }`}
+                >
+                  <PIcon size={14} weight={myReaction === rxn.type ? "fill" : "regular"} />
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

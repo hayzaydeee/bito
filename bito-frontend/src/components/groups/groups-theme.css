@@ -1,0 +1,176 @@
+/* ============================================================
+   DRILL — Groups feature theme
+   Brutalist athletic almanac. Scoped to `.grp` so the rest of
+   the app keeps its own look. Fonts are imported globally.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,400..800&family=Hanken+Grotesk:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+
+/* ── Token scope ─────────────────────────────────────────── */
+.grp {
+  --bg:        #0a0a0c;
+  --bg-2:      #0e0e12;
+  --surface:   #141418;
+  --surface-2: #1c1c22;
+  --line:      rgba(244, 241, 234, 0.10);
+  --line-2:    rgba(244, 241, 234, 0.20);
+  --line-3:    rgba(244, 241, 234, 0.34);
+
+  --ink:   #f3efe6;
+  --ink-2: #b4b0a7;
+  --ink-3: #79766e;
+
+  --signal:     #c8f135;  /* acid lime — live / go / primary */
+  --signal-2:   #d8ff5e;
+  --signal-ink: #0a0a0c;
+  --ember:      #ff7a3c;  /* streak heat */
+  --cobalt:     #6f9bff;  /* info / members */
+  --rose:       #ff5d73;  /* kudos */
+
+  --f-display: 'Fraunces', 'EB Garamond', Georgia, serif;
+  --f-sans:    'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+  --f-mono:    'Space Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  font-family: var(--f-sans);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Full-bleed page surface w/ grain + hairline grid ────── */
+.grp-surface {
+  position: relative;
+  background: var(--bg);
+  min-height: 100%;
+}
+.grp-surface::before {
+  /* faint structural grid */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 0%, transparent 75%);
+          mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 0%, transparent 75%);
+  opacity: 0.5;
+  pointer-events: none;
+}
+.grp-surface::after {
+  /* grain */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.035;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+.grp-surface > * { position: relative; z-index: 1; }
+
+/* ── Typography helpers ──────────────────────────────────── */
+.grp-display { font-family: var(--f-display); font-optical-sizing: auto; letter-spacing: -0.01em; }
+.grp-mono    { font-family: var(--f-mono); }
+.grp-kicker {
+  font-family: var(--f-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+.grp-num {
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+}
+
+/* ── Cards ───────────────────────────────────────────────── */
+.grp-card {
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: 4px;
+}
+.grp-card-hover { transition: border-color .18s ease, transform .18s ease, background .18s ease; }
+.grp-card-hover:hover { border-color: var(--line-3); background: var(--surface-2); }
+
+/* ── Tags (mono chips) ───────────────────────────────────── */
+.grp-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--f-mono); font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  padding: 3px 8px; border-radius: 3px;
+  border: 1px solid var(--line-2); color: var(--ink-2);
+}
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.grp-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: var(--f-mono); font-weight: 700; font-size: 12px;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  height: 40px; padding: 0 18px; border-radius: 4px;
+  border: 1px solid var(--line-2); color: var(--ink);
+  background: transparent; cursor: pointer;
+  transition: border-color .16s ease, background .16s ease, color .16s ease, transform .08s ease;
+}
+.grp-btn:hover { border-color: var(--line-3); background: var(--surface-2); }
+.grp-btn:active { transform: translateY(1px); }
+
+.grp-btn--signal {
+  background: var(--signal); border-color: var(--signal); color: var(--signal-ink);
+  box-shadow: 0 0 0 0 rgba(200,241,53,0);
+}
+.grp-btn--signal:hover { background: var(--signal-2); border-color: var(--signal-2); box-shadow: 0 6px 22px -8px rgba(200,241,53,0.6); }
+
+.grp-btn--ember { background: var(--ember); border-color: var(--ember); color: #1a0c04; }
+.grp-btn--ember:hover { filter: brightness(1.08); }
+
+.grp-btn--sm { height: 34px; padding: 0 14px; font-size: 11px; }
+
+/* ── Hairline rule ───────────────────────────────────────── */
+.grp-rule { height: 1px; background: var(--line-2); border: 0; }
+
+/* ── Tabs (scoreboard index) ─────────────────────────────── */
+.grp-tab {
+  position: relative;
+  font-family: var(--f-mono); font-weight: 700; font-size: 12px;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  padding: 14px 2px; color: var(--ink-3);
+  background: none; border: 0; cursor: pointer;
+  transition: color .16s ease;
+}
+.grp-tab:hover { color: var(--ink-2); }
+.grp-tab--active { color: var(--ink); }
+.grp-tab--active::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
+  background: var(--signal);
+}
+.grp-tab__n { color: var(--ink-3); margin-left: 6px; font-size: 10px; vertical-align: super; }
+.grp-tab--active .grp-tab__n { color: var(--signal); }
+
+/* ── Inputs ──────────────────────────────────────────────── */
+.grp-input {
+  width: 100%; height: 42px; padding: 0 14px;
+  background: var(--bg-2); border: 1px solid var(--line-2); border-radius: 4px;
+  font-family: var(--f-sans); font-size: 14px; color: var(--ink);
+  transition: border-color .16s ease;
+}
+.grp-input::placeholder { color: var(--ink-3); }
+.grp-input:focus { outline: none; border-color: var(--signal); }
+
+/* ── Reveal-on-load stagger ──────────────────────────────── */
+@keyframes grp-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.grp-rise { opacity: 0; animation: grp-rise .5s cubic-bezier(.2,.7,.2,1) forwards; }
+
+/* ── Progress meter ──────────────────────────────────────── */
+.grp-meter { height: 6px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 2px; overflow: hidden; }
+.grp-meter > i { display: block; height: 100%; background: var(--signal); }
+
+@media (prefers-reduced-motion: reduce) {
+  .grp-rise { animation: none; opacity: 1; }
+}
