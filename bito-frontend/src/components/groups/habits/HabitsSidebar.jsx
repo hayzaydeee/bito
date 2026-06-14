@@ -74,7 +74,7 @@ const HabitsSidebar = ({
                       <button
                         onClick={() => !done && handleLog(h._id)}
                         disabled={ls === "logging"}
-                        className={`w-5 h-5 rounded-[3px] border flex-shrink-0 flex items-center justify-center transition-colors ${
+                        className={`w-5 h-5 rounded-[7px] border flex-shrink-0 flex items-center justify-center transition-colors ${
                           done
                             ? "bg-[var(--signal)] border-[var(--signal)] text-[var(--signal-ink)]"
                             : ls === "logging"
@@ -164,7 +164,7 @@ const HabitsSidebar = ({
       {canManage && (
         <button
           onClick={onAddHabit}
-          className="w-full h-10 rounded-[4px] border border-dashed border-[var(--line-2)] flex items-center justify-center gap-2 grp-mono text-[11px] font-bold uppercase tracking-wider text-[var(--ink-3)] hover:text-[var(--signal)] hover:border-[var(--signal)]/50 transition-colors"
+          className="w-full h-10 rounded-[10px] border border-dashed border-[var(--line-2)] flex items-center justify-center gap-2 grp-mono text-[11px] font-bold uppercase tracking-wider text-[var(--ink-3)] hover:text-[var(--signal)] hover:border-[var(--signal)]/50 transition-colors"
         >
           <Plus size={13} weight="bold" />
           Create group habit

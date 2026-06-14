@@ -62,7 +62,7 @@ function activityLabel(type) {
 /** Left accent colour per activity type */
 function accentColor(type) {
   const map = {
-    habit_completed:     "#c8f135",
+    habit_completed:     "#a78bfa",
     streak_milestone:    "#ff7a3c",
     member_joined:       "#6f9bff",
     kudos:               "#ff5d73",
@@ -79,7 +79,7 @@ function accentColor(type) {
 /** Avatar background colour per type (for timeline nodes) */
 function avatarBg(type) {
   const map = {
-    habit_completed:     "linear-gradient(135deg,#9bbf1f,#c8f135)",
+    habit_completed:     "linear-gradient(135deg,#7c5cf0,#a78bfa)",
     streak_milestone:    "linear-gradient(135deg,#ea580c,#ff7a3c)",
     member_joined:       "linear-gradient(135deg,#3b6fd6,#6f9bff)",
     kudos:               "linear-gradient(135deg,#e11d48,#ff5d73)",
@@ -189,20 +189,20 @@ function MemberAvatar({ user, size = "md", type }) {
     xl:  "w-10 h-10 text-sm",
   }[size] || "w-8 h-8 text-xs";
 
-  const bg = type ? avatarBg(type) : "linear-gradient(135deg,#9bbf1f,#c8f135)";
+  const bg = type ? avatarBg(type) : "linear-gradient(135deg,#7c5cf0,#a78bfa)";
 
   if (user?.avatar) {
     return (
       <img
         src={user.avatar}
         alt={name}
-        className={`${sizeClass} rounded-[4px] object-cover flex-shrink-0`}
+        className={`${sizeClass} rounded-[10px] object-cover flex-shrink-0`}
       />
     );
   }
   return (
     <div
-      className={`${sizeClass} rounded-[4px] flex items-center justify-center text-[#0a0a0c] grp-display font-bold flex-shrink-0`}
+      className={`${sizeClass} rounded-[10px] flex items-center justify-center text-[#0a0a0c] grp-display font-bold flex-shrink-0`}
       style={{ background: bg }}
     >
       {initial}
@@ -369,7 +369,7 @@ const FeedCard = ({
         {/* Timeline column */}
         <div className="flex flex-col items-center flex-shrink-0 w-10">
           <div
-            className="relative z-10 rounded-[4px] ring-2 ring-[var(--bg)] flex-shrink-0"
+            className="relative z-10 rounded-[10px] ring-2 ring-[var(--bg)] flex-shrink-0"
             style={{ background: avatarBg(a.type) }}
           >
             <MemberAvatar user={userInfo} size="lg" type={a.type} />
@@ -479,7 +479,7 @@ const FeedCard = ({
           {label && <span className="ml-auto"><TypeBadge type={a.type} label={label} /></span>}
         </div>
 
-        <p className="grp-display text-[26px] font-bold text-[var(--ink)] leading-tight mt-3">
+        <p className="grp-display text-[21px] sm:text-[26px] font-bold text-[var(--ink)] leading-tight mt-3">
           {activityTitle(a)}
         </p>
       </div>

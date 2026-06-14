@@ -36,9 +36,9 @@ const MemberCard = ({ member, groupId, isYou, onEncourage }) => {
       {/* Avatar + presence dot */}
       <div className="relative flex-shrink-0">
         {info.avatar ? (
-          <img src={info.avatar} alt={name} className="w-10 h-10 rounded-[4px] object-cover" />
+          <img src={info.avatar} alt={name} className="w-10 h-10 rounded-[10px] object-cover" />
         ) : (
-          <div className="w-10 h-10 rounded-[4px] bg-[var(--surface-2)] flex items-center justify-center text-[var(--ink)] text-sm grp-display font-bold">
+          <div className="w-10 h-10 rounded-[10px] bg-[var(--surface-2)] flex items-center justify-center text-[var(--ink)] text-sm grp-display font-bold">
             {name.charAt(0).toUpperCase()}
           </div>
         )}
@@ -85,7 +85,7 @@ const MemberCard = ({ member, groupId, isYou, onEncourage }) => {
           </button>
           <button
             onClick={() => navigate(`/app/groups/${groupId}/members/${memberId}/dashboard`)}
-            className="w-7 h-7 flex items-center justify-center rounded-[3px] border border-[var(--line-2)] text-[var(--ink-3)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)] transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded-[7px] border border-[var(--line-2)] text-[var(--ink-3)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)] transition-colors"
           >
             <ArrowRight size={12} weight="bold" />
           </button>

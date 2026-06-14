@@ -187,19 +187,19 @@ const FeedTab = ({
                   key={i}
                   src={info.avatar}
                   alt={name}
-                  className="w-7 h-7 rounded-[4px] border border-[var(--bg)] object-cover"
+                  className="w-7 h-7 rounded-[10px] border border-[var(--bg)] object-cover"
                 />
               ) : (
                 <div
                   key={i}
-                  className="w-7 h-7 rounded-[4px] border border-[var(--bg)] bg-[var(--surface-2)] flex items-center justify-center text-[var(--ink-2)] text-[10px] grp-display font-bold"
+                  className="w-7 h-7 rounded-[10px] border border-[var(--bg)] bg-[var(--surface-2)] flex items-center justify-center text-[var(--ink-2)] text-[10px] grp-display font-bold"
                 >
                   {name.charAt(0).toUpperCase()}
                 </div>
               );
             })}
             {totalMembers > 7 && (
-              <div className="w-7 h-7 rounded-[4px] border border-[var(--bg)] bg-[var(--surface-2)] flex items-center justify-center text-[10px] grp-mono text-[var(--ink-3)]">
+              <div className="w-7 h-7 rounded-[10px] border border-[var(--bg)] bg-[var(--surface-2)] flex items-center justify-center text-[10px] grp-mono text-[var(--ink-3)]">
                 +{totalMembers - 7}
               </div>
             )}
@@ -222,7 +222,7 @@ const FeedTab = ({
             {challengeLeaderName && (
               <>
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-5 h-5 rounded-[3px] bg-[var(--surface-2)] flex items-center justify-center text-[var(--ink-2)] text-[10px] grp-display font-bold flex-shrink-0">
+                  <div className="w-5 h-5 rounded-[7px] bg-[var(--surface-2)] flex items-center justify-center text-[var(--ink-2)] text-[10px] grp-display font-bold flex-shrink-0">
                     {challengeLeaderName.charAt(0).toUpperCase()}
                   </div>
                   <span className="text-xs text-[var(--ink-2)]">{challengeLeaderName} leads</span>

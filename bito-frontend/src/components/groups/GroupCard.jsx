@@ -32,7 +32,7 @@ const GroupCard = ({ group, index = 0 }) => {
       {/* top row: icon tile + ledger index */}
       <div className="flex items-start justify-between">
         <span
-          className="w-11 h-11 rounded-[4px] flex items-center justify-center flex-shrink-0 border"
+          className="w-11 h-11 rounded-[10px] flex items-center justify-center flex-shrink-0 border"
           style={{ backgroundColor: `${color}1f`, borderColor: `${color}55` }}
         >
           <Icon size={22} weight="duotone" style={{ color }} />
@@ -65,7 +65,7 @@ const GroupCard = ({ group, index = 0 }) => {
         <span className="grp-tag" style={{ borderColor: `${color}55`, color }}>
           {typeLabel}
         </span>
-        <span className="ml-auto flex items-center justify-center w-8 h-8 rounded-[4px] border border-[var(--line-2)] text-[var(--ink-3)] group-hover:bg-[var(--signal)] group-hover:border-[var(--signal)] group-hover:text-[var(--signal-ink)] transition-colors">
+        <span className="ml-auto flex items-center justify-center w-8 h-8 rounded-[10px] border border-[var(--line-2)] text-[var(--ink-3)] group-hover:bg-[var(--signal)] group-hover:border-[var(--signal)] group-hover:text-[var(--signal-ink)] transition-colors">
           <ArrowRight size={14} weight="bold" />
         </span>
       </div>

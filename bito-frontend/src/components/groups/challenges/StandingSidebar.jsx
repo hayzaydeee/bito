@@ -145,7 +145,7 @@ const StandingSidebar = ({ activeChallenges = [], allChallenges = [], currentUse
       {/* Create challenge */}
       <button
         onClick={onCreateChallenge}
-        className="w-full h-10 rounded-[4px] border border-dashed border-[var(--line-2)] flex items-center justify-center gap-2 grp-mono text-[11px] font-bold uppercase tracking-wider text-[var(--ink-3)] hover:text-[var(--ember)] hover:border-[var(--ember)]/50 transition-colors"
+        className="w-full h-10 rounded-[10px] border border-dashed border-[var(--line-2)] flex items-center justify-center gap-2 grp-mono text-[11px] font-bold uppercase tracking-wider text-[var(--ink-3)] hover:text-[var(--ember)] hover:border-[var(--ember)]/50 transition-colors"
       >
         <Plus size={13} weight="bold" />
         Create challenge

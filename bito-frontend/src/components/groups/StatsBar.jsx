@@ -17,9 +17,9 @@ const StatsBar = ({ overview, members, teamGoalChallenge, onCreateChallenge }) =
   return (
     <div className="grp-card mb-8 grid grid-cols-3 divide-x divide-[var(--line-2)] overflow-hidden">
       {/* Active today */}
-      <div className="px-5 py-4 flex flex-col gap-2">
+      <div className="px-4 py-3.5 sm:px-5 sm:py-4 flex flex-col gap-2">
         <p className="grp-kicker">Active today</p>
-        <p className="grp-num text-[34px] text-[var(--ink)]">
+        <p className="grp-num text-[27px] sm:text-[34px] text-[var(--ink)]">
           {activeMembers}
           <span className="grp-mono text-[12px] font-normal text-[var(--ink-3)] ml-1.5 align-middle">
             / {totalMembers}
@@ -28,9 +28,9 @@ const StatsBar = ({ overview, members, teamGoalChallenge, onCreateChallenge }) =
       </div>
 
       {/* Completions */}
-      <div className="px-5 py-4 flex flex-col gap-2">
+      <div className="px-4 py-3.5 sm:px-5 sm:py-4 flex flex-col gap-2">
         <p className="grp-kicker">Completions</p>
-        <p className="grp-num text-[34px] text-[var(--ink)]">{completions}</p>
+        <p className="grp-num text-[27px] sm:text-[34px] text-[var(--ink)]">{completions}</p>
       </div>
 
       {/* Goal */}

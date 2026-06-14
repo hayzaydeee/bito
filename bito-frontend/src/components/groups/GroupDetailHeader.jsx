@@ -51,7 +51,7 @@ const GroupDetailHeader = ({ group, groupId, members }) => {
   };
 
   const iconBtn =
-    "w-9 h-9 rounded-[4px] flex items-center justify-center bg-[var(--surface)] border border-[var(--line-2)] hover:border-[var(--line-3)] hover:bg-[var(--surface-2)] text-[var(--ink-2)] hover:text-[var(--ink)] transition-colors";
+    "w-9 h-9 rounded-[10px] flex items-center justify-center bg-[var(--surface)] border border-[var(--line-2)] hover:border-[var(--line-3)] hover:bg-[var(--surface-2)] text-[var(--ink-2)] hover:text-[var(--ink)] transition-colors";
 
   return (
     <>
@@ -67,14 +67,14 @@ const GroupDetailHeader = ({ group, groupId, members }) => {
           </button>
 
           <span
-            className="w-14 h-14 rounded-[5px] flex items-center justify-center flex-shrink-0 border"
+            className="w-11 h-11 sm:w-14 sm:h-14 rounded-[12px] flex items-center justify-center flex-shrink-0 border"
             style={{ backgroundColor: `${color}1f`, borderColor: `${color}55` }}
           >
-            <Icon size={28} weight="duotone" style={{ color }} />
+            <Icon size={28} weight="duotone" style={{ color }} className="w-[22px] h-[22px] sm:w-7 sm:h-7" />
           </span>
 
           <div className="min-w-0">
-            <h1 className="grp-display text-[28px] sm:text-[34px] font-bold text-[var(--ink)] truncate leading-[0.95]">
+            <h1 className="grp-display text-[23px] sm:text-[34px] font-bold text-[var(--ink)] truncate leading-[0.95]">
               {group?.name}
             </h1>
             <p className="grp-mono text-[11px] text-[var(--ink-3)] mt-1 truncate uppercase tracking-wider">

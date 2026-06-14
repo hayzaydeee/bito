@@ -49,7 +49,7 @@ const ReactionPicker = ({ reactions = {}, myReaction = null, onReact }) => {
   const hasHeart = myReaction === "heart";
 
   const pill =
-    "flex items-center gap-1.5 h-7 px-2.5 rounded-[3px] grp-mono text-[11px] font-bold transition-colors border";
+    "flex items-center gap-1.5 h-7 px-2.5 rounded-[7px] grp-mono text-[11px] font-bold transition-colors border";
 
   return (
     <div ref={ref} className="flex items-center gap-1.5 relative">
@@ -92,14 +92,14 @@ const ReactionPicker = ({ reactions = {}, myReaction = null, onReact }) => {
       <div className="relative">
         <button
           onClick={() => setOpen((v) => !v)}
-          className="w-7 h-7 rounded-[3px] flex items-center justify-center bg-[var(--surface)] border border-[var(--line-2)] text-[var(--ink-3)] hover:text-[var(--ink)] hover:border-[var(--line-3)] transition-colors"
+          className="w-7 h-7 rounded-[7px] flex items-center justify-center bg-[var(--surface)] border border-[var(--line-2)] text-[var(--ink-3)] hover:text-[var(--ink)] hover:border-[var(--line-3)] transition-colors"
           aria-label="More reactions"
         >
           <Plus size={11} weight="bold" />
         </button>
 
         {open && (
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 flex items-center gap-1 p-1.5 rounded-[4px] bg-[var(--surface-2)] border border-[var(--line-3)] shadow-lg shadow-black/40 z-50">
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 flex items-center gap-1 p-1.5 rounded-[10px] bg-[var(--surface-2)] border border-[var(--line-3)] shadow-lg shadow-black/40 z-50">
             {REACTIONS.map((rxn) => {
               const PIcon = rxn.Icon;
               return (
@@ -110,7 +110,7 @@ const ReactionPicker = ({ reactions = {}, myReaction = null, onReact }) => {
                     setOpen(false);
                   }}
                   aria-label={rxn.label}
-                  className={`w-7 h-7 rounded-[3px] flex items-center justify-center transition-colors hover:bg-[var(--surface)] ${
+                  className={`w-7 h-7 rounded-[7px] flex items-center justify-center transition-colors hover:bg-[var(--surface)] ${
                     myReaction === rxn.type
                       ? "text-[var(--signal)]"
                       : "text-[var(--ink-2)]"

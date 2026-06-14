@@ -139,7 +139,7 @@ const GroupSelection = () => {
   /* ── loading skeleton ───────────────── */
 
   const groupsSkeleton = (
-    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-12">
+    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-7 sm:py-12">
       <div className="max-w-6xl mx-auto space-y-4">
         <div className="h-3 w-40 bg-[var(--surface-2)] animate-pulse" />
         <div className="h-12 w-64 bg-[var(--surface-2)] animate-pulse" />
@@ -157,14 +157,14 @@ const GroupSelection = () => {
 
   return (
     <SkeletonTransition isLoading={isLoading} skeleton={groupsSkeleton}>
-    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-12">
+    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-7 sm:py-12">
       <div className="max-w-6xl mx-auto">
 
         {/* header */}
         <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between mb-10 pb-8 border-b border-[var(--line-2)]">
           <div className="grp-rise" style={{ animationDelay: "40ms" }}>
             <p className="grp-kicker mb-3">The Collective — Ledger</p>
-            <h1 className="grp-display text-[clamp(2.75rem,7vw,4.5rem)] font-black leading-[0.9] text-[var(--ink)]">
+            <h1 className="grp-display text-[clamp(2.25rem,8vw,4.5rem)] font-black leading-[0.9] text-[var(--ink)]">
               Groups
             </h1>
             <p className="grp-mono text-[12px] text-[var(--ink-3)] mt-4 tracking-wide">

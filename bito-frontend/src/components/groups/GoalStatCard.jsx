@@ -17,7 +17,7 @@ const GoalStatCard = ({ teamGoalChallenge, onCreateChallenge }) => {
   if (!teamGoalChallenge) {
     return (
       <div
-        className="px-5 py-4 flex flex-col gap-2 cursor-pointer transition-colors hover:bg-[var(--surface-2)] relative group/goal"
+        className="px-4 py-3.5 sm:px-5 sm:py-4 flex flex-col gap-2 cursor-pointer transition-colors hover:bg-[var(--surface-2)] relative group/goal"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         onClick={onCreateChallenge}
@@ -54,7 +54,7 @@ const GoalStatCard = ({ teamGoalChallenge, onCreateChallenge }) => {
     : null;
 
   return (
-    <div className="px-5 py-4 flex flex-col gap-2">
+    <div className="px-4 py-3.5 sm:px-5 sm:py-4 flex flex-col gap-2">
       <div className="flex items-baseline justify-between gap-2">
         <p className="grp-kicker truncate">{teamGoalChallenge.title || "Team goal"}</p>
         <span className="grp-num text-[24px] text-[var(--signal)] flex-shrink-0">{pct}%</span>

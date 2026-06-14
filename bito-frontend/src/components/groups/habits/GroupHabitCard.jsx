@@ -38,7 +38,7 @@ const GroupHabitCard = ({ habit, totalMembers, adopted, canEdit, onAdopt, onEdit
           <div className="flex items-start gap-4 p-5 pb-4">
             {/* Icon */}
             <span
-              className="w-10 h-10 rounded-[4px] flex items-center justify-center flex-shrink-0 border"
+              className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0 border"
               style={{ backgroundColor: `${color}1f`, borderColor: `${color}55` }}
             >
               <HabitIcon icon={habit.icon} size={18} />
@@ -62,7 +62,7 @@ const GroupHabitCard = ({ habit, totalMembers, adopted, canEdit, onAdopt, onEdit
                   e.stopPropagation();
                   onEdit?.();
                 }}
-                className="w-7 h-7 flex items-center justify-center rounded-[3px] border border-[var(--line-2)] text-[var(--ink-3)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)] transition-colors flex-shrink-0"
+                className="w-7 h-7 flex items-center justify-center rounded-[7px] border border-[var(--line-2)] text-[var(--ink-3)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)] transition-colors flex-shrink-0"
               >
                 <GearIcon className="w-3.5 h-3.5" />
               </button>

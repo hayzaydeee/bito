@@ -121,7 +121,7 @@ const InvitePanel = ({ groupId, group, isOwner }) => {
 
         {/* Invite link */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2 px-3 py-2.5 rounded-[4px] bg-[var(--bg-2)] border border-[var(--line-2)]">
+          <div className="flex items-center gap-2 px-3 py-2.5 rounded-[10px] bg-[var(--bg-2)] border border-[var(--line-2)]">
             <span className="flex-1 grp-mono text-[13px] font-bold text-[var(--signal)] truncate tracking-[0.2em]">
               {inviteCode ?? "—"}
             </span>
@@ -141,7 +141,7 @@ const InvitePanel = ({ groupId, group, isOwner }) => {
               onClick={() => setShowQR(true)}
               disabled={!qrSrc}
               title="Show QR code"
-              className="w-9 h-9 flex items-center justify-center rounded-[4px] bg-[var(--surface)] border border-[var(--line-2)] text-[var(--ink-2)] hover:text-[var(--ink)] hover:border-[var(--line-3)] transition-colors flex-shrink-0 disabled:opacity-40"
+              className="w-9 h-9 flex items-center justify-center rounded-[10px] bg-[var(--surface)] border border-[var(--line-2)] text-[var(--ink-2)] hover:text-[var(--ink)] hover:border-[var(--line-3)] transition-colors flex-shrink-0 disabled:opacity-40"
             >
               <QrCode size={15} />
             </button>
@@ -150,7 +150,7 @@ const InvitePanel = ({ groupId, group, isOwner }) => {
                 onClick={handleRegenerate}
                 disabled={regenerating}
                 title="Regenerate code (invalidates old link)"
-                className="w-9 h-9 flex items-center justify-center rounded-[4px] bg-[var(--surface)] border border-[var(--line-2)] text-[var(--ink-3)] hover:text-[var(--ink)] hover:border-[var(--line-3)] transition-colors flex-shrink-0 disabled:opacity-40"
+                className="w-9 h-9 flex items-center justify-center rounded-[10px] bg-[var(--surface)] border border-[var(--line-2)] text-[var(--ink-3)] hover:text-[var(--ink)] hover:border-[var(--line-3)] transition-colors flex-shrink-0 disabled:opacity-40"
               >
                 <ArrowClockwise size={14} className={regenerating ? "animate-spin" : ""} />
               </button>

@@ -66,7 +66,7 @@ function LeaderboardRow({ rank, participant, targetValue }) {
       <span className="grp-mono w-5 text-[11px] font-bold text-[var(--ink-3)] text-right flex-shrink-0">
         {String(rank).padStart(2, "0")}
       </span>
-      <div className="w-7 h-7 rounded-[3px] bg-[var(--surface-2)] flex items-center justify-center text-[var(--ink)] text-[11px] grp-display font-bold flex-shrink-0">
+      <div className="w-7 h-7 rounded-[7px] bg-[var(--surface-2)] flex items-center justify-center text-[var(--ink)] text-[11px] grp-display font-bold flex-shrink-0">
         {name.charAt(0).toUpperCase()}
       </div>
       <span className="w-20 text-sm text-[var(--ink)] truncate flex-shrink-0">
@@ -89,7 +89,7 @@ function HabitMatchRow({ habit, selected, onSelect }) {
   return (
     <div
       onClick={onSelect}
-      className={`flex items-center gap-3 px-3 py-2 rounded-[4px] cursor-pointer transition-colors border ${
+      className={`flex items-center gap-3 px-3 py-2 rounded-[10px] cursor-pointer transition-colors border ${
         selected
           ? "bg-[var(--signal)]/10 border-[var(--signal)]/40"
           : "hover:bg-[var(--surface-2)] border-transparent"
@@ -104,7 +104,7 @@ function HabitMatchRow({ habit, selected, onSelect }) {
       )}
       <button
         onClick={(e) => { e.stopPropagation(); onSelect(); }}
-        className={`grp-mono text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-[3px] transition-colors flex-shrink-0 ${
+        className={`grp-mono text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-[7px] transition-colors flex-shrink-0 ${
           selected
             ? "bg-[var(--signal)] text-[var(--signal-ink)]"
             : "bg-[var(--surface-2)] text-[var(--ink-2)] hover:text-[var(--ink)]"

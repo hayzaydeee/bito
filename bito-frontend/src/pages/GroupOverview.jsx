@@ -274,7 +274,7 @@ const GroupOverview = () => {
   /* ── skeleton ────────────────────────── */
 
   const overviewSkeleton = (
-    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-8">
+    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-5 sm:py-8">
       <div className="max-w-6xl mx-auto space-y-5">
         <div className="h-16 grp-card animate-pulse" />
         <div className="grid grid-cols-3 gap-3">
@@ -342,7 +342,7 @@ const GroupOverview = () => {
   return (
     <SkeletonTransition isLoading={loading} skeleton={overviewSkeleton}>
     {group ? (
-    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-8">
+    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-5 sm:py-8">
       <div className="max-w-6xl mx-auto">
 
         {/* ── Header ──────────────────────── */}
