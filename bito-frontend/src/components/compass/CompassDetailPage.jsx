@@ -31,12 +31,10 @@ const CompassDetailPage = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="h-[calc(100dvh-3.5rem)] page-container flex items-center justify-center">
+      <div className="std h-[calc(100dvh-3.5rem)] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4 animate-fade-in">
-          <div className="w-10 h-10 border-2 border-[var(--color-brand-500)] border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm font-spartan text-[var(--color-text-tertiary)]">
-            Loading compass...
-          </p>
+          <div className="w-10 h-10 border-2 border-[var(--signal)] border-t-transparent rounded-full animate-spin" />
+          <p className="std-kicker">Loading compass</p>
         </div>
       </div>
     );
@@ -45,18 +43,18 @@ const CompassDetailPage = () => {
   // Error / not found
   if (!compass) {
     return (
-      <div className="h-[calc(100dvh-3.5rem)] page-container flex items-center justify-center">
-        <div className="text-center space-y-3 animate-fade-in">
-          <p className="text-4xl">🧭</p>
-          <p className="text-base font-spartan font-semibold text-[var(--color-text-primary)]">
+      <div className="std h-[calc(100dvh-3.5rem)] flex items-center justify-center px-6">
+        <div className="text-center max-w-sm animate-fade-in">
+          <p className="text-5xl mb-4">🧭</p>
+          <h2 className="std-display text-[22px] font-bold text-[var(--ink)] mb-2">
             Compass not found
-          </p>
-          <p className="text-sm font-spartan text-[var(--color-text-secondary)]">
+          </h2>
+          <p className="text-[14px] text-[var(--ink-2)] mb-5">
             {error || "This compass may have been archived or deleted."}
           </p>
           <button
             onClick={goBack}
-            className="mt-2 px-5 h-10 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white rounded-xl text-sm font-spartan font-medium transition-colors"
+            className="std-btn std-btn--signal mx-auto"
           >
             Back to compasses
           </button>
@@ -80,7 +78,7 @@ const CompassDetailPage = () => {
 
   return (
     <motion.div
-      className="h-[calc(100dvh-3.5rem)] page-container overflow-hidden"
+      className="std h-[calc(100dvh-3.5rem)] overflow-hidden"
       variants={pageVariants}
       initial="initial"
       animate="animate"

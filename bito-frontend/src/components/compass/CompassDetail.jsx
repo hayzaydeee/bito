@@ -5,20 +5,21 @@ import {
   CheckCircledIcon,
   ReloadIcon,
   ChevronDownIcon,
-  ChevronUpIcon,
   ChatBubbleIcon,
 } from "@radix-ui/react-icons";
 import CATEGORY_META from "../../data/categoryMeta";
 import CategoryBanner from "./CategoryBanner";
 import PhaseTimeline from "./PhaseTimeline";
 import HabitCard from "./HabitCard";
-import { springs, fadeUp, collapseVariants, habitCardVariants } from "./compassMotion";
+import { springs, collapseVariants, habitCardVariants } from "./compassMotion";
 import HabitIcon from "../shared/HabitIcon";
 
 /**
  * CompassDetail — full detail / preview view for a single compass.
- * Composes CategoryBanner, PhaseTimeline, and phase-grouped HabitCards.
- * Supports both phased and flat (legacy) habit layouts.
+ * Standard ("DRILL") design system: editorial chrome (mono kickers, serif
+ * phase names, std-card frames, signal action bar) wrapping the category hero
+ * and phase timeline. Composes CategoryBanner, PhaseTimeline, and
+ * phase-grouped HabitCards. Supports both phased and flat (legacy) layouts.
  * Enhanced with framer-motion phase reveal animations.
  */
 const CompassDetail = ({
@@ -68,19 +69,29 @@ const CompassDetail = ({
   const isActive = t.status === 'active';
   const canRefine = (isPreview || isActive) && turnsRemaining > 0;
 
+  // Habits section header (kicker + serif count)
+  const HabitsHeading = ({ count }) => (
+    <div className="flex items-baseline gap-2.5">
+      <p className="std-kicker">{isPreview ? "Generated" : "Active"} Habits</p>
+      <span className="std-num text-[16px] text-[var(--signal)]">
+        {String(count).padStart(2, "0")}
+      </span>
+    </div>
+  );
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="std flex flex-col h-full">
       {/* Scrollable content */}
       <div className="flex-1 min-h-0 overflow-y-auto space-y-6 px-4 sm:px-6 pt-10 pb-6">
         {/* Back */}
         <motion.button
           onClick={onBack}
-          className="flex items-center gap-2 text-sm font-spartan text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+          className="std-mono inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors"
           initial={{ opacity: 0, x: -12 }}
           animate={{ opacity: 1, x: 0 }}
           transition={springs.soft}
         >
-          <ArrowLeftIcon className="w-4 h-4" /> Back to compasses
+          <ArrowLeftIcon className="w-3.5 h-3.5" /> Back to compasses
         </motion.button>
 
         {/* Category hero banner */}
@@ -104,7 +115,7 @@ const CompassDetail = ({
         <AnimatePresence>
           {error && (
             <motion.p
-              className="text-sm text-red-400 font-spartan"
+              className="text-[13px] text-[var(--rose)]"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
@@ -122,9 +133,7 @@ const CompassDetail = ({
             animate={{ opacity: 1 }}
             transition={{ delay: 0.15 }}
           >
-            <h3 className="text-xs font-spartan font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider">
-              {isPreview ? "Generated" : "Active"} Habits ({totalHabits})
-            </h3>
+            <HabitsHeading count={totalHabits} />
 
             {phases.map((phase, pi) => {
               const expanded = expandedPhases.has(pi);
@@ -139,11 +148,14 @@ const CompassDetail = ({
               return (
                 <motion.div
                   key={pi}
-                  className={`rounded-2xl border transition-colors ${
+                  className={`std-card overflow-hidden transition-colors ${
+                    isLocked && !isPreview ? "opacity-60" : ""
+                  }`}
+                  style={
                     isCurrent && !isPreview
-                      ? "border-[var(--color-brand-500)]/30 bg-[var(--color-surface-elevated)]"
-                      : "border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]"
-                  } ${isLocked && !isPreview ? "opacity-60" : ""}`}
+                      ? { borderLeft: `3px solid ${catMeta.accent}` }
+                      : undefined
+                  }
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: isLocked && !isPreview ? 0.6 : 1, y: 0 }}
                   transition={{ ...springs.soft, delay: 0.2 + pi * 0.06 }}
@@ -153,9 +165,9 @@ const CompassDetail = ({
                     onClick={() => togglePhase(pi)}
                     className="w-full flex items-center justify-between p-4 text-left"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                       <div
-                        className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-spartan font-bold text-white"
+                        className="w-7 h-7 rounded-[var(--r-tag)] flex items-center justify-center std-mono text-[12px] font-bold text-white flex-shrink-0"
                         style={{ backgroundColor: catMeta.accent }}
                       >
                         {isCompleted ? (
@@ -164,27 +176,27 @@ const CompassDetail = ({
                           pi + 1
                         )}
                       </div>
-                      <div>
-                        <span className="text-sm font-spartan font-semibold text-[var(--color-text-primary)]">
+                      <div className="min-w-0">
+                        <span className="std-display text-[15px] font-bold text-[var(--ink)]">
                           {phase.name || `Phase ${pi + 1}`}
                         </span>
                         {phase.durationDays && (
-                          <span className="ml-2 text-xs font-spartan text-[var(--color-text-tertiary)]">
-                            · {phase.durationDays} days
+                          <span className="ml-2 std-mono text-[10.5px] text-[var(--ink-3)]">
+                            · {phase.durationDays}d
                           </span>
                         )}
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-spartan text-[var(--color-text-tertiary)]">
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="std-mono text-[10.5px] text-[var(--ink-3)]">
                         {phaseHabits.length} habit{phaseHabits.length !== 1 && "s"}
                       </span>
                       <motion.div
                         animate={{ rotate: expanded ? 180 : 0 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <ChevronDownIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
+                        <ChevronDownIcon className="w-4 h-4 text-[var(--ink-3)]" />
                       </motion.div>
                     </div>
                   </button>
@@ -200,18 +212,27 @@ const CompassDetail = ({
                         exit="collapsed"
                       >
                         {phase.description && (
-                          <p className="px-4 pb-2 text-xs font-spartan text-[var(--color-text-tertiary)]">
+                          <p className="px-4 pb-2 text-[13px] text-[var(--ink-3)] leading-relaxed">
                             {phase.description}
                           </p>
                         )}
 
                         {/* Contextual reasoning */}
                         {phase.reasoning && (
-                          <div className="mx-4 mb-3 p-3 rounded-xl bg-[var(--color-brand-500)]/5 border border-[var(--color-brand-500)]/10">
-                            <p className="text-[10px] font-spartan text-[var(--color-brand-400)] uppercase tracking-wider mb-1">
+                          <div
+                            className="mx-4 mb-3 p-3 rounded-[var(--r-tag)] border border-[var(--line)]"
+                            style={{
+                              background:
+                                "color-mix(in srgb, var(--signal) 7%, transparent)",
+                            }}
+                          >
+                            <p
+                              className="std-kicker mb-1"
+                              style={{ color: "var(--signal)" }}
+                            >
                               Why this phase
                             </p>
-                            <p className="text-xs font-spartan text-[var(--color-text-secondary)]">
+                            <p className="text-[13px] text-[var(--ink-2)] leading-relaxed">
                               {phase.reasoning}
                             </p>
                           </div>
@@ -256,9 +277,7 @@ const CompassDetail = ({
             animate={{ opacity: 1 }}
             transition={{ delay: 0.15 }}
           >
-            <h3 className="text-xs font-spartan font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider">
-              {isPreview ? "Generated" : "Active"} Habits ({flatHabits.length})
-            </h3>
+            <HabitsHeading count={flatHabits.length} />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {flatHabits.map((h, i) => (
@@ -287,30 +306,28 @@ const CompassDetail = ({
         {/* Applied habits (active compass) */}
         {t.status === "active" && t.appliedResources?.habitIds?.length > 0 && (
           <motion.div
-            className="p-5 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20"
+            className="std-card p-5"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ ...springs.soft, delay: 0.25 }}
           >
-            <h3 className="text-xs font-spartan font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-4">
-              Created Habits
-            </h3>
+            <p className="std-kicker mb-4">Created Habits</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {t.appliedResources.habitIds.map((h, i) => (
                 <motion.div
                   key={h._id || h}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-[var(--color-surface-hover)]/50"
+                  className="flex items-center gap-3 p-3 rounded-[var(--r-tag)] border border-[var(--line)] bg-[var(--surface-2)]"
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ ...springs.soft, delay: 0.3 + i * 0.04 }}
                 >
                   <HabitIcon icon={h.icon || "Target"} size={20} />
-                  <span className="text-sm font-spartan text-[var(--color-text-primary)]">
+                  <span className="text-[13px] text-[var(--ink)] truncate">
                     {h.name || "Habit"}
                   </span>
                   {h.isActive === false && (
-                    <span className="text-[10px] text-[var(--color-text-tertiary)] font-spartan">
-                      (archived)
+                    <span className="std-mono text-[10px] text-[var(--ink-3)] ml-auto">
+                      archived
                     </span>
                   )}
                 </motion.div>
@@ -322,7 +339,7 @@ const CompassDetail = ({
         {/* Generation metadata */}
         {t.generation?.model && (
           <motion.p
-            className="text-xs text-[var(--color-text-tertiary)] font-spartan text-center pb-4"
+            className="std-mono text-[11px] text-[var(--ink-3)] text-center pb-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
@@ -341,7 +358,7 @@ const CompassDetail = ({
       {/* Pinned action bar — preview mode */}
       {isPreview && (
         <motion.div
-          className="flex-shrink-0 border-t border-[var(--color-border-primary)]/40 px-4 sm:px-6 py-4 bg-[var(--color-bg-primary)]"
+          className="flex-shrink-0 border-t border-[var(--line-2)] px-4 sm:px-6 py-4 bg-[var(--bg)]"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ ...springs.soft, delay: 0.2 }}
@@ -352,11 +369,11 @@ const CompassDetail = ({
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => onOpenStudio(t)}
-                className="h-12 px-5 rounded-xl text-sm font-spartan font-medium border border-[var(--color-border-primary)]/40 text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-all flex items-center gap-2"
+                className="std-btn"
               >
                 <ChatBubbleIcon className="w-4 h-4" />
                 Refine
-                <span className="text-xs text-[var(--color-text-tertiary)]">
+                <span className="normal-case text-[var(--ink-3)]">
                   ({turnsRemaining} left)
                 </span>
               </motion.button>
@@ -366,7 +383,7 @@ const CompassDetail = ({
               whileTap={{ scale: 0.98 }}
               onClick={onApply}
               disabled={applyLoading}
-              className="flex-1 h-12 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white rounded-xl text-sm font-spartan font-medium transition-all disabled:opacity-50 flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-[var(--color-brand-600)]/20"
+              className="std-btn std-btn--signal flex-1 disabled:opacity-50"
             >
               {applyLoading ? (
                 <>
@@ -379,10 +396,7 @@ const CompassDetail = ({
                 </>
               )}
             </motion.button>
-            <button
-              onClick={() => onArchive(t._id)}
-              className="h-12 px-6 rounded-xl text-sm font-spartan text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
-            >
+            <button onClick={() => onArchive(t._id)} className="std-btn">
               Discard
             </button>
           </div>
@@ -392,24 +406,23 @@ const CompassDetail = ({
       {/* Pinned action bar — active mode (living plan) */}
       {isActive && canRefine && (
         <motion.div
-          className="flex-shrink-0 border-t border-[var(--color-border-primary)]/40 px-4 sm:px-6 py-4 bg-[var(--color-bg-primary)]"
+          className="flex-shrink-0 border-t border-[var(--line-2)] px-4 sm:px-6 py-4 bg-[var(--bg)]"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ ...springs.soft, delay: 0.2 }}
         >
-          <div className="flex items-center gap-3">
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              onClick={() => onOpenStudio?.(t)}
-              className="flex-1 h-12 rounded-xl text-sm font-spartan font-medium border border-[var(--color-brand-500)]/30 text-[var(--color-text-primary)] hover:bg-[var(--color-brand-500)]/5 transition-all flex items-center justify-center gap-2"
-            >
-              <ChatBubbleIcon className="w-4 h-4 text-[var(--color-brand-500)]" />
-              Refine Living Plan
-              <span className="text-xs text-[var(--color-text-tertiary)]">
-                ({turnsRemaining} left)
-              </span>
-            </motion.button>
-          </div>
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            onClick={() => onOpenStudio?.(t)}
+            className="std-btn w-full"
+            style={{ borderColor: "var(--signal)" }}
+          >
+            <ChatBubbleIcon className="w-4 h-4" style={{ color: "var(--signal)" }} />
+            Refine Living Plan
+            <span className="normal-case text-[var(--ink-3)]">
+              ({turnsRemaining} left)
+            </span>
+          </motion.button>
         </motion.div>
       )}
     </div>
