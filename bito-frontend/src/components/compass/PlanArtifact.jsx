@@ -7,7 +7,8 @@ import HabitCard from "./HabitCard";
 /**
  * PlanArtifact — slide-in side panel showing the current compass plan.
  * Displays plan header, phase timeline, phase-grouped habits (compact).
- * Claude-style artifact panel that opens alongside the chat.
+ * Claude-style artifact panel that opens alongside the chat (DRILL re-skin:
+ * serif title, std-card phase groups, hairline borders, mono meta).
  */
 const PlanArtifact = ({ compass, onClose }) => {
   const sys = compass.system || {};
@@ -17,18 +18,18 @@ const PlanArtifact = ({ compass, onClose }) => {
   return (
     <div className="flex flex-col h-full">
       {/* Artifact header */}
-      <div className="flex items-center justify-between px-4 h-12 border-b border-[var(--color-border-primary)]/20 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 h-12 border-b border-[var(--line-2)] flex-shrink-0">
         <div className="flex items-center gap-2 min-w-0">
           <HabitIcon icon={catMeta.icon} size={16} />
-          <span className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] truncate">
+          <span className="std-display text-sm font-bold text-[var(--ink)] truncate">
             {sys.name || "Untitled Plan"}
           </span>
         </div>
         <button
           onClick={onClose}
-          className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-[var(--color-surface-hover)] transition-colors flex-shrink-0"
+          className="w-7 h-7 rounded-[var(--r-tag)] flex items-center justify-center hover:bg-[var(--surface-2)] transition-colors flex-shrink-0"
         >
-          <Cross2Icon className="w-3.5 h-3.5 text-[var(--color-text-secondary)]" />
+          <Cross2Icon className="w-3.5 h-3.5 text-[var(--ink-2)]" />
         </button>
       </div>
 
@@ -36,7 +37,7 @@ const PlanArtifact = ({ compass, onClose }) => {
       <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
         {/* Description */}
         {sys.description && (
-          <p className="text-xs font-spartan text-[var(--color-text-tertiary)]">
+          <p className="text-xs text-[var(--ink-3)] leading-relaxed">
             {sys.description}
           </p>
         )}
@@ -48,30 +49,27 @@ const PlanArtifact = ({ compass, onClose }) => {
         {phases.length > 0 ? (
           <div className="space-y-3">
             {phases.map((phase, pi) => (
-              <div
-                key={pi}
-                className="rounded-xl border border-[var(--color-border-primary)]/20 bg-[var(--color-surface-elevated)]"
-              >
+              <div key={pi} className="std-card">
                 <div className="flex items-center gap-2.5 p-3">
                   <div
-                    className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-spartan font-bold text-white flex-shrink-0"
+                    className="w-5 h-5 rounded-[var(--r-tag)] flex items-center justify-center std-mono text-[9px] font-bold text-white flex-shrink-0"
                     style={{ backgroundColor: catMeta.accent }}
                   >
                     {pi + 1}
                   </div>
                   <div className="min-w-0">
-                    <span className="text-xs font-spartan font-semibold text-[var(--color-text-primary)]">
+                    <span className="font-semibold text-[var(--ink)] text-xs">
                       {phase.name}
                     </span>
                     {phase.durationDays && (
-                      <span className="ml-1.5 text-[10px] font-spartan text-[var(--color-text-tertiary)]">
+                      <span className="ml-1.5 std-mono text-[10px] text-[var(--ink-3)]">
                         · {phase.durationDays}d
                       </span>
                     )}
                   </div>
                 </div>
                 {phase.description && (
-                  <p className="px-3 pb-1.5 text-[10px] font-spartan text-[var(--color-text-tertiary)]">
+                  <p className="px-3 pb-1.5 text-[10px] text-[var(--ink-3)] leading-relaxed">
                     {phase.description}
                   </p>
                 )}
@@ -109,7 +107,7 @@ const PlanArtifact = ({ compass, onClose }) => {
 
         {/* Duration summary */}
         {sys.estimatedDuration && (
-          <p className="text-[10px] font-spartan text-[var(--color-text-tertiary)] text-center pt-1">
+          <p className="std-mono text-[10px] text-[var(--ink-3)] text-center pt-1">
             Estimated: {sys.estimatedDuration.value} {sys.estimatedDuration.unit}
           </p>
         )}

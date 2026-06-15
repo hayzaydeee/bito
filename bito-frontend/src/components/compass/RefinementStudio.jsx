@@ -87,22 +87,22 @@ const RefinementStudio = ({
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-[var(--color-bg-primary)] animate-fade-in">
+    <div className="std fixed inset-0 z-50 flex flex-col overflow-hidden bg-[var(--bg)] animate-fade-in">
       {/* ── Top bar ── */}
-      <header className="flex items-center justify-between px-4 sm:px-6 h-14 border-b border-[var(--color-border-primary)]/40 flex-shrink-0">
+      <header className="flex items-center justify-between px-4 sm:px-6 h-14 border-b border-[var(--line-2)] flex-shrink-0">
         <div className="flex items-center gap-3">
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--color-surface-hover)] transition-colors"
+            className="w-8 h-8 rounded-[var(--r-tag)] flex items-center justify-center hover:bg-[var(--surface-2)] transition-colors"
           >
-            <Cross2Icon className="w-4 h-4 text-[var(--color-text-secondary)]" />
+            <Cross2Icon className="w-4 h-4 text-[var(--ink-2)]" />
           </button>
           <div>
-            <h2 className="text-sm font-spartan font-bold text-[var(--color-text-primary)] truncate max-w-[200px] sm:max-w-none flex items-center gap-1.5">
+            <h2 className="std-display text-[15px] font-bold text-[var(--ink)] truncate max-w-[200px] sm:max-w-none flex items-center gap-1.5">
               <HabitIcon icon={catMeta.icon} size={14} />
               {sys.name || "Untitled Plan"}
             </h2>
-            <p className="text-xs font-spartan text-[var(--color-text-secondary)]">
+            <p className="std-mono text-[10px] uppercase tracking-wide text-[var(--ink-3)]">
               {isActive ? "Living Plan" : "Refinement Studio"} · {turnsRemaining} turns left
             </p>
           </div>
@@ -111,10 +111,9 @@ const RefinementStudio = ({
         <button
           onClick={handleApply}
           disabled={applyLoading || isActive}
-          className={`h-9 px-4 rounded-lg text-xs font-spartan font-medium transition-all disabled:opacity-50 flex items-center gap-1.5 ${
-            isActive
-              ? 'bg-green-500/15 text-green-400 cursor-default'
-              : 'bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white'
+          style={isActive ? { color: "var(--signal)", borderColor: "var(--signal)" } : undefined}
+          className={`std-btn std-btn--sm disabled:opacity-50 ${
+            isActive ? "cursor-default" : "std-btn--signal"
           }`}
         >
           {isActive ? (
@@ -134,8 +133,8 @@ const RefinementStudio = ({
       </header>
 
       {error && (
-        <div className="px-4 sm:px-6 py-2 bg-red-500/10 border-b border-red-500/20">
-          <p className="text-xs font-spartan text-red-400">{error}</p>
+        <div className="px-4 sm:px-6 py-2 bg-[var(--rose)]/10 border-b border-[var(--rose)]/20">
+          <p className="std-mono text-[11px] text-[var(--rose)]">{error}</p>
         </div>
       )}
 
@@ -144,7 +143,7 @@ const RefinementStudio = ({
         {/* Chat pane — always visible, expands/shrinks */}
         <div
           className={`flex flex-col h-full overflow-hidden transition-all duration-200 ease-in-out ${
-            showArtifact ? "w-1/2 sm:w-[55%] border-r border-[var(--color-border-primary)]/40" : "w-full"
+            showArtifact ? "w-1/2 sm:w-[55%] border-r border-[var(--line-2)]" : "w-full"
           }`}
         >
             <RefinementChat
@@ -164,7 +163,7 @@ const RefinementStudio = ({
 
         {/* Artifact panel — slides in from right */}
         <div
-          className={`flex flex-col h-full bg-[var(--color-bg-primary)] transition-all duration-200 ease-in-out overflow-hidden ${
+          className={`flex flex-col h-full bg-[var(--bg)] transition-all duration-200 ease-in-out overflow-hidden ${
             showArtifact
               ? "w-1/2 sm:w-[45%] opacity-100"
               : "w-0 opacity-0"
@@ -180,7 +179,7 @@ const RefinementStudio = ({
 
         {/* Mobile artifact overlay */}
         {showArtifact && (
-          <div className="sm:hidden fixed inset-0 z-[60] flex flex-col bg-[var(--color-bg-primary)] animate-fade-in">
+          <div className="sm:hidden fixed inset-0 z-[60] flex flex-col bg-[var(--bg)] animate-fade-in">
             <PlanArtifact
               compass={compass}
               onClose={toggleArtifact}
