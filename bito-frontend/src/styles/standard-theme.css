@@ -122,8 +122,13 @@
 [data-ds="standard"] body:has(.grp-surface) {
   background: var(--bg) !important;
 }
-[data-ds="standard"] .std-surface::before,
-[data-ds="standard"] .grp-surface::before {
+/* The grid + grain are owned by the app shell (.std-surface) ONLY. Feature
+   pages (e.g. groups) use .grp-surface transparently so the single shell
+   grid shows through — no double grid. */
+[data-ds="standard"] .grp-surface {
+  background: transparent;
+}
+[data-ds="standard"] .std-surface::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -137,8 +142,7 @@
   opacity: 0.7;
   pointer-events: none;
 }
-[data-ds="standard"] .std-surface::after,
-[data-ds="standard"] .grp-surface::after {
+[data-ds="standard"] .std-surface::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -147,6 +151,11 @@
   opacity: 0.035;
   mix-blend-mode: screen;
   pointer-events: none;
+}
+/* Grid toggle (Settings → Appearance). Default on; data-grid="off" hides it. */
+[data-grid="off"] .std-surface::before,
+[data-grid="off"] .std-surface::after {
+  display: none;
 }
 
 /* ── Typography helpers ──────────────────────────────────── */

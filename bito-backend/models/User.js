@@ -140,6 +140,10 @@ const userSchema = new mongoose.Schema({  // Basic user information
       enum: ['legacy', 'standard'],
       default: 'legacy'
     },
+    standardGrid: {
+      type: Boolean,
+      default: true
+    },
     timezone: {
       type: String,
       default: 'UTC'

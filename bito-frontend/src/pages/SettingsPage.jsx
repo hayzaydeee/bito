@@ -56,7 +56,7 @@ import { listItemVariants } from "../utils/motion";
 
 const SettingsPage = ({ section }) => {
   const { user, updateUser } = useAuth();
-  const { theme, changeTheme } = useTheme();
+  const { changeTheme, designSystem, standardGrid, changeStandardGrid } = useTheme();
   const { scale: currentScale, changeScale } = useScale();
   const navigate = useNavigate();
 
@@ -795,6 +795,34 @@ const SettingsPage = ({ section }) => {
             </p>
             <DesignSystemSwitcher />
           </div>
+
+          {/* Background grid — Standard layout only */}
+          {designSystem === "standard" && (
+            <div className="mb-6 flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)] mb-1">
+                  Background grid
+                </p>
+                <p className="text-xs text-[var(--color-text-tertiary)] font-spartan max-w-md">
+                  Show the structural grid behind the Standard layout.
+                </p>
+              </div>
+              <button
+                role="switch"
+                aria-checked={standardGrid}
+                onClick={() => changeStandardGrid(!standardGrid)}
+                className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
+                  standardGrid ? "bg-[var(--color-brand-500)]" : "bg-[var(--color-surface-hover)]"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
+                    standardGrid ? "translate-x-5" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
+          )}
 
           <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)] mb-3">
             Theme

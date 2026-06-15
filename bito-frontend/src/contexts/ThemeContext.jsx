@@ -18,6 +18,8 @@ export const ThemeProvider = ({ children }) => {
   // Design-system axis (orthogonal to light/dark): 'legacy' = current purple/serif
   // look, 'standard' = the new black/white + accent "DRILL" language. Legacy is the default.
   const [designSystem, setDesignSystem] = useState('legacy');
+  // Standard-layout background grid (on by default)
+  const [standardGrid, setStandardGrid] = useState(true);
   const [systemTheme, setSystemTheme] = useState('dark');
   const [isLoading, setIsLoading] = useState(true);
   const initializedForRef = useRef(undefined); // tracks which user id we've initialized from
@@ -53,6 +55,7 @@ export const ThemeProvider = ({ children }) => {
       setTheme('auto');
     }
     setDesignSystem(user?.preferences?.designSystem === 'standard' ? 'standard' : 'legacy');
+    setStandardGrid(user?.preferences?.standardGrid !== false);
     setIsLoading(false);
   }, [user, authLoading]);
 
@@ -93,6 +96,11 @@ export const ThemeProvider = ({ children }) => {
     document.body.classList.remove('ds-legacy', 'ds-standard');
     document.body.classList.add(`ds-${designSystem}`);
   }, [designSystem]);
+
+  // Apply the standard-layout grid toggle
+  useEffect(() => {
+    document.documentElement.setAttribute('data-grid', standardGrid ? 'on' : 'off');
+  }, [standardGrid]);
 
   const changeTheme = async (newTheme) => {
     setTheme(newTheme);
@@ -137,6 +145,25 @@ export const ThemeProvider = ({ children }) => {
     }
   };
 
+  const changeStandardGrid = async (enabled) => {
+    const value = Boolean(enabled);
+    setStandardGrid(value);
+
+    if (user) {
+      try {
+        await userAPI.updateProfile({
+          preferences: { ...user.preferences, standardGrid: value }
+        });
+        if (updateUser) {
+          updateUser({ preferences: { ...user.preferences, standardGrid: value } });
+        }
+      } catch (error) {
+        console.error('Failed to save grid preference:', error);
+        setStandardGrid(user.preferences?.standardGrid !== false);
+      }
+    }
+  };
+
   const getEffectiveTheme = () => {
     return theme === 'auto' ? systemTheme : theme;
   };
@@ -158,6 +185,8 @@ export const ThemeProvider = ({ children }) => {
     // Design-system axis (legacy | standard)
     designSystem,
     changeDesignSystem,
+    standardGrid,
+    changeStandardGrid,
     designSystemOptions: [
       { value: 'legacy', label: 'Legacy', description: 'The original purple & serif look' },
       { value: 'standard', label: 'Standard', description: 'New black/white + accent design language' }
