@@ -1,165 +1,173 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircledIcon } from "@radix-ui/react-icons";
-import { Brain, Target, BookOpen, Gear, Sparkle } from "@phosphor-icons/react";
-import { springs, stepVariants } from "./compassMotion";
+import { springs } from "./compassMotion";
 
 /**
- * GeneratingOverlay — progressive plan skeleton shown during compass generation.
- * Steps reveal with motion, and a skeleton blueprint of the plan fades in
- * as the AI gets closer to finishing.
+ * GeneratingOverlay — the "system being forged" moment.
+ * Left: a forge console — a mono telemetry log that ticks through each stage
+ * (with a blinking cursor on the active line) and a std-meter "FORGING — n%"
+ * readout. Right (lg+): a live blueprint that assembles as a numbered ledger
+ * — phase markers and habit rows drawing in as the engine nears completion.
+ * Driven by the `step` index (0..STEPS.length-1).
  */
 const STEPS = [
-  { label: "Understanding your goal...", Icon: Target, skeleton: "goal" },
-  { label: "Researching best practices...", Icon: BookOpen, skeleton: "research" },
-  { label: "Designing your habit system...", Icon: Gear, skeleton: "habits" },
-  { label: "Polishing your plan...", Icon: Sparkle, skeleton: "polish" },
+  { label: "Understanding the goal", skeleton: "goal" },
+  { label: "Researching methods", skeleton: "research" },
+  { label: "Designing the system", skeleton: "habits" },
+  { label: "Polishing the plan", skeleton: "polish" },
 ];
 
+const Cursor = () => (
+  <motion.span
+    className="text-[var(--signal)]"
+    animate={{ opacity: [1, 0, 1] }}
+    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+  >
+    ▋
+  </motion.span>
+);
+
 const GeneratingOverlay = ({ step = 0 }) => {
+  const pct = Math.round(((step + 1) / STEPS.length) * 100);
+
   return (
     <motion.div
-      className="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-8 lg:gap-12 min-h-[60vh] py-8"
+      className="std max-w-5xl mx-auto grid lg:grid-cols-2 gap-10 lg:gap-12 items-start py-6"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Left — Steps */}
-      <div className="glass-card-minimal p-8 sm:p-10 max-w-sm w-full text-center lg:text-left">
-        {/* Brain icon with pulse ring */}
-        <div className="relative inline-flex items-center justify-center mb-6">
-          <motion.div
-            className="absolute inset-0 rounded-full bg-[var(--color-brand-500)]/10"
-            animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0, 0.3] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <span className="text-5xl relative z-10">
-            <Brain size={48} weight="duotone" className="text-[var(--color-brand-400)]" />
-          </span>
-        </div>
-
-        <h2 className="text-xl sm:text-2xl font-garamond font-bold text-[var(--color-text-primary)] mb-6">
-          Generating Your Plan
+      {/* ── Left: forge console ── */}
+      <div>
+        <p className="std-kicker mb-4" style={{ color: "var(--signal)" }}>
+          The Compass — Forge
+        </p>
+        <h2 className="std-display font-black leading-[0.95] text-[var(--ink)] text-[clamp(1.75rem,4.5vw,2.75rem)] max-w-[14ch]">
+          Forging your system.
         </h2>
+        <p className="text-[var(--ink-2)] mt-3 max-w-md leading-relaxed">
+          The engine is assembling a habit system from your goal — hold tight.
+        </p>
 
-        {/* Steps */}
-        <div className="space-y-4 text-left max-w-xs mx-auto lg:mx-0">
+        {/* Telemetry log */}
+        <div className="mt-8 space-y-3 border-l border-[var(--line-2)] pl-5">
           {STEPS.map((s, i) => {
-            const isCompleted = i < step;
-            const isActive = i === step;
-            const state = isCompleted
-              ? "completed"
-              : isActive
-              ? "active"
-              : "inactive";
-
+            const done = i < step;
+            const active = i === step;
+            const mark = done ? "[✓]" : active ? "[▸]" : "[ ]";
             return (
               <motion.div
                 key={i}
-                className="flex items-center gap-4"
-                variants={stepVariants}
-                initial="inactive"
-                animate={state}
+                className="flex items-center gap-3 std-mono text-[12px] uppercase tracking-[0.08em]"
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: done || active ? 1 : 0.45, x: 0 }}
+                transition={{ ...springs.soft, delay: i * 0.08 }}
               >
-                <motion.div
-                  className={`w-9 h-9 rounded-full flex items-center justify-center text-sm transition-colors duration-500 ${
-                    isCompleted
-                      ? "bg-green-500/20 text-green-400"
-                      : isActive
-                      ? "bg-[var(--color-brand-600)]/20 text-[var(--color-brand-400)]"
-                      : "bg-[var(--color-surface-hover)] text-[var(--color-text-tertiary)]"
-                  }`}
-                  animate={
-                    isActive ? { scale: [1, 1.08, 1] } : { scale: 1 }
-                  }
-                  transition={
-                    isActive
-                      ? { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
-                      : {}
-                  }
-                >
-                  {isCompleted ? (
-                    <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={springs.bouncy}
-                    >
-                      <CheckCircledIcon className="w-4 h-4" />
-                    </motion.span>
-                  ) : (
-                    <s.Icon size={16} weight="duotone" />
-                  )}
-                </motion.div>
                 <span
-                  className={`text-sm font-spartan transition-colors duration-300 ${
-                    isActive
-                      ? "text-[var(--color-text-primary)] font-medium"
-                      : isCompleted
-                      ? "text-[var(--color-text-secondary)]"
-                      : "text-[var(--color-text-tertiary)]"
-                  }`}
+                  className="flex-shrink-0 w-7"
+                  style={{
+                    color: done
+                      ? "var(--signal)"
+                      : active
+                      ? "var(--ink)"
+                      : "var(--ink-3)",
+                  }}
+                >
+                  {mark}
+                </span>
+                <span
+                  className="flex-1"
+                  style={{
+                    color: done
+                      ? "var(--ink-2)"
+                      : active
+                      ? "var(--ink)"
+                      : "var(--ink-3)",
+                  }}
                 >
                   {s.label}
                 </span>
+                {active && <Cursor />}
+                {done && (
+                  <span className="text-[10px] text-[var(--ink-3)]">ok</span>
+                )}
               </motion.div>
             );
           })}
         </div>
 
-        {/* Progress bar */}
-        <div className="mt-8 h-1.5 rounded-full bg-[var(--color-surface-hover)] overflow-hidden">
-          <motion.div
-            className="h-full rounded-full bg-gradient-to-r from-[var(--color-brand-500)] to-[var(--color-brand-400)]"
-            initial={{ width: 0 }}
-            animate={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
-            transition={{ duration: 0.7, ease: "easeOut" }}
-          />
+        {/* Progress */}
+        <div className="mt-8 space-y-2 max-w-md">
+          <div className="std-meter">
+            <motion.i
+              initial={{ width: 0 }}
+              animate={{ width: `${pct}%` }}
+              transition={{ duration: 0.7, ease: "easeOut" }}
+            />
+          </div>
+          <div className="flex items-center justify-between std-mono text-[10px] uppercase tracking-[0.14em] text-[var(--ink-3)]">
+            <span>Forging</span>
+            <span style={{ color: "var(--signal)" }}>{pct}%</span>
+          </div>
         </div>
       </div>
 
-      {/* Right — Progressive plan skeleton */}
+      {/* ── Right: live blueprint ── */}
       <AnimatePresence>
         {step >= 1 && (
           <motion.div
-            className="hidden lg:block w-full max-w-sm"
-            initial={{ opacity: 0, x: 30, scale: 0.95 }}
+            className="hidden lg:block"
+            initial={{ opacity: 0, x: 30, scale: 0.97 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 30 }}
             transition={springs.gentle}
           >
-            <div className="glass-card-minimal rounded-2xl p-6 space-y-5">
+            <div className="std-card p-6 space-y-5">
               {/* Blueprint header */}
+              <div className="flex items-center justify-between">
+                <span className="std-kicker" style={{ color: "var(--signal)" }}>
+                  Blueprint — Draft
+                </span>
+                <span className="std-mono text-[10px] text-[var(--ink-3)] tracking-widest">
+                  №··
+                </span>
+              </div>
+              <hr className="std-rule" />
+
+              {/* Title block */}
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl compass-skeleton-shimmer" />
+                <div className="w-10 h-10 rounded-[var(--r-tag)] compass-skeleton-shimmer" />
                 <div className="flex-1 space-y-2">
                   <div className="h-4 w-3/4 rounded compass-skeleton-shimmer" />
                   <div className="h-3 w-1/2 rounded compass-skeleton-shimmer" />
                 </div>
               </div>
 
-              {/* Phase timeline skeleton */}
+              {/* Phase markers */}
               <AnimatePresence>
                 {step >= 2 && (
                   <motion.div
-                    className="flex gap-2 pt-2"
+                    className="flex gap-3 pt-1"
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ ...springs.soft, delay: 0.2 }}
                   >
                     {[0, 1, 2].map((j) => (
                       <div key={j} className="flex-1 space-y-1.5">
+                        <span className="std-mono text-[9px] text-[var(--ink-3)]">
+                          №{String(j + 1).padStart(2, "0")}
+                        </span>
                         <div className="h-2 rounded-full compass-skeleton-shimmer" />
-                        <div className="h-2.5 w-2/3 rounded compass-skeleton-shimmer" />
                       </div>
                     ))}
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* Habit card skeletons */}
+              {/* Habit rows — ledger entries drawing in */}
               <AnimatePresence>
                 {step >= 2 && (
                   <motion.div
-                    className="space-y-3 pt-2"
+                    className="space-y-2.5 pt-1"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.4 }}
@@ -167,23 +175,25 @@ const GeneratingOverlay = ({ step = 0 }) => {
                     {[0, 1, 2].map((j) => (
                       <motion.div
                         key={j}
-                        className="rounded-xl border border-[var(--color-border-primary)]/10 p-3 space-y-2"
+                        className="flex items-center gap-3 rounded-[var(--r-tag)] border border-[var(--line)] p-3"
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ ...springs.soft, delay: 0.5 + j * 0.15 }}
                       >
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-lg compass-skeleton-shimmer" />
-                          <div className="h-3.5 w-2/3 rounded compass-skeleton-shimmer" />
-                        </div>
-                        <div className="h-2.5 w-full rounded compass-skeleton-shimmer" />
-                        <div className="flex gap-1">
-                          {[0, 1, 2, 3, 4].map((d) => (
-                            <div
-                              key={d}
-                              className="w-5 h-5 rounded-full compass-skeleton-shimmer"
-                            />
-                          ))}
+                        <span className="std-mono text-[10px] text-[var(--ink-3)] flex-shrink-0">
+                          №{String(j + 1).padStart(2, "0")}
+                        </span>
+                        <div className="w-6 h-6 rounded-md compass-skeleton-shimmer flex-shrink-0" />
+                        <div className="flex-1 space-y-1.5">
+                          <div className="h-3 w-2/3 rounded compass-skeleton-shimmer" />
+                          <div className="flex gap-1">
+                            {[0, 1, 2, 3, 4].map((d) => (
+                              <div
+                                key={d}
+                                className="w-4 h-4 rounded-full compass-skeleton-shimmer"
+                              />
+                            ))}
+                          </div>
                         </div>
                       </motion.div>
                     ))}
@@ -191,17 +201,17 @@ const GeneratingOverlay = ({ step = 0 }) => {
                 )}
               </AnimatePresence>
 
-              {/* Action bar skeleton */}
+              {/* Action bar */}
               <AnimatePresence>
                 {step >= 3 && (
                   <motion.div
-                    className="flex gap-2 pt-3 border-t border-[var(--color-border-primary)]/10"
+                    className="flex gap-2 pt-3 border-t border-[var(--line)]"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.3 }}
                   >
-                    <div className="h-10 flex-1 rounded-xl compass-skeleton-shimmer" />
-                    <div className="h-10 w-24 rounded-xl compass-skeleton-shimmer" />
+                    <div className="h-10 flex-1 rounded-[var(--r-btn)] compass-skeleton-shimmer" />
+                    <div className="h-10 w-24 rounded-[var(--r-btn)] compass-skeleton-shimmer" />
                   </motion.div>
                 )}
               </AnimatePresence>
