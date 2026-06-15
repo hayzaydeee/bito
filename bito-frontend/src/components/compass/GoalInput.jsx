@@ -1,14 +1,16 @@
 import { useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeftIcon, Link2Icon } from "@radix-ui/react-icons";
-import { Brain, Question } from "@phosphor-icons/react";
+import { ArrowLeftIcon, ArrowRightIcon, Link2Icon } from "@radix-ui/react-icons";
 import { SUGGESTED_GOALS } from "../../data/categoryMeta";
-import { springs, fadeUp } from "./compassMotion";
+import { springs } from "./compassMotion";
 
 /**
- * GoalInput — the "create compass" screen.
- * Auto-resizing textarea, animated step transitions, horizontal scroll pills,
- * character counter ring, clarification Q&A with motion.
+ * GoalInput — the "create compass" threshold, rebuilt in the DRILL editorial
+ * language: a left-aligned canvas (mono kicker → giant Fraunces question), the
+ * goal field as a signal-ticked ledger card with a std-meter fill + mono count,
+ * a "Forge my system" CTA, and starter goals as mono-arrow chips. The
+ * clarification phase becomes a numbered (№) intake.
+ * Preserves auto-resize, the character meter, and the two-step clarify flow.
  */
 
 const CHAR_LIMIT = 3000;
@@ -43,92 +45,64 @@ const GoalInput = ({
     autoResize();
   }, [goalText, autoResize]);
 
-  // Character counter ring
+  // Character meter
   const charPercent = Math.min((goalText.length / CHAR_LIMIT) * 100, 100);
-  const charColor = goalText.length > CHAR_WARN
-    ? "var(--color-text-warning, #f59e0b)"
-    : goalText.length > CHAR_LIMIT
-    ? "#ef4444"
-    : "var(--color-brand-500)";
+  const charColor =
+    goalText.length > CHAR_LIMIT
+      ? "var(--rose)"
+      : goalText.length > CHAR_WARN
+      ? "var(--ember)"
+      : "var(--signal)";
 
   // Step indicator (1: write, 2: clarify)
   const currentStep = hasClarification ? 2 : 1;
 
   return (
     <motion.div
-      className="max-w-2xl mx-auto space-y-8"
+      className="std max-w-3xl mx-auto"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={springs.soft}
     >
-      {/* Back + Step indicator */}
-      <div className="flex items-center justify-between">
+      {/* Top bar — back + indexed step readout */}
+      <div className="flex items-center justify-between mb-10">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-sm font-spartan text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+          className="std-mono inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors"
         >
-          <ArrowLeftIcon className="w-4 h-4" /> Back
+          <ArrowLeftIcon className="w-3.5 h-3.5" /> Back
         </button>
 
-        {/* Step dots */}
-        <div className="flex items-center gap-2">
-          {[1, 2].map((step) => (
-            <div key={step} className="flex items-center gap-1.5">
-              <div
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  step === currentStep
-                    ? "bg-[var(--color-brand-500)] scale-125"
-                    : step < currentStep
-                    ? "bg-[var(--color-brand-500)]/50"
-                    : "bg-[var(--color-surface-hover)]"
-                }`}
-              />
-              {step < 2 && (
-                <div
-                  className={`w-6 h-0.5 rounded-full transition-colors duration-300 ${
-                    step < currentStep
-                      ? "bg-[var(--color-brand-500)]/40"
-                      : "bg-[var(--color-surface-hover)]"
-                  }`}
-                />
-              )}
-            </div>
-          ))}
-          <span className="ml-2 text-[10px] font-spartan text-[var(--color-text-tertiary)]">
-            {currentStep === 1 ? "Describe" : "Clarify"}
+        <div className="flex items-center gap-3 std-mono text-[11px] uppercase tracking-[0.14em]">
+          <span className={currentStep === 1 ? "text-[var(--ink)]" : "text-[var(--ink-3)]"}>
+            01 Describe
+          </span>
+          <span className="text-[var(--line-3)]">—</span>
+          <span className={currentStep === 2 ? "text-[var(--ink)]" : "text-[var(--ink-3)]"}>
+            02 Clarify
           </span>
         </div>
       </div>
 
-      {/* Hero */}
+      {/* Masthead */}
       <AnimatePresence mode="wait">
         <motion.div
           key={hasClarification ? "clarify" : "goal"}
-          className="text-center py-4"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -12 }}
           transition={springs.soft}
         >
-          <motion.div
-            className="w-16 h-16 mb-4 mx-auto flex items-center justify-center rounded-2xl bg-[var(--color-brand-500)]/10"
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={springs.bouncy}
-          >
-            {hasClarification
-              ? <Question size={36} weight="duotone" className="text-[var(--color-brand-400)]" />
-              : <Brain size={36} weight="duotone" className="text-[var(--color-brand-400)]" />}
-          </motion.div>
-          <h2 className="text-2xl sm:text-3xl font-garamond font-bold text-[var(--color-text-primary)]">
-            {hasClarification
-              ? "A few things first..."
-              : "What do you want to achieve?"}
-          </h2>
-          <p className="text-base text-[var(--color-text-secondary)] font-spartan mt-2 max-w-lg mx-auto">
+          <p className="std-kicker mb-4" style={{ color: "var(--signal)" }}>
+            {hasClarification ? "The Compass — Intake" : "The Compass — New System"}
+          </p>
+          <h1 className="std-display font-black leading-[0.95] text-[var(--ink)] text-[clamp(2rem,6vw,3.75rem)] max-w-[15ch]">
+            {hasClarification ? "A few specifics." : "What are you working toward?"}
+          </h1>
+          <p className="text-[var(--ink-2)] mt-4 max-w-xl leading-relaxed">
             {hasClarification
               ? clarification.reasoning
-              : "Describe your goal and AI will design a personalized habit system for you."}
+              : "State the goal in your own words — the engine forges a habit system around it."}
           </p>
         </motion.div>
       </AnimatePresence>
@@ -137,7 +111,7 @@ const GoalInput = ({
       <AnimatePresence>
         {error && (
           <motion.div
-            className="p-4 rounded-xl bg-red-500/10 text-red-400 text-sm font-spartan"
+            className="mt-6 p-4 rounded-[var(--r-btn)] border border-[var(--rose)]/30 bg-[var(--rose)]/10 text-[var(--rose)] text-sm"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
@@ -151,25 +125,26 @@ const GoalInput = ({
       <AnimatePresence>
         {isMultiGoal && hasClarification && (
           <motion.div
-            className="std-card rounded-2xl p-4 space-y-2 border border-purple-500/20"
+            className="mt-8 std-card p-4 space-y-2"
+            style={{ borderColor: "color-mix(in srgb, var(--signal) 35%, var(--line-2))" }}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={springs.soft}
           >
             <div className="flex items-center gap-2">
-              <Link2Icon className="w-4 h-4 text-purple-400" />
-              <span className="text-sm font-spartan font-semibold text-purple-400">
-                Multiple Goals Detected
+              <Link2Icon className="w-4 h-4 text-[var(--signal)]" />
+              <span className="std-kicker" style={{ color: "var(--signal)" }}>
+                Multiple goals detected
               </span>
             </div>
             {goalAnalysis.structureSummary && (
-              <p className="text-sm text-[var(--color-text-secondary)] font-spartan">
+              <p className="text-sm text-[var(--ink-2)] leading-relaxed">
                 {goalAnalysis.structureSummary}
               </p>
             )}
             {goalAnalysis.capacityNote && (
-              <p className="text-xs text-[var(--color-text-tertiary)] font-spartan italic">
+              <p className="text-xs text-[var(--ink-3)] italic">
                 {goalAnalysis.capacityNote}
               </p>
             )}
@@ -177,12 +152,12 @@ const GoalInput = ({
         )}
       </AnimatePresence>
 
-      {/* ── Clarification Questions ── */}
+      {/* ── Phase switch ── */}
       <AnimatePresence mode="wait">
         {hasClarification ? (
           <motion.div
             key="clarification"
-            className="space-y-5"
+            className="mt-10 space-y-5"
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -40 }}
@@ -191,16 +166,21 @@ const GoalInput = ({
             {clarification.questions.map((q, i) => (
               <motion.div
                 key={i}
-                className="std-card rounded-2xl p-5 space-y-3"
+                className="std-card p-5 space-y-3"
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ ...springs.soft, delay: i * 0.08 }}
               >
-                <p className="text-sm font-spartan font-medium text-[var(--color-text-primary)]">
-                  {q.question}
-                </p>
+                <div className="flex items-baseline gap-2.5">
+                  <span className="std-mono text-[12px] text-[var(--signal)] flex-shrink-0">
+                    №{String(i + 1).padStart(2, "0")}
+                  </span>
+                  <p className="font-semibold text-[var(--ink)] text-[15px] leading-snug">
+                    {q.question}
+                  </p>
+                </div>
                 {q.why && (
-                  <p className="text-xs font-spartan text-[var(--color-text-tertiary)]">
+                  <p className="text-xs text-[var(--ink-3)] leading-relaxed pl-[2.4rem]">
                     {q.why}
                   </p>
                 )}
@@ -212,7 +192,7 @@ const GoalInput = ({
                       ? `e.g., ${q.examples[0]}`
                       : "Your answer..."
                   }
-                  className="w-full h-20 p-3 rounded-xl bg-[var(--color-surface-elevated)] text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-600)]/40 resize-none border border-[var(--color-border-primary)]/10"
+                  className="w-full h-20 p-3 rounded-[var(--r-btn)] bg-[var(--bg-2)] text-sm text-[var(--ink)] placeholder:text-[var(--ink-3)] focus:outline-none focus:border-[var(--signal)] resize-none border border-[var(--line-2)] transition-colors"
                 />
                 {q.examples?.length > 1 && (
                   <div className="flex flex-wrap gap-1.5">
@@ -220,7 +200,7 @@ const GoalInput = ({
                       <button
                         key={ei}
                         onClick={() => onUpdateAnswer(i, ex)}
-                        className="text-xs font-spartan px-3 py-1 rounded-lg bg-[var(--color-surface-hover)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] border border-[var(--color-border-primary)]/10 transition-colors"
+                        className="std-mono text-[10px] uppercase tracking-wide px-2.5 py-1 rounded-[var(--r-tag)] border border-[var(--line-2)] text-[var(--ink-3)] hover:text-[var(--ink-2)] hover:border-[var(--line-3)] transition-colors"
                       >
                         {ex}
                       </button>
@@ -242,7 +222,8 @@ const GoalInput = ({
                 onClick={onClarificationSubmit}
                 className="std-btn std-btn--signal flex-1 h-14"
               >
-                Generate My Plan
+                Generate my plan
+                <ArrowRightIcon className="w-4 h-4" />
               </motion.button>
               <motion.button
                 whileTap={{ scale: 0.98 }}
@@ -256,52 +237,49 @@ const GoalInput = ({
         ) : (
           <motion.div
             key="input"
-            className="space-y-6"
+            className="mt-10 space-y-8"
             initial={{ opacity: 0, x: -40 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 40 }}
             transition={springs.soft}
           >
-            {/* Textarea — std-card with auto-resize */}
-            <div className="std-card rounded-2xl p-1 focus-within:ring-1 focus-within:ring-[var(--color-brand-500)]/20 transition-shadow">
-              <textarea
-                ref={textareaRef}
-                value={goalText}
-                onChange={(e) => setGoalText(e.target.value)}
-                onInput={autoResize}
-                placeholder="e.g., I want to run a 5K in 8 weeks..."
-                className="w-full min-h-[120px] max-h-[320px] p-5 rounded-xl bg-transparent text-base font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none resize-none"
-                maxLength={CHAR_LIMIT}
-                autoFocus
-              />
-              {/* Character counter */}
-              <div className="flex justify-between items-center px-4 pb-3">
-                <p className="text-xs text-[var(--color-text-tertiary)] font-spartan">
-                  Be as descriptive as you like
-                </p>
-                <div className="flex items-center gap-2">
-                  {/* Mini ring */}
-                  <svg width="16" height="16" viewBox="0 0 16 16" className="flex-shrink-0">
-                    <circle cx="8" cy="8" r="6" fill="none" stroke="var(--color-surface-hover)" strokeWidth="2" />
-                    <circle
-                      cx="8" cy="8" r="6" fill="none" stroke={charColor} strokeWidth="2"
-                      strokeDasharray={`${(charPercent / 100) * 37.7} 37.7`}
-                      strokeLinecap="round"
-                      transform="rotate(-90 8 8)"
-                      className="transition-all duration-300"
+            {/* Goal field — editorial ledger card */}
+            <div>
+              <p className="std-kicker mb-3">Your goal</p>
+              <div className="std-card relative overflow-hidden p-5 focus-within:border-[var(--line-3)] transition-colors">
+                <span className="absolute left-0 top-0 bottom-0 w-[3px] bg-[var(--signal)] opacity-70" />
+                <textarea
+                  ref={textareaRef}
+                  value={goalText}
+                  onChange={(e) => setGoalText(e.target.value)}
+                  onInput={autoResize}
+                  placeholder="e.g., Run a 5K in 8 weeks without burning out"
+                  className="w-full min-h-[120px] max-h-[320px] bg-transparent text-lg text-[var(--ink)] placeholder:text-[var(--ink-3)] focus:outline-none resize-none leading-relaxed"
+                  maxLength={CHAR_LIMIT}
+                  autoFocus
+                />
+                {/* Character meter */}
+                <div className="mt-3 flex items-center gap-4">
+                  <div className="std-meter flex-1">
+                    <i
+                      style={{
+                        width: `${charPercent}%`,
+                        background: charColor,
+                        transition: "width .3s ease, background .2s ease",
+                      }}
                     />
-                  </svg>
+                  </div>
                   <span
-                    className="text-xs font-spartan transition-colors duration-200"
+                    className="std-mono text-[11px] flex-shrink-0 transition-colors duration-200"
                     style={{ color: charColor }}
                   >
-                    {goalText.length.toLocaleString()}
+                    {goalText.length.toLocaleString()} / {CHAR_LIMIT.toLocaleString()}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Generate button */}
+            {/* Forge CTA */}
             <motion.button
               whileTap={{ scale: 0.98 }}
               onClick={onGenerate}
@@ -311,20 +289,21 @@ const GoalInput = ({
               className="std-btn std-btn--signal w-full h-14 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {clarifyLoading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Analyzing your goal...
-                </span>
+                <>
+                  <span className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+                  Analyzing goal...
+                </>
               ) : (
-                "Generate My Plan"
+                <>
+                  Forge my system
+                  <ArrowRightIcon className="w-4 h-4" />
+                </>
               )}
             </motion.button>
 
-            {/* Suggested goals — horizontal scroll on mobile */}
+            {/* Starter goals — horizontal scroll on mobile */}
             <div>
-              <p className="std-kicker mb-3">
-                Try a suggestion
-              </p>
+              <p className="std-kicker mb-3">Starter goals</p>
               <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 sm:flex-wrap scrollbar-none">
                 {SUGGESTED_GOALS.map((g, i) => (
                   <motion.button
@@ -334,8 +313,11 @@ const GoalInput = ({
                     transition={{ ...springs.soft, delay: 0.3 + i * 0.03 }}
                     whileTap={{ scale: 0.96 }}
                     onClick={() => setGoalText(g)}
-                    className="text-sm font-spartan px-4 py-2 rounded-xl bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/10 hover:border-[var(--color-border-primary)]/30 transition-all whitespace-nowrap flex-shrink-0 sm:flex-shrink"
+                    className="group inline-flex items-center gap-2 px-4 py-2 rounded-[var(--r-pill)] border border-[var(--line-2)] text-sm text-[var(--ink-2)] hover:text-[var(--ink)] hover:border-[var(--signal)] transition-all whitespace-nowrap flex-shrink-0 sm:flex-shrink"
                   >
+                    <span className="std-mono text-[10px] text-[var(--ink-3)] group-hover:text-[var(--signal)] transition-colors">
+                      →
+                    </span>
                     {g}
                   </motion.button>
                 ))}

@@ -49,7 +49,7 @@ const CompassCreatePage = () => {
 
   return (
     <motion.div
-      className="min-h-screen page-container px-4 sm:px-6 py-10"
+      className="std min-h-screen px-4 sm:px-6 py-10"
       variants={pageVariants}
       initial="initial"
       animate="animate"
