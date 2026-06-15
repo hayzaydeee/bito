@@ -1,9 +1,10 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { PlusIcon, TargetIcon, LightningBoltIcon } from "@radix-ui/react-icons";
+import { PlusIcon } from "@radix-ui/react-icons";
 import useCompassList from "./hooks/useCompassList";
 import CompassCard from "./CompassCard";
 import CompassEmptyState from "./CompassEmptyState";
+import FeatureHeader from "../shared/standard/FeatureHeader";
 import DiscardModal from "./DiscardModal";
 import SuitePreview from "./SuitePreview";
 import { compassAPI } from "../../services/api";
@@ -50,8 +51,8 @@ const CompassListPage = () => {
   // ── Suite preview (if redirected from multi-goal generation) ──
   if (activeSuite) {
     return (
-      <div className="min-h-screen page-container px-4 sm:px-6 py-10">
-        <div className="max-w-5xl mx-auto">
+      <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
+        <div className="max-w-6xl mx-auto">
           <SuitePreview
             suite={activeSuite}
             onBack={() => setActiveSuite(null)}
@@ -93,66 +94,42 @@ const CompassListPage = () => {
     <>
       {discardModalEl}
       <motion.div
-        className="min-h-screen page-container px-4 sm:px-6 py-8 sm:py-10"
+        className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12"
         variants={pageVariants}
         initial="initial"
         animate="animate"
         exit="exit"
       >
-        <div className="max-w-5xl mx-auto">
-          {/* Header — hidden in empty state since CompassEmptyState is self-contained */}
-          {!loading && compasses.length > 0 && (
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 sm:mb-10">
-              <motion.div variants={fadeUp}>
-                <h1 className="text-3xl font-bold font-garamond text-[var(--color-text-primary)] mb-1">
-                  Compasses
-                </h1>
-                <p className="text-sm text-[var(--color-text-secondary)] font-spartan">
-                  AI-powered habit systems from your goals
-                </p>
-              </motion.div>
+        <div className="max-w-6xl mx-auto">
+          {/* Header — shared Feature-Home masthead (twin of Groups home) */}
+          <FeatureHeader
+            kicker="The Compass — Systems"
+            title="Compasses"
+            stats={
+              !loading && compasses.length > 0 ? (
+                <>
+                  <span className="text-[var(--signal)]">{String(activeCount).padStart(2, "0")}</span> ACTIVE
+                  {"  ·  "}
+                  <span className="text-[var(--ink-2)]">{totalHabits}</span> HABIT{totalHabits !== 1 ? "S" : ""} TRACKING
+                  {"  ·  "}
+                  <span className="text-[var(--ink-2)]">{compasses.length}</span> TOTAL
+                </>
+              ) : (
+                "AI-POWERED HABIT SYSTEMS FROM YOUR GOALS"
+              )
+            }
+            actions={
               <motion.button
                 variants={fadeUp}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => navigate("/app/compass/new")}
-                className="flex items-center justify-center gap-2 h-11 w-full sm:w-auto px-5 text-white rounded-xl text-sm font-spartan font-medium transition-colors"
-                style={{
-                  background:
-                    "linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700))",
-                }}
+                className="std-btn std-btn--signal w-full sm:w-auto"
               >
                 <PlusIcon className="w-4 h-4" />
                 New compass
               </motion.button>
-            </div>
-          )}
-
-          {/* Stat pills */}
-          {!loading && compasses.length > 0 && (
-            <motion.div
-              className="flex items-center gap-3 mb-6 flex-wrap"
-              variants={fadeUp}
-            >
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/15">
-                <TargetIcon className="w-3.5 h-3.5 text-green-400" />
-                <span className="text-xs font-spartan font-semibold text-[var(--color-text-primary)]">
-                  {activeCount}
-                </span>
-                <span className="text-xs font-spartan text-[var(--color-text-tertiary)]">
-                  active
-                </span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/15">
-                <LightningBoltIcon className="w-3.5 h-3.5 text-[var(--color-brand-500)]" />
-                <span className="text-xs font-spartan font-semibold text-[var(--color-text-primary)]">
-                  {totalHabits}
-                </span>
-                <span className="text-xs font-spartan text-[var(--color-text-tertiary)]">
-                  habit{totalHabits !== 1 && "s"} tracking
-                </span>
-              </div>
-            </motion.div>
-          )}
+            }
+          />
 
           {error && (
             <p className="text-sm text-red-400 font-spartan mb-4">{error}</p>
@@ -213,17 +190,17 @@ const CompassListPage = () => {
               {suiteGroups.map((suite) => (
                 <div
                   key={suite.suiteId}
-                  className="glass-card-minimal rounded-2xl p-4 space-y-3"
+                  className="std-card p-4 space-y-3"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-spartan font-semibold text-purple-400 uppercase tracking-wider">
+                    <span className="std-kicker" style={{ color: "var(--signal)" }}>
                       Suite
                     </span>
-                    <span className="text-xs font-spartan text-[var(--color-text-tertiary)]">
+                    <span className="text-xs text-[var(--ink-3)]">
                       · {suite.suiteName}
                     </span>
                     <div className="flex-1" />
-                    <span className="text-[10px] font-spartan text-[var(--color-text-tertiary)] bg-purple-500/10 px-2 py-0.5 rounded-md">
+                    <span className="grp-mono text-[10px] text-[var(--signal)] bg-[var(--signal)]/10 px-2 py-0.5 rounded-md uppercase tracking-wider">
                       {suite.compasses.length} linked
                     </span>
                   </div>
