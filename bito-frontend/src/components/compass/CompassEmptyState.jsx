@@ -70,7 +70,7 @@ const CompassEmptyState = ({ onCreateNew, onGoalSelect }) => {
 
       {/* Goal suggestion pills */}
       <motion.div className="relative z-10 mb-8" variants={itemVariants}>
-        <p className="text-xs font-spartan font-medium text-[var(--color-text-tertiary)] uppercase tracking-wider mb-3">
+        <p className="std-kicker mb-3">
           Try a goal
         </p>
         <div className="flex flex-wrap justify-center gap-2 px-2">
@@ -96,11 +96,7 @@ const CompassEmptyState = ({ onCreateNew, onGoalSelect }) => {
           whileHover={prefersReduced ? {} : { scale: 1.03 }}
           whileTap={prefersReduced ? {} : { scale: 0.97 }}
           onClick={onCreateNew}
-          className="inline-flex items-center gap-2 h-12 px-7 rounded-xl text-sm font-spartan font-semibold text-white transition-all shadow-lg shadow-[var(--color-brand-600)]/20 hover:shadow-xl hover:shadow-[var(--color-brand-600)]/30"
-          style={{
-            background:
-              "linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700))",
-          }}
+          className="std-btn std-btn--signal h-12 px-7"
         >
           <PlusIcon className="w-4 h-4" />
           Create your first compass

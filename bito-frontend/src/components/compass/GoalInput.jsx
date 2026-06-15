@@ -151,7 +151,7 @@ const GoalInput = ({
       <AnimatePresence>
         {isMultiGoal && hasClarification && (
           <motion.div
-            className="glass-card-minimal rounded-2xl p-4 space-y-2 border border-purple-500/20"
+            className="std-card rounded-2xl p-4 space-y-2 border border-purple-500/20"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
@@ -191,7 +191,7 @@ const GoalInput = ({
             {clarification.questions.map((q, i) => (
               <motion.div
                 key={i}
-                className="glass-card-minimal rounded-2xl p-5 space-y-3"
+                className="std-card rounded-2xl p-5 space-y-3"
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ ...springs.soft, delay: i * 0.08 }}
@@ -240,14 +240,14 @@ const GoalInput = ({
               <motion.button
                 whileTap={{ scale: 0.98 }}
                 onClick={onClarificationSubmit}
-                className="flex-1 h-14 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white rounded-xl text-base font-spartan font-medium transition-all hover:shadow-lg hover:shadow-[var(--color-brand-600)]/20"
+                className="std-btn std-btn--signal flex-1 h-14"
               >
                 Generate My Plan
               </motion.button>
               <motion.button
                 whileTap={{ scale: 0.98 }}
                 onClick={onSkipClarification}
-                className="h-14 px-6 bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] rounded-xl text-sm font-spartan font-medium transition-colors border border-[var(--color-border-primary)]/10"
+                className="std-btn h-14 px-6"
               >
                 Skip
               </motion.button>
@@ -262,8 +262,8 @@ const GoalInput = ({
             exit={{ opacity: 0, x: 40 }}
             transition={springs.soft}
           >
-            {/* Textarea — glass-card-minimal with auto-resize */}
-            <div className="glass-card-minimal rounded-2xl p-1 focus-within:ring-1 focus-within:ring-[var(--color-brand-500)]/20 transition-shadow">
+            {/* Textarea — std-card with auto-resize */}
+            <div className="std-card rounded-2xl p-1 focus-within:ring-1 focus-within:ring-[var(--color-brand-500)]/20 transition-shadow">
               <textarea
                 ref={textareaRef}
                 value={goalText}
@@ -308,7 +308,7 @@ const GoalInput = ({
               disabled={
                 !goalText.trim() || goalText.trim().length < 5 || clarifyLoading
               }
-              className="w-full h-14 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] text-white rounded-xl text-base font-spartan font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-[var(--color-brand-600)]/20"
+              className="std-btn std-btn--signal w-full h-14 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {clarifyLoading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -322,7 +322,7 @@ const GoalInput = ({
 
             {/* Suggested goals — horizontal scroll on mobile */}
             <div>
-              <p className="text-xs font-spartan text-[var(--color-text-tertiary)] uppercase tracking-wider mb-3">
+              <p className="std-kicker mb-3">
                 Try a suggestion
               </p>
               <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 sm:flex-wrap scrollbar-none">
