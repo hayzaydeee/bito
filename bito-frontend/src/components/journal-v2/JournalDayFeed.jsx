@@ -36,7 +36,7 @@ const JournalDayFeed = ({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="w-6 h-6 border-2 border-[var(--color-text-tertiary)] border-t-[var(--color-brand-500)] rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-[var(--line-2)] border-t-[var(--signal)] rounded-full animate-spin" />
       </div>
     );
   }
@@ -84,23 +84,16 @@ const JournalDayFeed = ({
         {micros.length > 0 && (
           <div className="pb-4">
             <div className="flex items-center gap-3">
-              <div className="flex-1 h-px" style={{ backgroundColor: 'var(--color-border-primary)' }} />
-              <span className="text-[10px] font-spartan font-semibold uppercase tracking-wider"
-                style={{ color: 'var(--color-text-tertiary)' }}>
-                Long-form
-              </span>
-              <div className="flex-1 h-px" style={{ backgroundColor: 'var(--color-border-primary)' }} />
+              <div className="flex-1 h-px" style={{ backgroundColor: 'var(--line-2)' }} />
+              <span className="std-kicker">Long-form</span>
+              <div className="flex-1 h-px" style={{ backgroundColor: 'var(--line-2)' }} />
             </div>
           </div>
         )}
 
         {/* Longform editor */}
         <div className="pb-6">
-          <div className="rounded-xl border overflow-hidden" data-tour="journal-editor"
-            style={{
-              backgroundColor: 'var(--color-surface-primary)',
-              borderColor: 'var(--color-border-primary)',
-            }}>
+          <div className="std-card overflow-hidden" data-tour="journal-editor">
             <div className="pl-0 pr-4 py-4 sm:pr-6 sm:py-6">
               {editorSlot}
             </div>
@@ -110,9 +103,9 @@ const JournalDayFeed = ({
       </div>
 
       {/* ── Footer status bar ───────────────────────────────── */}
-      <div className="flex-shrink-0 border-t py-2 max-w-[740px] mx-auto w-full flex items-center justify-between text-xs font-spartan"
+      <div className="flex-shrink-0 border-t py-2 max-w-[740px] mx-auto w-full flex items-center justify-between grp-mono text-[10px] uppercase tracking-wider"
         data-tour="journal-status-bar"
-        style={{ borderColor: 'var(--color-border-primary)', color: 'var(--color-text-tertiary)' }}>
+        style={{ borderColor: 'var(--line-2)', color: 'var(--ink-3)' }}>
         <div className="flex items-center gap-3">
           <span>{wordCount} words</span>
           {micros.length > 0 && (
@@ -127,24 +120,24 @@ const JournalDayFeed = ({
         <div className="flex items-center gap-1.5">
           {saveStatus === 'saving' && (
             <>
-              <div className="w-2 h-2 rounded-full bg-[var(--color-brand-400)] animate-pulse" />
+              <div className="w-2 h-2 rounded-full bg-[var(--signal)] animate-pulse" />
               <span>Saving…</span>
             </>
           )}
           {saveStatus === 'saved' && (
             <>
-              <div className="w-2 h-2 rounded-full bg-[var(--color-success)]" />
+              <div className="w-2 h-2 rounded-full bg-[var(--signal)]" />
               <span>Saved</span>
             </>
           )}
           {saveStatus === 'error' && (
             <>
-              <div className="w-2 h-2 rounded-full bg-[var(--color-error)]" />
-              <span className="text-[var(--color-error)]">Error saving</span>
+              <div className="w-2 h-2 rounded-full bg-[var(--rose)]" />
+              <span style={{ color: 'var(--rose)' }}>Error saving</span>
             </>
           )}
           {saveStatus === 'idle' && (
-            <span style={{ color: 'var(--color-text-tertiary)' }}>Ready</span>
+            <span style={{ color: 'var(--ink-3)' }}>Ready</span>
           )}
         </div>
       </div>

@@ -38,7 +38,7 @@ const DayCell = memo(({ date, isSelected, isCurrentDay, indicator, onSelect }) =
           ? 'var(--color-brand-500)'
           : 'transparent',
         color: isSelected
-          ? 'white'
+          ? 'var(--signal-ink)'
           : isCurrentDay
           ? 'var(--color-brand-500)'
           : 'var(--color-text-primary)',
@@ -47,7 +47,7 @@ const DayCell = memo(({ date, isSelected, isCurrentDay, indicator, onSelect }) =
       aria-pressed={isSelected}
     >
       {/* Day letter */}
-      <span className="text-[10px] font-spartan font-semibold uppercase opacity-60">
+      <span className="text-[10px] grp-mono font-bold uppercase opacity-60">
         {DAY_LABELS[date.getDay()]}
       </span>
 
@@ -178,7 +178,7 @@ const CalendarPopover = memo(({ selectedDate, onSelect, onClose, indicators }) =
               style={{
                 backgroundColor: isSel ? 'var(--color-brand-500)' : 'transparent',
                 color: isSel
-                  ? 'white'
+                  ? 'var(--signal-ink)'
                   : !isCurrentMonth || isFuture
                   ? 'var(--color-text-tertiary)'
                   : isTdy

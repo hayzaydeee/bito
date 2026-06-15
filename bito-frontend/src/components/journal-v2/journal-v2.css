@@ -6,10 +6,14 @@
 .journal-v2-page {
   background-color: var(--color-bg-primary);
 }
+/* Under Standard, stay transparent so the single app-shell grid shows through. */
+[data-ds="standard"] .journal-v2-page {
+  background-color: transparent;
+}
 
 /* ── Editor overrides ────────────────────────────────────────── */
 .journal-v2-editor .bn-container {
-  font-family: 'EB Garamond', serif;
+  font-family: var(--font-garamond);
 }
 
 .journal-v2-editor .bn-block-content {
@@ -19,7 +23,7 @@
 }
 
 .journal-v2-editor .bn-inline-content {
-  font-family: 'EB Garamond', serif;
+  font-family: var(--font-garamond);
 }
 
 /* Clean placeholder styling */
@@ -34,7 +38,7 @@
 .journal-v2-editor h1 .bn-inline-content,
 .journal-v2-editor h2 .bn-inline-content,
 .journal-v2-editor h3 .bn-inline-content {
-  font-family: 'EB Garamond', serif;
+  font-family: var(--font-garamond);
   font-weight: 700;
 }
 
@@ -52,7 +56,7 @@
 .journal-v2-editor [data-content-type="audio"] .bn-file-caption,
 .journal-v2-editor [data-content-type="file"] input,
 .journal-v2-editor [data-content-type="file"] .bn-file-caption {
-  font-family: 'EB Garamond', serif !important;
+  font-family: var(--font-garamond) !important;
 }
 
 /* Remove default editor border/shadow */

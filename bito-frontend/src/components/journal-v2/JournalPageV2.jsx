@@ -135,39 +135,24 @@ const JournalPageV2 = () => {
   }
 
   return (
-    <div className="journal-v2-page flex flex-col h-full overflow-clip p-4 sm:p-6 max-w-5xl mx-auto w-full">
+    <div className="journal-v2-page std flex flex-col h-full overflow-clip p-4 sm:p-6 max-w-5xl mx-auto w-full">
       {/* ── Top bar ─────────────────────────────────────────── */}
-      <div className="flex-shrink-0 pb-2">
-        <div className="flex items-center justify-between mb-2">
-          {/* Left: Title · contextual date */}
-          <div className="flex items-baseline gap-2 min-w-0">
-            <h1 className="text-2xl font-garamond font-bold flex-shrink-0" style={{ color: 'var(--color-text-primary)' }}>
+      <div className="flex-shrink-0 pb-3">
+        <div className="flex items-end justify-between mb-3 gap-3">
+          {/* Left: kicker + Title */}
+          <div className="min-w-0">
+            <p className="std-kicker mb-1.5">The Ledger — Journal</p>
+            <h1 className="std-display text-[28px] sm:text-[34px] font-bold leading-none truncate" style={{ color: 'var(--ink)' }}>
               Journal
             </h1>
-            {/* <span className="text-sm font-spartan font-medium truncate" style={{ color: 'var(--color-text-secondary)' }}>
-              ·&nbsp; {headerDateLabel}
-            </span> */}
           </div>
 
           {/* Right: Accessory icons */}
-          <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+          <div className="flex items-center gap-2 flex-shrink-0">
             {/* Journal Intelligence button */}
             <button
               onClick={() => setShowPrivacySettings(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-spartan font-semibold transition-all duration-200 active:scale-95"
-              style={{
-                color: 'white',
-                backgroundColor: 'var(--color-brand-500)',
-                boxShadow: '0 1px 4px var(--color-glow)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-brand-600)';
-                e.currentTarget.style.boxShadow = '0 2px 8px var(--color-glow)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-brand-500)';
-                e.currentTarget.style.boxShadow = '0 1px 4px var(--color-glow)';
-              }}
+              className="std-btn std-btn--signal std-btn--sm"
               aria-label="Journal Intelligence settings"
               data-tour="journal-intelligence"
             >
@@ -180,60 +165,48 @@ const JournalPageV2 = () => {
 
             {/* View toggle: Day / List */}
             <div
-              className="flex items-center rounded-lg border p-0.5"
-              style={{ borderColor: 'var(--color-border-primary)' }}
+              className="flex items-center rounded-[10px] border border-[var(--line-2)] bg-[var(--bg-2)] p-0.5"
               data-tour="journal-view-toggle"
             >
-              <button
-                onClick={() => setActiveView('day')}
-                className="p-1.5 rounded-md transition-colors"
-                style={{
-                  backgroundColor: activeView === 'day' ? 'var(--color-surface-elevated)' : 'transparent',
-                  color: activeView === 'day' ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
-                }}
-                aria-label="Day view"
-                title="Day view"
-              >
-                <FileTextIcon className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setActiveView('list')}
-                className="p-1.5 rounded-md transition-colors"
-                style={{
-                  backgroundColor: activeView === 'list' ? 'var(--color-surface-elevated)' : 'transparent',
-                  color: activeView === 'list' ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
-                }}
-                aria-label="List view"
-                title="List view"
-              >
-                <ListBulletIcon className="w-4 h-4" />
-              </button>
+              {[
+                { id: 'day', Icon: FileTextIcon, label: 'Day view' },
+                { id: 'list', Icon: ListBulletIcon, label: 'List view' },
+              ].map(({ id, Icon, label }) => (
+                <button
+                  key={id}
+                  onClick={() => setActiveView(id)}
+                  className="p-1.5 rounded-[7px] transition-colors"
+                  style={{
+                    backgroundColor: activeView === id ? 'var(--surface-2)' : 'transparent',
+                    color: activeView === id ? 'var(--signal)' : 'var(--ink-3)',
+                  }}
+                  aria-label={label}
+                  title={label}
+                >
+                  <Icon className="w-4 h-4" />
+                </button>
+              ))}
             </div>
 
             {/* Search toggle */}
             <button
               onClick={() => showSearch ? clearSearch() : setShowSearch(true)}
-              className="p-2.5 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
-              style={{ color: 'var(--color-text-secondary)' }}
+              className="w-9 h-9 flex items-center justify-center rounded-[10px] border border-[var(--line-2)] text-[var(--ink-3)] hover:text-[var(--ink)] hover:bg-[var(--surface-2)] transition-colors"
               aria-label={showSearch ? 'Close search' : 'Search journal'}
               data-tour="journal-search"
             >
-              {showSearch
-                ? <Cross2Icon className="w-5 h-5" />
-                : <MagnifyingGlassIcon className="w-5 h-5" />
-              }
+              {showSearch ? <Cross2Icon className="w-4 h-4" /> : <MagnifyingGlassIcon className="w-4 h-4" />}
             </button>
 
             {/* Archive link */}
             <button
               onClick={() => setShowArchive(true)}
-              className="p-2.5 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
-              style={{ color: 'var(--color-text-secondary)' }}
+              className="w-9 h-9 flex items-center justify-center rounded-[10px] border border-[var(--line-2)] text-[var(--ink-3)] hover:text-[var(--ink)] hover:bg-[var(--surface-2)] transition-colors"
               aria-label="View archive"
               title="View archived entries"
               data-tour="journal-archive"
             >
-              <ArchiveIcon className="w-5 h-5" />
+              <ArchiveIcon className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -241,12 +214,8 @@ const JournalPageV2 = () => {
         {/* Search bar (conditional) */}
         {showSearch && (
           <div className="mb-3">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl border"
-              style={{
-                backgroundColor: 'var(--color-surface-secondary)',
-                borderColor: 'var(--color-border-primary)',
-              }}>
-              <MagnifyingGlassIcon className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--color-text-tertiary)' }} />
+            <div className="flex items-center gap-2 std-input">
+              <MagnifyingGlassIcon className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--ink-3)' }} />
               <input
                 type="text"
                 value={searchQuery}
@@ -254,16 +223,11 @@ const JournalPageV2 = () => {
                 onKeyDown={e => e.key === 'Enter' && handleSearch()}
                 placeholder="Search journal entries..."
                 autoFocus
-                className="flex-1 bg-transparent text-sm font-spartan outline-none"
-                style={{ color: 'var(--color-text-primary)' }}
+                className="flex-1 bg-transparent text-sm outline-none"
+                style={{ color: 'var(--ink)' }}
               />
               {searchQuery && (
-                <button
-                  onClick={handleSearch}
-                  disabled={searchLoading}
-                  className="px-2 py-0.5 rounded text-xs font-spartan font-semibold text-white"
-                  style={{ backgroundColor: 'var(--color-brand-500)' }}
-                >
+                <button onClick={handleSearch} disabled={searchLoading} className="std-btn std-btn--signal std-btn--sm h-7 px-3">
                   {searchLoading ? '...' : 'Search'}
                 </button>
               )}
@@ -271,13 +235,9 @@ const JournalPageV2 = () => {
 
             {/* Search results */}
             {searchResults && (
-              <div className="mt-2 max-h-60 overflow-y-auto rounded-xl border p-3 space-y-2"
-                style={{
-                  backgroundColor: 'var(--color-surface-primary)',
-                  borderColor: 'var(--color-border-primary)',
-                }}>
+              <div className="mt-2 max-h-60 overflow-y-auto std-card p-3 space-y-2">
                 {searchResults.entries?.length === 0 ? (
-                  <p className="text-xs font-spartan text-center py-4" style={{ color: 'var(--color-text-tertiary)' }}>
+                  <p className="grp-mono text-[11px] text-center py-4 uppercase tracking-wider" style={{ color: 'var(--ink-3)' }}>
                     No results for "{searchResults.query}"
                   </p>
                 ) : (
@@ -289,21 +249,17 @@ const JournalPageV2 = () => {
                         journal.selectDate(dateStr);
                         clearSearch();
                       }}
-                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
+                      className="w-full text-left px-3 py-2 rounded-[8px] hover:bg-[var(--surface-2)] transition-colors"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-spartan font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+                        <span className="text-xs font-semibold" style={{ color: 'var(--ink)' }}>
                           {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                         </span>
-                        <span className="text-[10px] font-spartan px-1.5 py-0.5 rounded-full"
-                          style={{
-                            backgroundColor: entry.type === 'micro' ? 'var(--color-surface-elevated)' : 'rgba(99,102,241,0.1)',
-                            color: entry.type === 'micro' ? 'var(--color-text-tertiary)' : 'var(--color-brand-500)',
-                          }}>
+                        <span className="std-tag" style={entry.type === 'micro' ? {} : { color: 'var(--signal)', borderColor: 'color-mix(in srgb, var(--signal) 40%, transparent)' }}>
                           {entry.type}
                         </span>
                       </div>
-                      <p className="text-xs font-spartan mt-0.5 truncate" style={{ color: 'var(--color-text-secondary)' }}>
+                      <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--ink-2)' }}>
                         {entry.plainTextContent?.slice(0, 120)}
                       </p>
                     </button>

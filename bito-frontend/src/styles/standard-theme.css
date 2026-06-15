@@ -108,6 +108,41 @@
   -webkit-font-smoothing: antialiased;
 }
 
+/* ── Legacy token-mapping for the reusable .std scope ─────── */
+/* Under Standard, `.std`-wrapped features inherit the root tokens above.
+   Under Legacy, map them onto the original purple/serif theme so the SAME
+   components render purple+serif (matches the .grp mapping in groups-theme.css). */
+[data-ds="legacy"] .std,
+html:not([data-ds="standard"]) .std {
+  --bg:        var(--color-bg-primary);
+  --bg-2:      var(--color-bg-secondary);
+  --surface:   var(--color-surface-elevated);
+  --surface-2: var(--color-surface-hover);
+  --line:      var(--color-border-primary);
+  --line-2:    var(--color-border-secondary);
+  --line-3:    var(--color-border-secondary);
+
+  --ink:   var(--color-text-primary);
+  --ink-2: var(--color-text-secondary);
+  --ink-3: var(--color-text-tertiary);
+
+  --signal:     var(--color-brand-500);
+  --signal-2:   var(--color-brand-400);
+  --signal-ink: #ffffff;
+  --ember:      #f59e0b;
+  --cobalt:     #38bdf8;
+  --rose:       #f43f5e;
+
+  --f-display: var(--font-garamond);
+  --f-sans:    var(--font-spartan);
+  --f-mono:    var(--font-spartan);
+
+  --r-card: 16px;
+  --r-btn:  12px;
+  --r-tag:  999px;
+  --r-pill: 999px;
+}
+
 /* ── Page surface (grain + gradient grid; standard only) ──── */
 .std-surface, .grp-surface {
   position: relative;

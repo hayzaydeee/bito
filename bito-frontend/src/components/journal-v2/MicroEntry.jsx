@@ -33,7 +33,7 @@ export const QuickCapture = memo(({ onSubmit, placeholder = 'Quick thought...' }
       style={{
         backgroundColor: isFocused ? 'var(--color-surface-primary)' : 'var(--color-surface-secondary)',
         borderColor: isFocused ? 'var(--color-brand-300)' : 'var(--color-border-primary)',
-        boxShadow: isFocused ? '0 0 0 2px rgba(99,102,241,0.1)' : 'none',
+        boxShadow: isFocused ? '0 0 0 2px color-mix(in srgb, var(--color-brand-500) 12%, transparent)' : 'none',
       }}
     >
       <PlusIcon
@@ -200,7 +200,7 @@ export const MicroEntryCard = memo(({ entry, onEdit, onDelete }) => {
       style={{
         backgroundColor: isSelected ? 'var(--color-surface-hover)' : undefined,
         border: isSelected ? '1px solid var(--color-brand-300)' : '1px solid transparent',
-        boxShadow: isSelected ? '0 0 0 2px rgba(99,102,241,0.08)' : 'none',
+        boxShadow: isSelected ? '0 0 0 2px color-mix(in srgb, var(--color-brand-500) 10%, transparent)' : 'none',
       }}
     >
       {/* Main row */}
@@ -250,8 +250,8 @@ export const MicroEntryCard = memo(({ entry, onEdit, onDelete }) => {
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); handleDelete(); }}
-              className="p-1.5 rounded-md border hover:bg-red-50 hover:border-red-200 transition-colors"
-              style={{ color: 'var(--color-error)', borderColor: 'var(--color-border-primary)' }}
+              className="p-1.5 rounded-md border hover:bg-[var(--rose)]/10 hover:border-[var(--rose)]/30 transition-colors"
+              style={{ color: 'var(--rose)', borderColor: 'var(--color-border-primary)' }}
               aria-label="Delete"
             >
               <TrashIcon className="w-3.5 h-3.5" />
@@ -279,9 +279,9 @@ export const MicroEntryCard = memo(({ entry, onEdit, onDelete }) => {
             onClick={(e) => { e.stopPropagation(); handleDelete(); }}
             className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-spartan font-semibold border transition-colors"
             style={{
-              color: 'var(--color-error)',
-              borderColor: 'var(--color-error)',
-              backgroundColor: 'rgba(239,68,68,0.04)',
+              color: 'var(--rose)',
+              borderColor: 'color-mix(in srgb, var(--rose) 40%, transparent)',
+              backgroundColor: 'color-mix(in srgb, var(--rose) 6%, transparent)',
             }}
           >
             <TrashIcon className="w-3.5 h-3.5" />
@@ -307,8 +307,7 @@ export const MicroStack = memo(({ micros, onExpand, isExpanded, onEdit, onDelete
       {/* Section label */}
       <div className="flex items-center justify-between px-3 mb-1">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-spartan font-semibold uppercase tracking-wider"
-            style={{ color: 'var(--color-text-tertiary)' }}>
+          <span className="std-kicker">
             Quick notes · {micros.length}
           </span>
           <span className="hidden sm:inline text-[9px] font-spartan"
