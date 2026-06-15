@@ -16,7 +16,6 @@ const CompassCard = ({ compass, index = 0, onOpen, onArchive, archiveLoading }) 
   const catMeta = CATEGORY_META[sys.category] || CATEGORY_META.custom;
   const sTheme = STATUS_THEME[t.status] || STATUS_THEME.preview;
   const isActive = t.status === "active";
-  const isFeatured = isActive || t.status === "preview";
   const pers = t.personalization || {};
   const displayIcon = pers.icon || catMeta.icon;
   const accentColor = pers.color || catMeta.accent;
@@ -63,11 +62,7 @@ const CompassCard = ({ compass, index = 0, onOpen, onArchive, archiveLoading }) 
       }
       whileHover={prefersReduced ? {} : { y: -2 }}
       whileTap={prefersReduced ? {} : { scale: 0.98 }}
-      className={`relative overflow-hidden rounded-2xl border cursor-pointer transition-shadow duration-200 min-h-[160px] flex flex-col group ${
-        isFeatured
-          ? "glass-card-minimal hover:shadow-lg hover:shadow-[var(--color-brand-500)]/5"
-          : "bg-[var(--color-surface-elevated)] border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40 hover:shadow-md"
-      }`}
+      className="relative overflow-hidden std-card grp-card-hover cursor-pointer min-h-[160px] flex flex-col group"
       style={{
         ...(isActive ? { borderLeft: `3px solid ${accentColor}` } : {}),
       }}

@@ -409,7 +409,7 @@ const CompassPage = () => {
     return (
       <>
         {discardModalEl}
-        <div className="min-h-screen page-container px-4 sm:px-6 py-10">
+        <div className="min-h-screen std px-4 sm:px-6 py-10">
           <div className="max-w-5xl mx-auto">
             <GeneratingOverlay step={generatingStep} />
           </div>
@@ -425,7 +425,7 @@ const CompassPage = () => {
       return (
         <>
           {discardModalEl}
-          <div className="min-h-screen page-container px-4 sm:px-6 py-10">
+          <div className="min-h-screen std px-4 sm:px-6 py-10">
           <div className="max-w-5xl mx-auto">
             <SuitePreview
               suite={activeSuite}
@@ -478,7 +478,7 @@ const CompassPage = () => {
     return (
       <>
         {discardModalEl}
-        <div className="h-[calc(100dvh-3.5rem)] page-container overflow-hidden">
+        <div className="h-[calc(100dvh-3.5rem)] std overflow-hidden">
         <div className="max-w-5xl mx-auto h-full">
           <CompassDetail
             compass={activecompass}
@@ -509,7 +509,7 @@ const CompassPage = () => {
   // ── Create ──
   if (view === "create") {
     return (
-      <div className="min-h-screen page-container px-4 sm:px-6 py-10">
+      <div className="min-h-screen std px-4 sm:px-6 py-10">
         <div className="max-w-5xl mx-auto">
           <GoalInput
             goalText={goalText}
@@ -536,15 +536,16 @@ const CompassPage = () => {
   return (
     <>
       {discardModalEl}
-      <div className="min-h-screen page-container px-4 sm:px-6 py-8 sm:py-10">
+      <div className="min-h-screen std px-4 sm:px-6 py-8 sm:py-10">
       <div className="max-w-5xl mx-auto">
         {/* Header — stacks on mobile */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 sm:mb-10">
           <div>
-            <h1 className="text-3xl font-bold font-garamond text-[var(--color-text-primary)] mb-1">
+            <p className="std-kicker mb-2">The Compass — Systems</p>
+            <h1 className="std-display text-[28px] sm:text-[34px] font-bold leading-none text-[var(--ink)] mb-1.5">
               Compasses
             </h1>
-            <p className="text-sm text-[var(--color-text-secondary)] font-spartan">
+            <p className="grp-mono text-[11px] text-[var(--ink-3)] uppercase tracking-wider">
               AI-powered habit systems from your goals
             </p>
           </div>
@@ -554,10 +555,7 @@ const CompassPage = () => {
               setView("create");
               setError(null);
             }}
-            className="flex items-center justify-center gap-2 h-11 w-full sm:w-auto px-5 text-white rounded-xl text-sm font-spartan font-medium transition-colors"
-            style={{
-              background: "linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700))",
-            }}
+            className="std-btn std-btn--signal w-full sm:w-auto"
           >
             <PlusIcon className="w-4 h-4" />
             New compass
@@ -660,14 +658,14 @@ const CompassPage = () => {
                 className="glass-card-minimal rounded-2xl p-4 space-y-3"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-spartan font-semibold text-purple-400 uppercase tracking-wider">
+                  <span className="std-kicker" style={{ color: "var(--signal)" }}>
                     Suite
                   </span>
-                  <span className="text-xs font-spartan text-[var(--color-text-tertiary)]">
+                  <span className="text-xs text-[var(--ink-3)]">
                     · {suite.suiteName}
                   </span>
                   <div className="flex-1" />
-                  <span className="text-[10px] font-spartan text-[var(--color-text-tertiary)] bg-purple-500/10 px-2 py-0.5 rounded-md">
+                  <span className="grp-mono text-[10px] text-[var(--signal)] bg-[var(--signal)]/10 px-2 py-0.5 rounded-md uppercase tracking-wider">
                     {suite.compasses.length} linked
                   </span>
                 </div>
