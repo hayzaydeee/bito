@@ -31,7 +31,7 @@ const GeneratingOverlay = ({ step = 0 }) => {
 
   return (
     <motion.div
-      className="std max-w-5xl mx-auto grid lg:grid-cols-2 gap-10 lg:gap-12 items-start py-6"
+      className="std w-full max-w-4xl mx-auto grid lg:grid-cols-[minmax(0,1fr)_auto] gap-10 lg:gap-14 items-center"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
@@ -41,7 +41,7 @@ const GeneratingOverlay = ({ step = 0 }) => {
         <p className="std-kicker mb-4" style={{ color: "var(--signal)" }}>
           The Compass — Forge
         </p>
-        <h2 className="std-display font-black leading-[0.95] text-[var(--ink)] text-[clamp(1.75rem,4.5vw,2.75rem)] max-w-[14ch]">
+        <h2 className="std-display font-black leading-[0.95] text-[var(--ink)] text-[clamp(2rem,5.5vw,3.5rem)] max-w-[14ch]">
           Forging your system.
         </h2>
         <p className="text-[var(--ink-2)] mt-3 max-w-md leading-relaxed">
@@ -115,7 +115,7 @@ const GeneratingOverlay = ({ step = 0 }) => {
       <AnimatePresence>
         {step >= 1 && (
           <motion.div
-            className="hidden lg:block"
+            className="hidden lg:block w-full max-w-sm"
             initial={{ opacity: 0, x: 30, scale: 0.97 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 30 }}
@@ -135,10 +135,10 @@ const GeneratingOverlay = ({ step = 0 }) => {
 
               {/* Title block */}
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-[var(--r-tag)] compass-skeleton-shimmer" />
+                <div className="w-10 h-10 rounded-[var(--r-tag)] bg-[var(--surface-2)] animate-pulse" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 w-3/4 rounded compass-skeleton-shimmer" />
-                  <div className="h-3 w-1/2 rounded compass-skeleton-shimmer" />
+                  <div className="h-4 w-3/4 rounded bg-[var(--surface-2)] animate-pulse" />
+                  <div className="h-3 w-1/2 rounded bg-[var(--surface-2)] animate-pulse" />
                 </div>
               </div>
 
@@ -156,7 +156,7 @@ const GeneratingOverlay = ({ step = 0 }) => {
                         <span className="std-mono text-[9px] text-[var(--ink-3)]">
                           №{String(j + 1).padStart(2, "0")}
                         </span>
-                        <div className="h-2 rounded-full compass-skeleton-shimmer" />
+                        <div className="h-2 rounded-full bg-[var(--surface-2)] animate-pulse" />
                       </div>
                     ))}
                   </motion.div>
@@ -183,14 +183,14 @@ const GeneratingOverlay = ({ step = 0 }) => {
                         <span className="std-mono text-[10px] text-[var(--ink-3)] flex-shrink-0">
                           №{String(j + 1).padStart(2, "0")}
                         </span>
-                        <div className="w-6 h-6 rounded-md compass-skeleton-shimmer flex-shrink-0" />
+                        <div className="w-6 h-6 rounded-md bg-[var(--surface-2)] animate-pulse flex-shrink-0" />
                         <div className="flex-1 space-y-1.5">
-                          <div className="h-3 w-2/3 rounded compass-skeleton-shimmer" />
+                          <div className="h-3 w-2/3 rounded bg-[var(--surface-2)] animate-pulse" />
                           <div className="flex gap-1">
                             {[0, 1, 2, 3, 4].map((d) => (
                               <div
                                 key={d}
-                                className="w-4 h-4 rounded-full compass-skeleton-shimmer"
+                                className="w-4 h-4 rounded-full bg-[var(--surface-2)] animate-pulse"
                               />
                             ))}
                           </div>
@@ -210,8 +210,8 @@ const GeneratingOverlay = ({ step = 0 }) => {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.3 }}
                   >
-                    <div className="h-10 flex-1 rounded-[var(--r-btn)] compass-skeleton-shimmer" />
-                    <div className="h-10 w-24 rounded-[var(--r-btn)] compass-skeleton-shimmer" />
+                    <div className="h-10 flex-1 rounded-[var(--r-btn)] bg-[var(--surface-2)] animate-pulse" />
+                    <div className="h-10 w-24 rounded-[var(--r-btn)] bg-[var(--surface-2)] animate-pulse" />
                   </motion.div>
                 )}
               </AnimatePresence>

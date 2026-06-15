@@ -103,7 +103,7 @@ const CompassListPage = () => {
         <div className="max-w-6xl mx-auto">
           {/* Header — shared Feature-Home masthead (twin of Groups home) */}
           <FeatureHeader
-            kicker="The Compass — Systems"
+            kicker=""
             title="Compasses"
             stats={
               !loading && compasses.length > 0 ? (
