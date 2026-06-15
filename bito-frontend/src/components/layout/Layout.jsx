@@ -76,10 +76,11 @@ const Layout = () => {
     const contentLeft = sidebarWidth + 24; // left-3 gap + 12px gutter
     return (
       <div className="std std-surface h-screen relative overflow-hidden" style={{ background: "var(--bg)" }}>
-        <StandardSidebar isCollapsed={isMenuCollapsed} />
+        <StandardSidebar
+          isCollapsed={isMenuCollapsed}
+          onToggle={() => setIsMenuCollapsed(!isMenuCollapsed)}
+        />
         <StandardTopBar
-          isMenuCollapsed={isMenuCollapsed}
-          setIsMenuCollapsed={setIsMenuCollapsed}
           userName={user?.name || user?.username || "User"}
           userAvatar={user?.avatar}
           leftOffset={contentLeft}

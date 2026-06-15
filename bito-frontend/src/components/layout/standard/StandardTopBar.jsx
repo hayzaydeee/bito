@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Avatar } from "@radix-ui/themes";
 import {
-  HamburgerMenuIcon,
   GearIcon,
   BellIcon,
   ExitIcon,
@@ -27,11 +26,10 @@ const TITLES = {
  * StandardTopBar — floating horizontal nav for the Standard design system.
  *
  * Props:
- *   isMenuCollapsed, setIsMenuCollapsed — sidebar collapse control
  *   userName, userAvatar
- *   leftOffset — px gap on the left to clear the floating sidebar
+ *   leftOffset — px gap on the left to align with the content column
  */
-const StandardTopBar = ({ isMenuCollapsed, setIsMenuCollapsed, userName = "User", userAvatar, leftOffset = 0 }) => {
+const StandardTopBar = ({ userName = "User", userAvatar, leftOffset = 0 }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -62,15 +60,8 @@ const StandardTopBar = ({ isMenuCollapsed, setIsMenuCollapsed, userName = "User"
       className="std-card fixed top-3 right-3 z-20 h-14 flex items-center justify-between px-3 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.7)]"
       style={{ left: leftOffset }}
     >
-      {/* Left: hamburger + breadcrumb */}
-      <div className="flex items-center gap-3 min-w-0">
-        <button
-          onClick={() => setIsMenuCollapsed(!isMenuCollapsed)}
-          className="w-8 h-8 flex items-center justify-center rounded-[8px] text-[var(--ink-3)] hover:text-[var(--ink)] hover:bg-[var(--surface-2)] transition-colors"
-          aria-label={isMenuCollapsed ? "Expand menu" : "Collapse menu"}
-        >
-          <HamburgerMenuIcon className="w-4 h-4" />
-        </button>
+      {/* Left: breadcrumb */}
+      <div className="flex items-center gap-3 min-w-0 pl-1">
         <p className="std-mono text-[11px] tracking-[0.14em] truncate">
           <span className="text-[var(--ink-3)]">HOME /</span>{" "}
           <span className="text-[var(--signal)] font-bold">{title.toUpperCase()}</span>
