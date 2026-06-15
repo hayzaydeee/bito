@@ -77,9 +77,9 @@ const HabitCard = ({
 
     return (
       <div
-        className="p-5 rounded-2xl bg-[var(--color-surface-elevated)] border-2 space-y-4 stagger-fade-in"
+        className="std-card p-5 border-2 space-y-4 stagger-fade-in"
         style={{
-          borderColor: accentColor ? `${accentColor}40` : "var(--color-brand-600)",
+          borderColor: accentColor ? `${accentColor}40` : "var(--signal)",
           animationDelay: `${index * 60}ms`,
         }}
       >
@@ -271,16 +271,10 @@ const HabitCard = ({
 
         {/* Actions */}
         <div className="flex gap-2 justify-end">
-          <button
-            onClick={cancelEdit}
-            className="text-xs font-spartan px-4 py-2 rounded-xl bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]"
-          >
+          <button onClick={cancelEdit} className="std-btn std-btn--sm">
             Cancel
           </button>
-          <button
-            onClick={saveEdit}
-            className="text-xs font-spartan font-medium px-4 py-2 rounded-xl bg-[var(--color-brand-600)] text-white hover:bg-[var(--color-brand-700)]"
-          >
+          <button onClick={saveEdit} className="std-btn std-btn--sm std-btn--signal">
             Save
           </button>
         </div>
@@ -291,7 +285,7 @@ const HabitCard = ({
   // ── View mode ──
   return (
     <div
-      className={`rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40 transition-all group stagger-fade-in ${
+      className={`std-card std-card-hover group stagger-fade-in ${
         compact ? "p-3" : "p-5"
       }`}
       style={{ animationDelay: `${index * 60}ms` }}
@@ -305,34 +299,34 @@ const HabitCard = ({
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className={`font-spartan font-semibold text-[var(--color-text-primary)] ${compact ? "text-xs" : "text-sm"}`}>
+            <p className={`font-semibold text-[var(--ink)] ${compact ? "text-xs" : "text-sm"}`}>
               {h.name}
             </p>
             <span
-              className={`text-[10px] font-spartan font-medium px-2 py-0.5 rounded-md ${diff.bg} ${diff.text}`}
+              className={`std-mono text-[9px] uppercase tracking-wide px-2 py-0.5 rounded-[var(--r-tag)] ${diff.bg} ${diff.text}`}
             >
               {h.difficulty}
             </span>
             {catMeta && (
-              <span className="text-[10px] font-spartan text-[var(--color-text-tertiary)] flex items-center gap-1">
+              <span className="std-mono text-[9px] uppercase tracking-wide text-[var(--ink-3)] flex items-center gap-1">
                 <HabitIcon icon={catMeta.icon} size={10} />{catMeta.label}
               </span>
             )}
             {!h.isRequired && (
-              <span className="text-[10px] font-spartan text-[var(--color-text-tertiary)] italic">
+              <span className="std-mono text-[9px] uppercase tracking-wide text-[var(--ink-3)]">
                 optional
               </span>
             )}
           </div>
 
           {h.description && !compact && (
-            <p className="text-sm text-[var(--color-text-tertiary)] font-spartan mt-1">
+            <p className="text-sm text-[var(--ink-3)] mt-1 leading-relaxed">
               {h.description}
             </p>
           )}
 
           {/* Metadata row: methodology, frequency text, target */}
-          <div className={`flex flex-wrap items-center gap-3 text-xs text-[var(--color-text-tertiary)] font-spartan ${compact ? "mt-1" : "mt-2"}`}>
+          <div className={`std-mono flex flex-wrap items-center gap-3 text-[10.5px] text-[var(--ink-3)] ${compact ? "mt-1" : "mt-2"}`}>
             <span>{METHODOLOGY_LABELS[h.methodology] || h.methodology}</span>
             <span>
               {h.frequency?.type === "daily" && "Daily"}
@@ -356,12 +350,12 @@ const HabitCard = ({
                 return (
                   <span
                     key={day}
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-spartan font-medium transition-colors ${
+                    className={`w-6 h-6 rounded-full flex items-center justify-center std-mono text-[10px] font-bold transition-colors ${
                       active
                         ? "text-white"
-                        : "bg-[var(--color-surface-hover)] text-[var(--color-text-tertiary)]/40"
+                        : "bg-[var(--surface-2)] text-[var(--ink-3)]"
                     }`}
-                    style={active ? { backgroundColor: accentColor || "var(--color-brand-500)" } : undefined}
+                    style={active ? { backgroundColor: accentColor || "var(--signal)" } : undefined}
                     title={DAY_FULL[day]}
                   >
                     {DAY_LABELS[day]}
@@ -377,7 +371,7 @@ const HabitCard = ({
           <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={startEdit}
-              className="p-2 rounded-xl hover:bg-[var(--color-surface-hover)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+              className="p-2 rounded-[var(--r-tag)] hover:bg-[var(--surface-2)] text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors"
               title="Edit habit"
             >
               <Pencil1Icon className="w-4 h-4" />
@@ -385,7 +379,7 @@ const HabitCard = ({
             {canRemove && (
               <button
                 onClick={() => onRemove?.(index, phaseIndex)}
-                className="p-2 rounded-xl hover:bg-red-500/10 text-[var(--color-text-tertiary)] hover:text-red-400 transition-colors"
+                className="p-2 rounded-[var(--r-tag)] hover:bg-[var(--rose)]/10 text-[var(--ink-3)] hover:text-[var(--rose)] transition-colors"
                 title="Remove habit"
               >
                 <TrashIcon className="w-4 h-4" />

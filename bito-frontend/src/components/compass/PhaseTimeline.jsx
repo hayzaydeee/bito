@@ -7,6 +7,8 @@ import { springs, phaseNodeVariants } from "./compassMotion";
  * PhaseTimeline — horizontal phase progression indicator.
  * Shows Foundation → Building → Mastery (or custom phases from compass data).
  * Switches to vertical on mobile. Animated nodes and connectors.
+ * Standard ("DRILL") language: std-card frame, mono kicker + node numerals,
+ * category-accent nodes/connectors for phase cohesion.
  */
 const DEFAULT_PHASES = [
   { name: "Foundation", description: "Build core habits" },
@@ -40,14 +42,12 @@ const PhaseTimeline = ({ compass }) => {
 
   return (
     <motion.div
-      className="p-5 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20"
+      className="std-card p-5"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ ...springs.soft, delay: 0.1 }}
     >
-      <h3 className="text-xs font-spartan font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-4">
-        Phases
-      </h3>
+      <h3 className="std-kicker mb-4">Phases</h3>
 
       {/* Desktop: horizontal */}
       <div className="hidden sm:flex items-start gap-0">
@@ -59,7 +59,7 @@ const PhaseTimeline = ({ compass }) => {
             <div key={i} className="flex-1 flex flex-col items-center relative">
               {/* Connector line — animated fill */}
               {i > 0 && (
-                <div className="absolute top-3.5 right-1/2 w-full h-0.5 -translate-y-1/2 bg-[var(--color-surface-hover)]">
+                <div className="absolute top-3.5 right-1/2 w-full h-0.5 -translate-y-1/2 bg-[var(--line-2)]">
                   <motion.div
                     className="h-full origin-left"
                     style={{ background: catMeta.accent }}
@@ -72,12 +72,10 @@ const PhaseTimeline = ({ compass }) => {
 
               {/* Circle node */}
               <motion.div
-                className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center text-sm font-spartan font-bold ${
-                  isCompleted
+                className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center std-mono text-sm font-bold ${
+                  isCompleted || isActive
                     ? "text-white"
-                    : isActive
-                    ? "text-white"
-                    : "text-[var(--color-text-tertiary)] bg-[var(--color-surface-hover)]"
+                    : "text-[var(--ink-3)] bg-[var(--surface-2)]"
                 }`}
                 style={{
                   backgroundColor: isCompleted || isActive ? catMeta.accent : undefined,
@@ -113,10 +111,8 @@ const PhaseTimeline = ({ compass }) => {
 
               {/* Label */}
               <motion.p
-                className={`mt-2 text-sm font-spartan font-semibold text-center ${
-                  isActive
-                    ? "text-[var(--color-text-primary)]"
-                    : "text-[var(--color-text-secondary)]"
+                className={`mt-2 text-sm font-semibold text-center ${
+                  isActive ? "text-[var(--ink)]" : "text-[var(--ink-2)]"
                 }`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -125,17 +121,17 @@ const PhaseTimeline = ({ compass }) => {
                 {phase.name}
               </motion.p>
               {phase.description && (
-                <p className="mt-1 text-xs font-spartan text-[var(--color-text-secondary)] text-center max-w-[160px]">
+                <p className="mt-1 text-xs text-[var(--ink-3)] text-center max-w-[160px] leading-relaxed">
                   {phase.description}
                 </p>
               )}
               {phase.durationDays && (
-                <p className="mt-1 text-xs font-spartan text-[var(--color-text-secondary)] font-medium">
+                <p className="mt-1 std-mono text-[10.5px] text-[var(--ink-3)]">
                   {phase.durationDays} days
                 </p>
               )}
               {!phase.durationDays && phase.duration && (
-                <p className="mt-1 text-xs font-spartan text-[var(--color-text-secondary)] font-medium">
+                <p className="mt-1 std-mono text-[10.5px] text-[var(--ink-3)]">
                   {phase.duration}
                 </p>
               )}
@@ -161,10 +157,10 @@ const PhaseTimeline = ({ compass }) => {
               {/* Vertical track */}
               <div className="flex flex-col items-center">
                 <motion.div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-spartan font-bold ${
+                  className={`w-7 h-7 rounded-full flex items-center justify-center std-mono text-[10px] font-bold ${
                     isCompleted || isActive
                       ? "text-white"
-                      : "text-[var(--color-text-tertiary)] bg-[var(--color-surface-hover)]"
+                      : "text-[var(--ink-3)] bg-[var(--surface-2)]"
                   }`}
                   style={{
                     backgroundColor: isCompleted || isActive ? catMeta.accent : undefined,
@@ -182,7 +178,7 @@ const PhaseTimeline = ({ compass }) => {
                   )}
                 </motion.div>
                 {i < phases.length - 1 && (
-                  <div className="w-0.5 min-h-[24px] mt-1 mb-1 bg-[var(--color-surface-hover)] relative overflow-hidden">
+                  <div className="w-0.5 min-h-[24px] mt-1 mb-1 bg-[var(--line-2)] relative overflow-hidden">
                     <motion.div
                       className="absolute inset-x-0 top-0 h-full origin-top"
                       style={{ background: catMeta.accent }}
@@ -197,16 +193,14 @@ const PhaseTimeline = ({ compass }) => {
               {/* Content */}
               <div className="pb-3 pt-0.5">
                 <p
-                  className={`text-sm font-spartan font-semibold ${
-                    isActive
-                      ? "text-[var(--color-text-primary)]"
-                      : "text-[var(--color-text-secondary)]"
+                  className={`text-sm font-semibold ${
+                    isActive ? "text-[var(--ink)]" : "text-[var(--ink-2)]"
                   }`}
                 >
                   {phase.name}
                   {isActive && (
                     <span
-                      className="ml-2 text-[10px] font-medium px-1.5 py-0.5 rounded-md"
+                      className="std-mono ml-2 text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-[var(--r-tag)]"
                       style={{
                         color: catMeta.accent,
                         backgroundColor: `${catMeta.accent}15`,
@@ -217,12 +211,12 @@ const PhaseTimeline = ({ compass }) => {
                   )}
                 </p>
                 {phase.description && (
-                  <p className="text-xs font-spartan text-[var(--color-text-secondary)] mt-0.5">
+                  <p className="text-xs text-[var(--ink-3)] mt-0.5 leading-relaxed">
                     {phase.description}
                   </p>
                 )}
                 {(phase.durationDays || phase.duration) && (
-                  <p className="text-xs font-spartan text-[var(--color-text-tertiary)] mt-0.5">
+                  <p className="std-mono text-[10.5px] text-[var(--ink-3)] mt-0.5">
                     {phase.durationDays ? `${phase.durationDays} days` : phase.duration}
                   </p>
                 )}

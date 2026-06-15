@@ -6,9 +6,10 @@ import HabitIcon from "../shared/HabitIcon";
 import { springs } from "./compassMotion";
 
 /**
- * CategoryBanner — gradient hero header for compass detail/preview views.
- * Shows category-colored background, icon, name, description, stats.
- * Supports personalization: inline emoji input, notes, pin.
+ * CategoryBanner — editorial hero header for compass detail/preview views.
+ * Standard ("DRILL") language: std-card frame with a faint category-accent
+ * wash, serif (std-display) name, mono status tag + stat readout, and
+ * signal-tinted personalization (inline emoji input, notes, pin).
  * Phase-aware habit count.
  */
 const CategoryBanner = ({ compass, onPersonalize }) => {
@@ -16,6 +17,7 @@ const CategoryBanner = ({ compass, onPersonalize }) => {
   const p = compass.personalization || {};
   const catMeta = CATEGORY_META[sys.category] || CATEGORY_META.custom;
   const sTheme = STATUS_THEME[compass.status] || STATUS_THEME.preview;
+  const isActiveStatus = compass.status === "active";
 
   // Phase-aware habit count
   const phases = sys.phases || [];
@@ -71,9 +73,9 @@ const CategoryBanner = ({ compass, onPersonalize }) => {
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl border border-[var(--color-border-primary)]/20 p-6 sm:p-8"
+      className="std-card relative overflow-hidden p-6 sm:p-8"
       style={{
-        background: `linear-gradient(135deg, ${accentColor}12 0%, ${accentColor}04 50%, transparent 100%)`,
+        background: `linear-gradient(135deg, ${accentColor}14 0%, transparent 55%), var(--surface)`,
       }}
     >
       {/* Decorative circle */}
@@ -90,10 +92,10 @@ const CategoryBanner = ({ compass, onPersonalize }) => {
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={handleTogglePin}
-          className={`absolute top-4 right-4 p-2 rounded-lg transition-all ${
+          className={`absolute top-4 right-4 p-2 rounded-[var(--r-tag)] transition-all ${
             p.isPinned
-              ? "text-[var(--color-brand-500)] bg-[var(--color-brand-500)]/10"
-              : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]"
+              ? "text-[var(--signal)] bg-[var(--signal)]/10"
+              : "text-[var(--ink-3)] hover:text-[var(--ink)] hover:bg-[var(--surface-2)]"
           }`}
           title={p.isPinned ? "Unpin" : "Pin to top"}
         >
@@ -126,20 +128,20 @@ const CategoryBanner = ({ compass, onPersonalize }) => {
                     if (e.key === "Enter") handleSaveIcon();
                     if (e.key === "Escape") handleCancelIcon();
                   }}
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl text-3xl sm:text-4xl text-center bg-[var(--color-surface-elevated)] border-2 border-[var(--color-brand-500)]/40 focus:outline-none focus:border-[var(--color-brand-500)]"
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-[var(--r-card)] text-3xl sm:text-4xl text-center border-2 border-[var(--signal)]/40 focus:outline-none focus:border-[var(--signal)]"
                   style={{ backgroundColor: `${accentColor}15` }}
                   maxLength={4}
                 />
                 <div className="flex gap-1">
                   <button
                     onClick={handleSaveIcon}
-                    className="p-1 rounded-md bg-[var(--color-brand-500)]/15 text-[var(--color-brand-500)] hover:bg-[var(--color-brand-500)]/25 transition-colors"
+                    className="p-1 rounded-md bg-[var(--signal)]/15 text-[var(--signal)] hover:bg-[var(--signal)]/25 transition-colors"
                   >
                     <CheckIcon className="w-3 h-3" />
                   </button>
                   <button
                     onClick={handleCancelIcon}
-                    className="p-1 rounded-md hover:bg-[var(--color-surface-hover)] text-[var(--color-text-tertiary)] transition-colors"
+                    className="p-1 rounded-md hover:bg-[var(--surface-2)] text-[var(--ink-3)] transition-colors"
                   >
                     <Cross2Icon className="w-3 h-3" />
                   </button>
@@ -148,7 +150,7 @@ const CategoryBanner = ({ compass, onPersonalize }) => {
             ) : (
               <motion.div
                 key="display"
-                className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center group relative ${
+                className={`w-16 h-16 sm:w-20 sm:h-20 rounded-[var(--r-card)] flex items-center justify-center group relative ${
                   canPersonalize ? "cursor-pointer" : ""
                 }`}
                 style={{ backgroundColor: `${accentColor}15` }}
@@ -163,7 +165,7 @@ const CategoryBanner = ({ compass, onPersonalize }) => {
               >
                 <HabitIcon icon={displayIcon} size={40} />
                 {canPersonalize && (
-                  <div className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="absolute inset-0 rounded-[var(--r-card)] bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <Pencil1Icon className="w-5 h-5 text-white" />
                   </div>
                 )}
@@ -175,40 +177,48 @@ const CategoryBanner = ({ compass, onPersonalize }) => {
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 flex-wrap mb-1">
-            <h1 className="text-2xl sm:text-3xl font-garamond font-bold text-[var(--color-text-primary)]">
+            <h1 className="std-display text-[26px] sm:text-[32px] font-bold text-[var(--ink)] leading-tight">
               {sys.name || "Untitled compass"}
             </h1>
             <span
-              className={`text-xs font-spartan font-semibold px-3 py-1 rounded-lg ${sTheme.bg} ${sTheme.text}`}
+              className="std-tag"
+              style={isActiveStatus ? { color: "var(--signal)", borderColor: "var(--signal)" } : undefined}
             >
               {sTheme.label}
             </span>
           </div>
 
           {sys.description && (
-            <p className="text-sm sm:text-base text-[var(--color-text-secondary)] font-spartan mt-1 max-w-2xl">
+            <p className="text-sm sm:text-base text-[var(--ink-2)] mt-1 max-w-2xl leading-relaxed">
               {sys.description}
             </p>
           )}
 
-          {/* Stat chips */}
-          <div className="flex items-center gap-4 mt-3 text-sm text-[var(--color-text-tertiary)] font-spartan flex-wrap">
+          {/* Stat readout */}
+          <div className="std-mono flex items-center gap-3 mt-3.5 text-[11px] uppercase tracking-wider text-[var(--ink-3)] flex-wrap">
             <span className="flex items-center gap-1.5">
-              <HabitIcon icon={catMeta.icon} size={14} />
+              <HabitIcon icon={catMeta.icon} size={13} />
               {catMeta.label}
             </span>
+            <span className="text-[var(--line-3)]">·</span>
             {sys.estimatedDuration?.value && (
-              <span>
-                {sys.estimatedDuration.value} {sys.estimatedDuration.unit}
-              </span>
+              <>
+                <span>
+                  {sys.estimatedDuration.value} {sys.estimatedDuration.unit}
+                </span>
+                <span className="text-[var(--line-3)]">·</span>
+              </>
             )}
             <span>
               {habitCount} habit{habitCount !== 1 && "s"}
             </span>
             {isPhased && (
-              <span>
-                {phases.length} phase{phases.length !== 1 && "s"}
-              </span>
+              <>
+                <span className="text-[var(--line-3)]">·</span>
+                <span>
+                  {phases.length} phase{phases.length !== 1 && "s"}
+                </span>
+              </>
             )}
           </div>
         </div>
@@ -216,14 +226,9 @@ const CategoryBanner = ({ compass, onPersonalize }) => {
 
       {/* Goal quote */}
       {compass.goal?.text && (
-        <div
-          className="mt-5 p-4 rounded-xl border border-[var(--color-border-primary)]/10"
-          style={{ backgroundColor: `${accentColor}06` }}
-        >
-          <p className="text-[10px] font-spartan text-[var(--color-text-tertiary)] uppercase tracking-wider mb-1">
-            Your goal
-          </p>
-          <p className="text-sm sm:text-base font-spartan text-[var(--color-text-primary)] italic">
+        <div className="mt-5 p-4 rounded-[var(--r-tag)] border border-[var(--line)] bg-[var(--surface-2)]">
+          <p className="std-kicker mb-1.5">Your goal</p>
+          <p className="std-display text-base sm:text-lg text-[var(--ink)] italic leading-snug">
             &ldquo;{compass.goal.text}&rdquo;
           </p>
         </div>
@@ -251,18 +256,18 @@ const CategoryBanner = ({ compass, onPersonalize }) => {
                   placeholder="Add personal notes about this plan..."
                   maxLength={500}
                   rows={2}
-                  className="flex-1 text-sm font-spartan bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] rounded-xl px-3 py-2 border border-[var(--color-border-primary)]/20 focus:outline-none focus:border-[var(--color-brand-500)]/50 resize-none placeholder:text-[var(--color-text-tertiary)]"
+                  className="flex-1 text-sm bg-[var(--bg-2)] text-[var(--ink)] rounded-[var(--r-btn)] px-3 py-2 border border-[var(--line-2)] focus:outline-none focus:border-[var(--signal)] resize-none placeholder:text-[var(--ink-3)]"
                   autoFocus
                 />
                 <button
                   onClick={handleSaveNotes}
-                  className="p-2 rounded-lg bg-[var(--color-brand-500)]/15 text-[var(--color-brand-500)] hover:bg-[var(--color-brand-500)]/25 transition-colors"
+                  className="p-2 rounded-[var(--r-tag)] bg-[var(--signal)]/15 text-[var(--signal)] hover:bg-[var(--signal)]/25 transition-colors"
                 >
                   <CheckIcon className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => { setEditingNotes(false); setNotesText(p.notes || ""); }}
-                  className="p-2 rounded-lg hover:bg-[var(--color-surface-hover)] text-[var(--color-text-tertiary)] transition-colors"
+                  className="p-2 rounded-[var(--r-tag)] hover:bg-[var(--surface-2)] text-[var(--ink-3)] transition-colors"
                 >
                   <Cross2Icon className="w-4 h-4" />
                 </button>
@@ -271,23 +276,19 @@ const CategoryBanner = ({ compass, onPersonalize }) => {
               <motion.button
                 key="view-notes"
                 onClick={() => setEditingNotes(true)}
-                className="w-full text-left p-3 rounded-xl bg-[var(--color-surface-hover)]/50 hover:bg-[var(--color-surface-hover)] transition-colors group"
+                className="w-full text-left p-3 rounded-[var(--r-tag)] bg-[var(--surface-2)] hover:bg-[var(--surface-2)] border border-[var(--line)] transition-colors group"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <p className="text-[10px] font-spartan text-[var(--color-text-tertiary)] uppercase tracking-wider mb-0.5">
-                  Notes
-                </p>
-                <p className="text-sm font-spartan text-[var(--color-text-secondary)]">
-                  {p.notes}
-                </p>
+                <p className="std-kicker mb-0.5">Notes</p>
+                <p className="text-sm text-[var(--ink-2)]">{p.notes}</p>
               </motion.button>
             ) : (
               <motion.button
                 key="add-notes"
                 onClick={() => setEditingNotes(true)}
-                className="text-xs font-spartan text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] transition-colors flex items-center gap-1.5"
+                className="std-mono text-[11px] uppercase tracking-wider text-[var(--ink-3)] hover:text-[var(--ink-2)] transition-colors flex items-center gap-1.5"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -302,13 +303,9 @@ const CategoryBanner = ({ compass, onPersonalize }) => {
 
       {/* Notes display for non-editable views */}
       {!canPersonalize && p.notes && (
-        <div className="mt-3 p-3 rounded-xl bg-[var(--color-surface-hover)]/50">
-          <p className="text-[10px] font-spartan text-[var(--color-text-tertiary)] uppercase tracking-wider mb-0.5">
-            Notes
-          </p>
-          <p className="text-sm font-spartan text-[var(--color-text-secondary)]">
-            {p.notes}
-          </p>
+        <div className="mt-3 p-3 rounded-[var(--r-tag)] bg-[var(--surface-2)] border border-[var(--line)]">
+          <p className="std-kicker mb-0.5">Notes</p>
+          <p className="text-sm text-[var(--ink-2)]">{p.notes}</p>
         </div>
       )}
     </div>
