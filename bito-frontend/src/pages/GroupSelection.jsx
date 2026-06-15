@@ -6,6 +6,7 @@ import { groupsAPI } from "../services/api";
 import GroupCreationModal from "../components/ui/GroupCreationModal";
 import JoinGroupModal from "../components/ui/JoinGroupModal";
 import GroupCard from "../components/groups/GroupCard";
+import FeatureHeader from "../components/shared/standard/FeatureHeader";
 import SkeletonTransition from "../components/ui/SkeletonTransition";
 import AnimatedList from "../components/ui/AnimatedList";
 import "../components/groups/groups-theme.css";
@@ -160,41 +161,38 @@ const GroupSelection = () => {
     <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-7 sm:py-12">
       <div className="max-w-6xl mx-auto">
 
-        {/* header */}
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between mb-10 pb-8 border-b border-[var(--line-2)]">
-          <div className="grp-rise" style={{ animationDelay: "40ms" }}>
-            <p className="grp-kicker mb-3">The Collective — Ledger</p>
-            <h1 className="grp-display text-[clamp(2.25rem,8vw,4.5rem)] font-black leading-[0.9] text-[var(--ink)]">
-              Groups
-            </h1>
-            <p className="grp-mono text-[12px] text-[var(--ink-3)] mt-4 tracking-wide">
-              {groups.length > 0 ? (
-                <>
-                  <span className="text-[var(--signal)]">{String(groups.length).padStart(2, "0")}</span> ACTIVE
-                  {"  ·  "}
-                  <span className="text-[var(--ink-2)]">{totalMembers}</span> MEMBERS
-                  {"  ·  "}
-                  <span className="text-[var(--ink-2)]">{totalHabits}</span> SHARED HABITS
-                </>
-              ) : (
-                "TRACK HABITS TOGETHER — TEAM · FAMILY · FRIENDS"
-              )}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 grp-rise" style={{ animationDelay: "120ms" }}>
-            <button onClick={openJoinModal} className="grp-btn">
-              <UserPlus size={15} weight="bold" />
-              Join
-            </button>
-            {groups.length > 0 && (
-              <button onClick={() => setShowCreateModal(true)} className="grp-btn grp-btn--signal">
-                <PlusIcon className="w-4 h-4" />
-                New Group
+        {/* header — shared Feature-Home masthead */}
+        <FeatureHeader
+          kicker="The Collective — Ledger"
+          title="Groups"
+          stats={
+            groups.length > 0 ? (
+              <>
+                <span className="text-[var(--signal)]">{String(groups.length).padStart(2, "0")}</span> ACTIVE
+                {"  ·  "}
+                <span className="text-[var(--ink-2)]">{totalMembers}</span> MEMBERS
+                {"  ·  "}
+                <span className="text-[var(--ink-2)]">{totalHabits}</span> SHARED HABITS
+              </>
+            ) : (
+              "TRACK HABITS TOGETHER — TEAM · FAMILY · FRIENDS"
+            )
+          }
+          actions={
+            <>
+              <button onClick={openJoinModal} className="grp-btn">
+                <UserPlus size={15} weight="bold" />
+                Join
               </button>
-            )}
-          </div>
-        </div>
+              {groups.length > 0 && (
+                <button onClick={() => setShowCreateModal(true)} className="grp-btn grp-btn--signal">
+                  <PlusIcon className="w-4 h-4" />
+                  New Group
+                </button>
+              )}
+            </>
+          }
+        />
 
         {/* empty state */}
         {groups.length === 0 ? (

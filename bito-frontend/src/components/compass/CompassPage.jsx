@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { PlusIcon, TargetIcon, LightningBoltIcon } from "@radix-ui/react-icons";
+import { PlusIcon } from "@radix-ui/react-icons";
 import { compassAPI } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 import CATEGORY_META from "../../data/categoryMeta";
 import CompassCard from "./CompassCard";
 import CompassDetail from "./CompassDetail";
 import CompassEmptyState from "./CompassEmptyState";
+import FeatureHeader from "../shared/standard/FeatureHeader";
 import GoalInput from "./GoalInput";
 import GeneratingOverlay from "./GeneratingOverlay";
 import RefinementStudio from "./RefinementStudio";
@@ -538,58 +539,34 @@ const CompassPage = () => {
       {discardModalEl}
       <div className="min-h-screen std px-4 sm:px-6 py-8 sm:py-10">
       <div className="max-w-5xl mx-auto">
-        {/* Header — stacks on mobile */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 sm:mb-10">
-          <div>
-            <p className="std-kicker mb-2">The Compass — Systems</p>
-            <h1 className="std-display text-[28px] sm:text-[34px] font-bold leading-none text-[var(--ink)] mb-1.5">
-              Compasses
-            </h1>
-            <p className="grp-mono text-[11px] text-[var(--ink-3)] uppercase tracking-wider">
-              AI-powered habit systems from your goals
-            </p>
-          </div>
-          <motion.button
-            whileTap={{ scale: 0.97 }}
-            onClick={() => {
-              setView("create");
-              setError(null);
-            }}
-            className="std-btn std-btn--signal w-full sm:w-auto"
-          >
-            <PlusIcon className="w-4 h-4" />
-            New compass
-          </motion.button>
-        </div>
-
-        {/* Stat pills — only when compasses exist */}
-        {!loading && compasses.length > 0 && (
-          <motion.div
-            className="flex items-center gap-3 mb-6 flex-wrap"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.4, ease: "easeOut" }}
-          >
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/15">
-              <TargetIcon className="w-3.5 h-3.5 text-green-400" />
-              <span className="text-xs font-spartan font-semibold text-[var(--color-text-primary)]">
-                {activeCount}
-              </span>
-              <span className="text-xs font-spartan text-[var(--color-text-tertiary)]">
-                active
-              </span>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/15">
-              <LightningBoltIcon className="w-3.5 h-3.5 text-[var(--color-brand-500)]" />
-              <span className="text-xs font-spartan font-semibold text-[var(--color-text-primary)]">
-                {totalHabits}
-              </span>
-              <span className="text-xs font-spartan text-[var(--color-text-tertiary)]">
-                habit{totalHabits !== 1 && "s"} tracking
-              </span>
-            </div>
-          </motion.div>
-        )}
+        {/* Header — shared Feature-Home masthead (twin of Groups home) */}
+        <FeatureHeader
+          kicker="The Compass — Systems"
+          title="Compasses"
+          stats={
+            !loading && compasses.length > 0 ? (
+              <>
+                <span className="text-[var(--signal)]">{String(activeCount).padStart(2, "0")}</span> ACTIVE
+                {"  ·  "}
+                <span className="text-[var(--ink-2)]">{totalHabits}</span> HABIT{totalHabits !== 1 ? "S" : ""} TRACKING
+                {"  ·  "}
+                <span className="text-[var(--ink-2)]">{compasses.length}</span> TOTAL
+              </>
+            ) : (
+              "AI-POWERED HABIT SYSTEMS FROM YOUR GOALS"
+            )
+          }
+          actions={
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={() => { setView("create"); setError(null); }}
+              className="std-btn std-btn--signal w-full sm:w-auto"
+            >
+              <PlusIcon className="w-4 h-4" />
+              New compass
+            </motion.button>
+          }
+        />
 
         {error && (
           <p className="text-sm text-red-400 font-spartan mb-4">{error}</p>

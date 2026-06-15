@@ -1,13 +1,14 @@
 import { motion, useReducedMotion } from "framer-motion";
-import { CrossCircledIcon, RocketIcon, DrawingPinFilledIcon } from "@radix-ui/react-icons";
+import { CrossCircledIcon, DrawingPinFilledIcon } from "@radix-ui/react-icons";
 import CATEGORY_META, { STATUS_THEME } from "../../data/categoryMeta";
-import ProgressRing from "../shared/ProgressRing";
 import HabitIcon from "../shared/HabitIcon";
+import LedgerCard from "../shared/standard/LedgerCard";
 
 /**
- * CompassCard — rich grid card for the compasses list view.
- * Features: Framer Motion spring entry/exit, category gradient stripe,
- * progress ring + bar, habit preview chips, glass treatment, mobile-first UX.
+ * CompassCard — entity card for the compasses list. Built on the shared
+ * LedgerCard frame (twin of the Groups card) with a richer compass body:
+ * phase-aware progress meter + habit preview chips. Keeps the per-category
+ * accent color, pin, status, and archive action.
  */
 const CompassCard = ({ compass, index = 0, onOpen, onArchive, archiveLoading }) => {
   const prefersReduced = useReducedMotion();
@@ -20,7 +21,6 @@ const CompassCard = ({ compass, index = 0, onOpen, onArchive, archiveLoading }) 
   const displayIcon = pers.icon || catMeta.icon;
   const accentColor = pers.color || catMeta.accent;
 
-  // Phase-aware counts and progress
   const phases = sys.phases || [];
   const isPhased = phases.length > 0 && phases.some((p) => p.habits?.length > 0);
   const progress = t.progress || {};
@@ -28,7 +28,6 @@ const CompassCard = ({ compass, index = 0, onOpen, onArchive, archiveLoading }) 
     ? phases.reduce((sum, p) => sum + (p.habits?.length || 0), 0)
     : sys.habits?.length || t.habitCount || 0;
 
-  // Real progress from progress field, fallback to computed
   const progressPct =
     progress.overallCompletion != null
       ? progress.overallCompletion
@@ -40,18 +39,13 @@ const CompassCard = ({ compass, index = 0, onOpen, onArchive, archiveLoading }) 
       ? 33
       : 0;
 
-  // Collect first 3 habits for preview chips (from phases or flat)
   const previewHabits = isPhased
     ? phases.flatMap((p) => p.habits || []).slice(0, 3)
     : (sys.habits || []).slice(0, 3);
 
-  // Current phase info
-  const currentPhase = isPhased ? phases[progress.currentPhaseIndex ?? 0] : null;
-
   return (
     <motion.div
       layout
-      onClick={() => onOpen(t)}
       initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       exit={prefersReduced ? { opacity: 0 } : { opacity: 0, x: -20, transition: { duration: 0.2 } }}
@@ -60,147 +54,74 @@ const CompassCard = ({ compass, index = 0, onOpen, onArchive, archiveLoading }) 
           ? { duration: 0 }
           : { type: "spring", stiffness: 300, damping: 30, delay: index * 0.05 }
       }
-      whileHover={prefersReduced ? {} : { y: -2 }}
-      whileTap={prefersReduced ? {} : { scale: 0.98 }}
-      className="relative overflow-hidden std-card grp-card-hover cursor-pointer min-h-[160px] flex flex-col group"
-      style={{
-        ...(isActive ? { borderLeft: `3px solid ${accentColor}` } : {}),
-      }}
     >
-      {/* Category gradient stripe */}
-      <div
-        className="h-1.5 w-full"
-        style={{ background: `linear-gradient(to right, ${accentColor}25, ${accentColor}08)` }}
-      />
-
-      {/* Main content */}
-      <div className="flex-1 p-4 sm:p-5 flex flex-col">
-        {/* Top row: icon + name + status */}
-        <div className="flex items-start gap-3 mb-3">
-          <span className="text-2xl flex-shrink-0 mt-0.5">
-            <HabitIcon icon={displayIcon} size={24} />
+      <LedgerCard
+        index={index}
+        accent={accentColor}
+        active={isActive}
+        onClick={() => onOpen(t)}
+        minHeight={196}
+        icon={
+          <span
+            className="w-11 h-11 rounded-[10px] flex items-center justify-center border flex-shrink-0"
+            style={{ backgroundColor: `${accentColor}1f`, borderColor: `${accentColor}55` }}
+          >
+            <HabitIcon icon={displayIcon} size={22} />
           </span>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              {pers.isPinned && (
-                <DrawingPinFilledIcon className="w-3.5 h-3.5 text-[var(--color-brand-500)] flex-shrink-0" />
-              )}
-              <h3 className="text-base font-garamond font-bold text-[var(--color-text-primary)] truncate">
-                {sys.name || "Untitled"}
-              </h3>
-              <span
-                className={`text-[10px] font-spartan font-semibold px-2 py-0.5 rounded-md ${sTheme.bg} ${sTheme.text}`}
-              >
-                {sTheme.label}
-              </span>
-            </div>
-            {sys.description && (
-              <p className="text-sm text-[var(--color-text-secondary)] font-spartan mt-1 line-clamp-2">
-                {sys.description}
-              </p>
-            )}
-            {/* Current phase badge for active compasses */}
-            {isActive && currentPhase && (
-              <div className="flex items-center gap-1.5 mt-1.5">
-                <RocketIcon className="w-3 h-3 text-[var(--color-brand-500)]" />
-                <span className="text-[10px] font-spartan font-medium text-[var(--color-brand-500)]">
-                  Phase {(progress.currentPhaseIndex ?? 0) + 1}: {currentPhase.name}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Archive button — always visible on mobile, hover-reveal on desktop */}
+        }
+        topAction={
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onArchive(t._id);
-            }}
+            onClick={(e) => { e.stopPropagation(); onArchive(t._id); }}
             disabled={archiveLoading === t._id}
-            className="p-1.5 rounded-lg hover:bg-red-500/10 text-[var(--color-text-tertiary)] hover:text-red-400 transition-colors flex-shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 disabled:opacity-50"
+            className="p-1.5 rounded-md text-[var(--ink-3)] hover:text-[var(--rose)] hover:bg-[var(--rose)]/10 transition-colors opacity-100 sm:opacity-0 sm:group-hover:opacity-100 disabled:opacity-50"
             title="Archive"
           >
             <CrossCircledIcon className="w-4 h-4" />
           </button>
-        </div>
-
-        {/* Spacer */}
-        <div className="flex-1" />
-
-        {/* Phase indicator pills (for phased compasses) */}
-        {isPhased && phases.length > 1 && (
-          <div className="flex items-center gap-1 mb-3">
-            {phases.map((_, pi) => {
-              const isDone = progress.completedPhases?.some((cp) => cp.phaseIndex === pi);
-              const isCurr = pi === (progress.currentPhaseIndex ?? 0);
-              return (
-                <div
-                  key={pi}
-                  className={`h-1 flex-1 rounded-full transition-all ${
-                    isDone
-                      ? ""
-                      : isCurr
-                      ? "opacity-60"
-                      : "bg-[var(--color-surface-hover)]"
-                  }`}
-                  style={{
-                    backgroundColor: isDone || isCurr ? catMeta.accent : undefined,
-                  }}
-                />
-              );
-            })}
-          </div>
-        )}
-
-        {/* Bottom row: progress ring, habit chips, category */}
-        <div className="flex items-center gap-3 pt-3 border-t border-[var(--color-border-primary)]/10">
-          <ProgressRing
-            value={progressPct}
-            size={32}
-            stroke={3}
-            color={catMeta.ring}
-          />
-
-          {/* Habit preview chips — wrap on mobile, single-row on desktop */}
-          <div className="flex-1 flex items-center gap-1.5 min-w-0 flex-wrap sm:flex-nowrap sm:overflow-hidden">
-            {previewHabits.map((h, i) => (
-              <span
-                key={i}
-                className="inline-flex items-center gap-1 text-[10px] font-spartan text-[var(--color-text-secondary)] bg-[var(--color-surface-hover)] px-2 py-0.5 rounded-md truncate max-w-[100px]"
-                title={h.name}
-              >
-                <HabitIcon icon={h.icon} size={14} />
-                <span className="truncate">{h.name}</span>
-              </span>
-            ))}
-            {habitCount > 3 && (
-              <span className="text-[10px] font-spartan text-[var(--color-text-tertiary)]">
-                +{habitCount - 3}
-              </span>
-            )}
-          </div>
-
-          {/* Category label */}
-          <span className="text-[10px] font-spartan text-[var(--color-text-tertiary)] flex-shrink-0 hidden sm:inline flex items-center gap-1">
-            <HabitIcon icon={catMeta.icon} size={12} />
-            {catMeta.label}
+        }
+        title={
+          <span className="inline-flex items-center gap-1.5">
+            {pers.isPinned && <DrawingPinFilledIcon className="w-3.5 h-3.5 text-[var(--signal)] flex-shrink-0" />}
+            <span className="truncate">{sys.name || "Untitled"}</span>
           </span>
+        }
+        meta={
+          <p className="std-mono text-[10px] text-[var(--ink-3)] uppercase tracking-wider">
+            <span style={{ color: "var(--ink-2)" }}>{sTheme.label}</span>
+            {" · "}{habitCount} habit{habitCount !== 1 ? "s" : ""}
+            {isActive && isPhased && ` · Phase ${(progress.currentPhaseIndex ?? 0) + 1}/${phases.length}`}
+          </p>
+        }
+        footer={
+          <span className="std-mono text-[10px] text-[var(--ink-3)] uppercase tracking-wider inline-flex items-center gap-1 truncate">
+            <HabitIcon icon={catMeta.icon} size={12} /> {catMeta.label}
+          </span>
+        }
+      >
+        {/* Richer body — phase-aware progress meter + habit chips */}
+        <div className="mt-4">
+          <div className="flex items-center justify-between std-mono text-[10px] text-[var(--ink-3)] uppercase tracking-wider mb-1.5">
+            <span>{isPhased ? "Phase progress" : "Progress"}</span>
+            <span style={{ color: accentColor }}>{progressPct}%</span>
+          </div>
+          <div className="std-meter">
+            <i style={{ width: `${progressPct}%`, background: accentColor, transition: "width .5s ease" }} />
+          </div>
+          {previewHabits.length > 0 && (
+            <div className="flex items-center gap-1.5 mt-3 flex-wrap">
+              {previewHabits.map((h, i) => (
+                <span key={i} className="std-tag" title={h.name}>
+                  <HabitIcon icon={h.icon} size={12} />
+                  <span className="truncate max-w-[80px] normal-case tracking-normal">{h.name}</span>
+                </span>
+              ))}
+              {habitCount > 3 && (
+                <span className="std-mono text-[10px] text-[var(--ink-3)]">+{habitCount - 3}</span>
+              )}
+            </div>
+          )}
         </div>
-      </div>
-
-      {/* Bottom progress bar */}
-      {progressPct > 0 && (
-        <div className="w-full bg-transparent">
-          <div
-            className="compass-progress-bar"
-            style={{
-              width: `${progressPct}%`,
-              backgroundColor: accentColor,
-              opacity: 0.5,
-            }}
-          />
-        </div>
-      )}
+      </LedgerCard>
     </motion.div>
   );
 };
