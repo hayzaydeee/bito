@@ -32,6 +32,7 @@ import { useScale } from "../contexts/ScaleContext";
 import usePushNotifications from "../hooks/usePushNotifications";
 import PersonalityQuiz from "../components/settingsPage/PersonalityQuiz";
 import AvatarPicker from "../components/ui/AvatarPicker";
+import DesignSystemSwitcher from "../components/ui/DesignSystemSwitcher";
 import SkeletonTransition from "../components/ui/SkeletonTransition";
 import AnimatedList from "../components/ui/AnimatedList";
 import { motion } from "framer-motion";
@@ -783,6 +784,21 @@ const SettingsPage = ({ section }) => {
 
         {/* ═══════ 2. APPEARANCE ═══════ */}
         <Section title="Appearance" icon={MoonIcon}>
+          {/* Design system (legacy | standard) — orthogonal to light/dark */}
+          <div className="mb-6">
+            <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)] mb-1">
+              Design system
+            </p>
+            <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mb-3 max-w-md">
+              Switch between the original look (Legacy) and the new Standard design language.
+              Light / dark below applies within whichever you pick.
+            </p>
+            <DesignSystemSwitcher />
+          </div>
+
+          <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)] mb-3">
+            Theme
+          </p>
           <AnimatedList className="grid grid-cols-4 gap-3">
             {themeCards.map((t, i) => {
               const active = settings.theme === t.value;

@@ -4,10 +4,13 @@ import { AnimatePresence } from "framer-motion";
 import VerticalMenu from "./VerticalMenu";
 import StatusBar from "./StatusBar";
 import BottomTabBar from "./BottomTabBar";
+import StandardSidebar from "./standard/StandardSidebar";
+import StandardTopBar from "./standard/StandardTopBar";
 import AnimatedPage from "../ui/AnimatedPage";
 import HabitCreationWizard from "../ui/HabitCreationWizard";
 import { useAuth, withAuth } from "../../contexts/AuthContext";
 import { useHabits } from "../../contexts/HabitContext";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const readNavCollapsed = () => {
   try { return localStorage.getItem('bito:nav-collapsed') === 'true'; }
@@ -20,6 +23,7 @@ const Layout = () => {
   const [addHabitModalOpen, setAddHabitModalOpen] = useState(false);
   const { user } = useAuth();
   const { createHabit } = useHabits();
+  const { designSystem } = useTheme();
   const location = useLocation();
 
   // Route guard: redirect to profile-setup or onboarding if needed
@@ -64,6 +68,42 @@ const Layout = () => {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // ── Standard design system — floating shell (desktop only) ──
+  const standardDesktop = designSystem === "standard" && !isMobile;
+  if (standardDesktop) {
+    const sidebarWidth = isMenuCollapsed ? 68 : 236;
+    const contentLeft = sidebarWidth + 24; // left-3 gap + 12px gutter
+    return (
+      <div className="std std-surface h-screen relative overflow-hidden" style={{ background: "var(--bg)" }}>
+        <StandardSidebar isCollapsed={isMenuCollapsed} />
+        <StandardTopBar
+          isMenuCollapsed={isMenuCollapsed}
+          setIsMenuCollapsed={setIsMenuCollapsed}
+          userName={user?.name || user?.username || "User"}
+          userAvatar={user?.avatar}
+          leftOffset={contentLeft}
+        />
+        <div
+          className="h-full overflow-y-auto overflow-x-hidden"
+          style={{ paddingLeft: contentLeft, paddingTop: 80, paddingRight: 12, paddingBottom: 12 }}
+        >
+          <AnimatePresence mode="wait">
+            <AnimatedPage key={location.pathname}>
+              <Outlet />
+            </AnimatedPage>
+          </AnimatePresence>
+        </div>
+
+        <HabitCreationWizard
+          isOpen={addHabitModalOpen}
+          onClose={() => setAddHabitModalOpen(false)}
+          onSave={handleSaveNewHabit}
+          userId={user?._id || user?.id}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen flex relative" style={{ backgroundColor: "var(--color-bg-primary)" }}>
