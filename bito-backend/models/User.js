@@ -135,6 +135,11 @@ const userSchema = new mongoose.Schema({  // Basic user information
       enum: ['light', 'dark', 'auto', 'bw'],
       default: 'auto'
     },
+    designSystem: {
+      type: String,
+      enum: ['legacy', 'standard'],
+      default: 'legacy'
+    },
     timezone: {
       type: String,
       default: 'UTC'

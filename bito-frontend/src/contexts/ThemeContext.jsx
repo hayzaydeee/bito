@@ -15,6 +15,9 @@ export const useTheme = () => {
 export const ThemeProvider = ({ children }) => {
   const { user, updateUser, isLoading: authLoading } = useAuth();
   const [theme, setTheme] = useState('dark'); // Default to dark
+  // Design-system axis (orthogonal to light/dark): 'legacy' = current purple/serif
+  // look, 'standard' = the new black/white + accent "DRILL" language. Legacy is the default.
+  const [designSystem, setDesignSystem] = useState('legacy');
   const [systemTheme, setSystemTheme] = useState('dark');
   const [isLoading, setIsLoading] = useState(true);
   const initializedForRef = useRef(undefined); // tracks which user id we've initialized from
@@ -49,6 +52,7 @@ export const ThemeProvider = ({ children }) => {
     } else {
       setTheme('auto');
     }
+    setDesignSystem(user?.preferences?.designSystem === 'standard' ? 'standard' : 'legacy');
     setIsLoading(false);
   }, [user, authLoading]);
 
@@ -73,13 +77,22 @@ export const ThemeProvider = ({ children }) => {
       radixThemeRoot.setAttribute('data-appearance', radixAppearance);
     }
 
-    // Update PWA theme-color meta tag
+    // Update PWA theme-color meta tag (palette depends on the active design system)
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-      const colors = { light: '#FAFBFF', dark: '#0D0A1A', bw: '#000000' };
-      metaThemeColor.setAttribute('content', colors[effectiveTheme] || '#0D0A1A');
+      const legacy = { light: '#FAFBFF', dark: '#0D0A1A', bw: '#000000' };
+      const standard = { light: '#faf9f6', dark: '#050507', bw: '#050507' };
+      const palette = designSystem === 'standard' ? standard : legacy;
+      metaThemeColor.setAttribute('content', palette[effectiveTheme] || palette.dark);
     }
-  }, [theme, systemTheme]);
+  }, [theme, systemTheme, designSystem]);
+
+  // Apply the design-system axis to the document (orthogonal to data-theme)
+  useEffect(() => {
+    document.documentElement.setAttribute('data-ds', designSystem);
+    document.body.classList.remove('ds-legacy', 'ds-standard');
+    document.body.classList.add(`ds-${designSystem}`);
+  }, [designSystem]);
 
   const changeTheme = async (newTheme) => {
     setTheme(newTheme);
@@ -105,6 +118,25 @@ export const ThemeProvider = ({ children }) => {
     }
   };
 
+  const changeDesignSystem = async (next) => {
+    const value = next === 'standard' ? 'standard' : 'legacy';
+    setDesignSystem(value);
+
+    if (user) {
+      try {
+        await userAPI.updateProfile({
+          preferences: { ...user.preferences, designSystem: value }
+        });
+        if (updateUser) {
+          updateUser({ preferences: { ...user.preferences, designSystem: value } });
+        }
+      } catch (error) {
+        console.error('Failed to save design system preference:', error);
+        setDesignSystem(user.preferences?.designSystem === 'standard' ? 'standard' : 'legacy');
+      }
+    }
+  };
+
   const getEffectiveTheme = () => {
     return theme === 'auto' ? systemTheme : theme;
   };
@@ -122,7 +154,15 @@ export const ThemeProvider = ({ children }) => {
     radixAppearance: getRadixAppearance(),
     isLoading,
     changeTheme,
-    
+
+    // Design-system axis (legacy | standard)
+    designSystem,
+    changeDesignSystem,
+    designSystemOptions: [
+      { value: 'legacy', label: 'Legacy', description: 'The original purple & serif look' },
+      { value: 'standard', label: 'Standard', description: 'New black/white + accent design language' }
+    ],
+
     // Theme options for UI
     themeOptions: [
       { value: 'light', label: 'Light', description: 'Light theme' },
