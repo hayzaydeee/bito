@@ -6,8 +6,7 @@
  * Falls back to static capacity-based messages if LLM is unavailable.
  */
 
-const OpenAIModule = require('openai');
-const OpenAI = OpenAIModule.default || OpenAIModule.OpenAI || OpenAIModule;
+const { isLLMAvailable, getLLMClient } = require('./llmClient');
 const { buildSystemPrompt, getTemperature, DEFAULT_PERSONALITY } = require('../prompts/buildSystemPrompt');
 
 /**
@@ -41,20 +40,9 @@ const STATIC_KICKSTART = {
   },
 };
 
-/** Lazily-created client singleton */
-let _client = null;
 function getClient() {
-  if (!_client && process.env.OPENAI_API_KEY) {
-    try {
-      _client = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-        ...(process.env.OPENAI_BASE_URL && { baseURL: process.env.OPENAI_BASE_URL }),
-      });
-    } catch {
-      return null;
-    }
-  }
-  return _client;
+  if (!isLLMAvailable()) return null;
+  return getLLMClient();
 }
 
 /**
@@ -75,7 +63,7 @@ async function generateKickstartInsights({ user, habits }) {
     try {
       const systemPrompt = buildSystemPrompt(personality, 'kickstart');
       const temperature = getTemperature(personality);
-      const model = process.env.INSIGHTS_LLM_MODEL || 'gpt-4o-mini';
+      const model = process.env.INSIGHTS_LLM_MODEL || 'claude-sonnet-4-6';
 
       const userMessage = JSON.stringify({
         userName: user.firstName || user.name || 'there',
@@ -91,17 +79,17 @@ async function generateKickstartInsights({ user, habits }) {
         })),
       });
 
-      const completion = await client.chat.completions.create({
+      const completion = await client.messages.create({
         model,
+        system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
         messages: [
-          { role: 'system', content: systemPrompt },
           { role: 'user', content: userMessage },
         ],
         temperature,
         max_tokens: 300,
       });
 
-      const text = completion.choices?.[0]?.message?.content;
+      const text = completion.content?.[0]?.text;
       if (text) {
         const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
         const parsed = JSON.parse(cleaned);

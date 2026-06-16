@@ -1,18 +1,15 @@
 /**
  * Optional LLM Enrichment Layer (Layer 2)
  *
- * When an OpenAI-compatible API key is configured via the OPENAI_API_KEY
- * env var, this module enriches the rule-based insights with natural
- * language summaries and open-ended pattern discovery.
+ * When CLAUDE_API_KEY is configured, this module enriches the rule-based
+ * insights with natural language summaries and open-ended pattern discovery.
  *
- * Uses the official `openai` npm package (already installed).
+ * Uses the Anthropic SDK via the shared llmClient singleton.
  * If the key is absent or the call fails, it falls back gracefully
  * and returns the original insights untouched.
  */
 
-const OpenAIModule = require('openai');
-// openai v5 may export the class as .default in CommonJS
-const OpenAI = OpenAIModule.default || OpenAIModule.OpenAI || OpenAIModule;
+const { isLLMAvailable: _isLLMAvailable, getLLMClient } = require('./llmClient');
 const { buildSystemPrompt, getTemperature, DEFAULT_PERSONALITY } = require('../prompts/buildSystemPrompt');
 const { validateLLMSchema, buildGroundTruthAnchors, factCheckOutput, correctWithLLM } = require('./llmValidator');
 
@@ -22,29 +19,13 @@ const toDateKey = (d) => {
   return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
 };
 
-/**
- * Check whether LLM enrichment is available.
- */
 function isLLMAvailable() {
-  return !!process.env.OPENAI_API_KEY;
+  return _isLLMAvailable();
 }
 
-/** Lazily-created client singleton */
-let _client = null;
 function getClient() {
-  if (!_client && isLLMAvailable()) {
-    try {
-      _client = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-        ...(process.env.OPENAI_BASE_URL && { baseURL: process.env.OPENAI_BASE_URL }),
-      });
-      console.log('[Insights] OpenAI client initialized successfully');
-    } catch (err) {
-      console.warn('[Insights] Failed to create OpenAI client:', err.message);
-      return null;
-    }
-  }
-  return _client;
+  if (!isLLMAvailable()) return null;
+  return getLLMClient();
 }
 
 /**
@@ -220,7 +201,7 @@ async function callLLM(ruleInsights, dataSummary, personality = DEFAULT_PERSONAL
   const client = getClient();
   if (!client) return null;
 
-  const model = process.env.INSIGHTS_LLM_MODEL || 'gpt-4o-mini';
+  const model = process.env.INSIGHTS_LLM_MODEL || 'claude-sonnet-4-6';
 
   const systemPrompt = buildSystemPrompt(personality, feature);
   const temperature = getTemperature(personality);
@@ -234,17 +215,17 @@ async function callLLM(ruleInsights, dataSummary, personality = DEFAULT_PERSONAL
   });
 
   try {
-    const completion = await client.chat.completions.create({
+    const completion = await client.messages.create({
       model,
+      system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
       messages: [
-        { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
       ],
       temperature,
       max_tokens: 300,
     });
 
-    const text = completion.choices?.[0]?.message?.content;
+    const text = completion.content?.[0]?.text;
     if (!text) return null;
 
     // Parse JSON from response (strip markdown fences if present)
@@ -278,7 +259,7 @@ async function callLLM(ruleInsights, dataSummary, personality = DEFAULT_PERSONAL
  */
 async function enrichWithLLM(ruleInsights, habits, entries, journalEntries, personality, feature = 'insight-enrichment') {
   if (!isLLMAvailable()) {
-    console.log('[Insights] LLM not available (no OPENAI_API_KEY)');
+    console.log('[Insights] LLM not available (no CLAUDE_API_KEY)');
     return { insights: ruleInsights, summary: null, llmUsed: false };
   }
 

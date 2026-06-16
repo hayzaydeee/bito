@@ -25,22 +25,11 @@ const { getUserInsightTier } = require('../utils/insightTier');
 const { sanitizeText } = require('../utils/llmSanitizer');
 const { securityLogger } = require('../utils/securityLogger');
 
-// ── OpenAI client (shared lazy singleton) ──────────────────
-let _openaiClient = null;
+const { isLLMAvailable, getLLMClient } = require('./llmClient');
+
 function getOpenAIClient() {
-  if (_openaiClient) return _openaiClient;
-  if (!process.env.OPENAI_API_KEY) return null;
-  try {
-    const OpenAIModule = require('openai');
-    const OpenAI = OpenAIModule.default || OpenAIModule.OpenAI || OpenAIModule;
-    _openaiClient = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-      ...(process.env.OPENAI_BASE_URL && { baseURL: process.env.OPENAI_BASE_URL }),
-    });
-    return _openaiClient;
-  } catch {
-    return null;
-  }
+  if (!isLLMAvailable()) return null;
+  return getLLMClient();
 }
 
 class WeeklyReportService {
@@ -268,7 +257,7 @@ class WeeklyReportService {
 
     try {
       const { sanitizedFirstName, sanitizedHabitBreakdown } = this._sanitizeWeeklyInsightsPromptData(user, habitBreakdown);
-      const model = process.env.INSIGHTS_LLM_MODEL || 'gpt-4o-mini';
+      const model = process.env.INSIGHTS_LLM_MODEL || 'claude-sonnet-4-6';
 
       const personality = user.aiPersonality || DEFAULT_PERSONALITY;
       const systemPrompt = buildSystemPrompt(personality, 'weekly-report');
@@ -298,13 +287,10 @@ class WeeklyReportService {
         noCompletionHabits.length ? `- Zero completions: ${noCompletionHabits.join(', ')}` : null,
       ].filter(Boolean).join('\n');
 
-      const completion = await client.chat.completions.create({
+      const completion = await client.messages.create({
         model,
+        system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
         messages: [
-          {
-            role: 'system',
-            content: systemPrompt,
-          },
           {
             role: 'user',
             content:
@@ -319,7 +305,7 @@ class WeeklyReportService {
         max_tokens: 200,
       });
 
-      return completion.choices[0]?.message?.content?.trim() || this._getStaticInsights(stats, habitBreakdown);
+      return completion.content[0]?.text?.trim() || this._getStaticInsights(stats, habitBreakdown);
     } catch (err) {
       console.warn('📊 AI insights generation failed:', err.message);
       return this._getStaticInsights(stats, habitBreakdown);

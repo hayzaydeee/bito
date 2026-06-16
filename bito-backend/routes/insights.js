@@ -603,21 +603,16 @@ async function generateAnalyticsReport(ruleInsights, analyticsData, rangeDays, p
     return buildFallbackSections(ruleInsights, analyticsData);
   }
 
-  const OpenAIModule = require('openai');
-  const OpenAI = OpenAIModule.default || OpenAIModule.OpenAI || OpenAIModule;
-
+  const { getLLMClient: _getLLMClient } = require('../services/llmClient');
   let client;
   try {
-    client = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-      ...(process.env.OPENAI_BASE_URL && { baseURL: process.env.OPENAI_BASE_URL }),
-    });
+    client = _getLLMClient();
   } catch (err) {
-    console.warn('[Analytics] Failed to create OpenAI client:', err.message);
+    console.warn('[Analytics] Failed to create Anthropic client:', err.message);
     return buildFallbackSections(ruleInsights, analyticsData);
   }
 
-  const model = process.env.INSIGHTS_LLM_MODEL || 'gpt-4o-mini';
+  const model = process.env.INSIGHTS_LLM_MODEL || 'claude-sonnet-4-6';
 
   const systemPrompt = buildSystemPrompt(personality, feature);
   const temperature = getTemperature(personality);
@@ -629,17 +624,17 @@ async function generateAnalyticsReport(ruleInsights, analyticsData, rangeDays, p
 
   try {
     console.log('[Analytics] Calling LLM for sectioned report...');
-    const completion = await client.chat.completions.create({
+    const completion = await client.messages.create({
       model,
+      system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
       messages: [
-        { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
       ],
       temperature,
       max_tokens: 800,
     });
 
-    const text = completion.choices?.[0]?.message?.content;
+    const text = completion.content?.[0]?.text;
     if (!text) {
       console.warn('[Analytics] LLM returned empty response');
       return buildFallbackSections(ruleInsights, analyticsData);
@@ -721,20 +716,15 @@ function buildFallbackSections(ruleInsights, data) {
 async function answerAnalyticsQueryWithLLM({ query, analyticsData, habits, personality, tier }) {
   if (!isLLMAvailable()) return null;
 
-  const OpenAIModule = require('openai');
-  const OpenAI = OpenAIModule.default || OpenAIModule.OpenAI || OpenAIModule;
-
+  const { getLLMClient: _getLLMClient2 } = require('../services/llmClient');
   let client;
   try {
-    client = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-      ...(process.env.OPENAI_BASE_URL && { baseURL: process.env.OPENAI_BASE_URL }),
-    });
+    client = _getLLMClient2();
   } catch {
     return null;
   }
 
-  const model = process.env.INSIGHTS_LLM_MODEL || 'gpt-4o-mini';
+  const model = process.env.INSIGHTS_LLM_MODEL || 'claude-sonnet-4-6';
   const feature = tier === 'sprouting' ? 'early-analytics' : 'analytics-report';
   const systemPrompt = buildSystemPrompt(personality, feature);
   const temperature = getTemperature(personality);
@@ -754,10 +744,10 @@ async function answerAnalyticsQueryWithLLM({ query, analyticsData, habits, perso
   };
 
   try {
-    const completion = await client.chat.completions.create({
+    const completion = await client.messages.create({
       model,
+      system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
       messages: [
-        { role: 'system', content: systemPrompt },
         {
           role: 'user',
           content: JSON.stringify({
@@ -781,7 +771,7 @@ async function answerAnalyticsQueryWithLLM({ query, analyticsData, habits, perso
       max_tokens: 450,
     });
 
-    const text = completion.choices?.[0]?.message?.content;
+    const text = completion.content?.[0]?.text;
     if (!text) return null;
 
     const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();

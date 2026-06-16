@@ -200,7 +200,7 @@ async function correctWithLLM(parsed, violations, dataSummary, client) {
   if (!client) return null;
   if (process.env.ENABLE_LLM_VALIDATION !== 'true') return null;
 
-  const model = process.env.INSIGHTS_LLM_MODEL || 'gpt-4o-mini';
+  const model = process.env.INSIGHTS_LLM_MODEL || 'claude-sonnet-4-6';
 
   let systemPrompt;
   try {
@@ -217,17 +217,17 @@ async function correctWithLLM(parsed, violations, dataSummary, client) {
   });
 
   try {
-    const completion = await client.chat.completions.create({
+    const completion = await client.messages.create({
       model,
+      system: systemPrompt,
       messages: [
-        { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
       ],
-      temperature: 0.1, // low temperature for precision correction
+      temperature: 0.1,
       max_tokens: 300,
     });
 
-    const text = completion.choices?.[0]?.message?.content;
+    const text = completion.content?.[0]?.text;
     if (!text) return null;
 
     const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();

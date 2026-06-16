@@ -5,35 +5,22 @@
  *           refine(compass, userMessage) → delta patches + assistant reply.
  */
 
-const OpenAIModule = require('openai');
-const OpenAI = OpenAIModule.default || OpenAIModule.OpenAI || OpenAIModule;
+const { isLLMAvailable: _isLLMAvailable, getLLMClient } = require('./llmClient');
 const mongoose = require('mongoose');
 const Habit = require('../models/Habit');
 const User = require('../models/User');
 const HabitEntry = require('../models/HabitEntry');
 
-// ── Lazy-init OpenAI client (same pattern as llmEnrichment.js) ──
-let _client = null;
 function getClient() {
-  if (_client) return _client;
-  if (!process.env.OPENAI_API_KEY) return null;
-  try {
-    _client = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-      ...(process.env.OPENAI_BASE_URL && { baseURL: process.env.OPENAI_BASE_URL }),
-    });
-  } catch (err) {
-    console.warn('[CompassEngine] Failed to create OpenAI client:', err.message);
-    return null;
-  }
-  return _client;
+  if (!_isLLMAvailable()) return null;
+  return getLLMClient();
 }
 
 function isAvailable() {
-  return !!process.env.OPENAI_API_KEY;
+  return _isLLMAvailable();
 }
 
-const MODEL = process.env.COMPASS_LLM_MODEL || process.env.INSIGHTS_LLM_MODEL || 'gpt-4o-mini';
+const MODEL = process.env.COMPASS_LLM_MODEL || process.env.INSIGHTS_LLM_MODEL || 'claude-sonnet-4-6';
 
 const DAY_NAMES_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -424,14 +411,11 @@ async function parseGoal(goalText) {
   if (!client) return fallback;
 
   try {
-    const response = await client.chat.completions.create({
+    const response = await client.messages.create({
       model: MODEL,
       temperature: 0.3,
       max_tokens: 2500,
-      messages: [
-        {
-          role: 'system',
-          content: `You are a goal analysis engine. Analyze the user's input and determine:
+      system: `You are a goal analysis engine. Analyze the user's input and determine:
 1. Is this a SINGLE goal or MULTIPLE distinct goals?
 2. Extract structured data for each goal.
 
@@ -481,12 +465,10 @@ Goals that are independent get their own group. Strongly related goals (e.g., "l
 Each sub-goal index must appear in exactly one group.
 
 IMPORTANT: Create at most 5 suiteGroups. If there are many goals, aggressively group related ones together. For example, group all fitness goals, all creative goals, all financial goals, etc. Never create more than 5 groups.`,
-        },
-        { role: 'user', content: goalText },
-      ],
+      messages: [{ role: 'user', content: goalText }],
     });
 
-    const text = response.choices?.[0]?.message?.content?.trim();
+    const text = response.content?.[0]?.text?.trim();
     const parsed = JSON.parse(text);
 
     // Normalize — ensure backward-compat fields exist
@@ -647,32 +629,20 @@ async function generateSingle(goalText, userId, parsed, dossier, dossierBlock, c
     model: MODEL,
     temperature: 0.7,
     max_tokens: 3000,
+    system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
     messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user', content: userPrompt },
     ],
   };
 
-  // Enable web search for research-grounded plans (OpenAI Responses API tool)
-  if (useWebSearch) {
-    createParams.tools = [{ type: 'web_search_preview' }];
-  }
-
   let response;
   try {
-    response = await client.chat.completions.create(createParams);
+    response = await client.messages.create(createParams);
   } catch (wsErr) {
-    // If web search tool fails (model doesn't support it), retry without
-    if (useWebSearch) {
-      console.warn('[CompassEngine] LLM call with web search failed, retrying without:', wsErr.message);
-      delete createParams.tools;
-      response = await client.chat.completions.create(createParams);
-    } else {
-      throw wsErr;
-    }
+    throw wsErr;
   }
 
-  const raw = response.choices?.[0]?.message?.content?.trim();
+  const raw = response.content?.[0]?.text?.trim();
   if (!raw) {
     throw new Error('AI returned an empty response. Please try again.');
   }
@@ -963,19 +933,15 @@ User's NEW change request: "${userMessage}"
 
 Remember: Output ONLY valid JSON with "patches" and "assistantMessage" fields. No markdown, no explanation.`;
 
-  const messages = [
-    { role: 'system', content: REFINE_SYSTEM_PROMPT },
-    { role: 'user', content: userPrompt },
-  ];
-
-  const response = await client.chat.completions.create({
+  const response = await client.messages.create({
     model: MODEL,
     temperature: 0.5,
     max_tokens: 2000,
-    messages,
+    system: [{ type: 'text', text: REFINE_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
+    messages: [{ role: 'user', content: userPrompt }],
   });
 
-  const raw = response.choices?.[0]?.message?.content?.trim();
+  const raw = response.content?.[0]?.text?.trim();
   if (!raw) {
     throw new Error('AI returned an empty response. Please try again.');
   }
@@ -997,8 +963,8 @@ Remember: Output ONLY valid JSON with "patches" and "assistantMessage" fields. N
 
   // Track token usage
   const tokenUsage = {
-    input: response.usage?.prompt_tokens || 0,
-    output: response.usage?.completion_tokens || 0,
+    input: response.usage?.input_tokens || 0,
+    output: response.usage?.output_tokens || 0,
   };
 
   return { ...result, tokenUsage };
@@ -1333,17 +1299,15 @@ async function clarify(goalText, userId) {
   promptParts.push(`\n--- USER CONTEXT DOSSIER ---\n${dossierBlock}\n--- END DOSSIER ---`);
 
   try {
-    const response = await client.chat.completions.create({
+    const response = await client.messages.create({
       model: MODEL,
       temperature: 0.5,
       max_tokens: 1000,
-      messages: [
-        { role: 'system', content: CLARIFY_SYSTEM_PROMPT },
-        { role: 'user', content: promptParts.join('\n') },
-      ],
+      system: [{ type: 'text', text: CLARIFY_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
+      messages: [{ role: 'user', content: promptParts.join('\n') }],
     });
 
-    const raw = response.choices?.[0]?.message?.content?.trim();
+    const raw = response.content?.[0]?.text?.trim();
     if (!raw) return { needsClarification: false, reasoning: 'Empty response — proceeding.', goalAnalysis: null };
 
     const result = extractJSON(raw);

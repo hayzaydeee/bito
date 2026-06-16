@@ -12,44 +12,24 @@
 const emailService = require('./emailService');
 const { baseLayout, button, infoCard, BRAND } = require('./emailTemplates');
 
-// Lazy import to share the singleton client from llmEnrichment
-let _openaiClient = null;
-function getOpenAIClient() {
-  if (_openaiClient) return _openaiClient;
-  if (!process.env.OPENAI_API_KEY) return null;
-  try {
-    const OpenAIModule = require('openai');
-    const OpenAI = OpenAIModule.default || OpenAIModule.OpenAI || OpenAIModule;
-    _openaiClient = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-      ...(process.env.OPENAI_BASE_URL && { baseURL: process.env.OPENAI_BASE_URL }),
-    });
-    return _openaiClient;
-  } catch {
-    return null;
-  }
-}
+const { isLLMAvailable, getLLMClient } = require('./llmClient');
 
 /**
  * Generate a short welcome message with AI.
  * Falls back to a static message if OpenAI is unavailable.
  */
 async function generateWelcomeMessage(name) {
-  const client = getOpenAIClient();
-  if (!client) return getStaticWelcome(name);
+  if (!isLLMAvailable()) return getStaticWelcome(name);
 
   try {
-    const model = process.env.INSIGHTS_LLM_MODEL || 'gpt-4o-mini';
-    const completion = await client.chat.completions.create({
+    const client = getLLMClient();
+    const model = process.env.INSIGHTS_LLM_MODEL || 'claude-sonnet-4-6';
+    const completion = await client.messages.create({
       model,
+      system: 'You write short, warm welcome emails for Bito — a habit-tracking app that helps people build better routines. ' +
+        'Keep it to 2-3 sentences. Be encouraging but not cheesy. Do NOT include a subject line — just the body paragraph. ' +
+        'Address the user by first name. End with a motivating nudge to set up their first habit.',
       messages: [
-        {
-          role: 'system',
-          content:
-            'You write short, warm welcome emails for Bito — a habit-tracking app that helps people build better routines. ' +
-            'Keep it to 2-3 sentences. Be encouraging but not cheesy. Do NOT include a subject line — just the body paragraph. ' +
-            'Address the user by first name. End with a motivating nudge to set up their first habit.',
-        },
         {
           role: 'user',
           content: `Write a welcome message for a new user named "${name}".`,
@@ -59,7 +39,7 @@ async function generateWelcomeMessage(name) {
       max_tokens: 150,
     });
 
-    return completion.choices[0]?.message?.content?.trim() || getStaticWelcome(name);
+    return completion.content[0]?.text?.trim() || getStaticWelcome(name);
   } catch (err) {
     console.warn('📧 AI welcome generation failed, using static:', err.message);
     return getStaticWelcome(name);

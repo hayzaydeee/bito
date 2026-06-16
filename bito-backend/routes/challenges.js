@@ -476,12 +476,8 @@ router.post('/challenges/:id/suggest-habits', async (req, res) => {
     try {
       const { isLLMAvailable } = require('../services/llmEnrichment');
       if (isLLMAvailable()) {
-        const OpenAIModule = require('openai');
-        const OpenAI = OpenAIModule.default || OpenAIModule.OpenAI || OpenAIModule;
-        const client = new OpenAI({
-          apiKey: process.env.OPENAI_API_KEY,
-          ...(process.env.OPENAI_BASE_URL && { baseURL: process.env.OPENAI_BASE_URL }),
-        });
+        const { getLLMClient: _getLLMClient } = require('../services/llmClient');
+        const client = _getLLMClient();
 
         const habitList = userHabits.map((h, i) => ({
           index: i,
@@ -522,14 +518,14 @@ Return a JSON array of objects with { index, score, reason } where score is 0-10
 
 Return ONLY the JSON array, no markdown or extra text.`;
 
-        const response = await client.chat.completions.create({
-          model: 'gpt-4o-mini',
+        const response = await client.messages.create({
+          model: process.env.INSIGHTS_LLM_MODEL || 'claude-sonnet-4-6',
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.3,
           max_tokens: 500,
         });
 
-        const text = response.choices?.[0]?.message?.content?.trim();
+        const text = response.content?.[0]?.text?.trim();
         if (text) {
           const parsed = JSON.parse(text.replace(/```json?\n?/g, '').replace(/```/g, ''));
           suggestions = parsed.map((s) => ({
