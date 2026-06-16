@@ -104,7 +104,7 @@ const CompassListPage = () => {
           {/* Header — shared Feature-Home masthead (twin of Groups home) */}
           <FeatureHeader
             kicker=""
-            title="Compasses"
+            title="Compass"
             stats={
               !loading && compasses.length > 0 ? (
                 <>

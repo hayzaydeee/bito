@@ -163,7 +163,7 @@ const GroupSelection = () => {
 
         {/* header — shared Feature-Home masthead */}
         <FeatureHeader
-          kicker="The Collective — Ledger"
+          kicker=""
           title="Groups"
           stats={
             groups.length > 0 ? (
@@ -175,7 +175,7 @@ const GroupSelection = () => {
                 <span className="text-[var(--ink-2)]">{totalHabits}</span> SHARED HABITS
               </>
             ) : (
-              "TRACK HABITS TOGETHER — TEAM · FAMILY · FRIENDS"
+              "TRACK HABITS TOGETHER"
             )
           }
           actions={
@@ -202,7 +202,7 @@ const GroupSelection = () => {
               <Users size={48} weight="duotone" className="mx-auto mb-6 text-[var(--signal)]" />
               <p className="grp-kicker mb-3">No groups on record</p>
               <h2 className="grp-display text-3xl font-bold text-[var(--ink)] mb-3">
-                Start the ledger
+                Gather the troops
               </h2>
               <p className="text-sm text-[var(--ink-2)] max-w-xs mx-auto mb-8 leading-relaxed">
                 Spin up a group from scratch, or punch in an invite code to join one someone shared with you.
