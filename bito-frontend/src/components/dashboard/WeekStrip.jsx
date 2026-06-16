@@ -28,8 +28,7 @@ const DayHabitRow = memo(({ habit, isCompleted, onToggle, onEdit, dateStr }) => 
 
   return (
     <div
-      className="flex items-center gap-3 px-3 py-2.5 border-b border-[var(--line)] last:border-b-0 transition-all duration-200"
-      style={{ backgroundColor: isCompleted ? "var(--signal-2)" : "transparent" }}
+      className="flex items-center gap-3 px-3 py-2.5 border-b border-[var(--line)] last:border-b-0 transition-all duration-200 hover:bg-[var(--surface-2)]"
     >
       <button
         onClick={handleToggle}

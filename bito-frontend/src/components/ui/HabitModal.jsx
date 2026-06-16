@@ -10,7 +10,7 @@ import {
   TrashIcon,
   ArchiveIcon,
 } from "@radix-ui/react-icons";
-import { CalendarDots, Target, Barbell, BookOpen, Brain, Users, Palette, Sparkle } from "@phosphor-icons/react";
+import { Barbell, Target, BookOpen, Brain, Users, Palette, Sparkle } from "@phosphor-icons/react";
 import IconPicker from "../shared/IconPicker";
 import HabitIcon from "../shared/HabitIcon";
 
@@ -39,6 +39,14 @@ const STEP_LABELS = ["What", "When", "Style", "Go"];
 const LS_COMPACT_KEY = "bito_wizard_compact";
 const getCompactKey = (userId) => (userId ? `${LS_COMPACT_KEY}_${userId}` : LS_COMPACT_KEY);
 
+/* ─── Shared styles ─── */
+
+const inputCls =
+  "w-full h-11 px-3.5 bg-[var(--surface-2)] border border-[var(--line)] rounded-[var(--r-btn)] text-[var(--ink)] placeholder-[var(--ink-3)] focus:outline-none focus:border-[var(--signal)] transition-colors text-sm";
+
+const fieldLabelCls = "std-kicker block mb-1.5";
+const errorCls = "std-mono text-[10px] uppercase tracking-wide text-[var(--rose)] mt-1";
+
 /* ─── Shared sub-components ─── */
 
 const ProgressDots = ({ step, total, labels }) => (
@@ -49,12 +57,12 @@ const ProgressDots = ({ step, total, labels }) => (
           className="h-1.5 rounded-full transition-all duration-300"
           style={{
             width: i === step ? 24 : 8,
-            backgroundColor: i <= step ? "var(--color-brand-500)" : "var(--color-surface-hover)",
+            backgroundColor: i <= step ? "var(--signal)" : "var(--line-2)",
           }}
         />
         <span
-          className="text-[10px] font-spartan transition-colors duration-200"
-          style={{ color: i <= step ? "var(--color-brand-500)" : "var(--color-text-tertiary)" }}
+          className="std-mono text-[9px] uppercase tracking-wide transition-colors duration-200"
+          style={{ color: i <= step ? "var(--signal)" : "var(--ink-3)" }}
         >
           {labels[i]}
         </span>
@@ -62,6 +70,13 @@ const ProgressDots = ({ step, total, labels }) => (
     ))}
   </div>
 );
+
+/* segmented toggle button helper */
+const segStyle = (active) => ({
+  backgroundColor: active ? "var(--signal)" : "var(--surface-2)",
+  color: active ? "var(--signal-ink)" : "var(--ink-2)",
+  borderColor: active ? "var(--signal)" : "var(--line)",
+});
 
 /* ─── Shared: Frequency section (used in both modes) ─── */
 
@@ -82,22 +97,16 @@ const FrequencySection = ({ formData, setFormData, errors }) => {
         <button
           type="button"
           onClick={() => setFormData((p) => ({ ...p, frequency: "daily" }))}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 font-outfit border ${
-            formData.frequency !== "weekly"
-              ? "bg-[var(--color-brand-500)] text-white border-[var(--color-brand-500)]"
-              : "bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] border-[var(--color-border-primary)]/40 hover:bg-[var(--color-surface-hover)]"
-          }`}
+          className="flex-1 py-2.5 rounded-[var(--r-btn)] text-sm font-medium transition-all duration-200 border"
+          style={segStyle(formData.frequency !== "weekly")}
         >
           Daily
         </button>
         <button
           type="button"
           onClick={() => setFormData((p) => ({ ...p, frequency: "weekly" }))}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 font-outfit border ${
-            formData.frequency === "weekly"
-              ? "bg-[var(--color-brand-500)] text-white border-[var(--color-brand-500)]"
-              : "bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] border-[var(--color-border-primary)]/40 hover:bg-[var(--color-surface-hover)]"
-          }`}
+          className="flex-1 py-2.5 rounded-[var(--r-btn)] text-sm font-medium transition-all duration-200 border"
+          style={segStyle(formData.frequency === "weekly")}
         >
           Weekly target
         </button>
@@ -105,35 +114,35 @@ const FrequencySection = ({ formData, setFormData, errors }) => {
 
       {formData.frequency === "weekly" ? (
         <div className="space-y-2">
-          <div className="flex items-center gap-3 p-4 bg-[var(--color-surface-elevated)] rounded-xl">
-            <span className="text-sm font-outfit text-[var(--color-text-primary)] flex-1">Complete on any</span>
+          <div className="flex items-center gap-3 px-4 py-3 std-card">
+            <span className="text-sm text-[var(--ink)] flex-1">Complete on any</span>
             <button
               type="button"
               onClick={() => setFormData((p) => ({ ...p, weeklyTarget: Math.max(1, p.weeklyTarget - 1) }))}
-              className="w-8 h-8 rounded-lg bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] font-bold text-sm flex items-center justify-center hover:bg-[var(--color-border-primary)] transition-colors"
+              className="w-8 h-8 rounded-[var(--r-btn)] bg-[var(--surface-2)] border border-[var(--line)] text-[var(--ink)] font-bold text-sm flex items-center justify-center hover:border-[var(--signal)] transition-colors"
             >
               −
             </button>
-            <span className="text-xl font-bold font-spartan text-[var(--color-brand-500)] tabular-nums w-6 text-center">
+            <span className="std-num text-xl font-bold text-[var(--signal)] tabular-nums w-6 text-center">
               {formData.weeklyTarget}
             </span>
             <button
               type="button"
               onClick={() => setFormData((p) => ({ ...p, weeklyTarget: Math.min(7, p.weeklyTarget + 1) }))}
-              className="w-8 h-8 rounded-lg bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] font-bold text-sm flex items-center justify-center hover:bg-[var(--color-border-primary)] transition-colors"
+              className="w-8 h-8 rounded-[var(--r-btn)] bg-[var(--surface-2)] border border-[var(--line)] text-[var(--ink)] font-bold text-sm flex items-center justify-center hover:border-[var(--signal)] transition-colors"
             >
               +
             </button>
-            <span className="text-sm font-outfit text-[var(--color-text-primary)]">days/week</span>
+            <span className="text-sm text-[var(--ink)]">days/week</span>
           </div>
-          <p className="text-[11px] text-[var(--color-text-tertiary)] font-outfit px-1 leading-relaxed">
+          <p className="std-mono text-[10px] text-[var(--ink-3)] px-1 leading-relaxed">
             No fixed schedule — pick any {formData.weeklyTarget} day{formData.weeklyTarget > 1 ? "s" : ""} each week.
             Your streak counts consecutive weeks where you meet the target.
           </p>
         </div>
       ) : (
         <div className="space-y-2">
-          <label className="text-xs font-medium text-[var(--color-text-primary)] font-outfit">Which days?</label>
+          <label className={fieldLabelCls}>Which days?</label>
           <div className="flex gap-1.5">
             {["M", "T", "W", "T", "F", "S", "S"].map((day, index) => {
               const dayId = index === 6 ? 0 : index + 1;
@@ -143,18 +152,15 @@ const FrequencySection = ({ formData, setFormData, errors }) => {
                   key={index}
                   type="button"
                   onClick={() => toggleDay(dayId)}
-                  className={`flex-1 h-10 rounded-lg text-xs font-medium transition-all duration-200 font-outfit ${
-                    isSelected
-                      ? "bg-[var(--color-brand-500)] text-white"
-                      : "bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]"
-                  }`}
+                  className="flex-1 h-10 rounded-[var(--r-btn)] std-mono text-xs uppercase transition-all duration-200 border"
+                  style={segStyle(isSelected)}
                 >
                   {day}
                 </button>
               );
             })}
           </div>
-          {errors?.schedule && <p className="text-xs text-red-500 mt-1 font-outfit">{errors.schedule}</p>}
+          {errors?.schedule && <p className={errorCls}>{errors.schedule}</p>}
         </div>
       )}
     </div>
@@ -167,47 +173,51 @@ const StyleSection = ({ formData, setFormData }) => (
   <div className="space-y-4">
     {/* Category */}
     <div>
-      <label className="text-xs font-medium text-[var(--color-text-primary)] font-outfit block mb-2">
-        Category
-      </label>
+      <label className={fieldLabelCls}>Category</label>
       <div className="grid grid-cols-4 gap-1.5">
-        {CATEGORIES.map(({ id, Icon, label }) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setFormData((p) => ({ ...p, category: id }))}
-            className={`flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl text-xs font-outfit transition-all duration-200 border ${
-              formData.category === id
-                ? "bg-[var(--color-brand-500)]/10 border-[var(--color-brand-500)] text-[var(--color-brand-600)]"
-                : "bg-[var(--color-surface-elevated)] border-[var(--color-border-primary)]/40 text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]"
-            }`}
-          >
-            <Icon size={15} weight="duotone" />
-            <span className="font-medium">{label}</span>
-          </button>
-        ))}
+        {CATEGORIES.map(({ id, Icon, label }) => {
+          const active = formData.category === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setFormData((p) => ({ ...p, category: id }))}
+              className="flex flex-col items-center gap-1 py-2.5 px-1 rounded-[var(--r-btn)] transition-all duration-200 border"
+              style={{
+                backgroundColor: active ? "var(--signal-2)" : "var(--surface-2)",
+                borderColor: active ? "var(--signal)" : "var(--line)",
+                color: active ? "var(--signal)" : "var(--ink-2)",
+              }}
+            >
+              <Icon size={15} weight="duotone" />
+              <span className="std-mono text-[9px] uppercase tracking-wide">{label}</span>
+            </button>
+          );
+        })}
       </div>
     </div>
 
     {/* Color */}
     <div>
-      <label className="text-xs font-medium text-[var(--color-text-primary)] font-outfit block mb-2">
-        Colour
-      </label>
+      <label className={fieldLabelCls}>Colour</label>
       <div className="flex flex-wrap gap-2">
-        {COLOR_OPTIONS.map((color) => (
-          <button
-            key={color}
-            type="button"
-            className="w-8 h-8 rounded-lg transition-transform hover:scale-110"
-            style={{
-              backgroundColor: color,
-              border: formData.color === color ? "2px solid white" : "1px solid var(--color-border-primary)",
-              outline: formData.color === color ? `2px solid ${color}` : "none",
-            }}
-            onClick={() => setFormData((p) => ({ ...p, color }))}
-          />
-        ))}
+        {COLOR_OPTIONS.map((color) => {
+          const active = formData.color === color;
+          return (
+            <button
+              key={color}
+              type="button"
+              className="w-8 h-8 rounded-[var(--r-btn)] transition-transform hover:scale-110"
+              style={{
+                backgroundColor: color,
+                outline: active ? `2px solid var(--signal)` : "none",
+                outlineOffset: "2px",
+                border: "1px solid var(--line)",
+              }}
+              onClick={() => setFormData((p) => ({ ...p, color }))}
+            />
+          );
+        })}
       </div>
     </div>
   </div>
@@ -215,34 +225,36 @@ const StyleSection = ({ formData, setFormData }) => (
 
 /* ─── Shared: Reminder toggle ─── */
 
+const Switch = ({ checked, onChange }) => (
+  <label className="relative inline-flex items-center cursor-pointer">
+    <input type="checkbox" checked={checked} onChange={onChange} className="sr-only" />
+    <div
+      className="w-11 h-6 rounded-full transition-colors"
+      style={{ backgroundColor: checked ? "var(--signal)" : "var(--line-2)" }}
+    >
+      <div
+        className={`w-5 h-5 rounded-full shadow transform transition-transform mt-0.5 ml-0.5 ${
+          checked ? "translate-x-5" : "translate-x-0"
+        }`}
+        style={{ backgroundColor: checked ? "var(--signal-ink)" : "var(--surface)" }}
+      />
+    </div>
+  </label>
+);
+
 const ReminderToggle = ({ formData, setFormData }) => (
   <div className="space-y-2">
-    <div className="flex items-center justify-between p-4 bg-[var(--color-surface-elevated)] rounded-xl">
+    <div className="flex items-center justify-between px-4 py-3 std-card">
       <div>
-        <span className="text-sm font-medium text-[var(--color-text-primary)] font-outfit">Reminder</span>
-        <p className="text-[11px] text-[var(--color-text-tertiary)] font-outfit">Get a nudge at the right time</p>
+        <span className="text-sm font-medium text-[var(--ink)]">Reminder</span>
+        <p className="std-mono text-[10px] text-[var(--ink-3)] mt-0.5">Get a nudge at the right time</p>
       </div>
-      <label className="relative inline-flex items-center cursor-pointer">
-        <input
-          type="checkbox"
-          checked={formData.schedule.reminderEnabled}
-          onChange={(e) =>
-            setFormData((p) => ({ ...p, schedule: { ...p.schedule, reminderEnabled: e.target.checked } }))
-          }
-          className="sr-only"
-        />
-        <div
-          className={`w-11 h-6 rounded-full transition-colors ${
-            formData.schedule.reminderEnabled ? "bg-[var(--color-brand-500)]" : "bg-gray-300"
-          }`}
-        >
-          <div
-            className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${
-              formData.schedule.reminderEnabled ? "translate-x-5" : "translate-x-0"
-            } mt-0.5 ml-0.5`}
-          />
-        </div>
-      </label>
+      <Switch
+        checked={formData.schedule.reminderEnabled}
+        onChange={(e) =>
+          setFormData((p) => ({ ...p, schedule: { ...p.schedule, reminderEnabled: e.target.checked } }))
+        }
+      />
     </div>
     {formData.schedule.reminderEnabled && (
       <input
@@ -251,14 +263,14 @@ const ReminderToggle = ({ formData, setFormData }) => (
         onChange={(e) =>
           setFormData((p) => ({ ...p, schedule: { ...p.schedule, reminderTime: e.target.value } }))
         }
-        className="w-full h-10 px-3 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/40 rounded-xl text-[var(--color-text-primary)] font-outfit focus:outline-none focus:border-[var(--color-brand-500)] transition-colors text-sm"
+        className={inputCls}
       />
     )}
   </div>
 );
 
 /* ═══════════════════════════════════════
-   ADD MODE — 4-step wizard
+   ADD MODE — 4-step wizard (Step ⇄ Quick)
    ═══════════════════════════════════════ */
 
 const AddMode = ({ isOpen, onClose, onSave, userId }) => {
@@ -349,16 +361,17 @@ const AddMode = ({ isOpen, onClose, onSave, userId }) => {
 
   /* ── Step renderers ── */
 
+  const StepHeading = ({ title, sub }) => (
+    <div className="text-center mb-2">
+      <p className="std-kicker">{`Step ${step + 1} of ${STEP_COUNT}`}</p>
+      <h3 className="std-display text-xl font-bold text-[var(--ink)] mt-1">{title}</h3>
+      <p className="text-[13px] text-[var(--ink-2)] mt-1 leading-relaxed">{sub}</p>
+    </div>
+  );
+
   const renderStep0 = () => (
     <div className="space-y-4">
-      <div className="text-center mb-2">
-        <h3 className="text-base font-bold text-[var(--color-text-primary)] font-dmSerif">
-          What habit do you want to build?
-        </h3>
-        <p className="text-xs text-[var(--color-text-secondary)] font-outfit mt-1">
-          Name it, pick an icon, and you're off.
-        </p>
-      </div>
+      <StepHeading title="What habit do you want to build?" sub="Name it, pick an icon, and you're off." />
       <div>
         <input
           ref={nameInputRef}
@@ -366,10 +379,10 @@ const AddMode = ({ isOpen, onClose, onSave, userId }) => {
           value={formData.name}
           onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
           onKeyDown={handleNameKeyDown}
-          className="w-full h-12 px-4 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/40 rounded-xl text-[var(--color-text-primary)] font-outfit placeholder-[var(--color-text-tertiary)] focus:outline-none focus:border-[var(--color-brand-500)] transition-colors text-sm"
+          className={`${inputCls} h-12`}
           placeholder="e.g., Morning run, Read 20 pages, Meditate..."
         />
-        {errors.name && <p className="text-xs text-red-500 mt-1 font-outfit">{errors.name}</p>}
+        {errors.name && <p className={errorCls}>{errors.name}</p>}
       </div>
       <IconPicker value={formData.icon} onChange={(icon) => setFormData((p) => ({ ...p, icon }))} />
     </div>
@@ -377,37 +390,26 @@ const AddMode = ({ isOpen, onClose, onSave, userId }) => {
 
   const renderStep1 = () => (
     <div className="space-y-4">
-      <div className="text-center mb-2">
-        <h3 className="text-base font-bold text-[var(--color-text-primary)] font-dmSerif">
-          When will you do it?
-        </h3>
-        <p className="text-xs text-[var(--color-text-secondary)] font-outfit mt-1">
-          Daily habits have a fixed schedule. Weekly habits let you choose any days to hit your target.
-        </p>
-      </div>
+      <StepHeading
+        title="When will you do it?"
+        sub="Daily habits have a fixed schedule. Weekly habits let you choose any days to hit your target."
+      />
       <FrequencySection formData={formData} setFormData={setFormData} errors={errors} />
     </div>
   );
 
   const renderStep2 = () => (
     <div className="space-y-4">
-      <div className="text-center mb-2">
-        <h3 className="text-base font-bold text-[var(--color-text-primary)] font-dmSerif">
-          Make it yours
-        </h3>
-        <p className="text-xs text-[var(--color-text-secondary)] font-outfit mt-1">
-          Pick a category and colour for your dashboard.
-        </p>
-      </div>
+      <StepHeading title="Make it yours" sub="Pick a category and colour for your dashboard." />
       {/* Preview */}
       <div className="flex items-center justify-center gap-3 py-2">
         <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-sm"
+          className="w-12 h-12 rounded-[var(--r-card)] flex items-center justify-center shadow-sm"
           style={{ backgroundColor: formData.color }}
         >
           <HabitIcon icon={formData.icon} size={24} color="#fff" />
         </div>
-        <span className="text-sm font-outfit font-medium text-[var(--color-text-primary)]">
+        <span className="std-display text-base font-bold text-[var(--ink)]">
           {formData.name || "Your habit"}
         </span>
       </div>
@@ -417,19 +419,17 @@ const AddMode = ({ isOpen, onClose, onSave, userId }) => {
         <button
           type="button"
           onClick={() => setShowDescription(true)}
-          className="text-xs text-[var(--color-brand-500)] font-outfit hover:underline"
+          className="std-mono text-[10px] uppercase tracking-wider text-[var(--signal)] hover:underline"
         >
           + Add a description
         </button>
       ) : (
         <div>
-          <label className="text-xs font-medium text-[var(--color-text-primary)] font-outfit block mb-1">
-            Description
-          </label>
+          <label className={fieldLabelCls}>Description</label>
           <textarea
             value={formData.description}
             onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
-            className="w-full h-16 px-3 py-2 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/40 rounded-xl text-[var(--color-text-primary)] font-outfit placeholder-[var(--color-text-tertiary)] focus:outline-none focus:border-[var(--color-brand-500)] transition-colors resize-none text-sm"
+            className={`${inputCls} h-16 py-2 resize-none`}
             placeholder="Add a note or target for yourself..."
           />
         </div>
@@ -451,37 +451,26 @@ const AddMode = ({ isOpen, onClose, onSave, userId }) => {
 
     return (
       <div className="space-y-4">
-        <div className="text-center mb-2">
-          <h3 className="text-base font-bold text-[var(--color-text-primary)] font-dmSerif">Looking good!</h3>
-          <p className="text-xs text-[var(--color-text-secondary)] font-outfit mt-1">
-            Confirm your habit and set up a reminder if you'd like.
-          </p>
-        </div>
+        <StepHeading title="Looking good!" sub="Confirm your habit and set up a reminder if you'd like." />
         {/* Summary card */}
-        <div
-          className="p-4 rounded-xl border border-[var(--color-border-primary)] space-y-3"
-          style={{ backgroundColor: "var(--color-surface-elevated)" }}
-        >
+        <div className="std-card p-4 space-y-3">
           <div className="flex items-center gap-3">
             <div
-              className="w-11 h-11 rounded-xl flex items-center justify-center text-white"
+              className="w-11 h-11 rounded-[var(--r-card)] flex items-center justify-center"
               style={{ backgroundColor: formData.color }}
             >
               <HabitIcon icon={formData.icon} size={22} color="#fff" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-outfit font-semibold text-[var(--color-text-primary)] truncate">{formData.name}</p>
-              <p className="text-xs font-outfit text-[var(--color-text-secondary)]">{scheduleLabel}</p>
+              <p className="std-display text-[15px] font-bold text-[var(--ink)] truncate">{formData.name}</p>
+              <p className="std-mono text-[10px] uppercase tracking-wide text-[var(--ink-3)] mt-0.5">{scheduleLabel}</p>
             </div>
-            <span
-              className="text-[10px] font-outfit px-2 py-0.5 rounded-full border"
-              style={{ borderColor: "var(--color-border-primary)", color: "var(--color-text-secondary)" }}
-            >
+            <span className="std-mono text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-[var(--r-tag)] border border-[var(--line-2)] text-[var(--ink-3)]">
               {categoryObj?.label}
             </span>
           </div>
           {formData.description && (
-            <p className="text-xs font-outfit text-[var(--color-text-tertiary)] pl-14">{formData.description}</p>
+            <p className="text-[13px] text-[var(--ink-2)] pl-14 leading-relaxed">{formData.description}</p>
           )}
         </div>
         <ReminderToggle formData={formData} setFormData={setFormData} />
@@ -492,11 +481,11 @@ const AddMode = ({ isOpen, onClose, onSave, userId }) => {
   const renderCompact = () => (
     <div className="space-y-5">
       {renderStep0()}
-      <hr className="border-[var(--color-border-primary)]" />
+      <hr className="std-rule" />
       {renderStep1()}
-      <hr className="border-[var(--color-border-primary)]" />
+      <hr className="std-rule" />
       {renderStep2()}
-      <hr className="border-[var(--color-border-primary)]" />
+      <hr className="std-rule" />
       {renderStep3()}
     </div>
   );
@@ -507,20 +496,23 @@ const AddMode = ({ isOpen, onClose, onSave, userId }) => {
 
   return (
     <AnimatedModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-xl">
-      <div className="bg-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)] w-full max-h-[90vh] overflow-y-auto">
+      <div className="std std-card p-0 w-full max-h-[90vh] overflow-y-auto rounded-2xl">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-[var(--color-surface-primary)] px-6 pt-5 pb-3 border-b border-[var(--color-border-primary)]">
+        <div className="sticky top-0 z-10 bg-[var(--surface)] px-6 pt-5 pb-3 border-b border-[var(--line)]">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold text-[var(--color-text-primary)] font-dmSerif">New Habit</h2>
-            <div className="flex items-center gap-2">
+            <div>
+              <p className="std-kicker">New Entry · Tracker</p>
+              <h2 className="std-display text-xl font-bold text-[var(--ink)]">New Habit</h2>
+            </div>
+            <div className="flex items-center gap-3">
               <button
                 onClick={toggleCompact}
-                className="text-[11px] font-outfit text-[var(--color-text-tertiary)] hover:text-[var(--color-brand-500)] transition-colors"
+                className="std-mono text-[10px] uppercase tracking-wider text-[var(--ink-3)] hover:text-[var(--signal)] transition-colors"
               >
                 {compactMode ? "Step mode" : "Quick mode"}
               </button>
               <button
-                className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+                className="text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors"
                 onClick={onClose}
               >
                 <Cross2Icon />
@@ -551,19 +543,15 @@ const AddMode = ({ isOpen, onClose, onSave, userId }) => {
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-[var(--color-surface-primary)] px-6 py-4 border-t border-[var(--color-border-primary)]">
+        <div className="sticky bottom-0 bg-[var(--surface)] px-6 py-4 border-t border-[var(--line)]">
           {compactMode ? (
             <div className="flex gap-3">
-              <button
-                type="button"
-                className="flex-1 h-11 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/40 text-[var(--color-text-primary)] rounded-xl transition-all duration-200 font-outfit font-medium text-sm"
-                onClick={onClose}
-              >
+              <button type="button" className="std-btn flex-1 justify-center" onClick={onClose}>
                 Cancel
               </button>
               <button
                 type="button"
-                className="flex-1 h-11 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] disabled:opacity-40 text-white rounded-xl transition-all duration-200 font-outfit font-semibold flex items-center justify-center gap-2 text-sm"
+                className="std-btn std-btn--signal flex-1 justify-center gap-2 disabled:opacity-40"
                 onClick={handleSubmit}
                 disabled={!formData.name.trim()}
               >
@@ -573,17 +561,13 @@ const AddMode = ({ isOpen, onClose, onSave, userId }) => {
             </div>
           ) : (
             <div className="flex gap-3">
-              <button
-                type="button"
-                className="h-11 px-4 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/40 text-[var(--color-text-primary)] rounded-xl transition-all duration-200 font-outfit font-medium text-sm flex items-center gap-1.5"
-                onClick={goBack}
-              >
+              <button type="button" className="std-btn gap-1.5" onClick={goBack}>
                 <ArrowLeftIcon className="w-3.5 h-3.5" />
                 {step === 0 ? "Cancel" : "Back"}
               </button>
               <button
                 type="button"
-                className="flex-1 h-11 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] disabled:opacity-40 text-white rounded-xl transition-all duration-200 font-outfit font-semibold flex items-center justify-center gap-2 text-sm"
+                className="std-btn std-btn--signal flex-1 justify-center gap-2 disabled:opacity-40"
                 onClick={isLastStep ? handleSubmit : goNext}
                 disabled={!canProceed}
               >
@@ -608,7 +592,7 @@ const AddMode = ({ isOpen, onClose, onSave, userId }) => {
 };
 
 /* ═══════════════════════════════════════
-   EDIT MODE — single-page scrollable form
+   EDIT MODE — single-page sectioned form
    ═══════════════════════════════════════ */
 
 const EditMode = ({ isOpen, onClose, habit, onSave, onDelete, onArchive }) => {
@@ -687,30 +671,34 @@ const EditMode = ({ isOpen, onClose, habit, onSave, onDelete, onArchive }) => {
 
   const isArchived = !formData.isActive;
 
+  /* section header */
+  const SectionLabel = ({ children }) => <h3 className="std-kicker">{children}</h3>;
+
   return (
     <AnimatedModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-xl">
-      <div className="bg-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)] w-full max-h-[90vh] overflow-y-auto">
+      <div className="std std-card p-0 w-full max-h-[90vh] overflow-y-auto rounded-2xl">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-[var(--color-surface-primary)] px-6 pt-5 pb-4 border-b border-[var(--color-border-primary)]">
+        <div className="sticky top-0 z-10 bg-[var(--surface)] px-6 pt-5 pb-4 border-b border-[var(--line)]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+                className="w-10 h-10 rounded-[var(--r-card)] flex items-center justify-center flex-shrink-0"
                 style={{ backgroundColor: formData.color }}
               >
-                <HabitIcon icon={formData.icon} size={18} color="#fff" />
+                <HabitIcon icon={formData.icon} size={20} color="#fff" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-[var(--color-text-primary)] font-dmSerif leading-tight">
+                <p className="std-kicker">Tracker · Revise</p>
+                <h2 className="std-display text-xl font-bold text-[var(--ink)] leading-tight">
                   Edit Habit
                 </h2>
                 {isArchived && (
-                  <span className="text-[11px] font-outfit text-[var(--color-text-tertiary)]">Archived</span>
+                  <span className="std-mono text-[10px] uppercase tracking-wide text-[var(--ink-3)]">Archived</span>
                 )}
               </div>
             </div>
             <button
-              className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+              className="text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors"
               onClick={onClose}
             >
               <Cross2Icon />
@@ -722,23 +710,21 @@ const EditMode = ({ isOpen, onClose, habit, onSave, onDelete, onArchive }) => {
         <div className="px-6 py-5 space-y-6">
           {/* ── Section: Basics ── */}
           <div className="space-y-3">
-            <h3 className="text-xs font-semibold text-[var(--color-text-tertiary)] font-spartan uppercase tracking-wider">
-              Basics
-            </h3>
+            <SectionLabel>Basics</SectionLabel>
 
             {/* Name */}
             <div>
-              <label className="text-xs font-medium text-[var(--color-text-primary)] font-outfit block mb-1.5">
-                Habit name <span className="text-red-400">*</span>
+              <label className={fieldLabelCls}>
+                Habit name <span className="text-[var(--rose)]">*</span>
               </label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
-                className="w-full h-12 px-4 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/40 rounded-xl text-[var(--color-text-primary)] font-outfit placeholder-[var(--color-text-tertiary)] focus:outline-none focus:border-[var(--color-brand-500)] transition-colors text-sm"
+                className={`${inputCls} h-12`}
                 placeholder="e.g., Morning run, Read 20 pages..."
               />
-              {errors.name && <p className="text-xs text-red-500 mt-1 font-outfit">{errors.name}</p>}
+              {errors.name && <p className={errorCls}>{errors.name}</p>}
             </div>
 
             {/* Icon picker */}
@@ -749,123 +735,97 @@ const EditMode = ({ isOpen, onClose, habit, onSave, onDelete, onArchive }) => {
               <button
                 type="button"
                 onClick={() => setShowDescription(true)}
-                className="text-xs text-[var(--color-brand-500)] font-outfit hover:underline"
+                className="std-mono text-[10px] uppercase tracking-wider text-[var(--signal)] hover:underline"
               >
                 + Add a description
               </button>
             ) : (
               <div>
-                <label className="text-xs font-medium text-[var(--color-text-primary)] font-outfit block mb-1.5">
-                  Description
-                </label>
+                <label className={fieldLabelCls}>Description</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
-                  className="w-full h-16 px-3 py-2.5 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/40 rounded-xl text-[var(--color-text-primary)] font-outfit placeholder-[var(--color-text-tertiary)] focus:outline-none focus:border-[var(--color-brand-500)] transition-colors resize-none text-sm"
+                  className={`${inputCls} h-16 py-2.5 resize-none`}
                   placeholder="Add a note or target for yourself..."
                 />
               </div>
             )}
           </div>
 
-          <div className="border-t border-[var(--color-border-primary)]" />
+          <hr className="std-rule" />
 
           {/* ── Section: Schedule ── */}
           <div className="space-y-3">
-            <h3 className="text-xs font-semibold text-[var(--color-text-tertiary)] font-spartan uppercase tracking-wider">
-              Schedule
-            </h3>
+            <SectionLabel>Schedule</SectionLabel>
             <FrequencySection formData={formData} setFormData={setFormData} errors={errors} />
           </div>
 
-          <div className="border-t border-[var(--color-border-primary)]" />
+          <hr className="std-rule" />
 
           {/* ── Section: Style ── */}
           <div className="space-y-3">
-            <h3 className="text-xs font-semibold text-[var(--color-text-tertiary)] font-spartan uppercase tracking-wider">
-              Style
-            </h3>
+            <SectionLabel>Style</SectionLabel>
             {/* Live preview */}
-            <div className="flex items-center gap-3 p-3 bg-[var(--color-surface-elevated)] rounded-xl">
+            <div className="flex items-center gap-3 px-3 py-3 std-card">
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+                className="w-10 h-10 rounded-[var(--r-card)] flex items-center justify-center flex-shrink-0"
                 style={{ backgroundColor: formData.color }}
               >
                 <HabitIcon icon={formData.icon} size={20} color="#fff" />
               </div>
-              <span className="text-sm font-outfit font-medium text-[var(--color-text-primary)] truncate">
+              <span className="std-display text-[15px] font-bold text-[var(--ink)] truncate">
                 {formData.name || "Your habit"}
               </span>
             </div>
             <StyleSection formData={formData} setFormData={setFormData} />
           </div>
 
-          <div className="border-t border-[var(--color-border-primary)]" />
+          <hr className="std-rule" />
 
           {/* ── Section: Reminders & Status ── */}
           <div className="space-y-3">
-            <h3 className="text-xs font-semibold text-[var(--color-text-tertiary)] font-spartan uppercase tracking-wider">
-              Reminders &amp; Status
-            </h3>
+            <SectionLabel>Reminders &amp; Status</SectionLabel>
             <ReminderToggle formData={formData} setFormData={setFormData} />
 
             {/* Active/Archived toggle */}
-            <div className="flex items-center justify-between p-4 bg-[var(--color-surface-elevated)] rounded-xl">
+            <div className="flex items-center justify-between px-4 py-3 std-card">
               <div>
-                <span className="text-sm font-medium text-[var(--color-text-primary)] font-outfit">
+                <span className="text-sm font-medium text-[var(--ink)]">
                   {formData.isActive ? "Active" : "Archived"}
                 </span>
-                <p className="text-[11px] text-[var(--color-text-tertiary)] font-outfit">
+                <p className="std-mono text-[10px] text-[var(--ink-3)] mt-0.5">
                   {formData.isActive ? "Visible in your habit tracker" : "Hidden from your habit tracker"}
                 </p>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.isActive}
-                  onChange={() => setFormData((p) => ({ ...p, isActive: !p.isActive }))}
-                  className="sr-only"
-                />
-                <div
-                  className={`w-11 h-6 rounded-full transition-colors ${
-                    formData.isActive ? "bg-[var(--color-brand-500)]" : "bg-gray-300"
-                  }`}
-                >
-                  <div
-                    className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${
-                      formData.isActive ? "translate-x-5" : "translate-x-0"
-                    } mt-0.5 ml-0.5`}
-                  />
-                </div>
-              </label>
+              <Switch
+                checked={formData.isActive}
+                onChange={() => setFormData((p) => ({ ...p, isActive: !p.isActive }))}
+              />
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-[var(--color-surface-primary)] px-6 py-4 border-t border-[var(--color-border-primary)]">
+        <div className="sticky bottom-0 bg-[var(--surface)] px-6 py-4 border-t border-[var(--line)]">
           <div className="flex items-center gap-2">
             {/* Destructive actions — left side */}
             {onDelete && (
               <button
                 type="button"
                 onClick={handleDelete}
-                className={`h-11 px-3 rounded-xl text-xs font-outfit font-medium flex items-center gap-1.5 transition-all duration-200 border ${
+                className="h-10 px-3 rounded-[var(--r-btn)] std-mono text-[10px] uppercase tracking-wider flex items-center gap-1.5 transition-all duration-200 border"
+                style={
                   showDeleteConfirm
-                    ? "bg-red-500 text-white border-red-500 hover:bg-red-600"
-                    : "text-red-500 border-red-200 hover:bg-red-50 dark:hover:bg-red-950/20"
-                }`}
+                    ? { backgroundColor: "var(--rose)", color: "#fff", borderColor: "var(--rose)" }
+                    : { color: "var(--rose)", borderColor: "color-mix(in srgb, var(--rose) 40%, transparent)" }
+                }
               >
                 <TrashIcon className="w-3.5 h-3.5" />
                 {showDeleteConfirm ? "Confirm?" : "Delete"}
               </button>
             )}
             {onArchive && (
-              <button
-                type="button"
-                onClick={handleArchive}
-                className="h-11 px-3 rounded-xl text-xs font-outfit font-medium flex items-center gap-1.5 transition-all duration-200 border text-[var(--color-text-secondary)] border-[var(--color-border-primary)]/40 hover:bg-[var(--color-surface-hover)]"
-              >
+              <button type="button" onClick={handleArchive} className="std-btn std-btn--sm gap-1.5">
                 <ArchiveIcon className="w-3.5 h-3.5" />
                 {isArchived ? "Unarchive" : "Archive"}
               </button>
@@ -875,16 +835,12 @@ const EditMode = ({ isOpen, onClose, habit, onSave, onDelete, onArchive }) => {
             <div className="flex-1" />
 
             {/* Primary actions — right side */}
-            <button
-              type="button"
-              className="h-11 px-4 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/40 text-[var(--color-text-primary)] rounded-xl transition-all duration-200 font-outfit font-medium text-sm"
-              onClick={onClose}
-            >
+            <button type="button" className="std-btn std-btn--sm" onClick={onClose}>
               Cancel
             </button>
             <button
               type="button"
-              className="h-11 px-5 bg-[var(--color-brand-500)] hover:bg-[var(--color-brand-600)] disabled:opacity-40 text-white rounded-xl transition-all duration-200 font-outfit font-semibold flex items-center gap-2 text-sm"
+              className="std-btn std-btn--signal std-btn--sm gap-2 disabled:opacity-40"
               onClick={handleSubmit}
               disabled={!formData.name.trim()}
             >
@@ -893,7 +849,7 @@ const EditMode = ({ isOpen, onClose, habit, onSave, onDelete, onArchive }) => {
             </button>
           </div>
           {showDeleteConfirm && (
-            <p className="text-[11px] text-red-500 font-outfit mt-2 text-center">
+            <p className="std-mono text-[10px] uppercase tracking-wide text-[var(--rose)] mt-2 text-center">
               Click Delete again to permanently remove this habit and all its entries.
             </p>
           )}

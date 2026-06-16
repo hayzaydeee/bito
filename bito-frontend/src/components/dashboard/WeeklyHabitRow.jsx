@@ -43,8 +43,7 @@ const WeeklyHabitRow = memo(({ habit, weekProgress, isTodayCompleted, onToggle, 
 
   return (
     <div
-      className="flex items-center gap-3 px-4 py-3 border-b border-[var(--line)] last:border-b-0 transition-all duration-200 group"
-      style={{ backgroundColor: met ? "var(--signal-2)" : "transparent" }}
+      className="flex items-center gap-3 px-4 py-3 border-b border-[var(--line)] last:border-b-0 transition-all duration-200 group hover:bg-[var(--surface-2)]"
     >
       {/* Checkbox (today's check) */}
       <button

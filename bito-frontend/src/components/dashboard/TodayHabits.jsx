@@ -33,8 +33,7 @@ const HabitRow = memo(({ habit, isCompleted, onToggle, onEdit, variant, number }
       animate={{ opacity: 1, y: 0 }}
       exit={shouldAnimate ? { opacity: 0, x: -20, transition: { duration: 0.2 } } : undefined}
       transition={springs.soft}
-      className="flex items-center gap-3 px-4 py-3 border-b border-[var(--line)] last:border-b-0 transition-colors duration-200 group"
-      style={{ backgroundColor: isCompleted ? "var(--signal-2)" : "transparent" }}
+      className="flex items-center gap-3 px-4 py-3 border-b border-[var(--line)] last:border-b-0 transition-colors duration-200 group hover:bg-[var(--surface-2)]"
     >
       {/* Control № index */}
       {isControl && (
