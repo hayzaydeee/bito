@@ -1,8 +1,10 @@
 import { useState, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { PlusIcon, MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import { useHabits } from "../contexts/HabitContext";
 import { useAuth } from "../contexts/AuthContext";
 import HabitCard from "../components/habits/HabitCard";
+import CompassHabitGroup from "../components/habits/CompassHabitGroup";
 import HabitCardExpanded from "../components/habits/HabitCardExpanded";
 import HabitsEmptyState from "../components/habits/HabitsEmptyState";
 import HabitsSkeleton from "../components/habits/HabitsSkeleton";
@@ -19,6 +21,7 @@ import { listItemVariants } from "../utils/motion";
  */
 const HabitsPage = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const {
     habits,
     isLoading,
@@ -31,32 +34,114 @@ const HabitsPage = () => {
   // UI state
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("active");
+  const [groupMode, setGroupMode] = useState("grouped"); // grouped | flat
   const [selectedHabit, setSelectedHabit] = useState(null);
   const [showCreateWizard, setShowCreateWizard] = useState(false);
   const [editingHabit, setEditingHabit] = useState(null);
 
   // ── Derived data ──
 
-  const filteredHabits = useMemo(() => {
-    let list = habits || [];
-
-    if (statusFilter === "active") {
-      list = list.filter((h) => h.isActive !== false && !h.isArchived);
-    } else if (statusFilter === "archived") {
-      list = list.filter((h) => h.isArchived);
-    }
-
-    if (search.trim()) {
+  const matchesSearch = useCallback(
+    (h) => {
+      if (!search.trim()) return true;
       const q = search.toLowerCase();
-      list = list.filter(
-        (h) =>
-          h.name?.toLowerCase().includes(q) ||
-          h.description?.toLowerCase().includes(q)
+      return (
+        h.name?.toLowerCase().includes(q) ||
+        h.description?.toLowerCase().includes(q)
       );
-    }
+    },
+    [search]
+  );
 
-    return list;
-  }, [habits, search, statusFilter]);
+  const matchesStatus = useCallback(
+    (h) => {
+      if (statusFilter === "active") return h.isActive !== false && !h.isArchived;
+      if (statusFilter === "archived") return h.isArchived;
+      return true;
+    },
+    [statusFilter]
+  );
+
+  // Flat list — group-sourced habits live under Groups, so exclude them here.
+  const filteredHabits = useMemo(
+    () => (habits || []).filter((h) => h.source !== "group" && matchesStatus(h) && matchesSearch(h)),
+    [habits, matchesStatus, matchesSearch]
+  );
+
+  // Any compass-originated habits? (gates the grouped view + toggle)
+  const hasCompassHabits = useMemo(
+    () => (habits || []).some((h) => h.source === "compass" && h.compassId),
+    [habits]
+  );
+
+  // Grouped view — Personal section + one section per origin compass,
+  // with not-yet-activated phases surfaced as "upcoming" ghost cards.
+  const grouped = useMemo(() => {
+    const base = (habits || []).filter((h) => h.source !== "group" && matchesSearch(h));
+
+    const personal = base.filter(
+      (h) => (h.source !== "compass" || !h.compassId) && matchesStatus(h)
+    );
+
+    const map = new Map();
+    base
+      .filter((h) => h.source === "compass" && h.compassId)
+      .forEach((h) => {
+        const id = h.compassId._id;
+        if (!map.has(id)) map.set(id, { compass: h.compassId, all: [] });
+        map.get(id).all.push(h);
+      });
+
+    const compasses = [];
+    map.forEach(({ compass, all }) => {
+      const phases = compass?.system?.phases || [];
+      const phaseMeta = new Map(
+        phases.map((p, i) => [String(p._id), { i, name: p.name }])
+      );
+
+      const current = all.filter((h) => h.isActive !== false && !h.isArchived);
+      const archivedItems = all.filter((h) => h.isArchived);
+      const upcoming = all.filter((h) => h.isActive === false && !h.isArchived);
+
+      const upMap = new Map();
+      upcoming.forEach((h) => {
+        const key = String(h.compassPhaseId || "none");
+        if (!upMap.has(key)) {
+          const meta = phaseMeta.get(key);
+          upMap.set(key, {
+            phaseId: key,
+            phaseNumber: meta ? meta.i + 1 : "—",
+            phaseName: meta?.name || "",
+            order: meta ? meta.i : 999,
+            habits: [],
+          });
+        }
+        upMap.get(key).habits.push(h);
+      });
+      const upcomingByPhase = [...upMap.values()].sort((a, b) => a.order - b.order);
+
+      // Apply the page status filter
+      let showCurrent = current;
+      let showArchived = [];
+      let showUpcoming = upcomingByPhase;
+      if (statusFilter === "archived") {
+        showCurrent = [];
+        showUpcoming = [];
+        showArchived = archivedItems;
+      } else if (statusFilter === "all") {
+        showArchived = archivedItems;
+      }
+
+      if (showCurrent.length || showArchived.length || showUpcoming.length) {
+        compasses.push({ compass, current: showCurrent, archived: showArchived, upcomingByPhase: showUpcoming });
+      }
+    });
+
+    return { personal, compasses };
+  }, [habits, matchesSearch, matchesStatus, statusFilter]);
+
+  const showGrouped = groupMode === "grouped" && hasCompassHabits;
+  const groupedEmpty = grouped.personal.length === 0 && grouped.compasses.length === 0;
 
   const totalCount = (habits || []).length;
   const activeList = (habits || []).filter((h) => h.isActive !== false && !h.isArchived);
@@ -124,6 +209,11 @@ const HabitsPage = () => {
   const handleHabitClick = useCallback((habit) => {
     setSelectedHabit(habit);
   }, []);
+
+  const handleOpenCompass = useCallback(
+    (compassId) => navigate(`/app/compass/${compassId}`),
+    [navigate]
+  );
 
   const handleOpenEdit = useCallback((habit) => {
     setSelectedHabit(null);
@@ -199,11 +289,67 @@ const HabitsPage = () => {
                 </button>
               ))}
             </div>
+
+            {/* Grouped ⇄ Flat — only when compass habits exist */}
+            {hasCompassHabits && (
+              <div className="flex rounded-[var(--r-pill)] border border-[var(--line)] overflow-hidden flex-shrink-0">
+                {["grouped", "flat"].map((key) => (
+                  <button
+                    key={key}
+                    onClick={() => setGroupMode(key)}
+                    className="px-3 py-2 std-mono text-[10px] uppercase tracking-wider transition-colors"
+                    style={
+                      groupMode === key
+                        ? { background: "var(--signal)", color: "var(--signal-ink)" }
+                        : { color: "var(--ink-3)" }
+                    }
+                  >
+                    {key}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
         {/* Collection */}
-        {filteredHabits.length === 0 ? (
+        {showGrouped ? (
+          groupedEmpty ? (
+            <HabitsEmptyState
+              isFiltered={!!isFiltered && hasAnyHabits}
+              onCreateHabit={() => setShowCreateWizard(true)}
+            />
+          ) : (
+            <div className="space-y-6" data-tour="habits-grid">
+              {/* Personal section */}
+              {grouped.personal.length > 0 && (
+                <div>
+                  {grouped.compasses.length > 0 && <p className="std-kicker mb-3">Personal</p>}
+                  <AnimatedList className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {grouped.personal.map((habit, i) => (
+                      <motion.div key={habit._id} variants={listItemVariants} custom={i}>
+                        <HabitCard habit={habit} onClick={handleHabitClick} />
+                      </motion.div>
+                    ))}
+                  </AnimatedList>
+                </div>
+              )}
+
+              {/* One section per origin compass */}
+              {grouped.compasses.map((g) => (
+                <CompassHabitGroup
+                  key={g.compass._id}
+                  compass={g.compass}
+                  current={g.current}
+                  archived={g.archived}
+                  upcomingByPhase={g.upcomingByPhase}
+                  onSelect={handleHabitClick}
+                  onOpenCompass={handleOpenCompass}
+                />
+              ))}
+            </div>
+          )
+        ) : filteredHabits.length === 0 ? (
           <HabitsEmptyState
             isFiltered={!!isFiltered && hasAnyHabits}
             onCreateHabit={() => setShowCreateWizard(true)}

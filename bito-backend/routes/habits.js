@@ -39,6 +39,10 @@ router.get('/', validatePagination, async (req, res) => {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit))
+        // Compass funnel: surface the origin compass name + phase names + current
+        // phase so the Habits page can group compass-sourced habits and show upcoming
+        // (not-yet-activated) phases. Lightweight select; only compass habits populate.
+        .populate('compassId', 'system.name system.phases.name progress.currentPhaseIndex status')
         .lean(),
       Habit.countDocuments(filter)
     ]);

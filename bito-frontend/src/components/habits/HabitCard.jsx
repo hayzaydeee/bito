@@ -2,14 +2,15 @@ import React, { memo, useMemo } from "react";
 import ProgressRing from "../shared/ProgressRing";
 import CATEGORY_META from "../../data/categoryMeta";
 import HabitIcon from "../shared/HabitIcon";
-import { Fire } from "@phosphor-icons/react";
+import { Fire, LockSimple } from "@phosphor-icons/react";
 
 /**
- * HabitCard — DRILL gallery card ("The Roster").
+ * HabitCard — DRILL gallery card.
  * Per-habit colour spine + icon as identity; serif name, mono telemetry,
  * progress ring. std-card editorial frame.
+ * `locked` → ghost treatment for upcoming (not-yet-activated) compass phases.
  */
-const HabitCard = memo(({ habit, onClick }) => {
+const HabitCard = memo(({ habit, onClick, locked = false }) => {
   const cat = CATEGORY_META[habit.category] || CATEGORY_META.custom;
   const isArchived = habit.isArchived;
   const accentColor = habit.color || cat.accent || "var(--signal)";
@@ -29,14 +30,19 @@ const HabitCard = memo(({ habit, onClick }) => {
   return (
     <button
       onClick={() => onClick(habit)}
-      className={`std-card std-card-hover group relative w-full text-left overflow-hidden p-0 flex ${
-        isArchived ? "opacity-50" : ""
-      }`}
+      className={`std-card group relative w-full text-left overflow-hidden p-0 flex ${
+        locked ? "opacity-60 hover:opacity-100 transition-opacity" : "std-card-hover"
+      } ${isArchived ? "opacity-50" : ""}`}
     >
       {/* Colour spine — habit identity */}
       <span
         className="w-1 self-stretch flex-shrink-0"
-        style={{ background: isArchived ? "var(--line-2)" : accentColor }}
+        style={{
+          background: isArchived || locked ? "var(--line-2)" : accentColor,
+          ...(locked
+            ? { backgroundImage: `repeating-linear-gradient(45deg, ${accentColor}, ${accentColor} 3px, transparent 3px, transparent 6px)` }
+            : {}),
+        }}
       />
 
       <div className="flex-1 min-w-0 p-4 flex items-center gap-3.5">
@@ -59,7 +65,7 @@ const HabitCard = memo(({ habit, onClick }) => {
                 {freqLabel}
               </span>
             )}
-            {habit.stats?.currentStreak > 0 && (
+            {!locked && habit.stats?.currentStreak > 0 && (
               <span
                 className="inline-flex items-center gap-0.5 std-mono text-[10px] tabular-nums"
                 style={{ color: accentColor }}
@@ -70,13 +76,22 @@ const HabitCard = memo(({ habit, onClick }) => {
           </div>
         </div>
 
-        {/* Progress ring */}
-        <div className="relative flex-shrink-0">
-          <ProgressRing value={completionPct} size={38} stroke={3} color={accentColor} />
-          <span className="absolute inset-0 flex items-center justify-center std-num text-[11px] tabular-nums text-[var(--ink-2)]">
-            {completionPct > 0 ? `${completionPct}` : ""}
+        {/* Progress ring — or lock for upcoming phases */}
+        {locked ? (
+          <span
+            className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-[var(--ink-3)] border border-dashed border-[var(--line-2)]"
+            title="Unlocks when this phase begins"
+          >
+            <LockSimple size={15} weight="duotone" />
           </span>
-        </div>
+        ) : (
+          <div className="relative flex-shrink-0">
+            <ProgressRing value={completionPct} size={38} stroke={3} color={accentColor} />
+            <span className="absolute inset-0 flex items-center justify-center std-num text-[11px] tabular-nums text-[var(--ink-2)]">
+              {completionPct > 0 ? `${completionPct}` : ""}
+            </span>
+          </div>
+        )}
       </div>
     </button>
   );
