@@ -18,7 +18,9 @@ import HabitIcon from '../shared/HabitIcon';
    Weekly habits show streak in weeks; daily habits in days.
 ----------------------------------------------------------------- */
 
-const StreakBarChart = ({ habits, entries }) => {
+const MONO = "ui-monospace, 'Courier New', monospace";
+
+const StreakBarChart = ({ habits, entries, stripped = false }) => {
   const streakData = useMemo(() => {
     if (!habits.length) return [];
 
@@ -99,10 +101,12 @@ const StreakBarChart = ({ habits, entries }) => {
   // Empty state -- show even habits with 0 streaks for visual context
   const hasStreaks = streakData.some(d => d.streak > 0);
 
+  const emptyClass = stripped ? 'flex flex-col items-center justify-center h-[220px] gap-2' : 'analytics-chart-card flex flex-col items-center justify-center h-[280px] gap-2';
+
   if (!streakData.length) {
     return (
-      <div className="analytics-chart-card flex flex-col items-center justify-center h-[280px] gap-2">
-        <Fire size={32} weight="duotone" className="text-orange-400 opacity-40" />
+      <div className={emptyClass}>
+        <Fire size={28} weight="duotone" className="text-orange-400 opacity-40" />
         <p className="text-sm font-spartan text-[var(--color-text-tertiary)]">
           Complete habits consistently to build streaks
         </p>
@@ -112,8 +116,8 @@ const StreakBarChart = ({ habits, entries }) => {
 
   if (!hasStreaks) {
     return (
-      <div className="analytics-chart-card flex flex-col items-center justify-center h-[280px] gap-2">
-        <Fire size={32} weight="duotone" className="text-orange-400 opacity-40" />
+      <div className={emptyClass}>
+        <Fire size={28} weight="duotone" className="text-orange-400 opacity-40" />
         <p className="text-sm font-spartan text-[var(--color-text-tertiary)] text-center leading-relaxed">
           Complete habits consistently to build streaks
         </p>
@@ -130,12 +134,17 @@ const StreakBarChart = ({ habits, entries }) => {
 
   const displayData = streakData.filter(d => d.streak > 0);
   const maxStreak = Math.max(...displayData.map(d => d.streak), 1);
+  const tickColor = stripped ? 'var(--ink-3)' : 'var(--color-text-tertiary)';
+  const tickFont  = stripped ? MONO : 'League Spartan';
+  const nameColor = stripped ? 'var(--ink-2)' : 'var(--color-text-primary)';
 
   return (
-    <div className="analytics-chart-card">
-      <h3 className="text-base font-garamond font-semibold text-[var(--color-text-primary)] mb-4">
-        Current Streaks
-      </h3>
+    <div className={stripped ? '' : 'analytics-chart-card'}>
+      {!stripped && (
+        <h3 className="text-base font-garamond font-semibold text-[var(--color-text-primary)] mb-4">
+          Current Streaks
+        </h3>
+      )}
 
       <div style={{ width: '100%', height: Math.max(160, displayData.length * 44 + 20) }}>
         <ResponsiveContainer>
@@ -146,14 +155,14 @@ const StreakBarChart = ({ habits, entries }) => {
           >
             <CartesianGrid
               strokeDasharray="3 6"
-              stroke="var(--color-border-primary)"
-              strokeOpacity={0.3}
+              stroke={stripped ? 'var(--line)' : 'var(--color-border-primary)'}
+              strokeOpacity={0.4}
               horizontal={false}
             />
             <XAxis
               type="number"
               domain={[0, Math.ceil(maxStreak * 1.15)]}
-              tick={{ fontSize: '0.6875rem', fill: 'var(--color-text-tertiary)', fontFamily: 'League Spartan' }}
+              tick={{ fontSize: '0.6875rem', fill: tickColor, fontFamily: tickFont }}
               tickLine={false}
               axisLine={false}
               tickFormatter={v => `${v}`}
@@ -161,13 +170,13 @@ const StreakBarChart = ({ habits, entries }) => {
             <YAxis
               type="category"
               dataKey="name"
-              tick={{ fontSize: '0.75rem', fill: 'var(--color-text-primary)', fontFamily: 'League Spartan' }}
+              tick={{ fontSize: '0.6875rem', fill: nameColor, fontFamily: tickFont }}
               tickLine={false}
               axisLine={false}
               width={110}
             />
-            <Tooltip content={<StreakTooltip />} cursor={{ fill: 'rgba(99,102,241,0.06)' }} />
-            <Bar dataKey="streak" radius={[0, 8, 8, 0]} barSize={20} animationDuration={600}>
+            <Tooltip content={<StreakTooltip />} cursor={{ fill: stripped ? 'color-mix(in srgb, var(--signal) 6%, transparent)' : 'rgba(99,102,241,0.06)' }} />
+            <Bar dataKey="streak" radius={[0, 6, 6, 0]} barSize={18} animationDuration={600}>
               {displayData.map((entry, i) => (
                 <Cell key={i} fill={entry.color} fillOpacity={0.85} />
               ))}

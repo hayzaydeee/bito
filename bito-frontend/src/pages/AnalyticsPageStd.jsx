@@ -6,7 +6,7 @@ import MetricCardsStd from '../components/analytics/MetricCardsStd';
 import CompletionAreaChart from '../components/analytics/CompletionAreaChart';
 import StreakBarChart from '../components/analytics/StreakBarChart';
 import TopHabitsList from '../components/analytics/TopHabitsList';
-import AnalyticsInsights from '../components/analytics/AnalyticsInsights';
+import AnalyticsInsightsStd from '../components/analytics/AnalyticsInsightsStd';
 import HabitStreakChart from '../components/analytics/HabitStreakChart';
 import AnalyticsTour from '../components/analytics/AnalyticsTour';
 
@@ -139,12 +139,13 @@ const AnalyticsPageStd = () => {
         {/* ── Daily completion area chart ──────── */}
         <div data-tour="analytics-charts">
           <div className="std-card p-5 sm:p-6">
-            <p className="std-kicker text-[var(--ink-3)] mb-5">Daily Performance</p>
+            <p className="std-kicker text-[var(--ink-3)] mb-4">Daily Performance</p>
             <CompletionAreaChart
               habits={habits}
               entries={entries}
               timeRange={timeRange}
               accountAgeDays={effectiveAccountAgeDays}
+              stripped
             />
           </div>
         </div>
@@ -152,16 +153,17 @@ const AnalyticsPageStd = () => {
         {/* ── Streaks + Top habits 2-col ────────── */}
         <div className="grid gap-4 lg:grid-cols-2" data-tour="analytics-streaks-grid">
           <div className="std-card p-5 sm:p-6">
-            <p className="std-kicker text-[var(--ink-3)] mb-5">Current Streaks</p>
-            <StreakBarChart habits={habits} entries={entries} />
+            <p className="std-kicker text-[var(--ink-3)] mb-4">Current Streaks</p>
+            <StreakBarChart habits={habits} entries={entries} stripped />
           </div>
           <div className="std-card p-5 sm:p-6">
-            <p className="std-kicker text-[var(--ink-3)] mb-5">Top Habits</p>
+            <p className="std-kicker text-[var(--ink-3)] mb-4">Top Habits</p>
             <TopHabitsList
               habits={habits}
               entries={entries}
               timeRange={timeRange}
               accountAgeDays={effectiveAccountAgeDays}
+              stripped
             />
           </div>
         </div>
@@ -170,13 +172,15 @@ const AnalyticsPageStd = () => {
         {habits.length > 0 && (
           <div data-tour="analytics-streak-timeline">
             <div className="std-card p-5 sm:p-6">
-              <p className="std-kicker text-[var(--ink-3)] mb-5">Streak Timeline</p>
+              <p className="std-kicker text-[var(--ink-3)] mb-4">Streak Timeline</p>
               <HabitStreakChart
                 habits={habits}
                 entries={entries}
                 timeRange={timeRange}
                 maxHabitsDisplayed={5}
                 accountAgeDays={effectiveAccountAgeDays}
+                chartHeight={260}
+                stripped
               />
             </div>
           </div>
@@ -185,8 +189,7 @@ const AnalyticsPageStd = () => {
         {/* ── AI Insights ──────────────────────── */}
         {user?.preferences?.aiAnalytics !== false && (
           <div data-tour="analytics-ai-insights">
-            <p className="std-kicker text-[var(--ink-3)] mb-3">Signal Intelligence</p>
-            <AnalyticsInsights timeRange={timeRange} />
+            <AnalyticsInsightsStd timeRange={timeRange} />
           </div>
         )}
 

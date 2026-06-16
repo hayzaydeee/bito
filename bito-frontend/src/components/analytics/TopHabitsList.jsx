@@ -8,7 +8,7 @@ import HabitIcon from '../shared/HabitIcon';
    rank | color dot | icon+name | progress bar | rate %
 ----------------------------------------------------------------- */
 
-const TopHabitsList = ({ habits, entries, timeRange, accountAgeDays = 365 }) => {
+const TopHabitsList = ({ habits, entries, timeRange, accountAgeDays = 365, stripped = false }) => {
   const ranked = useMemo(() => {
     if (!habits.length) return [];
 
@@ -95,8 +95,8 @@ const TopHabitsList = ({ habits, entries, timeRange, accountAgeDays = 365 }) => 
 
   if (!ranked.length) {
     return (
-      <div className="analytics-chart-card flex flex-col items-center justify-center h-[240px] gap-2">
-        <Trophy size={28} weight="duotone" className="opacity-40 text-[var(--color-text-tertiary)]" />
+      <div className={stripped ? 'flex flex-col items-center justify-center h-[220px] gap-2' : 'analytics-chart-card flex flex-col items-center justify-center h-[240px] gap-2'}>
+        <Trophy size={24} weight="duotone" className="opacity-40 text-[var(--color-text-tertiary)]" />
         <p className="text-sm font-spartan text-[var(--color-text-tertiary)]">
           Your top habits will appear here
         </p>
@@ -105,47 +105,53 @@ const TopHabitsList = ({ habits, entries, timeRange, accountAgeDays = 365 }) => 
   }
 
   return (
-    <div className="analytics-chart-card">
-      <h3 className="text-base font-garamond font-semibold text-[var(--color-text-primary)] mb-4">
-        Top Habits
-      </h3>
+    <div className={stripped ? '' : 'analytics-chart-card'}>
+      {!stripped && (
+        <h3 className="text-base font-garamond font-semibold text-[var(--color-text-primary)] mb-4">
+          Top Habits
+        </h3>
+      )}
 
-      <div className="space-y-1.5">
+      <div className={stripped ? 'space-y-0' : 'space-y-1.5'}>
         {ranked.map((h, i) => (
           <div
             key={h.id}
-            className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors group"
+            className={`flex items-center gap-3 transition-colors ${
+              stripped
+                ? 'py-2.5 border-b border-[var(--line)] last:border-0 hover:bg-[var(--surface-2)]'
+                : 'p-2.5 rounded-lg hover:bg-[var(--color-surface-hover)]'
+            }`}
           >
             {/* Rank */}
-            <span className={`w-5 text-xs font-spartan font-bold ${
-              i === 0 ? 'text-[var(--color-warning)]' : 'text-[var(--color-text-tertiary)]'
-            }`}>
-              {i + 1}
+            <span
+              className={`w-5 tabular-nums flex-shrink-0 ${stripped ? 'std-mono text-[10px]' : 'text-xs font-spartan font-bold'}`}
+              style={{ color: i === 0 ? 'var(--signal)' : 'var(--color-text-tertiary)' }}
+            >
+              {String(i + 1).padStart(2, '0')}
             </span>
 
             {/* Icon + Name */}
-            <span className="flex items-center gap-1.5 flex-1 text-sm font-spartan text-[var(--color-text-primary)] truncate min-w-0">
-              <HabitIcon icon={h.icon} size={14} />
+            <span className={`flex items-center gap-1.5 flex-1 truncate min-w-0 ${stripped ? 'std-mono text-xs text-[var(--ink)]' : 'text-sm font-spartan text-[var(--color-text-primary)]'}`}>
+              <HabitIcon icon={h.icon} size={13} />
               <span className="truncate">{h.name}</span>
             </span>
 
             {/* Progress bar */}
-            <div className="w-16 sm:w-20 h-1.5 rounded-full bg-[var(--color-surface-elevated)] overflow-hidden flex-shrink-0">
+            <div className={`h-1 overflow-hidden flex-shrink-0 ${stripped ? 'w-16 sm:w-24 bg-[var(--line)]' : 'w-16 sm:w-20 rounded-full bg-[var(--color-surface-elevated)]'}`}>
               <div
-                className="h-full rounded-full transition-all duration-500"
+                className={`h-full transition-all duration-500 ${stripped ? '' : 'rounded-full'}`}
                 style={{
                   width: `${Math.max(h.rate, 2)}%`,
-                  background: h.rate > 0
-                    ? `linear-gradient(90deg, ${h.color}99, ${h.color})`
-                    : 'transparent',
+                  background: h.rate > 0 ? (stripped ? `var(--signal)` : `linear-gradient(90deg, ${h.color}99, ${h.color})`) : 'transparent',
+                  opacity: stripped ? 0.7 : 1,
                 }}
               />
             </div>
 
             {/* Rate */}
             <span
-              className="w-12 text-right text-sm font-spartan font-semibold tabular-nums"
-              style={{ color: h.rate > 0 ? h.color : 'var(--color-text-tertiary)' }}
+              className={`w-12 text-right tabular-nums flex-shrink-0 ${stripped ? 'std-mono text-[11px]' : 'text-sm font-spartan font-semibold'}`}
+              style={{ color: stripped ? (h.rate > 0 ? 'var(--ink)' : 'var(--ink-3)') : (h.rate > 0 ? h.color : 'var(--color-text-tertiary)') }}
             >
               {h.rateLabel}
             </span>

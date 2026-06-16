@@ -52,12 +52,15 @@ const countWeekCompletions = (he, monday) => {
   return c;
 };
 
+const MONO = "ui-monospace, 'Courier New', monospace";
+
 const HabitStreakChart = ({
   habits = [],
   entries = {},
   timeRange = '30d',
   dateRange,
   widgetMode = false,
+  stripped = false,
   maxHabitsDisplayed = 5,
   chartHeight = 320,
   showLegend = true,
@@ -171,8 +174,8 @@ const HabitStreakChart = ({
   /* ── Empty states ─────────────────────────────── */
   if (!habits.length || !topHabits.length) {
     return (
-      <div className="analytics-chart-card flex flex-col items-center justify-center h-[280px] gap-2">
-        <span className="text-3xl opacity-40">📈</span>
+      <div className={stripped ? 'flex flex-col items-center justify-center h-[240px] gap-2' : 'analytics-chart-card flex flex-col items-center justify-center h-[280px] gap-2'}>
+        <span className="text-3xl opacity-30">📈</span>
         <p className="text-sm font-spartan text-[var(--color-text-tertiary)] text-center leading-relaxed">
           Complete habits consistently to see streak timelines
         </p>
@@ -180,24 +183,27 @@ const HabitStreakChart = ({
     );
   }
 
+  const tickColor = stripped ? 'var(--ink-3)' : 'var(--color-text-tertiary)';
+  const tickFont  = stripped ? MONO : 'League Spartan';
+
   /* ── Shared chart elements ───────────────────── */
   const chartContent = (
     <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: -20 }}>
       <CartesianGrid
         strokeDasharray="3 6"
-        stroke="var(--color-border-primary)"
-        strokeOpacity={0.4}
+        stroke={stripped ? 'var(--line)' : 'var(--color-border-primary)'}
+        strokeOpacity={0.45}
         vertical={false}
       />
       <XAxis
         dataKey="label"
-        tick={{ fontSize: '0.6875rem', fill: 'var(--color-text-tertiary)', fontFamily: 'League Spartan' }}
+        tick={{ fontSize: '0.6875rem', fill: tickColor, fontFamily: tickFont }}
         tickLine={false}
         axisLine={false}
         interval="preserveStartEnd"
       />
       <YAxis
-        tick={{ fontSize: '0.6875rem', fill: 'var(--color-text-tertiary)', fontFamily: 'League Spartan' }}
+        tick={{ fontSize: '0.6875rem', fill: tickColor, fontFamily: tickFont }}
         tickLine={false}
         axisLine={false}
         tickFormatter={(v) => Math.round(v)}
@@ -205,7 +211,7 @@ const HabitStreakChart = ({
       />
       <Tooltip
         content={<StreakTimelineTooltip topHabits={topHabits} />}
-        cursor={{ stroke: 'var(--color-brand-400)', strokeWidth: 1, strokeDasharray: '4 4' }}
+        cursor={{ stroke: stripped ? 'var(--signal)' : 'var(--color-brand-400)', strokeWidth: 1, strokeDasharray: '4 4' }}
       />
       {topHabits.map((habitData) => (
         <Line
@@ -213,7 +219,9 @@ const HabitStreakChart = ({
           type="monotone"
           dataKey={habitData.habit._id}
           stroke={habitData.color}
-          strokeWidth={2.5}          strokeDasharray={habitData.isWeekly ? '6 3' : undefined}          dot={false}
+          strokeWidth={2.5}
+          strokeDasharray={habitData.isWeekly ? '6 3' : undefined}
+          dot={false}
           activeDot={{
             r: 5,
             fill: habitData.color,
@@ -227,6 +235,32 @@ const HabitStreakChart = ({
       ))}
     </LineChart>
   );
+
+  /* ── Stripped mode: DRILL layout, no legacy chrome ── */
+  if (stripped) {
+    return (
+      <div>
+        <div style={{ width: '100%', height: chartHeight }}>
+          <ResponsiveContainer>
+            {chartContent}
+          </ResponsiveContainer>
+        </div>
+        {topHabits.length > 0 && (
+          <div className="flex flex-wrap gap-4 mt-4 pt-3 border-t border-[var(--line)]">
+            {topHabits.map((h) => (
+              <div key={h.habit._id} className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: h.color }} />
+                <span className="std-mono text-[10px] text-[var(--ink-2)]">{h.habit.name}</span>
+                <span className="std-mono text-[10px] text-[var(--ink-3)]">
+                  ({h.total}{h.isWeekly ? 'w' : 'd'})
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   /* ── Widget mode: plain wrapper, no chrome ───── */
   if (widgetMode) {

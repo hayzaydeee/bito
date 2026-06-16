@@ -16,7 +16,9 @@ import {
    Only tracks daily habits — weekly habits have separate metrics.
 ----------------------------------------------------------------- */
 
-const CompletionAreaChart = ({ habits, entries, timeRange, accountAgeDays = 365 }) => {
+const MONO = "ui-monospace, 'Courier New', monospace";
+
+const CompletionAreaChart = ({ habits, entries, timeRange, accountAgeDays = 365, stripped = false }) => {
   const { chartData, average } = useMemo(() => {
     // Filter to daily habits only — weekly habits shouldn't drag down daily %
     const dailyHabits = habits.filter(h => h.frequency !== 'weekly');
@@ -59,7 +61,7 @@ const CompletionAreaChart = ({ habits, entries, timeRange, accountAgeDays = 365 
 
   if (!habits.length || !habits.some(h => h.frequency !== 'weekly')) {
     return (
-      <div className="analytics-chart-card flex items-center justify-center h-[280px]">
+      <div className={stripped ? 'flex items-center justify-center h-[220px]' : 'analytics-chart-card flex items-center justify-center h-[280px]'}>
         <p className="text-sm font-spartan text-[var(--color-text-tertiary)]">
           Track daily habits to see completion trends
         </p>
@@ -67,48 +69,62 @@ const CompletionAreaChart = ({ habits, entries, timeRange, accountAgeDays = 365 
     );
   }
 
+  const tickColor = stripped ? 'var(--ink-3)' : 'var(--color-text-tertiary)';
+  const tickFont  = stripped ? MONO : 'League Spartan';
+  const lineColor = stripped ? 'var(--signal)' : '#818cf8';
+  const gradId    = stripped ? 'completionGradStd' : 'completionGrad';
+
   return (
-    <div className="analytics-chart-card">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-garamond font-semibold text-[var(--color-text-primary)]">
-          Daily Completion Rate
-        </h3>
-        {average > 0 && (
-          <span className="text-xs font-spartan px-2 py-0.5 rounded-full"
-            style={{ background: 'rgba(99,102,241,0.12)', color: 'var(--color-brand-400)' }}>
+    <div className={stripped ? '' : 'analytics-chart-card'}>
+      {!stripped ? (
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-base font-garamond font-semibold text-[var(--color-text-primary)]">
+            Daily Completion Rate
+          </h3>
+          {average > 0 && (
+            <span className="text-xs font-spartan px-2 py-0.5 rounded-full"
+              style={{ background: 'rgba(99,102,241,0.12)', color: 'var(--color-brand-400)' }}>
+              avg {average}%
+            </span>
+          )}
+        </div>
+      ) : average > 0 && (
+        <div className="flex justify-end mb-3">
+          <span className="std-mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-[var(--r-pill)] border border-[var(--line)]"
+            style={{ color: 'var(--signal)' }}>
             avg {average}%
           </span>
-        )}
-      </div>
+        </div>
+      )}
 
       <div style={{ width: '100%', height: 220 }}>
         <ResponsiveContainer>
           <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: -20 }}>
             <defs>
-              <linearGradient id="completionGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#818cf8" stopOpacity={0.4} />
-                <stop offset="50%" stopColor="#6366f1" stopOpacity={0.15} />
-                <stop offset="100%" stopColor="#4f46e5" stopOpacity={0.02} />
+              <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"   stopColor={stripped ? 'var(--signal)' : '#818cf8'} stopOpacity={0.35} />
+                <stop offset="60%"  stopColor={stripped ? 'var(--signal)' : '#6366f1'} stopOpacity={0.1} />
+                <stop offset="100%" stopColor={stripped ? 'var(--signal)' : '#4f46e5'} stopOpacity={0.01} />
               </linearGradient>
             </defs>
 
             <CartesianGrid
               strokeDasharray="3 6"
-              stroke="var(--color-border-primary)"
-              strokeOpacity={0.4}
+              stroke={stripped ? 'var(--line)' : 'var(--color-border-primary)'}
+              strokeOpacity={0.5}
               vertical={false}
             />
 
             <XAxis
               dataKey="label"
-              tick={{ fontSize: '0.6875rem', fill: 'var(--color-text-tertiary)', fontFamily: 'League Spartan' }}
+              tick={{ fontSize: '0.6875rem', fill: tickColor, fontFamily: tickFont }}
               tickLine={false}
               axisLine={false}
               interval="preserveStartEnd"
             />
             <YAxis
               domain={[0, 100]}
-              tick={{ fontSize: '0.6875rem', fill: 'var(--color-text-tertiary)', fontFamily: 'League Spartan' }}
+              tick={{ fontSize: '0.6875rem', fill: tickColor, fontFamily: tickFont }}
               tickLine={false}
               axisLine={false}
               tickFormatter={v => `${v}%`}
@@ -117,24 +133,24 @@ const CompletionAreaChart = ({ habits, entries, timeRange, accountAgeDays = 365 
             {average > 0 && (
               <ReferenceLine
                 y={average}
-                stroke="var(--color-brand-300)"
+                stroke={lineColor}
                 strokeDasharray="4 4"
-                strokeOpacity={0.5}
+                strokeOpacity={0.4}
               />
             )}
 
             <Tooltip
               content={<CompletionTooltip />}
-              cursor={{ stroke: 'var(--color-brand-400)', strokeWidth: 1, strokeDasharray: '4 4' }}
+              cursor={{ stroke: lineColor, strokeWidth: 1, strokeDasharray: '4 4' }}
             />
             <Area
               type="monotoneX"
               dataKey="rate"
-              stroke="#818cf8"
+              stroke={lineColor}
               strokeWidth={2.5}
-              fill="url(#completionGrad)"
+              fill={`url(#${gradId})`}
               dot={false}
-              activeDot={{ r: 5, fill: '#818cf8', stroke: 'var(--color-surface-primary)', strokeWidth: 2 }}
+              activeDot={{ r: 5, fill: lineColor, stroke: 'var(--color-surface-primary)', strokeWidth: 2 }}
               animationDuration={800}
               animationEasing="ease-out"
             />
