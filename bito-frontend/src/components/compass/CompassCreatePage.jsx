@@ -39,10 +39,8 @@ const CompassCreatePage = () => {
   // ── Generating overlay ──
   if (generating) {
     return (
-      <div className="min-h-screen page-container px-4 sm:px-6 py-10">
-        <div className="max-w-5xl mx-auto">
-          <GeneratingOverlay step={generatingStep} />
-        </div>
+      <div className="std min-h-screen px-4 sm:px-6 py-10 flex items-center justify-center">
+        <GeneratingOverlay step={generatingStep} />
       </div>
     );
   }

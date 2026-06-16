@@ -175,7 +175,7 @@ const GroupSelection = () => {
                 <span className="text-[var(--ink-2)]">{totalHabits}</span> SHARED HABITS
               </>
             ) : (
-              "TRACK HABITS TOGETHER"
+              "TRACK HABITS TOGETHER: TEAM, FRIENDS OR FAMILY"
             )
           }
           actions={
