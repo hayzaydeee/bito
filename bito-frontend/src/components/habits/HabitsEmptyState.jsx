@@ -3,30 +3,32 @@ import { PlusIcon } from "@radix-ui/react-icons";
 import { Leaf } from "@phosphor-icons/react";
 
 /**
- * HabitsEmptyState — minimal empty state.
+ * HabitsEmptyState — DRILL editorial empty state.
  */
 const HabitsEmptyState = memo(({ isFiltered, onCreateHabit }) => {
   if (isFiltered) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 gap-2">
-        <p className="text-sm font-spartan text-[var(--color-text-tertiary)]">
+      <div className="flex flex-col items-center justify-center py-24 gap-2 text-center">
+        <p className="std-display text-base font-bold text-[var(--ink)]">
           No habits match your search
+        </p>
+        <p className="std-mono text-[10px] uppercase tracking-wider text-[var(--ink-3)]">
+          Try a different term or filter
         </p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center justify-center py-24 gap-4">
-      <Leaf size={40} weight="duotone" className="text-green-400" />
-      <p className="text-sm font-spartan text-[var(--color-text-tertiary)]">
-        No habits yet
-      </p>
-      <button
-        onClick={onCreateHabit}
-        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-spartan font-medium text-white transition-all hover:scale-[1.03] active:scale-[0.98]"
-        style={{ background: "var(--color-brand-500)" }}
-      >
+    <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
+      <Leaf size={36} weight="duotone" className="text-[var(--ink-3)]" />
+      <div>
+        <p className="std-display text-lg font-bold text-[var(--ink)]">The roster is empty</p>
+        <p className="std-mono text-[10px] uppercase tracking-wider text-[var(--ink-3)] mt-1">
+          Enlist your first discipline
+        </p>
+      </div>
+      <button onClick={onCreateHabit} className="std-btn std-btn--signal std-btn--sm flex items-center gap-1.5">
         <PlusIcon className="w-3.5 h-3.5" />
         Create one
       </button>

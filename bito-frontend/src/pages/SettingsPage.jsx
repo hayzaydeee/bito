@@ -1020,20 +1020,22 @@ const SettingsPage = ({ section }) => {
               disabled={saving}
             />
           </SettingRow>
-          <SettingRow
-            label="Dashboard Style"
-            description="Daybook (serif almanac) or Mission Control (status console)"
-          >
-            <SelectInput
-              value={settings.dashboardStyle}
-              options={[
-                { value: 'daybook', label: 'Daybook' },
-                { value: 'control', label: 'Mission Control' },
-              ]}
-              onChange={(v) => saveSetting("dashboardStyle", v)}
-              disabled={saving}
-            />
-          </SettingRow>
+          {designSystem === "standard" && (
+            <SettingRow
+              label="Dashboard Style"
+              description="Daybook (serif almanac) or Mission Control (status console)"
+            >
+              <SelectInput
+                value={settings.dashboardStyle}
+                options={[
+                  { value: 'daybook', label: 'Daybook' },
+                  { value: 'control', label: 'Mission Control' },
+                ]}
+                onChange={(v) => saveSetting("dashboardStyle", v)}
+                disabled={saving}
+              />
+            </SettingRow>
+          )}
         </Section>
 
         {/* ═══════ 4. AI FEATURES ═══════ */}
