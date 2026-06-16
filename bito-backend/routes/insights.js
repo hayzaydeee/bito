@@ -612,7 +612,7 @@ async function generateAnalyticsReport(ruleInsights, analyticsData, rangeDays, p
     return buildFallbackSections(ruleInsights, analyticsData);
   }
 
-  const model = process.env.INSIGHTS_LLM_MODEL || 'claude-sonnet-4-6';
+  const model = process.env.INSIGHTS_LLM_MODEL || 'gpt-4.1-mini';
 
   const systemPrompt = buildSystemPrompt(personality, feature);
   const temperature = getTemperature(personality);
@@ -624,17 +624,17 @@ async function generateAnalyticsReport(ruleInsights, analyticsData, rangeDays, p
 
   try {
     console.log('[Analytics] Calling LLM for sectioned report...');
-    const completion = await client.messages.create({
+    const completion = await client.chat.completions.create({
       model,
-      system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
       messages: [
+        { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
       ],
       temperature,
       max_tokens: 800,
     });
 
-    const text = completion.content?.[0]?.text;
+    const text = completion.choices?.[0]?.message?.content;
     if (!text) {
       console.warn('[Analytics] LLM returned empty response');
       return buildFallbackSections(ruleInsights, analyticsData);
@@ -724,7 +724,7 @@ async function answerAnalyticsQueryWithLLM({ query, analyticsData, habits, perso
     return null;
   }
 
-  const model = process.env.INSIGHTS_LLM_MODEL || 'claude-sonnet-4-6';
+  const model = process.env.INSIGHTS_LLM_MODEL || 'gpt-4.1-mini';
   const feature = tier === 'sprouting' ? 'early-analytics' : 'analytics-report';
   const systemPrompt = buildSystemPrompt(personality, feature);
   const temperature = getTemperature(personality);
@@ -744,10 +744,10 @@ async function answerAnalyticsQueryWithLLM({ query, analyticsData, habits, perso
   };
 
   try {
-    const completion = await client.messages.create({
+    const completion = await client.chat.completions.create({
       model,
-      system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
       messages: [
+        { role: 'system', content: systemPrompt },
         {
           role: 'user',
           content: JSON.stringify({
@@ -771,7 +771,7 @@ async function answerAnalyticsQueryWithLLM({ query, analyticsData, habits, perso
       max_tokens: 450,
     });
 
-    const text = completion.content?.[0]?.text;
+    const text = completion.choices?.[0]?.message?.content;
     if (!text) return null;
 
     const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();

@@ -257,7 +257,7 @@ class WeeklyReportService {
 
     try {
       const { sanitizedFirstName, sanitizedHabitBreakdown } = this._sanitizeWeeklyInsightsPromptData(user, habitBreakdown);
-      const model = process.env.INSIGHTS_LLM_MODEL || 'claude-sonnet-4-6';
+      const model = process.env.INSIGHTS_LLM_MODEL || 'gpt-4.1-mini';
 
       const personality = user.aiPersonality || DEFAULT_PERSONALITY;
       const systemPrompt = buildSystemPrompt(personality, 'weekly-report');
@@ -287,10 +287,10 @@ class WeeklyReportService {
         noCompletionHabits.length ? `- Zero completions: ${noCompletionHabits.join(', ')}` : null,
       ].filter(Boolean).join('\n');
 
-      const completion = await client.messages.create({
+      const completion = await client.chat.completions.create({
         model,
-        system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
         messages: [
+          { role: 'system', content: systemPrompt },
           {
             role: 'user',
             content:
@@ -305,7 +305,7 @@ class WeeklyReportService {
         max_tokens: 200,
       });
 
-      return completion.content[0]?.text?.trim() || this._getStaticInsights(stats, habitBreakdown);
+      return completion.choices[0]?.message?.content?.trim() || this._getStaticInsights(stats, habitBreakdown);
     } catch (err) {
       console.warn('📊 AI insights generation failed:', err.message);
       return this._getStaticInsights(stats, habitBreakdown);

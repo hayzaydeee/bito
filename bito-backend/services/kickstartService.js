@@ -63,7 +63,7 @@ async function generateKickstartInsights({ user, habits }) {
     try {
       const systemPrompt = buildSystemPrompt(personality, 'kickstart');
       const temperature = getTemperature(personality);
-      const model = process.env.INSIGHTS_LLM_MODEL || 'claude-sonnet-4-6';
+      const model = process.env.INSIGHTS_LLM_MODEL || 'gpt-4.1-mini';
 
       const userMessage = JSON.stringify({
         userName: user.firstName || user.name || 'there',
@@ -79,17 +79,17 @@ async function generateKickstartInsights({ user, habits }) {
         })),
       });
 
-      const completion = await client.messages.create({
+      const completion = await client.chat.completions.create({
         model,
-        system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
         messages: [
+          { role: 'system', content: systemPrompt },
           { role: 'user', content: userMessage },
         ],
         temperature,
         max_tokens: 300,
       });
 
-      const text = completion.content?.[0]?.text;
+      const text = completion.choices?.[0]?.message?.content;
       if (text) {
         const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
         const parsed = JSON.parse(cleaned);

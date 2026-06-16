@@ -201,7 +201,7 @@ async function callLLM(ruleInsights, dataSummary, personality = DEFAULT_PERSONAL
   const client = getClient();
   if (!client) return null;
 
-  const model = process.env.INSIGHTS_LLM_MODEL || 'claude-sonnet-4-6';
+  const model = process.env.INSIGHTS_LLM_MODEL || 'gpt-4.1-mini';
 
   const systemPrompt = buildSystemPrompt(personality, feature);
   const temperature = getTemperature(personality);
@@ -215,17 +215,17 @@ async function callLLM(ruleInsights, dataSummary, personality = DEFAULT_PERSONAL
   });
 
   try {
-    const completion = await client.messages.create({
+    const completion = await client.chat.completions.create({
       model,
-      system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
       messages: [
+        { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
       ],
       temperature,
       max_tokens: 300,
     });
 
-    const text = completion.content?.[0]?.text;
+    const text = completion.choices?.[0]?.message?.content;
     if (!text) return null;
 
     // Parse JSON from response (strip markdown fences if present)

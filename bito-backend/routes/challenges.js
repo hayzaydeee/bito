@@ -518,14 +518,14 @@ Return a JSON array of objects with { index, score, reason } where score is 0-10
 
 Return ONLY the JSON array, no markdown or extra text.`;
 
-        const response = await client.messages.create({
-          model: process.env.INSIGHTS_LLM_MODEL || 'claude-sonnet-4-6',
+        const response = await client.chat.completions.create({
+          model: process.env.INSIGHTS_LLM_MODEL || 'gpt-4.1-mini',
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.3,
           max_tokens: 500,
         });
 
-        const text = response.content?.[0]?.text?.trim();
+        const text = response.choices?.[0]?.message?.content?.trim();
         if (text) {
           const parsed = JSON.parse(text.replace(/```json?\n?/g, '').replace(/```/g, ''));
           suggestions = parsed.map((s) => ({

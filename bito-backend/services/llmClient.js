@@ -1,17 +1,14 @@
-const Anthropic = require('@anthropic-ai/sdk');
+const OpenAI = require('openai');
 
 let _client = null;
 
 function isLLMAvailable() {
-  return !!process.env.CLAUDE_API_KEY;
+  return !!process.env.OPENAI_API_KEY;
 }
 
 function getLLMClient() {
   if (!_client) {
-    _client = new Anthropic({
-      apiKey: process.env.CLAUDE_API_KEY,
-      defaultHeaders: { 'anthropic-beta': 'prompt-caching-2024-07-31' },
-    });
+    _client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   }
   return _client;
 }
