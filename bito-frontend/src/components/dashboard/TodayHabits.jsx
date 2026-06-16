@@ -120,7 +120,7 @@ const HabitRow = memo(({ habit, isCompleted, onToggle, onEdit }) => {
 /* ─── Today's Habits list ─── */
 const TodayHabits = memo(
   ({ habits, entries, onToggle, onEdit, onAdd, weeklyHabits = [] }) => {
-    const todayStr = new Date().toISOString().split("T")[0];
+    const todayStr = habitUtils.normalizeDate(new Date());
 
     if (habits.length === 0 && weeklyHabits.length === 0) {
       return (

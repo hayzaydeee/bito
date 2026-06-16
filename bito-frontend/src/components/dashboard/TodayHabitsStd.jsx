@@ -104,7 +104,7 @@ const HabitRow = memo(({ habit, isCompleted, onToggle, onEdit, variant, number }
 /* ─── Today's Habits list ─── */
 const TodayHabits = memo(
   ({ habits, entries, onToggle, onEdit, onAdd, weeklyHabits = [], variant = "daybook" }) => {
-    const todayStr = new Date().toISOString().split("T")[0];
+    const todayStr = habitUtils.normalizeDate(new Date());
     const isControl = variant === "control";
 
     if (habits.length === 0 && weeklyHabits.length === 0) {
