@@ -33,6 +33,20 @@ const JournalDayFeed = ({
 }) => {
   const [microsExpanded, setMicrosExpanded] = useState(false);
 
+  // Dateline for the spread masthead
+  const _d = new Date(selectedDate + 'T12:00:00');
+  const _now = new Date();
+  const _isToday = _d.toDateString() === _now.toDateString();
+  const _yest = new Date(_now);
+  _yest.setDate(_yest.getDate() - 1);
+  const _isYesterday = _d.toDateString() === _yest.toDateString();
+  const dateKicker = `${_d.toLocaleDateString('en-US', { weekday: 'long' })} · ${_d.getFullYear()}`;
+  const dateTitle = _isToday
+    ? 'Today'
+    : _isYesterday
+      ? 'Yesterday'
+      : _d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -44,16 +58,25 @@ const JournalDayFeed = ({
   return (
     <div className="flex flex-col h-full">
       {/* ── Centralized content column ─────────────────────── */}
-      <div className="flex-shrink-0 pt-4 pb-3 max-w-[740px] mx-auto w-full" data-tour="journal-mood-energy">
-        <JournalMeta
-          mood={mood}
-          energy={energy}
-          tags={tags}
-          onMoodChange={onMoodChange}
-          onEnergyChange={onEnergyChange}
-          onAddTag={onAddTag}
-          onRemoveTag={onRemoveTag}
-        />
+      <div className="flex-shrink-0 pt-2 pb-3 max-w-[740px] mx-auto w-full">
+        {/* Dateline masthead */}
+        <div className="mb-4">
+          <p className="std-kicker mb-1.5">{dateKicker}</p>
+          <h2 className="std-display text-[30px] sm:text-[36px] font-bold leading-[0.95] text-[var(--ink)]">
+            {dateTitle}
+          </h2>
+        </div>
+        <div data-tour="journal-mood-energy">
+          <JournalMeta
+            mood={mood}
+            energy={energy}
+            tags={tags}
+            onMoodChange={onMoodChange}
+            onEnergyChange={onEnergyChange}
+            onAddTag={onAddTag}
+            onRemoveTag={onRemoveTag}
+          />
+        </div>
       </div>
 
       {/* ── Content area ────────────────────────────────────── */}
@@ -91,10 +114,11 @@ const JournalDayFeed = ({
           </div>
         )}
 
-        {/* Longform editor */}
+        {/* Longform editor — manuscript column */}
         <div className="pb-6">
-          <div className="std-card overflow-hidden" data-tour="journal-editor">
-            <div className="pl-0 pr-4 py-4 sm:pr-6 sm:py-6">
+          <div className="relative pl-5 sm:pl-6" data-tour="journal-editor">
+            <span className="absolute left-0 top-1 bottom-1 w-px" style={{ background: 'var(--line-2)' }} />
+            <div className="pr-1 sm:pr-2 py-1">
               {editorSlot}
             </div>
           </div>

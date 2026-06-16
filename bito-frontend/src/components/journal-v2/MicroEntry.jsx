@@ -3,7 +3,8 @@ import { PlusIcon, Cross2Icon, Pencil1Icon, TrashIcon, CheckIcon } from '@radix-
 import HabitIcon from '../shared/HabitIcon';
 
 /* ═══════════════════════════════════════════════════════════════
-   MicroEntry — quick text capture + display cards
+   MicroEntry — quick capture + the captain's-log (DRILL)
+   Bullet timeline, mono timestamps, hairline tokens.
    ═══════════════════════════════════════════════════════════════ */
 
 /* ── Quick capture input bar ─────────────────────────────────── */
@@ -29,16 +30,15 @@ export const QuickCapture = memo(({ onSubmit, placeholder = 'Quick thought...' }
 
   return (
     <div
-      className="flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all duration-200"
+      className="flex items-center gap-2 px-4 py-2.5 rounded-[var(--r-btn)] border transition-all duration-200"
       style={{
-        backgroundColor: isFocused ? 'var(--color-surface-primary)' : 'var(--color-surface-secondary)',
-        borderColor: isFocused ? 'var(--color-brand-300)' : 'var(--color-border-primary)',
-        boxShadow: isFocused ? '0 0 0 2px color-mix(in srgb, var(--color-brand-500) 12%, transparent)' : 'none',
+        backgroundColor: isFocused ? 'var(--surface)' : 'var(--bg-2)',
+        borderColor: isFocused ? 'var(--signal)' : 'var(--line-2)',
       }}
     >
       <PlusIcon
         className="w-4 h-4 flex-shrink-0 transition-colors"
-        style={{ color: isFocused ? 'var(--color-brand-500)' : 'var(--color-text-tertiary)' }}
+        style={{ color: isFocused ? 'var(--signal)' : 'var(--ink-3)' }}
       />
       <input
         type="text"
@@ -49,14 +49,13 @@ export const QuickCapture = memo(({ onSubmit, placeholder = 'Quick thought...' }
         onBlur={() => setIsFocused(false)}
         placeholder={placeholder}
         maxLength={2000}
-        className="flex-1 bg-transparent text-sm font-spartan outline-none placeholder:text-[var(--color-text-tertiary)]"
-        style={{ color: 'var(--color-text-primary)' }}
+        className="flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--ink-3)]"
+        style={{ color: 'var(--ink)' }}
       />
       {text.trim() && (
         <button
           onClick={handleSubmit}
-          className="flex-shrink-0 px-3 py-1 rounded-lg text-xs font-spartan font-semibold text-white transition-colors"
-          style={{ backgroundColor: 'var(--color-brand-500)' }}
+          className="std-btn std-btn--signal std-btn--sm h-7 px-3 flex-shrink-0"
         >
           Add
         </button>
@@ -66,7 +65,7 @@ export const QuickCapture = memo(({ onSubmit, placeholder = 'Quick thought...' }
 });
 QuickCapture.displayName = 'QuickCapture';
 
-/* ── Single micro-entry card ─────────────────────────────────── */
+/* ── Single micro-entry (log line) ───────────────────────────── */
 export const MicroEntryCard = memo(({ entry, onEdit, onDelete }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(entry.plainTextContent || '');
@@ -165,21 +164,21 @@ export const MicroEntryCard = memo(({ entry, onEdit, onDelete }) => {
 
   if (isEditing) {
     return (
-      <div className="flex items-start gap-2 px-3 py-2 rounded-lg border"
-        style={{ borderColor: 'var(--color-brand-300)', backgroundColor: 'var(--color-surface-primary)' }}>
+      <div className="flex items-start gap-2 px-3 py-2 rounded-[var(--r-btn)] border"
+        style={{ borderColor: 'var(--signal)', backgroundColor: 'var(--surface)' }}>
         <input
           type="text"
           value={editText}
           onChange={(e) => setEditText(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') setIsEditing(false); }}
           autoFocus
-          className="flex-1 bg-transparent text-sm font-spartan outline-none"
-          style={{ color: 'var(--color-text-primary)' }}
+          className="flex-1 bg-transparent text-sm outline-none"
+          style={{ color: 'var(--ink)' }}
         />
-        <button onClick={handleSave} className="p-1 rounded" style={{ color: 'var(--color-success)' }}>
+        <button onClick={handleSave} className="p-1 rounded" style={{ color: 'var(--signal)' }}>
           <CheckIcon className="w-3.5 h-3.5" />
         </button>
-        <button onClick={() => setIsEditing(false)} className="p-1 rounded" style={{ color: 'var(--color-text-tertiary)' }}>
+        <button onClick={() => setIsEditing(false)} className="p-1 rounded" style={{ color: 'var(--ink-3)' }}>
           <Cross2Icon className="w-3.5 h-3.5" />
         </button>
       </div>
@@ -189,7 +188,7 @@ export const MicroEntryCard = memo(({ entry, onEdit, onDelete }) => {
   return (
     <div
       ref={cardRef}
-      className="group rounded-lg transition-all duration-150"
+      className="group rounded-[var(--r-tag)] transition-all duration-150"
       onMouseEnter={() => !isSelected && setShowActions(true)}
       onMouseLeave={() => !isSelected && setShowActions(false)}
       onDoubleClick={openEditor}
@@ -198,52 +197,55 @@ export const MicroEntryCard = memo(({ entry, onEdit, onDelete }) => {
       onTouchCancel={clearLongPressTimer}
       onTouchMove={clearLongPressTimer}
       style={{
-        backgroundColor: isSelected ? 'var(--color-surface-hover)' : undefined,
-        border: isSelected ? '1px solid var(--color-brand-300)' : '1px solid transparent',
-        boxShadow: isSelected ? '0 0 0 2px color-mix(in srgb, var(--color-brand-500) 10%, transparent)' : 'none',
+        backgroundColor: isSelected ? 'var(--surface-2)' : undefined,
+        border: isSelected ? '1px solid var(--signal)' : '1px solid transparent',
       }}
     >
-      {/* Main row */}
+      {/* Log line */}
       <div className="flex items-start gap-3 px-3 py-2">
-        {/* Bullet / timeline dot */}
-        <div className="flex-shrink-0 mt-1.5">
+        {/* Timeline bullet */}
+        <div className="flex-shrink-0 mt-[7px]">
           <div
             className="w-1.5 h-1.5 rounded-full transition-colors"
-            style={{ backgroundColor: isSelected ? 'var(--color-brand-400)' : 'var(--color-text-tertiary)' }}
+            style={{ backgroundColor: isSelected ? 'var(--signal)' : 'var(--ink-3)' }}
           />
         </div>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-spartan leading-relaxed" style={{ color: 'var(--color-text-primary)' }}>
-            {entry.plainTextContent}
-          </p>
-          <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-[10px] font-spartan" style={{ color: 'var(--color-text-tertiary)' }}>
+          <div className="flex items-baseline gap-2.5">
+            <span className="std-mono text-[10px] tabular-nums text-[var(--ink-3)] flex-shrink-0">
               {time}
             </span>
-            {entry.linkedHabitId && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-spartan px-1.5 py-0.5 rounded-full"
-                style={{ backgroundColor: 'var(--color-surface-elevated)', color: 'var(--color-text-secondary)' }}>
-                <HabitIcon icon={entry.linkedHabitId.icon || 'Star'} size={12} /> {entry.linkedHabitId.name}
-              </span>
-            )}
-            {entry.tags?.map(t => (
-              <span key={t} className="text-[10px] font-spartan px-1.5 py-0.5 rounded-full"
-                style={{ backgroundColor: 'var(--color-surface-elevated)', color: 'var(--color-text-tertiary)' }}>
-                {t}
-              </span>
-            ))}
+            <p className="text-[13px] leading-relaxed" style={{ color: 'var(--ink)' }}>
+              {entry.plainTextContent}
+            </p>
           </div>
+          {(entry.linkedHabitId || entry.tags?.length > 0) && (
+            <div className="flex items-center flex-wrap gap-1.5 mt-1 pl-[3.4rem]">
+              {entry.linkedHabitId && (
+                <span className="inline-flex items-center gap-1 std-mono text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-[var(--r-tag)] border border-[var(--line-2)]"
+                  style={{ color: 'var(--ink-2)' }}>
+                  <HabitIcon icon={entry.linkedHabitId.icon || 'Star'} size={11} /> {entry.linkedHabitId.name}
+                </span>
+              )}
+              {entry.tags?.map(t => (
+                <span key={t} className="std-mono text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-[var(--r-tag)] border border-[var(--line-2)]"
+                  style={{ color: 'var(--ink-3)' }}>
+                  {t}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Desktop hover actions (icon buttons, top-right) */}
+        {/* Desktop hover actions */}
         {!isSelected && (
           <div className={`flex items-center gap-1 flex-shrink-0 transition-opacity duration-150 ${showActions ? 'opacity-100' : 'opacity-0'}`}>
             <button
               onClick={(e) => { e.stopPropagation(); openEditor(); }}
-              className="p-1.5 rounded-md border hover:bg-[var(--color-surface-elevated)] transition-colors"
-              style={{ color: 'var(--color-text-secondary)', borderColor: 'var(--color-border-primary)' }}
+              className="p-1.5 rounded-md border hover:bg-[var(--surface-2)] transition-colors"
+              style={{ color: 'var(--ink-2)', borderColor: 'var(--line-2)' }}
               aria-label="Edit"
             >
               <Pencil1Icon className="w-3.5 h-3.5" />
@@ -251,7 +253,7 @@ export const MicroEntryCard = memo(({ entry, onEdit, onDelete }) => {
             <button
               onClick={(e) => { e.stopPropagation(); handleDelete(); }}
               className="p-1.5 rounded-md border hover:bg-[var(--rose)]/10 hover:border-[var(--rose)]/30 transition-colors"
-              style={{ color: 'var(--rose)', borderColor: 'var(--color-border-primary)' }}
+              style={{ color: 'var(--rose)', borderColor: 'var(--line-2)' }}
               aria-label="Delete"
             >
               <TrashIcon className="w-3.5 h-3.5" />
@@ -265,11 +267,11 @@ export const MicroEntryCard = memo(({ entry, onEdit, onDelete }) => {
         <div className="flex items-center gap-2 px-3 pb-2.5">
           <button
             onClick={(e) => { e.stopPropagation(); openEditor(); }}
-            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-spartan font-semibold border transition-colors"
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-[var(--r-btn)] std-mono text-[11px] uppercase tracking-wide border transition-colors"
             style={{
-              color: 'var(--color-text-secondary)',
-              borderColor: 'var(--color-border-primary)',
-              backgroundColor: 'var(--color-surface-primary)',
+              color: 'var(--ink-2)',
+              borderColor: 'var(--line-2)',
+              backgroundColor: 'var(--surface)',
             }}
           >
             <Pencil1Icon className="w-3.5 h-3.5" />
@@ -277,7 +279,7 @@ export const MicroEntryCard = memo(({ entry, onEdit, onDelete }) => {
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); handleDelete(); }}
-            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-spartan font-semibold border transition-colors"
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-[var(--r-btn)] std-mono text-[11px] uppercase tracking-wide border transition-colors"
             style={{
               color: 'var(--rose)',
               borderColor: 'color-mix(in srgb, var(--rose) 40%, transparent)',
@@ -294,7 +296,7 @@ export const MicroEntryCard = memo(({ entry, onEdit, onDelete }) => {
 });
 MicroEntryCard.displayName = 'MicroEntryCard';
 
-/* ── Collapsed micro-entry stack ─────────────────────────────── */
+/* ── The captain's-log stack ─────────────────────────────────── */
 export const MicroStack = memo(({ micros, onExpand, isExpanded, onEdit, onDelete }) => {
   if (!micros || micros.length === 0) return null;
 
@@ -305,28 +307,26 @@ export const MicroStack = memo(({ micros, onExpand, isExpanded, onEdit, onDelete
   return (
     <div className="space-y-0.5">
       {/* Section label */}
-      <div className="flex items-center justify-between px-3 mb-1">
+      <div className="flex items-center justify-between px-3 mb-1.5">
         <div className="flex items-center gap-2">
-          <span className="std-kicker">
-            Quick notes · {micros.length}
-          </span>
-          <span className="hidden sm:inline text-[9px] font-spartan"
-            style={{ color: 'var(--color-text-tertiary)', opacity: 0.6 }}>
+          <span className="std-kicker">Log · {micros.length}</span>
+          <span className="hidden sm:inline std-mono text-[9px] uppercase tracking-wide"
+            style={{ color: 'var(--ink-3)', opacity: 0.7 }}>
             double-click to edit · hold to select
           </span>
         </div>
         {micros.length > 2 && (
           <button
             onClick={onExpand}
-            className="text-[10px] font-spartan font-semibold transition-colors hover:text-[var(--color-brand-500)]"
-            style={{ color: 'var(--color-text-tertiary)' }}
+            className="std-mono text-[10px] uppercase tracking-wide transition-colors hover:text-[var(--signal)]"
+            style={{ color: 'var(--ink-3)' }}
           >
             {isExpanded ? 'Collapse' : `Show all ${micros.length}`}
           </button>
         )}
       </div>
 
-      {/* Micro entries */}
+      {/* Log entries */}
       {visible.map(micro => (
         <MicroEntryCard
           key={micro._id}
@@ -340,8 +340,8 @@ export const MicroStack = memo(({ micros, onExpand, isExpanded, onEdit, onDelete
       {!isExpanded && hiddenCount > 0 && (
         <button
           onClick={onExpand}
-          className="w-full py-1 text-[10px] font-spartan text-center transition-colors"
-          style={{ color: 'var(--color-text-tertiary)' }}
+          className="w-full py-1 std-mono text-[10px] uppercase tracking-wide text-center transition-colors hover:text-[var(--ink-2)]"
+          style={{ color: 'var(--ink-3)' }}
         >
           +{hiddenCount} more
         </button>
