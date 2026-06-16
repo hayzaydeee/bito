@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { journalV2Service } from '../../services/journalV2Service';
-import { ChevronDownIcon, ChevronUpIcon } from '@radix-ui/react-icons';
+import { ArrowLeftIcon, PlusIcon, MinusIcon } from '@radix-ui/react-icons';
 import {
   SmileyAngry, SmileySad, SmileyMeh, Smiley, SmileyWink,
   BatteryEmpty, BatteryLow, BatteryMedium, BatteryHigh, BatteryFull,
 } from '@phosphor-icons/react';
 
 /* ═══════════════════════════════════════════════════════════════
-   JournalArchiveView — Read-only view of legacy journal entries
+   JournalArchiveView — "The Stacks"
+   Read-only ledger of legacy journal entries. DRILL editorial:
+   mono № indices, hairline-framed cards, serif datelines.
    ═══════════════════════════════════════════════════════════════ */
 
 const MOOD_ICONS = [
@@ -26,7 +28,7 @@ const ENERGY_ICONS = [
   { Icon: BatteryFull,   color: '#6366f1', label: 'Peak' },
 ];
 
-const ArchiveEntry = memo(({ entry }) => {
+const ArchiveEntry = memo(({ entry, number }) => {
   const [expanded, setExpanded] = useState(false);
 
   const date = new Date(entry.date).toLocaleDateString('en-US', {
@@ -40,66 +42,77 @@ const ArchiveEntry = memo(({ entry }) => {
   const plainText = entry.plainTextContent || '';
   const preview = plainText.length > 200 ? plainText.slice(0, 200) + '…' : plainText;
 
+  const mood = entry.mood ? MOOD_ICONS[entry.mood - 1] : null;
+  const energy = entry.energy ? ENERGY_ICONS[entry.energy - 1] : null;
+
   return (
-    <div
-      className="rounded-xl border p-4 transition-all duration-200"
-      style={{
-        backgroundColor: 'var(--color-surface-primary)',
-        borderColor: 'var(--color-border-primary)',
-      }}
-    >
+    <div className="std-card p-0 overflow-hidden">
       {/* Header */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between text-left"
+        className="w-full flex items-baseline gap-4 px-4 py-3.5 text-left hover:bg-[var(--surface-2)] transition-colors"
       >
-        <div>
-          <h3 className="text-sm font-spartan font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-            {date}
-          </h3>
-          <div className="flex items-center gap-2 mt-1">
-            {entry.mood && (() => {
-              const m = MOOD_ICONS[entry.mood - 1];
-              return m ? <m.Icon size={14} weight="fill" color={m.color} title={m.label} /> : null;
-            })()}
-            {entry.energy && (() => {
-              const e = ENERGY_ICONS[entry.energy - 1];
-              return e ? <e.Icon size={14} weight="fill" color={e.color} title={e.label} /> : null;
-            })()}
+        <span className="std-mono text-[11px] tabular-nums text-[var(--ink-3)] w-10 flex-shrink-0 pt-0.5">
+          №{number != null ? String(number).padStart(2, '0') : '—'}
+        </span>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-2.5">
+            <h3 className="std-display text-[15px] font-bold text-[var(--ink)] flex-shrink-0">
+              {date}
+            </h3>
+            {mood && (
+              <span className="flex-shrink-0 self-center" title={`Mood: ${mood.label}`}>
+                <mood.Icon size={13} weight="fill" color={mood.color} />
+              </span>
+            )}
+            {energy && (
+              <span className="flex-shrink-0 self-center" title={`Energy: ${energy.label}`}>
+                <energy.Icon size={13} weight="fill" color={energy.color} />
+              </span>
+            )}
             {entry.wordCount > 0 && (
-              <span className="text-[10px] font-spartan" style={{ color: 'var(--color-text-tertiary)' }}>
+              <span className="ml-auto std-mono text-[10.5px] text-[var(--ink-3)] flex-shrink-0 self-center">
                 {entry.wordCount} words
               </span>
             )}
-            {entry.tags?.map(t => (
-              <span key={t} className="text-[10px] font-spartan px-1.5 py-0.5 rounded-full"
-                style={{ backgroundColor: 'var(--color-surface-elevated)', color: 'var(--color-text-tertiary)' }}>
-                {t}
-              </span>
-            ))}
           </div>
+
+          {/* Tags */}
+          {entry.tags?.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-1.5">
+              {entry.tags.map((t) => (
+                <span
+                  key={t}
+                  className="std-mono text-[9px] uppercase tracking-wide text-[var(--ink-3)] border border-[var(--line-2)] px-1.5 py-0.5 rounded-[var(--r-tag)]"
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Collapsed preview */}
+          {!expanded && preview && (
+            <p className="mt-1.5 text-[13px] text-[var(--ink-2)] leading-relaxed line-clamp-2">
+              {preview}
+            </p>
+          )}
         </div>
+
         {expanded
-          ? <ChevronUpIcon className="w-4 h-4" style={{ color: 'var(--color-text-tertiary)' }} />
-          : <ChevronDownIcon className="w-4 h-4" style={{ color: 'var(--color-text-tertiary)' }} />
+          ? <MinusIcon className="w-4 h-4 flex-shrink-0 self-center text-[var(--ink-3)]" />
+          : <PlusIcon className="w-4 h-4 flex-shrink-0 self-center text-[var(--ink-3)]" />
         }
       </button>
 
-      {/* Content */}
-      {expanded ? (
-        <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--color-border-primary)' }}>
-          <p className="text-sm font-spartan leading-relaxed whitespace-pre-wrap"
-            style={{ color: 'var(--color-text-primary)' }}>
+      {/* Expanded content — manuscript column */}
+      {expanded && (
+        <div className="px-4 pb-4 pt-3 border-t border-[var(--line)]">
+          <p className="std-display text-[15px] text-[var(--ink)] leading-[1.75] whitespace-pre-wrap">
             {plainText || 'No text content'}
           </p>
         </div>
-      ) : (
-        preview && (
-          <p className="mt-2 text-xs font-spartan leading-relaxed"
-            style={{ color: 'var(--color-text-secondary)' }}>
-            {preview}
-          </p>
-        )
       )}
     </div>
   );
@@ -128,69 +141,84 @@ const JournalArchiveView = ({ onClose }) => {
 
   useEffect(() => { loadPage(1); }, [loadPage]);
 
+  const total = pagination?.total ?? entries.length;
+
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="std h-full flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex-shrink-0 px-6 sm:px-10 pt-6 pb-4 flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-garamond font-bold" style={{ color: 'var(--color-text-primary)' }}>
-            Journal Archive
-          </h2>
-          <p className="text-xs font-spartan mt-0.5" style={{ color: 'var(--color-text-tertiary)' }}>
-            Read-only entries from the previous journal format
-          </p>
+      <div className="flex-shrink-0 px-6 sm:px-10 pt-6 pb-4">
+        <div className="max-w-3xl mx-auto w-full">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="std-kicker">The Stacks · Archive</p>
+              <h2 className="std-display text-2xl font-bold text-[var(--ink)] mt-1">
+                Journal Archive
+              </h2>
+              <p className="std-mono text-[10px] uppercase tracking-wider text-[var(--ink-3)] mt-1">
+                Read-only · previous journal format
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="std-btn std-btn--sm flex items-center gap-1.5 flex-shrink-0"
+            >
+              <ArrowLeftIcon className="w-3.5 h-3.5" />
+              Back to Journal
+            </button>
+          </div>
+          <hr className="std-rule mt-4" />
         </div>
-        <button
-          onClick={onClose}
-          className="px-3 py-1.5 rounded-lg text-xs font-spartan font-semibold transition-colors hover:bg-[var(--color-surface-hover)]"
-          style={{ color: 'var(--color-text-secondary)' }}
-        >
-          Back to Journal
-        </button>
       </div>
 
       {/* Entry list */}
-      <div className="flex-1 overflow-y-auto px-6 sm:px-10 pb-6 space-y-3">
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-6 h-6 border-2 border-[var(--color-text-tertiary)] border-t-[var(--color-brand-500)] rounded-full animate-spin" />
-          </div>
-        ) : entries.length === 0 ? (
-          <div className="flex items-center justify-center py-20">
-            <p className="text-sm font-spartan" style={{ color: 'var(--color-text-tertiary)' }}>
-              No archived entries found.
-            </p>
-          </div>
-        ) : (
-          entries.map(entry => (
-            <ArchiveEntry key={entry._id} entry={entry} />
-          ))
-        )}
+      <div className="flex-1 overflow-y-auto px-6 sm:px-10 pb-6">
+        <div className="max-w-3xl mx-auto w-full space-y-3">
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="w-6 h-6 border-2 border-[var(--line-2)] border-t-[var(--signal)] rounded-full animate-spin" />
+            </div>
+          ) : entries.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-2 text-center">
+              <p className="std-display text-base font-bold text-[var(--ink)]">
+                No archived entries found
+              </p>
+              <p className="std-mono text-[10px] uppercase tracking-wider text-[var(--ink-3)]">
+                The stacks are empty
+              </p>
+            </div>
+          ) : (
+            entries.map((entry, idx) => (
+              <ArchiveEntry
+                key={entry._id}
+                entry={entry}
+                number={total - ((page - 1) * 10 + idx)}
+              />
+            ))
+          )}
 
-        {/* Pagination */}
-        {pagination && pagination.pages > 1 && (
-          <div className="flex items-center justify-center gap-2 pt-4">
-            <button
-              onClick={() => loadPage(page - 1)}
-              disabled={page <= 1}
-              className="px-3 py-1.5 rounded-lg text-xs font-spartan font-semibold transition-colors disabled:opacity-30"
-              style={{ color: 'var(--color-text-secondary)', backgroundColor: 'var(--color-surface-elevated)' }}
-            >
-              Previous
-            </button>
-            <span className="text-xs font-spartan" style={{ color: 'var(--color-text-tertiary)' }}>
-              Page {page} of {pagination.pages}
-            </span>
-            <button
-              onClick={() => loadPage(page + 1)}
-              disabled={page >= pagination.pages}
-              className="px-3 py-1.5 rounded-lg text-xs font-spartan font-semibold transition-colors disabled:opacity-30"
-              style={{ color: 'var(--color-text-secondary)', backgroundColor: 'var(--color-surface-elevated)' }}
-            >
-              Next
-            </button>
-          </div>
-        )}
+          {/* Pagination */}
+          {pagination && pagination.pages > 1 && (
+            <div className="flex items-center justify-center gap-3 pt-4">
+              <button
+                onClick={() => loadPage(page - 1)}
+                disabled={page <= 1}
+                className="std-btn std-btn--sm disabled:opacity-30"
+              >
+                Prev
+              </button>
+              <span className="std-mono text-[10px] uppercase tracking-wider text-[var(--ink-3)]">
+                Page {page} / {pagination.pages}
+              </span>
+              <button
+                onClick={() => loadPage(page + 1)}
+                disabled={page >= pagination.pages}
+                className="std-btn std-btn--sm disabled:opacity-30"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

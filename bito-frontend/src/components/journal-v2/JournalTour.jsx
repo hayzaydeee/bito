@@ -208,17 +208,18 @@ const JournalTour = ({ forceShow = false, onComplete, userId }) => {
   // ── Prompt screen (step === -1) ──
   if (step === -1) {
     return createPortal(
-      <div className="tour-overlay" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }} onClick={finish}>
+      <div className="tour-overlay std" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }} onClick={finish}>
         <div
           className="tour-prompt"
           onClick={(e) => e.stopPropagation()}
           role="dialog"
           aria-label="Journal tour prompt"
         >
-          <h2 className="text-xl font-garamond font-bold text-[var(--color-text-primary)] mb-1">
+          <p className="std-kicker mb-2">Field Guide · The Logbook</p>
+          <h2 className="std-display text-xl font-bold text-[var(--ink)] mb-1.5">
             Want a quick tour of your journal?
           </h2>
-          <p className="text-sm font-spartan text-[var(--color-text-secondary)] mb-5">
+          <p className="text-[13px] text-[var(--ink-2)] leading-relaxed mb-5">
             30 seconds to learn what you can do here. You can always replay it from Settings → About.
           </p>
           <div className="flex gap-3">
@@ -315,7 +316,7 @@ const JournalTour = ({ forceShow = false, onComplete, userId }) => {
 
   return createPortal(
     <div
-      className="tour-overlay"
+      className="tour-overlay std"
       onClick={finish}
       role="dialog"
       aria-label={`Tour step ${step + 1} of ${STEPS.length}`}
@@ -347,26 +348,31 @@ const JournalTour = ({ forceShow = false, onComplete, userId }) => {
         style={getTooltipStyle()}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Step indicator dots */}
-        <div className="flex gap-1.5 mb-3">
-          {STEPS.map((_, i) => (
-            <div
-              key={i}
-              className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                i === step
-                  ? 'w-4 bg-[var(--color-brand-500)]'
-                  : i < step
-                    ? 'bg-[var(--color-brand-500)] opacity-40'
-                    : 'bg-[var(--color-text-tertiary)] opacity-30'
-              }`}
-            />
-          ))}
+        {/* Step counter + indicator dots */}
+        <div className="flex items-center justify-between mb-3">
+          <span className="std-mono text-[10px] uppercase tracking-wider text-[var(--ink-3)] tabular-nums">
+            {String(step + 1).padStart(2, '0')} / {String(STEPS.length).padStart(2, '0')}
+          </span>
+          <div className="flex gap-1.5">
+            {STEPS.map((_, i) => (
+              <div
+                key={i}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  i === step
+                    ? 'w-4 bg-[var(--signal)]'
+                    : i < step
+                      ? 'w-1.5 bg-[var(--signal)] opacity-40'
+                      : 'w-1.5 bg-[var(--ink-3)] opacity-30'
+                }`}
+              />
+            ))}
+          </div>
         </div>
 
-        <h3 className="text-lg font-garamond font-bold text-[var(--color-text-primary)] mb-1">
+        <h3 className="std-display text-lg font-bold text-[var(--ink)] mb-1.5">
           {currentStep.title}
         </h3>
-        <p className="text-sm font-spartan text-[var(--color-text-secondary)] leading-relaxed mb-4">
+        <p className="text-[13px] text-[var(--ink-2)] leading-relaxed mb-4">
           {currentStep.body}
         </p>
 
