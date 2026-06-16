@@ -4,11 +4,12 @@ import { useJournal } from '../../hooks/useJournal';
 import BlockNoteEditor from '../journal/BlockNoteEditor';
 import JournalWeekStrip from './JournalWeekStrip';
 import JournalDayFeed from './JournalDayFeed';
+import JournalStream from './JournalStream';
 import JournalArchiveView from './JournalArchiveView';
 import JournalEntryList from './JournalEntryList';
 import JournalPrivacySettings, { AIOptInNudge } from './JournalPrivacy';
 import JournalTour from './JournalTour';
-import { ArchiveIcon, MagnifyingGlassIcon, Cross2Icon, LockClosedIcon, LockOpen1Icon, ListBulletIcon, FileTextIcon } from '@radix-ui/react-icons';
+import { ArchiveIcon, MagnifyingGlassIcon, Cross2Icon, LockClosedIcon, LockOpen1Icon, ListBulletIcon, FileTextIcon, RowsIcon } from '@radix-ui/react-icons';
 import { journalV2Service } from '../../services/journalV2Service';
 import { userAPI } from '../../services/api';
 
@@ -171,6 +172,7 @@ const JournalPageV2 = () => {
               {[
                 { id: 'day', Icon: FileTextIcon, label: 'Day view' },
                 { id: 'list', Icon: ListBulletIcon, label: 'Ledger view' },
+                { id: 'stream', Icon: RowsIcon, label: 'Stream view' },
               ].map(({ id, Icon, label }) => (
                 <button
                   key={id}
@@ -294,6 +296,13 @@ const JournalPageV2 = () => {
       <div className="flex-1 overflow-hidden">
         {activeView === 'list' ? (
           <JournalEntryList
+            onSelectDate={(dateStr) => {
+              journal.selectDate(dateStr);
+              setActiveView('day');
+            }}
+          />
+        ) : activeView === 'stream' ? (
+          <JournalStream
             onSelectDate={(dateStr) => {
               journal.selectDate(dateStr);
               setActiveView('day');
