@@ -23,10 +23,10 @@ const TYPE_META = {
 };
 
 const STATUS_THEME = {
-  upcoming: { bg: "bg-blue-500/10", text: "text-blue-600", dot: "bg-blue-500" },
-  active: { bg: "bg-green-500/10", text: "text-green-600", dot: "bg-green-500" },
-  completed: { bg: "bg-gray-500/10", text: "text-gray-500", dot: "bg-gray-400" },
-  cancelled: { bg: "bg-red-500/10", text: "text-red-500", dot: "bg-red-500" },
+  upcoming:  { color: 'var(--signal)',         bg: 'color-mix(in srgb, var(--signal) 10%, transparent)' },
+  active:    { color: 'var(--signal)',         bg: 'color-mix(in srgb, var(--signal) 10%, transparent)' },
+  completed: { color: 'var(--ink-3)',          bg: 'color-mix(in srgb, var(--ink-3) 10%, transparent)' },
+  cancelled: { color: 'var(--rose, #e11d48)', bg: 'color-mix(in srgb, var(--rose, #e11d48) 10%, transparent)' },
 };
 
 const MATCH_MODE_LABELS = {
@@ -136,11 +136,15 @@ const ChallengeDetailPage = () => {
 
   /* ── skeleton ── */
   const challengeSkeleton = (
-    <div className="max-w-3xl mx-auto p-6">
-      <div className="animate-pulse space-y-6">
-        <div className="h-6 w-48 bg-[var(--color-surface-hover)] rounded" />
-        <div className="h-32 bg-[var(--color-surface-hover)] rounded-2xl" />
-        <div className="h-64 bg-[var(--color-surface-hover)] rounded-2xl" />
+    <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
+      <div className="max-w-3xl mx-auto space-y-4 animate-pulse">
+        <div className="h-8 w-24 rounded-[var(--r-btn)] bg-[var(--surface-2)]" />
+        <div className="h-36 std-card bg-[var(--surface-2)]" />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="h-32 std-card bg-[var(--surface-2)]" />
+          <div className="h-32 std-card bg-[var(--surface-2)]" />
+        </div>
+        <div className="h-56 std-card bg-[var(--surface-2)]" />
       </div>
     </div>
   );
@@ -148,16 +152,15 @@ const ChallengeDetailPage = () => {
   /* ── error states ── */
   if (!loading && (error || !challenge)) {
     return (
-      <div className="max-w-3xl mx-auto p-6">
-        <button
-          onClick={() => navigate(`/app/groups/${groupId}`)}
-          className="flex items-center gap-2 text-sm font-spartan text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] mb-6 transition-colors"
-        >
-          <ArrowLeftIcon className="w-4 h-4" /> Back to group
-        </button>
-        <div className="text-center py-16">
-          <p className="text-4xl mb-3">😕</p>
-          <p className="text-sm text-[var(--color-text-secondary)] font-spartan">{error || "Challenge not found"}</p>
+      <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
+        <div className="max-w-3xl mx-auto">
+          <button onClick={() => navigate(`/app/groups/${groupId}`)} className="std-btn std-btn--sm mb-8 flex items-center gap-1.5">
+            <ArrowLeftIcon className="w-3.5 h-3.5" /> Group
+          </button>
+          <div className="std-card p-10 text-center">
+            <p className="std-display text-3xl text-[var(--ink-3)] mb-3">—</p>
+            <p className="std-mono text-[11px] text-[var(--ink-3)]">{error || "Challenge not found"}</p>
+          </div>
         </div>
       </div>
     );
@@ -169,45 +172,40 @@ const ChallengeDetailPage = () => {
 
   return (
     <SkeletonTransition isLoading={loading} skeleton={challengeSkeleton}>
-    <div className="max-w-3xl mx-auto p-6 space-y-6">
+    <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
+    <div className="max-w-3xl mx-auto space-y-5">
       {/* ── Back nav ── */}
-      <button
-        onClick={() => navigate(`/app/groups/${groupId}`)}
-        className="flex items-center gap-2 text-sm font-spartan text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
-      >
-        <ArrowLeftIcon className="w-4 h-4" /> Back to group
+      <button onClick={() => navigate(`/app/groups/${groupId}`)} className="std-btn std-btn--sm flex items-center gap-1.5">
+        <ArrowLeftIcon className="w-3.5 h-3.5" /> Group
       </button>
 
       {/* ── Header card ── */}
-      <div className="p-6 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20">
+      <div className="std-card p-5 sm:p-6">
         <div className="flex items-start gap-4">
-          <span className="w-14 h-14 rounded-2xl bg-[var(--color-surface-hover)] flex items-center justify-center flex-shrink-0 text-[var(--color-text-secondary)]">
-            {meta.icon ? <meta.icon size={28} weight="duotone" /> : <Trophy size={28} weight="duotone" />}
+          <span className="w-12 h-12 rounded-[var(--r-card)] bg-[var(--surface-2)] flex items-center justify-center flex-shrink-0 text-[var(--ink-3)]">
+            {meta.icon ? <meta.icon size={24} weight="duotone" /> : <Trophy size={24} weight="duotone" />}
           </span>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-xl font-garamond font-bold text-[var(--color-text-primary)]">
-                {challenge.title}
-              </h1>
-              <span className={`inline-flex items-center gap-1.5 text-xs font-spartan font-medium px-2.5 py-1 rounded-lg ${theme.bg} ${theme.text}`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${theme.dot}`} />
+              <h1 className="std-display text-xl text-[var(--ink)]">{challenge.title}</h1>
+              <span
+                className="std-mono text-[10px] px-2 py-0.5 rounded-[var(--r-pill)] flex items-center gap-1.5"
+                style={{ color: theme.color, background: theme.bg, border: `1px solid ${theme.color}40` }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full inline-block flex-shrink-0" style={{ background: theme.color }} />
                 {challenge.status}
               </span>
             </div>
             {challenge.description && (
-              <p className="text-sm text-[var(--color-text-secondary)] font-spartan mt-1">
-                {challenge.description}
-              </p>
+              <p className="std-mono text-[11px] text-[var(--ink-3)] mt-1 leading-relaxed">{challenge.description}</p>
             )}
-
-            {/* info row */}
-            <div className="flex flex-wrap items-center gap-4 text-xs text-[var(--color-text-tertiary)] font-spartan mt-3">
+            <div className="flex flex-wrap items-center gap-3 std-mono text-[10px] text-[var(--ink-3)] mt-3">
               <span className="flex items-center gap-1">
                 <CalendarIcon className="w-3 h-3" />
                 {fmtDate(challenge.startDate)} — {fmtDate(challenge.endDate)}
               </span>
               {challenge.daysRemaining != null && challenge.status === "active" && (
-                <span className="font-medium text-[var(--color-text-secondary)]">{challenge.daysRemaining}d left</span>
+                <span style={{ color: 'var(--signal)' }}>{challenge.daysRemaining}d left</span>
               )}
               <span className="flex items-center gap-1">
                 <PersonIcon className="w-3 h-3" />
@@ -224,17 +222,13 @@ const ChallengeDetailPage = () => {
                 <button
                   onClick={handleLeave}
                   disabled={actionLoading}
-                  className="text-xs font-spartan font-medium px-4 py-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors disabled:opacity-50"
+                  className="std-btn std-btn--sm border-red-500/40 text-red-500 hover:bg-red-500/10 disabled:opacity-50"
                 >
                   Leave
                 </button>
               ) : (
-                <button
-                  onClick={handleJoin}
-                  disabled={actionLoading}
-                  className="text-xs font-spartan font-medium px-4 py-2 rounded-lg bg-[var(--color-brand-600)] text-white hover:bg-[var(--color-brand-700)] transition-colors disabled:opacity-50"
-                >
-                  Join Challenge
+                <button onClick={handleJoin} disabled={actionLoading} className="std-btn std-btn--signal std-btn--sm disabled:opacity-50">
+                  Join
                 </button>
               )
             )}
@@ -242,9 +236,9 @@ const ChallengeDetailPage = () => {
               <button
                 onClick={handleCancel}
                 disabled={actionLoading}
-                className="text-[10px] font-spartan text-[var(--color-text-tertiary)] hover:text-red-500 transition-colors disabled:opacity-50"
+                className="std-mono text-[10px] text-[var(--ink-3)] hover:text-red-500 transition-colors disabled:opacity-50"
               >
-                Cancel challenge
+                Cancel
               </button>
             )}
           </div>
@@ -253,130 +247,92 @@ const ChallengeDetailPage = () => {
 
       {/* ── Rules & matching info ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Rules card */}
-        <div className="p-4 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20">
-          <h3 className="text-xs font-spartan font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-3">
-            Rules
-          </h3>
-          <dl className="space-y-2 text-sm font-spartan">
-            <div className="flex justify-between">
-              <dt className="text-[var(--color-text-tertiary)]">Target</dt>
-              <dd className="font-medium text-[var(--color-text-primary)]">{challenge.rules?.targetValue} {challenge.rules?.targetUnit}</dd>
-            </div>
-            {challenge.rules?.minimumDailyValue && (
-              <div className="flex justify-between">
-                <dt className="text-[var(--color-text-tertiary)]">Min daily</dt>
-                <dd className="font-medium text-[var(--color-text-primary)]">{challenge.rules.minimumDailyValue}</dd>
+        <div className="std-card p-5">
+          <p className="std-kicker text-[var(--ink-3)] mb-3">Rules</p>
+          <dl className="space-y-2">
+            {[
+              { label: "Target",       value: `${challenge.rules?.targetValue} ${challenge.rules?.targetUnit}` },
+              challenge.rules?.minimumDailyValue && { label: "Min daily", value: challenge.rules.minimumDailyValue },
+              { label: "Grace period", value: `${challenge.rules?.gracePeriodHours || 4}h` },
+              challenge.rules?.allowMakeupDays && { label: "Makeup days", value: "Allowed" },
+              challenge.settings?.maxParticipants && { label: "Max participants", value: challenge.settings.maxParticipants },
+            ].filter(Boolean).map((row) => (
+              <div key={row.label} className="flex justify-between items-baseline">
+                <dt className="std-mono text-[10px] text-[var(--ink-3)]">{row.label}</dt>
+                <dd className="std-mono text-[11px] text-[var(--ink)]">{row.value}</dd>
               </div>
-            )}
-            <div className="flex justify-between">
-              <dt className="text-[var(--color-text-tertiary)]">Grace period</dt>
-              <dd className="font-medium text-[var(--color-text-primary)]">{challenge.rules?.gracePeriodHours || 4}h</dd>
-            </div>
-            {challenge.rules?.allowMakeupDays && (
-              <div className="flex justify-between">
-                <dt className="text-[var(--color-text-tertiary)]">Makeup days</dt>
-                <dd className="font-medium text-green-600">Allowed</dd>
-              </div>
-            )}
-            {challenge.settings?.maxParticipants && (
-              <div className="flex justify-between">
-                <dt className="text-[var(--color-text-tertiary)]">Max participants</dt>
-                <dd className="font-medium text-[var(--color-text-primary)]">{challenge.settings.maxParticipants}</dd>
-              </div>
-            )}
+            ))}
           </dl>
         </div>
 
-        {/* Habit matching card */}
-        <div className="p-4 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20">
-          <h3 className="text-xs font-spartan font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-3">
-            Habit Matching
-          </h3>
-          <dl className="space-y-2 text-sm font-spartan">
-            <div className="flex justify-between">
-              <dt className="text-[var(--color-text-tertiary)]">Mode</dt>
-              <dd className="font-medium text-[var(--color-text-primary)]">
+        <div className="std-card p-5">
+          <p className="std-kicker text-[var(--ink-3)] mb-3">Habit Matching</p>
+          <dl className="space-y-2">
+            <div className="flex justify-between items-baseline">
+              <dt className="std-mono text-[10px] text-[var(--ink-3)]">Mode</dt>
+              <dd className="std-mono text-[11px] text-[var(--ink)]">
                 {MATCH_MODE_LABELS[challenge.habitMatchMode] || challenge.habitMatchMode || "Single"}
               </dd>
             </div>
             {challenge.habitMatchMode === "minimum" && challenge.habitMatchMinimum && (
-              <div className="flex justify-between">
-                <dt className="text-[var(--color-text-tertiary)]">Minimum</dt>
-                <dd className="font-medium text-[var(--color-text-primary)]">{challenge.habitMatchMinimum} habits</dd>
+              <div className="flex justify-between items-baseline">
+                <dt className="std-mono text-[10px] text-[var(--ink-3)]">Minimum</dt>
+                <dd className="std-mono text-[11px] text-[var(--ink)]">{challenge.habitMatchMinimum} habits</dd>
               </div>
             )}
             {challenge.habitSlot && (
               <div>
-                <dt className="text-[var(--color-text-tertiary)] mb-1">Habit description</dt>
-                <dd className="text-[var(--color-text-primary)] bg-[var(--color-surface-hover)] rounded-lg px-3 py-2 text-xs">
-                  {challenge.habitSlot}
-                </dd>
+                <dt className="std-mono text-[10px] text-[var(--ink-3)] mb-1">Habit description</dt>
+                <dd className="std-mono text-[10px] text-[var(--ink)] bg-[var(--surface-2)] rounded-[var(--r-btn)] px-3 py-2 leading-relaxed">{challenge.habitSlot}</dd>
               </div>
             )}
             {challenge.habitId && (
-              <div className="flex justify-between">
-                <dt className="text-[var(--color-text-tertiary)]">Linked habit</dt>
-                <dd className="font-medium text-[var(--color-text-primary)]">
-                  {challenge.habitId?.icon} {challenge.habitId?.name || "Group habit"}
-                </dd>
+              <div className="flex justify-between items-baseline">
+                <dt className="std-mono text-[10px] text-[var(--ink-3)]">Linked habit</dt>
+                <dd className="std-mono text-[11px] text-[var(--ink)]">{challenge.habitId?.icon} {challenge.habitId?.name || "Group habit"}</dd>
               </div>
             )}
           </dl>
           {challenge.reward && (
-            <div className="mt-3 pt-3 border-t border-[var(--color-border-primary)]/10">
-              <p className="text-xs text-[var(--color-text-tertiary)] font-spartan">Reward</p>
-              <p className="text-sm font-spartan font-medium text-[var(--color-text-primary)] mt-0.5">{challenge.reward}</p>
+            <div className="mt-3 pt-3 border-t border-[var(--line)]">
+              <p className="std-kicker text-[10px] text-[var(--ink-3)] mb-0.5">Reward</p>
+              <p className="text-sm text-[var(--ink)]">{challenge.reward}</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* ── Team progress (team_goal only) ── */}
       {challenge.type === "team_goal" && (
-        <div className="p-4 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20">
-          <h3 className="text-xs font-spartan font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-3">
-            Team Progress
-          </h3>
-          <div className="flex items-center justify-between text-sm font-spartan mb-2">
-            <span className="text-[var(--color-text-primary)] font-medium">{teamTotal()} / {challenge.rules?.targetValue} {challenge.rules?.targetUnit}</span>
-            <span className="text-[var(--color-text-tertiary)]">{teamPercent()}%</span>
+        <div className="std-card p-5">
+          <p className="std-kicker text-[var(--ink-3)] mb-3">Team Progress</p>
+          <div className="flex items-center justify-between std-mono text-[11px] mb-2">
+            <span className="text-[var(--ink)]">{teamTotal()} / {challenge.rules?.targetValue} {challenge.rules?.targetUnit}</span>
+            <span className="text-[var(--ink-3)]">{teamPercent()}%</span>
           </div>
-          <div className="h-3 bg-[var(--color-surface-hover)] rounded-full overflow-hidden">
-            <div
-              className="h-full bg-[var(--color-brand-600)] rounded-full transition-all duration-500"
-              style={{ width: `${teamPercent()}%` }}
-            />
+          <div className="h-1.5 bg-[var(--line)] rounded-full overflow-hidden">
+            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${teamPercent()}%`, background: 'var(--signal)' }} />
           </div>
         </div>
       )}
 
-      {/* ── Milestones ── */}
       {challenge.milestones?.length > 0 && (
-        <div className="p-4 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20">
-          <h3 className="text-xs font-spartan font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-3">
-            Milestones
-          </h3>
+        <div className="std-card p-5">
+          <p className="std-kicker text-[var(--ink-3)] mb-3">Milestones</p>
           <div className="space-y-2">
             {challenge.milestones.map((m, i) => {
               const reached = m.reachedBy?.length > 0;
               return (
-                <div key={i} className="flex items-center gap-3">
-                  <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs ${reached ? "bg-green-500/20 text-green-600" : "bg-[var(--color-surface-hover)] text-[var(--color-text-tertiary)]"}`}>
-                    {reached ? <CheckCircledIcon className="w-3.5 h-3.5" /> : i + 1}
+                <div key={i} className="flex items-center gap-3 py-1 border-b border-[var(--line)] last:border-0">
+                  <span
+                    className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center std-mono text-[10px]"
+                    style={{ background: reached ? 'color-mix(in srgb, var(--signal) 15%, transparent)' : 'var(--surface-2)', color: reached ? 'var(--signal)' : 'var(--ink-3)' }}
+                  >
+                    {reached ? <CheckCircledIcon className="w-3 h-3" /> : i + 1}
                   </span>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-spartan ${reached ? "text-[var(--color-text-primary)] font-medium" : "text-[var(--color-text-secondary)]"}`}>
-                      {m.label}
-                    </p>
-                  </div>
-                  <span className="text-xs font-spartan text-[var(--color-text-tertiary)]">
-                    {m.value} {challenge.rules?.targetUnit}
-                  </span>
+                  <p className={`flex-1 text-sm truncate ${reached ? 'text-[var(--ink)]' : 'text-[var(--ink-2)]'}`}>{m.label}</p>
+                  <span className="std-mono text-[10px] text-[var(--ink-3)]">{m.value} {challenge.rules?.targetUnit}</span>
                   {reached && (
-                    <span className="text-[10px] font-spartan text-green-600">
-                      {m.reachedBy.length} reached
-                    </span>
+                    <span className="std-mono text-[10px]" style={{ color: 'var(--signal)' }}>{m.reachedBy.length} reached</span>
                   )}
                 </div>
               );
@@ -385,14 +341,13 @@ const ChallengeDetailPage = () => {
         </div>
       )}
 
-      {/* ── Leaderboard ── */}
       {leaderboard.length > 0 && (
-        <div className="p-4 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20">
-          <h3 className="text-xs font-spartan font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-4">
-            Leaderboard
-          </h3>
-          <div className="space-y-2">
-            {leaderboard.map((entry) => {
+        <div className="std-card overflow-hidden">
+          <div className="px-5 py-4 border-b border-[var(--line)]">
+            <p className="std-kicker text-[var(--ink-3)]">Leaderboard</p>
+          </div>
+          <div>
+            {leaderboard.map((entry, idx) => {
               const name = entry.userId?.name || "Member";
               const avatar = entry.userId?.avatar;
               const val = (() => {
@@ -407,55 +362,45 @@ const ChallengeDetailPage = () => {
               return (
                 <div
                   key={entry.userId?._id || entry.userId}
-                  className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isMe ? "bg-[var(--color-brand-600)]/5 border border-[var(--color-brand-600)]/20" : "hover:bg-[var(--color-surface-hover)]"}`}
+                  className={`flex items-center gap-3 px-5 py-3 border-b border-[var(--line)] last:border-0 transition-colors ${
+                    isMe ? 'bg-[color-mix(in_srgb,var(--signal)_5%,transparent)]' : 'hover:bg-[var(--surface-2)]'
+                  }`}
+                  style={isMe ? { outline: '1px solid var(--signal)', outlineOffset: '-1px' } : {}}
                 >
-                  {/* rank */}
-                  <span className="w-6 text-center text-sm font-spartan font-bold text-[var(--color-text-tertiary)]">
-                    {entry.rank === 1 ? <Medal size={18} weight="fill" className="text-amber-400" /> :
-                     entry.rank === 2 ? <Medal size={18} weight="fill" className="text-slate-400" /> :
-                     entry.rank === 3 ? <Medal size={18} weight="fill" className="text-amber-700" /> :
+                  <span className="w-5 text-center std-mono text-[11px] text-[var(--ink-3)] flex-shrink-0">
+                    {entry.rank === 1 ? <Medal size={15} weight="fill" style={{ color: '#f59e0b' }} /> :
+                     entry.rank === 2 ? <Medal size={15} weight="fill" style={{ color: '#94a3b8' }} /> :
+                     entry.rank === 3 ? <Medal size={15} weight="fill" style={{ color: '#b45309' }} /> :
                      entry.rank}
                   </span>
 
-                  {/* avatar */}
                   {avatar ? (
-                    <img src={avatar} alt={name} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                    <img src={avatar} alt={name} className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-[var(--color-surface-hover)] flex items-center justify-center flex-shrink-0">
-                      <PersonIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
+                    <div className="w-7 h-7 rounded-full bg-[var(--surface-2)] flex items-center justify-center flex-shrink-0">
+                      <PersonIcon className="w-3.5 h-3.5 text-[var(--ink-3)]" />
                     </div>
                   )}
 
-                  {/* name + progress */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className={`text-sm font-spartan truncate ${isMe ? "font-bold text-[var(--color-text-primary)]" : "font-medium text-[var(--color-text-primary)]"}`}>
+                    <div className="flex items-center gap-1.5">
+                      <p className={`text-sm truncate ${isMe ? 'text-[var(--ink)] font-semibold' : 'text-[var(--ink)]'}`}>
                         {name}{isMe && " (you)"}
                       </p>
-                      {isCompleted && (
-                        <CheckCircledIcon className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
-                      )}
+                      {isCompleted && <CheckCircledIcon className="w-3 h-3 flex-shrink-0" style={{ color: 'var(--signal)' }} />}
                     </div>
                     <div className="flex items-center gap-2 mt-1">
-                      <div className="flex-1 h-1.5 bg-[var(--color-surface-hover)] rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-500 ${isCompleted ? "bg-green-500" : "bg-[var(--color-brand-600)]"}`}
-                          style={{ width: `${pct}%` }}
-                        />
+                      <div className="flex-1 h-px bg-[var(--line)] overflow-hidden">
+                        <div className="h-full transition-all duration-500" style={{ width: `${pct}%`, background: isCompleted ? 'var(--signal)' : 'var(--signal)' }} />
                       </div>
-                      <span className="text-[10px] font-spartan text-[var(--color-text-tertiary)] w-8 text-right">{pct}%</span>
+                      <span className="std-mono text-[10px] text-[var(--ink-3)] w-7 text-right">{pct}%</span>
                     </div>
                   </div>
 
-                  {/* value */}
                   <div className="text-right flex-shrink-0">
-                    <p className="text-sm font-spartan font-bold text-[var(--color-text-primary)]">
-                      {val}
-                    </p>
-                    <p className="text-[10px] font-spartan text-[var(--color-text-tertiary)]">
-                      {challenge.type === "streak" && "day streak"}
-                      {challenge.type === "consistency" && "%"}
-                      {challenge.type !== "streak" && challenge.type !== "consistency" && (challenge.rules?.targetUnit || "")}
+                    <p className="std-num text-sm text-[var(--ink)]">{val}</p>
+                    <p className="std-mono text-[10px] text-[var(--ink-3)]">
+                      {challenge.type === "streak" ? "d streak" : challenge.type === "consistency" ? "%" : (challenge.rules?.targetUnit || "")}
                     </p>
                   </div>
                 </div>
@@ -465,40 +410,35 @@ const ChallengeDetailPage = () => {
         </div>
       )}
 
-      {/* ── Empty state when no leaderboard ── */}
       {leaderboard.length === 0 && challenge.settings?.showLeaderboard && (
-        <div className="p-6 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 text-center">
-          <div className="flex justify-center mb-2">
-            <ChartBar size={36} weight="duotone" className="text-[var(--color-text-tertiary)]" />
-          </div>
-          <p className="text-sm text-[var(--color-text-secondary)] font-spartan">
-            No leaderboard data yet. Join the challenge to see rankings!
-          </p>
+        <div className="std-card p-8 text-center">
+          <ChartBar size={32} weight="duotone" className="mx-auto mb-3 text-[var(--ink-3)]" />
+          <p className="std-mono text-[11px] text-[var(--ink-3)]">No leaderboard data yet. Join the challenge to see rankings.</p>
         </div>
       )}
 
       {/* ── Stats footer ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-[var(--line)] rounded-[var(--r-card)] overflow-hidden">
         {[
           { label: "Participants", value: challenge.stats?.participantCount || 0 },
-          { label: "Completed", value: challenge.stats?.completedCount || 0 },
+          { label: "Completed",    value: challenge.stats?.completedCount || 0 },
           { label: "Avg Progress", value: challenge.stats?.averageProgress || 0 },
-          { label: "Top Streak", value: challenge.stats?.topStreak || 0 },
+          { label: "Top Streak",   value: challenge.stats?.topStreak || 0 },
         ].map((s) => (
-          <div key={s.label} className="p-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 text-center">
-            <p className="text-lg font-garamond font-bold text-[var(--color-text-primary)]">{s.value}</p>
-            <p className="text-[10px] font-spartan text-[var(--color-text-tertiary)] uppercase tracking-wider">{s.label}</p>
+          <div key={s.label} className="bg-[var(--surface)] px-4 py-4 text-center">
+            <p className="std-num text-xl text-[var(--ink)]">{s.value}</p>
+            <p className="std-kicker text-[10px] text-[var(--ink-3)] mt-0.5">{s.label}</p>
           </div>
         ))}
       </div>
 
-      {/* ── Join Modal ── */}
       <ChallengeJoinModal
         isOpen={joinModalOpen}
         challenge={challenge}
         onClose={() => setJoinModalOpen(false)}
         onSuccess={handleJoinSuccess}
       />
+    </div>
     </div>
     </SkeletonTransition>
   );

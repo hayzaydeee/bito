@@ -127,17 +127,21 @@ const MemberDashboardView = () => {
   /* ── skeleton ────────────────────────── */
 
   const memberSkeleton = (
-    <div className="min-h-screen page-container px-4 sm:px-6 py-10">
-      <div className="max-w-3xl mx-auto space-y-4">
-        <div className="h-8 w-56 rounded-lg bg-[var(--color-surface-elevated)] animate-pulse" />
-        <div className="h-5 w-72 rounded bg-[var(--color-surface-elevated)] animate-pulse" />
-        <div className="mt-8 space-y-3">
-          {[...Array(5)].map((_, i) => (
-            <div
-              key={i}
-              className="h-16 rounded-xl bg-[var(--color-surface-elevated)] animate-pulse"
-            />
-          ))}
+    <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
+      <div className="max-w-3xl mx-auto space-y-4 animate-pulse">
+        <div className="flex items-center gap-4 mb-8">
+          <div className="w-10 h-10 rounded-[var(--r-card)] bg-[var(--surface-2)]" />
+          <div className="w-11 h-11 rounded-full bg-[var(--surface-2)]" />
+          <div className="flex-1 space-y-1.5">
+            <div className="h-6 w-40 rounded bg-[var(--surface-2)]" />
+            <div className="h-3 w-24 rounded bg-[var(--surface-2)]" />
+          </div>
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          {[...Array(4)].map((_, i) => <div key={i} className="h-16 std-card bg-[var(--surface-2)]" />)}
+        </div>
+        <div className="space-y-2 mt-4">
+          {[...Array(5)].map((_, i) => <div key={i} className="h-14 std-card bg-[var(--surface-2)]" />)}
         </div>
       </div>
     </div>
@@ -147,28 +151,14 @@ const MemberDashboardView = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen page-container px-4 sm:px-6 py-10">
+      <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
         <div className="max-w-3xl mx-auto text-center py-20">
-          <p className="text-4xl mb-4"><Warning size={40} weight="duotone" className="text-yellow-400 mx-auto" /></p>
-          <h2 className="text-xl font-garamond font-bold text-[var(--color-text-primary)] mb-2">
-            Something went wrong
-          </h2>
-          <p className="text-sm text-[var(--color-text-secondary)] font-spartan mb-6">
-            {error}
-          </p>
+          <Warning size={40} weight="duotone" className="mx-auto mb-4" style={{ color: 'var(--ember, #f59e0b)' }} />
+          <p className="std-display text-xl text-[var(--ink)] mb-2">Something went wrong</p>
+          <p className="std-mono text-[11px] text-[var(--ink-3)] mb-6">{error}</p>
           <div className="flex items-center justify-center gap-3">
-            <button
-              onClick={fetchData}
-              className="h-9 px-5 bg-[var(--color-brand-600)] text-white rounded-xl text-sm font-spartan font-medium"
-            >
-              Try Again
-            </button>
-            <button
-              onClick={() => navigate(`/app/groups/${groupId}`)}
-              className="h-9 px-5 border border-[var(--color-border-primary)]/30 rounded-xl text-sm font-spartan text-[var(--color-text-secondary)]"
-            >
-              Back to Group
-            </button>
+            <button onClick={fetchData} className="std-btn std-btn--signal">Try Again</button>
+            <button onClick={() => navigate(`/app/groups/${groupId}`)} className="std-btn">Back to Group</button>
           </div>
         </div>
       </div>
@@ -180,115 +170,92 @@ const MemberDashboardView = () => {
   return (
     <SkeletonTransition isLoading={loading} skeleton={memberSkeleton}>
     {member ? (
-    <div className="min-h-screen page-container px-4 sm:px-6 py-10">
+    <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
       <div className="max-w-3xl mx-auto">
         {/* header */}
         <div className="flex items-center gap-4 mb-8">
           <button
             onClick={() => navigate(`/app/groups/${groupId}`)}
-            className="w-10 h-10 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 flex items-center justify-center hover:bg-[var(--color-surface-hover)] transition-colors"
+            className="std-btn std-btn--sm w-10 h-10 flex items-center justify-center p-0 flex-shrink-0"
           >
-            <ArrowLeftIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
+            <ArrowLeftIcon className="w-3.5 h-3.5" />
           </button>
 
-          <div className="w-11 h-11 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center text-white text-base font-spartan font-bold flex-shrink-0">
+          <div className="w-11 h-11 rounded-full bg-[var(--signal)] flex items-center justify-center text-white std-mono text-sm font-bold flex-shrink-0">
             {memberName.charAt(0)?.toUpperCase() || "?"}
           </div>
 
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold font-garamond text-[var(--color-text-primary)] truncate">
-              {memberName}
-            </h1>
-            <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)] font-spartan">
+            <h1 className="std-display text-2xl text-[var(--ink)] truncate">{memberName}</h1>
+            <div className="flex items-center gap-1.5 std-mono text-[10px] text-[var(--ink-3)]">
               <EyeOpenIcon className="w-3 h-3" />
               Read-only view
             </div>
           </div>
         </div>
 
-        {/* summary row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+        {/* summary strip */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-[var(--line)] rounded-[var(--r-card)] overflow-hidden mb-8">
           <StatCard label="Habits" value={habits.length} />
           <StatCard label="Today" value={`${todayTotal}/${habits.length}`} />
-          <StatCard
-            label="Personal"
-            value={habits.filter((h) => !h.isGroupHabit).length}
-          />
-          <StatCard
-            label="Group"
-            value={habits.filter((h) => h.isGroupHabit).length}
-          />
+          <StatCard label="Personal" value={habits.filter((h) => !h.isGroupHabit).length} />
+          <StatCard label="Group"    value={habits.filter((h) => h.isGroupHabit).length} />
         </div>
 
         {/* empty state */}
         {habits.length === 0 && (
-          <div className="text-center py-20">
-            <p className="text-4xl mb-4"><ClipboardText size={40} weight="duotone" className="text-[var(--color-text-tertiary)] mx-auto" /></p>
-            <h3 className="text-lg font-garamond font-bold text-[var(--color-text-primary)] mb-1">
-              No habits yet
-            </h3>
-            <p className="text-sm text-[var(--color-text-secondary)] font-spartan">
+          <div className="std-card p-10 text-center">
+            <ClipboardText size={36} weight="duotone" className="mx-auto mb-3" style={{ color: 'var(--ink-3)' }} />
+            <p className="std-display text-base text-[var(--ink)] mb-1">No habits yet</p>
+            <p className="std-mono text-[11px] text-[var(--ink-3)]">
               {memberName} hasn't created any habits to track yet.
             </p>
           </div>
         )}
 
-        {/* habit list with 7-day dots */}
+        {/* habit list */}
         {habits.length > 0 && (
           <section>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-spartan font-semibold uppercase tracking-wider text-[var(--color-text-secondary)]">
-                Habits — Last 7 Days
-              </h2>
-            </div>
-
-            <ul className="space-y-2">
-              {habitStats.map((h) => (
-                <li
+            <p className="std-kicker text-[var(--ink-3)] mb-3">Habits — Last 7 Days</p>
+            <div className="std-card overflow-hidden">
+              {habitStats.map((h, idx) => (
+                <div
                   key={h._id}
-                  className="flex items-center gap-4 px-4 py-3 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20"
+                  className={`flex items-center gap-4 px-5 py-3 ${idx < habitStats.length - 1 ? 'border-b border-[var(--line)]' : ''}`}
                 >
-                  <span className="text-lg flex-shrink-0">
-                    <HabitIcon icon={h.icon || "Target"} size={16} />
+                  <span className="flex-shrink-0 text-[var(--ink-3)]">
+                    <HabitIcon icon={h.icon || "Target"} size={15} />
                   </span>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-spartan font-semibold text-[var(--color-text-primary)] truncate">
-                        {h.name}
-                      </p>
+                      <p className="text-sm text-[var(--ink)] truncate">{h.name}</p>
                       {h.isGroupHabit && (
-                        <span className="text-[10px] font-spartan px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600">
+                        <span className="std-mono text-[10px] px-1.5 py-0.5 border border-[var(--line)] rounded-[var(--r-pill)] text-[var(--ink-3)]">
                           group
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-[var(--color-text-tertiary)] font-spartan">
-                      {h.weekDone}/7 this week
-                    </p>
+                    <p className="std-mono text-[10px] text-[var(--ink-3)]">{h.weekDone}/7 this week</p>
                   </div>
 
-                  {/* 7-day completion dots */}
+                  {/* 7-day dots */}
                   <div className="flex gap-1 flex-shrink-0">
                     {last7.map((day) => {
-                      const he = entries[h._id] || {};
-                      const done = !!he[day]?.completed;
+                      const done = !!(entries[h._id] || {})[day]?.completed;
                       return (
                         <div
                           key={day}
-                          className={`w-3 h-3 rounded-full ${
-                            done
-                              ? "bg-green-500"
-                              : "bg-[var(--color-surface-hover)] border border-[var(--color-border-primary)]/30"
-                          }`}
+                          className="w-2.5 h-2.5 rounded-full transition-colors"
+                          style={{ background: done ? 'var(--signal)' : 'var(--line)' }}
                           title={`${day}: ${done ? "Done" : "Missed"}`}
                         />
                       );
                     })}
                   </div>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           </section>
         )}
       </div>
@@ -302,13 +269,9 @@ const MemberDashboardView = () => {
 
 function StatCard({ label, value }) {
   return (
-    <div className="flex-1 px-4 py-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 text-center">
-      <p className="text-lg font-garamond font-bold text-[var(--color-text-primary)]">
-        {value}
-      </p>
-      <p className="text-[11px] text-[var(--color-text-tertiary)] font-spartan uppercase tracking-wide">
-        {label}
-      </p>
+    <div className="bg-[var(--surface)] px-4 py-4 text-center">
+      <p className="std-num text-xl text-[var(--ink)]">{value}</p>
+      <p className="std-kicker text-[10px] text-[var(--ink-3)] mt-0.5">{label}</p>
     </div>
   );
 }
