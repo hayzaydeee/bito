@@ -1,12 +1,12 @@
 import { useState, useMemo, useCallback } from "react";
-import { PlusIcon, MagnifyingGlassIcon, RowsIcon, GridIcon } from "@radix-ui/react-icons";
+import { PlusIcon, MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import { useHabits } from "../contexts/HabitContext";
 import { useAuth } from "../contexts/AuthContext";
 import HabitCard from "../components/habits/HabitCard";
-import HabitLedgerRow from "../components/habits/HabitLedgerRow";
 import HabitCardExpanded from "../components/habits/HabitCardExpanded";
 import HabitsEmptyState from "../components/habits/HabitsEmptyState";
 import HabitsSkeleton from "../components/habits/HabitsSkeleton";
+import FeatureHeader from "../components/shared/standard/FeatureHeader";
 import HabitModal from "../components/ui/HabitModal";
 import SkeletonTransition from "../components/ui/SkeletonTransition";
 import AnimatedList from "../components/ui/AnimatedList";
@@ -31,7 +31,6 @@ const HabitsPage = () => {
   // UI state
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("active");
-  const [viewMode, setViewMode] = useState("gallery"); // gallery | ledger
   const [selectedHabit, setSelectedHabit] = useState(null);
   const [showCreateWizard, setShowCreateWizard] = useState(false);
   const [editingHabit, setEditingHabit] = useState(null);
@@ -139,98 +138,69 @@ const HabitsPage = () => {
 
   return (
     <SkeletonTransition isLoading={isLoading} skeleton={<HabitsSkeleton />}>
-    <div className="std min-h-screen page-container px-4 sm:px-6 py-8">
-      <div className="max-w-4xl mx-auto space-y-7">
-        {/* Masthead */}
+    <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
+      <div className="max-w-6xl mx-auto">
+        {/* Header — shared Feature-Home masthead (twin of Compass / Groups home) */}
         <div data-tour="habits-header">
-          <p className="std-kicker">The Roster</p>
-          <div className="flex items-end justify-between gap-4 flex-wrap mt-1">
-            <h1 className="std-display text-3xl font-bold text-[var(--ink)]">Habits</h1>
-            {hasAnyHabits && (
-              <div className="flex items-stretch divide-x divide-[var(--line)] text-center">
-                <div className="px-4 first:pl-0">
-                  <p className="std-num text-xl font-bold text-[var(--ink)] leading-none tabular-nums">{activeCount}</p>
-                  <p className="std-kicker mt-1">Active</p>
-                </div>
-                <div className="px-4">
-                  <p className="std-num text-xl font-bold text-[var(--ink)] leading-none tabular-nums">{totalCount}</p>
-                  <p className="std-kicker mt-1">Total</p>
-                </div>
-                <div className="px-4">
-                  <p className="std-num text-xl font-bold text-[var(--signal)] leading-none tabular-nums">{avgCompletion}%</p>
-                  <p className="std-kicker mt-1">Avg rate</p>
-                </div>
-              </div>
-            )}
+          <FeatureHeader
+            kicker=""
+            title="Habits"
+            stats={
+              hasAnyHabits ? (
+                <>
+                  <span className="text-[var(--signal)]">{String(activeCount).padStart(2, "0")}</span> ACTIVE
+                  {"  ·  "}
+                  <span className="text-[var(--ink-2)]">{totalCount}</span> TOTAL
+                  {"  ·  "}
+                  <span className="text-[var(--ink-2)]">{avgCompletion}%</span> AVG RATE
+                </>
+              ) : (
+                "THE DAILY DISCIPLINES YOU'RE TRACKING"
+              )
+            }
+            actions={
+              <button
+                onClick={() => setShowCreateWizard(true)}
+                data-tour="habits-add"
+                className="std-btn std-btn--signal w-full sm:w-auto"
+              >
+                <PlusIcon className="w-4 h-4" />
+                New habit
+              </button>
+            }
+          />
+        </div>
+
+        {/* Slim filter row — search + status */}
+        {hasAnyHabits && (
+          <div className="flex items-center gap-2 flex-wrap mb-6 -mt-2" data-tour="habits-filters">
+            <div className="flex-1 min-w-[180px] relative">
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--ink-3)]" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search…"
+                className="w-full h-10 pl-9 pr-4 rounded-[var(--r-btn)] bg-[var(--surface-2)] border border-[var(--line)] text-sm text-[var(--ink)] placeholder:text-[var(--ink-3)] outline-none focus:border-[var(--signal)] transition-colors"
+              />
+            </div>
+            <div className="flex rounded-[var(--r-pill)] border border-[var(--line)] overflow-hidden flex-shrink-0">
+              {["active", "archived", "all"].map((key) => (
+                <button
+                  key={key}
+                  onClick={() => setStatusFilter(key)}
+                  className="px-3 py-2 std-mono text-[10px] uppercase tracking-wider transition-colors"
+                  style={
+                    statusFilter === key
+                      ? { background: "var(--signal)", color: "var(--signal-ink)" }
+                      : { color: "var(--ink-3)" }
+                  }
+                >
+                  {key}
+                </button>
+              ))}
+            </div>
           </div>
-          <hr className="std-rule mt-3" />
-        </div>
-
-        {/* Control bar: search · status · view · add */}
-        <div className="flex items-center gap-2 flex-wrap" data-tour="habits-filters">
-          {hasAnyHabits && (
-            <>
-              <div className="flex-1 min-w-[180px] relative">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--ink-3)]" />
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search the roster…"
-                  className="w-full h-10 pl-9 pr-4 rounded-[var(--r-btn)] bg-[var(--surface-2)] border border-[var(--line)] text-sm text-[var(--ink)] placeholder:text-[var(--ink-3)] outline-none focus:border-[var(--signal)] transition-colors"
-                />
-              </div>
-
-              {/* Status filter */}
-              <div className="flex rounded-[var(--r-pill)] border border-[var(--line)] overflow-hidden flex-shrink-0">
-                {["active", "archived", "all"].map((key) => (
-                  <button
-                    key={key}
-                    onClick={() => setStatusFilter(key)}
-                    className="px-3 py-2 std-mono text-[10px] uppercase tracking-wider transition-colors"
-                    style={
-                      statusFilter === key
-                        ? { background: "var(--signal)", color: "var(--signal-ink)" }
-                        : { color: "var(--ink-3)" }
-                    }
-                  >
-                    {key}
-                  </button>
-                ))}
-              </div>
-
-              {/* View toggle */}
-              <div className="flex rounded-[var(--r-pill)] border border-[var(--line)] overflow-hidden flex-shrink-0">
-                {[
-                  { key: "gallery", Icon: GridIcon, label: "Gallery" },
-                  { key: "ledger", Icon: RowsIcon, label: "Ledger" },
-                ].map(({ key, Icon, label }) => (
-                  <button
-                    key={key}
-                    onClick={() => setViewMode(key)}
-                    title={label}
-                    className="px-2.5 py-2 flex items-center justify-center transition-colors"
-                    style={
-                      viewMode === key
-                        ? { background: "var(--signal)", color: "var(--signal-ink)" }
-                        : { color: "var(--ink-3)" }
-                    }
-                  >
-                    <Icon className="w-3.5 h-3.5" />
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-
-          <button
-            onClick={() => setShowCreateWizard(true)}
-            data-tour="habits-add"
-            className="std-btn std-btn--signal std-btn--sm flex items-center gap-1.5 flex-shrink-0"
-          >
-            <PlusIcon className="w-3.5 h-3.5" />
-            New
-          </button>
-        </div>
+        )}
 
         {/* Collection */}
         {filteredHabits.length === 0 ? (
@@ -238,26 +208,6 @@ const HabitsPage = () => {
             isFiltered={!!isFiltered && hasAnyHabits}
             onCreateHabit={() => setShowCreateWizard(true)}
           />
-        ) : viewMode === "ledger" ? (
-          <div className="std-card p-0 overflow-hidden" data-tour="habits-grid">
-            {/* Column header */}
-            <div className="flex items-center gap-3 px-3 py-2 border-b border-[var(--line)] bg-[var(--surface-2)]">
-              <span className="std-kicker w-9 flex-shrink-0">№</span>
-              <span className="std-kicker flex-1 min-w-0">Habit</span>
-              <span className="std-kicker w-16 text-right hidden sm:block flex-shrink-0">Freq</span>
-              <span className="std-kicker w-14 text-right hidden sm:block flex-shrink-0">Streak</span>
-              <span className="std-kicker w-24 text-right flex-shrink-0">Rate</span>
-              <span className="w-2 flex-shrink-0" />
-            </div>
-            {filteredHabits.map((habit, i) => (
-              <HabitLedgerRow
-                key={habit._id}
-                habit={habit}
-                number={i + 1}
-                onSelect={handleHabitClick}
-              />
-            ))}
-          </div>
         ) : (
           <AnimatedList
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"

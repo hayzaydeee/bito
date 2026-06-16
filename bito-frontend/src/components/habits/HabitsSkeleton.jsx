@@ -4,23 +4,21 @@ import React, { memo } from "react";
  * HabitsSkeleton — DRILL loading placeholder ("The Roster").
  */
 const HabitsSkeleton = memo(() => (
-  <div className="std min-h-screen page-container px-4 sm:px-6 py-8">
-    <div className="max-w-4xl mx-auto space-y-8 animate-pulse">
+  <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
+    <div className="max-w-6xl mx-auto animate-pulse">
       {/* Masthead */}
-      <div>
-        <div className="h-3 w-24 rounded bg-[var(--surface-2)]" />
-        <div className="flex items-end justify-between gap-4 mt-2">
-          <div className="h-9 w-40 rounded-lg bg-[var(--surface-2)]" />
-          <div className="h-10 w-48 rounded-lg bg-[var(--surface-2)]" />
+      <div className="mb-10 pb-7 sm:pb-8 border-b border-[var(--line-2)] flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-4">
+          <div className="h-12 w-56 rounded-lg bg-[var(--surface-2)]" />
+          <div className="h-3 w-72 rounded bg-[var(--surface-2)]" />
         </div>
-        <hr className="std-rule mt-3" />
+        <div className="h-10 w-36 rounded-[var(--r-btn)] bg-[var(--surface-2)]" />
       </div>
 
-      {/* Control bar */}
-      <div className="flex items-center gap-2 flex-wrap">
+      {/* Filter row */}
+      <div className="flex items-center gap-2 flex-wrap mb-6">
         <div className="flex-1 min-w-[180px] h-10 rounded-[var(--r-btn)] bg-[var(--surface-2)]" />
         <div className="h-10 w-40 rounded-[var(--r-btn)] bg-[var(--surface-2)]" />
-        <div className="h-10 w-28 rounded-[var(--r-btn)] bg-[var(--surface-2)]" />
       </div>
 
       {/* Card grid */}
