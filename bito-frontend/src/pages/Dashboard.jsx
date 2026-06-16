@@ -25,6 +25,9 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+
+  /* ── Dashboard editorial variant (DRILL) ── */
+  const variant = user?.preferences?.dashboardStyle === "control" ? "control" : "daybook";
   const [isOnboardingHandoffLoading, setIsOnboardingHandoffLoading] = useState(
     Boolean(location.state?.fromOnboarding)
   );
@@ -245,23 +248,24 @@ const Dashboard = () => {
 
   return (
     <SkeletonTransition isLoading={isDashboardLoading} skeleton={dashboardSkeleton}>
-    <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-6">
-      {/* 1. Compact greeting */}
-      <GreetingBar userName={user?.name || user?.username || "User"} firstName={user?.firstName} />
+    <div className="std p-4 sm:p-6 max-w-2xl mx-auto space-y-6">
+      {/* 1. Compact greeting / status masthead */}
+      <GreetingBar userName={user?.name || user?.username || "User"} firstName={user?.firstName} variant={variant} />
 
-      {/* 2. Stat pills (only when habits exist) */}
+      {/* 2. Stat readout (only when habits exist) */}
       {habits.length > 0 && (
         <StatPills
           completed={stats.completed}
           total={stats.total}
           streak={stats.streak}
           weeklyProgress={stats.weeklyProgress}
+          variant={variant}
         />
       )}
 
       {/* 3. Insights nudge */}
       {user?.preferences?.aiDashboard !== false && (
-        <InsightsNudge habits={habits} entries={entries} />
+        <InsightsNudge habits={habits} entries={entries} variant={variant} />
       )}
 
       {/* 4. Today's habit checklist */}
@@ -273,13 +277,14 @@ const Dashboard = () => {
         onEdit={handleEditHabit}
         onAdd={handleAddHabit}
         weeklyHabits={weeklyHabits}
+        variant={variant}
       />
       </div>
 
       {/* 5. 7-day heatmap strip */}
       {habits.length > 0 && (
         <div className="pt-2">
-          <WeekStrip habits={habits} entries={entries} onToggle={handleToggleDate} onEdit={handleEditHabit} fetchHabitEntries={fetchHabitEntries} />
+          <WeekStrip habits={habits} entries={entries} onToggle={handleToggleDate} onEdit={handleEditHabit} fetchHabitEntries={fetchHabitEntries} variant={variant} />
         </div>
       )}
 

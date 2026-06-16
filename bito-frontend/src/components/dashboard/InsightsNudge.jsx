@@ -3,6 +3,12 @@ import { Link } from "react-router-dom";
 import { Leaf, TrendUp } from "@phosphor-icons/react";
 import { useInsights } from "../../globalHooks/useInsights";
 
+/* ─────────────────────────────────────────────
+   InsightsNudge — DRILL editorial insight card
+   · daybook  → "The Margin" serif pull-quote
+   · control  → "Signal" mono telemetry note
+   ───────────────────────────────────────────── */
+
 /* ─── Progress bar for seedling / sprouting tiers ─── */
 const TierProgress = ({ entryCount, thresholds, tier }) => {
   if (!thresholds || tier === "growing") return null;
@@ -17,54 +23,36 @@ const TierProgress = ({ entryCount, thresholds, tier }) => {
       : `${remaining} more ${remaining === 1 ? "entry" : "entries"} until full analytics`;
 
   return (
-    <div className="mt-3 relative z-10">
+    <div className="mt-3">
       <div className="flex items-center justify-between mb-1">
-        <span
-          className="text-[10px] font-spartan font-medium uppercase tracking-wider"
-          style={{ color: "var(--color-text-muted)" }}
-        >
+        <span className="std-mono text-[10px] uppercase tracking-wider text-[var(--ink-3)]">
           {tier === "seedling" ? (
             <span className="inline-flex items-center gap-1">
-              <Leaf size={12} weight="duotone" className="text-green-400" /> Getting started
+              <Leaf size={12} weight="duotone" /> Getting started
             </span>
           ) : (
             <span className="inline-flex items-center gap-1">
-              <TrendUp size={12} weight="duotone" style={{ color: "var(--color-brand-400)" }} /> Building momentum
+              <TrendUp size={12} weight="duotone" style={{ color: "var(--signal)" }} /> Building momentum
             </span>
           )}
         </span>
-        <span
-          className="text-[10px] font-spartan"
-          style={{ color: "var(--color-text-muted)" }}
-        >
+        <span className="std-mono text-[10px] tabular-nums text-[var(--ink-3)]">
           {entryCount}/{target}
         </span>
       </div>
-      <div
-        className="h-1.5 rounded-full overflow-hidden"
-        style={{ background: "rgba(99,102,241,0.1)" }}
-      >
+      <div className="h-1.5 rounded-full overflow-hidden bg-[var(--line-2)]">
         <div
-          className="h-full rounded-full transition-all duration-500"
-          style={{
-            width: `${pct}%`,
-            background:
-              "linear-gradient(90deg, var(--color-brand-400), var(--color-brand-500, #7c3aed))",
-          }}
+          className="h-full rounded-full bg-[var(--signal)] transition-all duration-500"
+          style={{ width: `${pct}%` }}
         />
       </div>
-      <p
-        className="text-[10px] font-spartan mt-1"
-        style={{ color: "var(--color-text-muted)" }}
-      >
-        {label}
-      </p>
+      <p className="std-mono text-[10px] mt-1 text-[var(--ink-3)]">{label}</p>
     </div>
   );
 };
 
-/* ─── AI-powered insight card (Phase 12) ─── */
-const InsightsNudge = memo(({ habits, entries }) => {
+/* ─── AI-powered insight card ─── */
+const InsightsNudge = memo(({ habits, entries, variant = "daybook" }) => {
   const {
     insights,
     summary,
@@ -75,13 +63,13 @@ const InsightsNudge = memo(({ habits, entries }) => {
     entryCount,
     thresholds,
   } = useInsights();
+  const isControl = variant === "control";
 
   /* ── Auto-refresh when entries change (debounced) ── */
   const entriesSnapshotRef = useRef(null);
   const debounceRef = useRef(null);
 
   useEffect(() => {
-    // Build a lightweight snapshot of completion states
     const snapshot = JSON.stringify(
       Object.entries(entries || {}).reduce((acc, [hId, dates]) => {
         const todayKey = new Date().toISOString().split("T")[0];
@@ -91,13 +79,11 @@ const InsightsNudge = memo(({ habits, entries }) => {
       }, {})
     );
 
-    // Skip initial mount (useInsights already fetches once)
     if (entriesSnapshotRef.current === null) {
       entriesSnapshotRef.current = snapshot;
       return;
     }
 
-    // Only refresh if something actually changed
     if (snapshot !== entriesSnapshotRef.current) {
       entriesSnapshotRef.current = snapshot;
       clearTimeout(debounceRef.current);
@@ -153,39 +139,15 @@ const InsightsNudge = memo(({ habits, entries }) => {
     return null;
   }, [habits, entries]);
 
-  /* ── Pick the best text to display ── */
   const displayText = summary || fallbackText;
-
   if (!displayText) return null;
 
   return (
-    <div
-      className="glass-insight relative overflow-hidden rounded-2xl border p-4 transition-all duration-300"
-      style={{
-        background:
-          "linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.06) 50%, rgba(99,102,241,0.04) 100%)",
-        backdropFilter: "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
-        borderColor: "rgba(99,102,241,0.18)",
-        boxShadow:
-          "0 2px 12px rgba(99,102,241,0.08), inset 0 1px 0 rgba(255,255,255,0.06)",
-      }}
-    >
-      {/* Sheen layer */}
-      <div
-        className="glass-sheen pointer-events-none absolute inset-0 rounded-2xl"
-        style={{
-          background:
-            "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.07) 45%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.07) 55%, transparent 60%)",
-          backgroundSize: "200% 100%",
-          backgroundPosition: "200% 0",
-          transition: "background-position 600ms ease",
-        }}
-      />
+    <div className="std-card relative overflow-hidden p-4 border-l-2 border-l-[var(--signal)]">
+      <p className="std-kicker mb-2">{isControl ? "Signal" : "The Margin"}</p>
 
       <p
-        className="text-sm font-spartan leading-relaxed relative z-10"
-        style={{ color: "var(--color-text-secondary)" }}
+        className={`${isControl ? "std-mono text-[12px] leading-relaxed" : "std-display text-[15px] leading-relaxed italic"} text-[var(--ink-2)]`}
       >
         {displayText}
       </p>
@@ -195,37 +157,26 @@ const InsightsNudge = memo(({ habits, entries }) => {
 
       {/* Footer */}
       {!isLoading && insights.length > 0 && (
-        <div className="flex items-center gap-2 mt-2 relative z-10">
+        <div className="flex items-center gap-2 mt-3">
           <button
             onClick={refresh}
-            className="text-xs font-spartan hover:underline transition-colors"
-            style={{ color: "var(--color-text-muted)" }}
+            className="std-mono text-[10px] uppercase tracking-wider text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors"
           >
             Refresh
           </button>
           {llmUsed && (
-            <span
-              className="text-xs font-spartan hover:underline transition-colors"
-              style={{ color: "var(--color-text-muted)" }}
-            >
-              · powered by OpenAI
+            <span className="std-mono text-[10px] uppercase tracking-wider text-[var(--ink-3)]">
+              · via OpenAI
             </span>
           )}
           {tier === "sprouting" && (
-            <span
-              className="text-[10px] font-spartan font-medium px-2 py-0.5 rounded-full"
-              style={{
-                background: "rgba(34,197,94,0.12)",
-                color: "var(--color-success)",
-              }}
-            >
+            <span className="std-mono text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-[var(--r-tag)] border border-[var(--line-2)] text-[var(--ink-3)]">
               Early insights
             </span>
           )}
           <Link
             to="/app/analytics"
-            className="text-xs font-spartan ml-auto hover:underline transition-colors"
-            style={{ color: "var(--color-brand-400)" }}
+            className="std-mono text-[10px] uppercase tracking-wider ml-auto text-[var(--signal)] hover:underline transition-colors"
           >
             Full analysis →
           </Link>

@@ -171,6 +171,11 @@ const userSchema = new mongoose.Schema({  // Basic user information
       enum: ['day', 'list', 'feed'],
       default: 'day'
     },
+    dashboardStyle: {
+      type: String,
+      enum: ['daybook', 'control'],
+      default: 'daybook'
+    },
     scale: {
       type: String,
       enum: ['small', 'medium', 'large'],

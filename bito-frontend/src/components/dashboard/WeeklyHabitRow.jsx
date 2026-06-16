@@ -2,7 +2,7 @@ import React, { memo, useState, useCallback } from "react";
 import { CheckIcon, Pencil1Icon } from "@radix-ui/react-icons";
 import HabitIcon from "../shared/HabitIcon";
 
-/* ─── Segmented progress dots ─── */
+/* ─── Segmented progress dots (DRILL — signal fill) ─── */
 const ProgressDots = memo(({ completed, target }) => {
   const cappedCompleted = Math.min(completed, target);
   return (
@@ -10,22 +10,14 @@ const ProgressDots = memo(({ completed, target }) => {
       {Array.from({ length: target }, (_, i) => (
         <div
           key={i}
-          className="w-2.5 h-2.5 rounded-full transition-all duration-300"
+          className="w-2 h-2 rounded-full transition-all duration-300"
           style={{
-            backgroundColor: i < cappedCompleted
-              ? "var(--color-brand-500)"
-              : "var(--color-surface-hover)",
-            boxShadow: i < cappedCompleted
-              ? "0 0 4px var(--color-glow)"
-              : "none",
+            backgroundColor: i < cappedCompleted ? "var(--signal)" : "var(--line-2)",
           }}
         />
       ))}
       {completed > target && (
-        <span
-          className="text-[10px] font-spartan font-bold ml-0.5"
-          style={{ color: "var(--color-success, #10b981)" }}
-        >
+        <span className="std-mono text-[10px] font-bold ml-0.5 text-[var(--signal)]">
           +{completed - target}
         </span>
       )}
@@ -33,7 +25,7 @@ const ProgressDots = memo(({ completed, target }) => {
   );
 });
 
-/* ─── Single weekly habit row ─── */
+/* ─── Single weekly habit row (DRILL hairline row) ─── */
 const WeeklyHabitRow = memo(({ habit, weekProgress, isTodayCompleted, onToggle, onEdit }) => {
   const [animating, setAnimating] = useState(false);
   const [justCompleted, setJustCompleted] = useState(false);
@@ -51,35 +43,22 @@ const WeeklyHabitRow = memo(({ habit, weekProgress, isTodayCompleted, onToggle, 
 
   return (
     <div
-      className="flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-200 group"
-      style={{
-        backgroundColor: met
-          ? "rgba(16,185,129,0.04)"
-          : "var(--color-surface-primary)",
-        borderColor: met
-          ? "rgba(16,185,129,0.2)"
-          : "var(--color-border-primary)",
-      }}
+      className="flex items-center gap-3 px-4 py-3 border-b border-[var(--line)] last:border-b-0 transition-all duration-200 group"
+      style={{ backgroundColor: met ? "var(--signal-2)" : "transparent" }}
     >
       {/* Checkbox (today's check) */}
       <button
         onClick={handleToggle}
-        className="w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200"
+        className="w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200"
         style={{
-          borderColor: isTodayCompleted
-            ? "var(--color-brand-500)"
-            : "var(--color-border-secondary)",
-          backgroundColor: isTodayCompleted
-            ? "var(--color-brand-500)"
-            : "transparent",
+          borderColor: isTodayCompleted ? "var(--signal)" : "var(--line-2)",
+          backgroundColor: isTodayCompleted ? "var(--signal)" : "transparent",
           transform: animating ? "scale(1.2)" : "scale(1)",
         }}
         aria-label={isTodayCompleted ? `Uncheck ${habit.name}` : `Check ${habit.name}`}
       >
         {isTodayCompleted && (
-          <CheckIcon
-            className={`w-3.5 h-3.5 text-white ${justCompleted ? 'check-bounce' : ''}`}
-          />
+          <CheckIcon className={`w-3.5 h-3.5 text-[var(--signal-ink)] ${justCompleted ? "check-bounce" : ""}`} />
         )}
       </button>
 
@@ -89,26 +68,20 @@ const WeeklyHabitRow = memo(({ habit, weekProgress, isTodayCompleted, onToggle, 
       {/* Name + progress */}
       <div className="flex-1 min-w-0">
         <span
-          className="text-sm font-spartan font-medium block truncate"
-          style={{
-            color: met
-              ? "var(--color-text-tertiary)"
-              : "var(--color-text-primary)",
-          }}
+          className="std-display text-[15px] font-semibold block truncate"
+          style={{ color: met ? "var(--ink-3)" : "var(--ink)" }}
         >
           {habit.name}
         </span>
 
-        <div className="flex items-center gap-2 mt-0.5">
+        <div className="flex items-center gap-2 mt-1">
           <ProgressDots completed={completed} target={target} />
           <span
-            className="text-[11px] font-spartan tabular-nums"
-            style={{ color: met ? "var(--color-success, #10b981)" : "var(--color-text-tertiary)" }}
+            className="std-mono text-[10px] tabular-nums uppercase tracking-wide"
+            style={{ color: met ? "var(--signal)" : "var(--ink-3)" }}
           >
             {met
-              ? (completed > target
-                ? `✓ ${completed}/${target} — exceeding target!`
-                : "✓ done this week")
+              ? (completed > target ? `${completed}/${target} · over target` : "done this week")
               : `${completed}/${target} this week`}
           </span>
         </div>
@@ -117,8 +90,7 @@ const WeeklyHabitRow = memo(({ habit, weekProgress, isTodayCompleted, onToggle, 
       {/* Edit icon */}
       <button
         onClick={() => onEdit(habit)}
-        className="opacity-100 transition-opacity p-1 rounded-md"
-        style={{ color: "var(--color-text-secondary)" }}
+        className="opacity-40 group-hover:opacity-100 transition-opacity p-1 rounded-md text-[var(--ink-2)]"
         aria-label={`Edit ${habit.name}`}
       >
         <Pencil1Icon className="w-3.5 h-3.5" />

@@ -114,6 +114,7 @@ const SettingsPage = ({ section }) => {
           aiDashboard: u.preferences?.aiDashboard ?? true,
           aiAnalytics: u.preferences?.aiAnalytics ?? true,
           journalDefaultView: u.preferences?.journalDefaultView ?? "day",
+          dashboardStyle: u.preferences?.dashboardStyle ?? "daybook",
         }));
       } catch {
         console.error("Failed to load profile");
@@ -234,7 +235,7 @@ const SettingsPage = ({ section }) => {
       return;
     }
 
-    const supported = ["emailNotifications", "timezone", "weekStartsOn", "aiDashboard", "aiAnalytics", "journalDefaultView"];
+    const supported = ["emailNotifications", "timezone", "weekStartsOn", "aiDashboard", "aiAnalytics", "journalDefaultView", "dashboardStyle"];
     if (!supported.includes(key)) return;
 
     try {
@@ -253,6 +254,7 @@ const SettingsPage = ({ section }) => {
         aiDashboard: "Dashboard AI insights",
         aiAnalytics: "Analytics AI insights",
         journalDefaultView: "Journal default view",
+        dashboardStyle: "Dashboard style",
       };
       showToast(`${names[key]} updated`);
     } catch {
@@ -1015,6 +1017,20 @@ const SettingsPage = ({ section }) => {
                 { value: 'list', label: 'Entry list' },
               ]}
               onChange={(v) => saveSetting("journalDefaultView", v)}
+              disabled={saving}
+            />
+          </SettingRow>
+          <SettingRow
+            label="Dashboard Style"
+            description="Daybook (serif almanac) or Mission Control (status console)"
+          >
+            <SelectInput
+              value={settings.dashboardStyle}
+              options={[
+                { value: 'daybook', label: 'Daybook' },
+                { value: 'control', label: 'Mission Control' },
+              ]}
+              onChange={(v) => saveSetting("dashboardStyle", v)}
               disabled={saving}
             />
           </SettingRow>
