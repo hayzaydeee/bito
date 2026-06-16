@@ -170,7 +170,7 @@ const JournalPageV2 = () => {
             >
               {[
                 { id: 'day', Icon: FileTextIcon, label: 'Day view' },
-                { id: 'list', Icon: ListBulletIcon, label: 'List view' },
+                { id: 'list', Icon: ListBulletIcon, label: 'Ledger view' },
               ].map(({ id, Icon, label }) => (
                 <button
                   key={id}

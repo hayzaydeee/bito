@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
+import { ArrowRightIcon } from '@radix-ui/react-icons';
 import { journalV2Service } from '../../services/journalV2Service';
 import {
   SmileyAngry, SmileySad, SmileyMeh, Smiley, SmileyWink,
@@ -6,8 +7,12 @@ import {
 } from '@phosphor-icons/react';
 
 /* ═══════════════════════════════════════════════════════════════
-   JournalEntryList — Paginated list of V2 longform entries
+   JournalEntryList — "The Ledger / Index"
+   A logbook table-of-contents: mono № rows (date, mood/energy pips,
+   word count, preview), ledger-line hairlines. DRILL editorial.
    ═══════════════════════════════════════════════════════════════ */
+
+const PAGE_SIZE = 10;
 
 const MOOD_ICONS = [
   { Icon: SmileyAngry, color: '#ef4444', label: 'Awful' },
@@ -25,7 +30,7 @@ const ENERGY_ICONS = [
   { Icon: BatteryFull,   color: '#6366f1', label: 'Peak' },
 ];
 
-const EntryRow = memo(({ entry, onSelect }) => {
+const EntryRow = memo(({ entry, onSelect, number }) => {
   const date = new Date(entry.date);
   const dateStr = date.toISOString().split('T')[0];
 
@@ -52,78 +57,64 @@ const EntryRow = memo(({ entry, onSelect }) => {
           year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
         });
 
+  const mood = entry.mood ? MOOD_ICONS[entry.mood - 1] : null;
+  const energy = entry.energy ? ENERGY_ICONS[entry.energy - 1] : null;
+
   return (
     <button
       onClick={() => onSelect(dateStr)}
-      className="w-full text-left rounded-xl border p-4 transition-all duration-200 hover:bg-[var(--color-surface-hover)] active:scale-[0.99]"
-      style={{
-        backgroundColor: 'var(--color-surface-primary)',
-        borderColor: 'var(--color-border-primary)',
-      }}
+      className="group w-full text-left flex items-baseline gap-4 px-2 py-3.5 border-b border-[var(--line)] hover:bg-[var(--surface-2)] transition-colors"
     >
-      {/* Top row: date + metadata */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <h3
-            className="text-sm font-spartan font-semibold truncate"
-            style={{ color: 'var(--color-text-primary)' }}
-          >
+      {/* Ledger number */}
+      <span className="std-mono text-[11px] tabular-nums text-[var(--ink-3)] w-12 flex-shrink-0 pt-0.5">
+        №{number != null ? String(number).padStart(2, '0') : '—'}
+      </span>
+
+      <div className="flex-1 min-w-0">
+        {/* Dateline + pips + words */}
+        <div className="flex items-baseline gap-2.5">
+          <h3 className="std-display text-[15px] font-bold text-[var(--ink)] flex-shrink-0">
             {formattedDate}
           </h3>
-          {entry.mood && (() => {
-            const m = MOOD_ICONS[entry.mood - 1];
-            return m ? (
-              <span className="flex-shrink-0" title={`Mood: ${m.label}`}>
-                <m.Icon size={14} weight="fill" color={m.color} />
-              </span>
-            ) : null;
-          })()}
-          {entry.energy && (() => {
-            const e = ENERGY_ICONS[entry.energy - 1];
-            return e ? (
-              <span className="flex-shrink-0" title={`Energy: ${e.label}`}>
-                <e.Icon size={14} weight="fill" color={e.color} />
-              </span>
-            ) : null;
-          })()}
+          {mood && (
+            <span className="flex-shrink-0 self-center" title={`Mood: ${mood.label}`}>
+              <mood.Icon size={13} weight="fill" color={mood.color} />
+            </span>
+          )}
+          {energy && (
+            <span className="flex-shrink-0 self-center" title={`Energy: ${energy.label}`}>
+              <energy.Icon size={13} weight="fill" color={energy.color} />
+            </span>
+          )}
+          {entry.wordCount > 0 && (
+            <span className="ml-auto std-mono text-[10.5px] text-[var(--ink-3)] flex-shrink-0 self-center">
+              {entry.wordCount} words
+            </span>
+          )}
+          <ArrowRightIcon className="w-3.5 h-3.5 text-[var(--ink-3)] flex-shrink-0 self-center opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
         </div>
-        {entry.wordCount > 0 && (
-          <span
-            className="text-[10px] font-spartan flex-shrink-0"
-            style={{ color: 'var(--color-text-tertiary)' }}
-          >
-            {entry.wordCount} words
-          </span>
+
+        {/* Preview */}
+        {entry.preview && (
+          <p className="mt-1 text-[13px] text-[var(--ink-2)] leading-relaxed line-clamp-1">
+            {entry.preview}
+          </p>
+        )}
+
+        {/* Tags */}
+        {entry.tags?.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-1.5">
+            {entry.tags.map((t) => (
+              <span
+                key={t}
+                className="std-mono text-[9px] uppercase tracking-wide text-[var(--ink-3)] border border-[var(--line-2)] px-1.5 py-0.5 rounded-[var(--r-tag)]"
+              >
+                {t}
+              </span>
+            ))}
+          </div>
         )}
       </div>
-
-      {/* Preview */}
-      {entry.preview && (
-        <p
-          className="mt-1.5 text-xs font-spartan leading-relaxed line-clamp-2"
-          style={{ color: 'var(--color-text-secondary)' }}
-        >
-          {entry.preview}
-        </p>
-      )}
-
-      {/* Tags */}
-      {entry.tags?.length > 0 && (
-        <div className="flex flex-wrap gap-1 mt-2">
-          {entry.tags.map((t) => (
-            <span
-              key={t}
-              className="text-[10px] font-spartan px-1.5 py-0.5 rounded-full"
-              style={{
-                backgroundColor: 'var(--color-surface-elevated)',
-                color: 'var(--color-text-tertiary)',
-              }}
-            >
-              {t}
-            </span>
-          ))}
-        </div>
-      )}
     </button>
   );
 });
@@ -138,7 +129,7 @@ const JournalEntryList = ({ onSelectDate }) => {
   const loadPage = useCallback(async (p) => {
     setLoading(true);
     try {
-      const data = await journalV2Service.getEntries({ page: p, limit: 10 });
+      const data = await journalV2Service.getEntries({ page: p, limit: PAGE_SIZE });
       setEntries(data.entries || []);
       setPagination(data.pagination);
       setPage(p);
@@ -153,86 +144,75 @@ const JournalEntryList = ({ onSelectDate }) => {
     loadPage(1);
   }, [loadPage]);
 
+  const total = pagination?.total ?? entries.length;
+
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      {/* Header */}
-      <div className="flex-shrink-0 px-1 pt-2 pb-3">
-        <h2
-          className="text-lg font-garamond font-bold"
-          style={{ color: 'var(--color-text-primary)' }}
-        >
-          All Entries
-        </h2>
-        <p
-          className="text-xs font-spartan mt-0.5"
-          style={{ color: 'var(--color-text-tertiary)' }}
-        >
-          {pagination
-            ? `${pagination.total} longform ${pagination.total === 1 ? 'entry' : 'entries'}`
-            : 'Loading...'}
-        </p>
-      </div>
-
-      {/* Entry list */}
-      <div className="flex-1 overflow-y-auto px-1 pb-6 space-y-2">
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-6 h-6 border-2 border-[var(--color-text-tertiary)] border-t-[var(--color-brand-500)] rounded-full animate-spin" />
-          </div>
-        ) : entries.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-2">
-            <p
-              className="text-sm font-spartan"
-              style={{ color: 'var(--color-text-tertiary)' }}
-            >
-              No longform entries yet.
-            </p>
-            <p
-              className="text-xs font-spartan"
-              style={{ color: 'var(--color-text-tertiary)' }}
-            >
-              Start writing today — your entries will appear here.
-            </p>
-          </div>
-        ) : (
-          entries.map((entry) => (
-            <EntryRow key={entry._id} entry={entry} onSelect={onSelectDate} />
-          ))
-        )}
-
-        {/* Pagination */}
-        {pagination && pagination.pages > 1 && (
-          <div className="flex items-center justify-center gap-2 pt-4">
-            <button
-              onClick={() => loadPage(page - 1)}
-              disabled={page <= 1}
-              className="px-3 py-1.5 rounded-lg text-xs font-spartan font-semibold transition-colors disabled:opacity-30"
-              style={{
-                color: 'var(--color-text-secondary)',
-                backgroundColor: 'var(--color-surface-elevated)',
-              }}
-            >
-              Previous
-            </button>
-            <span
-              className="text-xs font-spartan"
-              style={{ color: 'var(--color-text-tertiary)' }}
-            >
-              Page {page} of {pagination.pages}
+      <div className="max-w-3xl mx-auto w-full flex flex-col h-full">
+        {/* Ledger header */}
+        <div className="flex-shrink-0 pt-2 pb-2">
+          <div className="flex items-baseline justify-between gap-2">
+            <h2 className="std-display text-lg font-bold text-[var(--ink)]">
+              All entries
+            </h2>
+            <span className="std-mono text-[10px] uppercase tracking-wider text-[var(--ink-3)]">
+              {pagination
+                ? `${total} ${total === 1 ? 'entry' : 'entries'}`
+                : 'Loading…'}
             </span>
-            <button
-              onClick={() => loadPage(page + 1)}
-              disabled={page >= pagination.pages}
-              className="px-3 py-1.5 rounded-lg text-xs font-spartan font-semibold transition-colors disabled:opacity-30"
-              style={{
-                color: 'var(--color-text-secondary)',
-                backgroundColor: 'var(--color-surface-elevated)',
-              }}
-            >
-              Next
-            </button>
           </div>
-        )}
+          <hr className="std-rule mt-2" />
+        </div>
+
+        {/* Ledger rows */}
+        <div className="flex-1 overflow-y-auto pb-6">
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="w-6 h-6 border-2 border-[var(--line-2)] border-t-[var(--signal)] rounded-full animate-spin" />
+            </div>
+          ) : entries.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-2 text-center">
+              <p className="std-display text-base font-bold text-[var(--ink)]">
+                No entries yet
+              </p>
+              <p className="std-mono text-[10px] uppercase tracking-wider text-[var(--ink-3)]">
+                Start writing today — entries log here
+              </p>
+            </div>
+          ) : (
+            entries.map((entry, idx) => (
+              <EntryRow
+                key={entry._id}
+                entry={entry}
+                onSelect={onSelectDate}
+                number={total - ((page - 1) * PAGE_SIZE + idx)}
+              />
+            ))
+          )}
+
+          {/* Pagination */}
+          {pagination && pagination.pages > 1 && (
+            <div className="flex items-center justify-center gap-3 pt-5">
+              <button
+                onClick={() => loadPage(page - 1)}
+                disabled={page <= 1}
+                className="std-btn std-btn--sm disabled:opacity-30"
+              >
+                Prev
+              </button>
+              <span className="std-mono text-[10px] uppercase tracking-wider text-[var(--ink-3)]">
+                Page {page} / {pagination.pages}
+              </span>
+              <button
+                onClick={() => loadPage(page + 1)}
+                disabled={page >= pagination.pages}
+                className="std-btn std-btn--sm disabled:opacity-30"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
