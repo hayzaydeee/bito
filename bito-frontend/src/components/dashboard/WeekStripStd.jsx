@@ -11,7 +11,9 @@ import { useWeekStartDay } from "../../hooks/useUserPreferences";
 import HabitIcon from "../shared/HabitIcon";
 
 /* ════════════════════════════════════════════
-   Sub-components
+   WeekStrip — DRILL completion heat-rail
+   Day strip for traversing past data (week/month/year).
+   Shared across dashboard variants; signal heat tints.
    ════════════════════════════════════════════ */
 
 /* ─── Inline habit row for the expanded day panel ─── */
@@ -26,41 +28,27 @@ const DayHabitRow = memo(({ habit, isCompleted, onToggle, onEdit, dateStr }) => 
 
   return (
     <div
-      className="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all duration-200"
-      style={{
-        backgroundColor: isCompleted
-          ? "rgba(99,102,241,0.04)"
-          : "var(--color-surface-primary)",
-        borderColor: isCompleted
-          ? "rgba(99,102,241,0.2)"
-          : "var(--color-border-primary)",
-      }}
+      className="flex items-center gap-3 px-3 py-2.5 border-b border-[var(--line)] last:border-b-0 transition-all duration-200 hover:bg-[var(--surface-2)]"
     >
       <button
         onClick={handleToggle}
         className="w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200"
         style={{
-          borderColor: isCompleted
-            ? "var(--color-brand-500)"
-            : "var(--color-border-secondary)",
-          backgroundColor: isCompleted
-            ? "var(--color-brand-500)"
-            : "transparent",
+          borderColor: isCompleted ? "var(--signal)" : "var(--line-2)",
+          backgroundColor: isCompleted ? "var(--signal)" : "transparent",
           transform: animating ? "scale(1.2)" : "scale(1)",
         }}
         aria-label={isCompleted ? `Uncheck ${habit.name}` : `Check ${habit.name}`}
       >
-        {isCompleted && <CheckIcon className="w-3 h-3 text-white" />}
+        {isCompleted && <CheckIcon className="w-3 h-3 text-[var(--signal-ink)]" />}
       </button>
 
       <HabitIcon icon={habit.icon || "Star"} size={16} className="flex-shrink-0" />
 
       <span
-        className="text-sm font-spartan font-medium truncate transition-colors duration-200"
+        className="std-display text-sm font-semibold truncate transition-colors duration-200"
         style={{
-          color: isCompleted
-            ? "var(--color-text-tertiary)"
-            : "var(--color-text-primary)",
+          color: isCompleted ? "var(--ink-3)" : "var(--ink)",
           textDecoration: isCompleted ? "line-through" : "none",
         }}
       >
@@ -70,8 +58,7 @@ const DayHabitRow = memo(({ habit, isCompleted, onToggle, onEdit, dateStr }) => 
       {onEdit && (
         <button
           onClick={() => onEdit(habit)}
-          className="p-1 rounded-md ml-auto flex-shrink-0 transition-opacity"
-          style={{ color: "var(--color-text-secondary)" }}
+          className="p-1 rounded-md ml-auto flex-shrink-0 transition-opacity text-[var(--ink-2)]"
           aria-label={`Edit ${habit.name}`}
         >
           <Pencil1Icon className="w-3.5 h-3.5" />
@@ -90,16 +77,16 @@ const ViewPills = memo(({ value, onChange }) => {
     { value: "year", label: "Y" },
   ];
   return (
-    <div className="flex items-center gap-0.5 rounded-full p-0.5" style={{ backgroundColor: "var(--color-surface-elevated)" }}>
+    <div className="flex items-center gap-0.5 rounded-[var(--r-pill)] p-0.5 border border-[var(--line)]">
       {views.map((v) => (
         <button
           key={v.value}
           onClick={() => onChange(v.value)}
-          className={`px-3 py-1 rounded-full text-xs font-spartan font-semibold transition-all duration-200 ${
-            value === v.value
-              ? "bg-[var(--color-brand-600)] text-white shadow-sm"
-              : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
-          }`}
+          className="px-3 py-1 rounded-[var(--r-pill)] std-mono text-[11px] uppercase tracking-wider transition-all duration-200"
+          style={{
+            backgroundColor: value === v.value ? "var(--signal)" : "transparent",
+            color: value === v.value ? "var(--signal-ink)" : "var(--ink-3)",
+          }}
         >
           {v.label}
         </button>
@@ -126,7 +113,7 @@ const DayLabels = memo(({ weekStartDay }) => {
   return (
     <div className="grid grid-cols-7 mb-1">
       {labels.map((l, i) => (
-        <span key={i} className="text-center text-xs font-spartan font-medium" style={{ color: "var(--color-text-tertiary)" }}>
+        <span key={i} className="text-center std-mono text-[10px] uppercase text-[var(--ink-3)]">
           {l}
         </span>
       ))}
@@ -140,10 +127,10 @@ DayLabels.displayName = "DayLabels";
    ════════════════════════════════════════════ */
 
 const cellColor = (pct) => {
-  if (pct === 0) return "var(--color-surface-hover)";
-  if (pct < 0.5) return "rgba(99,102,241,0.25)";
-  if (pct < 1) return "rgba(99,102,241,0.5)";
-  return "var(--color-brand-500)";
+  if (pct === 0) return "var(--surface-2)";
+  if (pct < 0.5) return "color-mix(in srgb, var(--signal) 28%, transparent)";
+  if (pct < 1) return "color-mix(in srgb, var(--signal) 58%, transparent)";
+  return "var(--signal)";
 };
 
 /** Build per-day stats for an array of dateObj items */
@@ -166,11 +153,12 @@ const buildDayStats = (dates, habits, entries) =>
    Main component
    ════════════════════════════════════════════ */
 
-const WeekStrip = memo(({ habits, entries, onToggle, onEdit, fetchHabitEntries }) => {
+const WeekStrip = memo(({ habits, entries, onToggle, onEdit, fetchHabitEntries, variant = "daybook" }) => {
   const [weekStartDay] = useWeekStartDay();
   const [view, setView] = useState("week"); // week | month | year
   const [anchor, setAnchor] = useState(() => new Date());
   const [expandedDate, setExpandedDate] = useState(null);
+  const isControl = variant === "control";
 
   // View change resets expanded
   const handleViewChange = useCallback((v) => {
@@ -272,32 +260,30 @@ const WeekStrip = memo(({ habits, entries, onToggle, onEdit, fetchHabitEntries }
 
   /* ═══ Render helpers ═══ */
 
-  // Header: view pills on top, centered nav arrows below
+  // Header: range label + view pills, centered nav below
   const renderHeader = () => (
     <div className="mb-3 space-y-2">
-      {/* Row 1: ViewPills right-aligned */}
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-garamond font-bold" style={{ color: "var(--color-text-primary)" }}>
+        <h2
+          className={isControl
+            ? "std-mono text-[11px] uppercase tracking-[0.18em] text-[var(--ink-2)]"
+            : "std-display text-lg font-bold text-[var(--ink)]"}
+        >
           {rangeLabel}
         </h2>
         <div data-tour="ws-view-pills">
           <ViewPills value={view} onChange={handleViewChange} />
         </div>
       </div>
-      {/* Row 2: Centered nav arrows + Today button */}
       <div data-tour="ws-nav" className="flex items-center justify-center gap-2">
-        <button onClick={handlePrev} className="p-1.5 rounded-md hover:bg-[var(--color-surface-hover)] transition-colors" aria-label="Previous">
-          <ChevronLeftIcon className="w-4 h-4" style={{ color: "var(--color-text-secondary)" }} />
+        <button onClick={handlePrev} className="p-1.5 rounded-md hover:bg-[var(--surface-2)] transition-colors" aria-label="Previous">
+          <ChevronLeftIcon className="w-4 h-4 text-[var(--ink-2)]" />
         </button>
-        <button onClick={handleNext} className="p-1.5 rounded-md hover:bg-[var(--color-surface-hover)] transition-colors" aria-label="Next">
-          <ChevronRightIcon className="w-4 h-4" style={{ color: "var(--color-text-secondary)" }} />
+        <button onClick={handleNext} className="p-1.5 rounded-md hover:bg-[var(--surface-2)] transition-colors" aria-label="Next">
+          <ChevronRightIcon className="w-4 h-4 text-[var(--ink-2)]" />
         </button>
         {!isCurrentPeriod && (
-          <button
-            onClick={handleToday}
-            className="px-3 py-1 rounded-full text-xs font-spartan font-semibold transition-colors shadow-sm"
-            style={{ backgroundColor: "var(--color-brand-500)", color: "white" }}
-          >
+          <button onClick={handleToday} className="std-btn std-btn--signal std-btn--sm">
             Today
           </button>
         )}
@@ -305,38 +291,41 @@ const WeekStrip = memo(({ habits, entries, onToggle, onEdit, fetchHabitEntries }
     </div>
   );
 
-  // 7-cell week row (reused in both modes)
+  // 7-cell week row
   const renderWeekCells = (data) => (
     <div className="flex items-end gap-1.5 sm:gap-2">
       {data.map((day) => (
         <div key={day.date} className="flex-1 flex flex-col items-center gap-1.5">
-          <span className="text-[10px] font-spartan font-medium truncate w-full text-center" style={{ color: day.isToday ? "var(--color-brand-500)" : "var(--color-text-tertiary)" }}>
+          <span
+            className="std-mono text-[9px] uppercase truncate w-full text-center"
+            style={{ color: day.isToday ? "var(--signal)" : "var(--ink-3)" }}
+          >
             {day.dayName || day.shortDay || ""}
           </span>
           <button
             onClick={() => day.total > 0 && handleCellClick(day.date)}
-            className="w-full aspect-square rounded-lg transition-colors duration-300 relative group"
+            className="w-full aspect-square rounded-md transition-colors duration-300 relative group"
             style={{
               backgroundColor: cellColor(day.pct),
               cursor: day.total > 0 ? "pointer" : "default",
-              outline: expandedDate === day.date ? "2px solid var(--color-brand-500)" : "none",
+              outline: expandedDate === day.date ? "2px solid var(--signal)" : "none",
               outlineOffset: "1px",
             }}
             aria-label={`${day.shortDay || ""}: ${day.completed}/${day.total}`}
             disabled={day.total === 0}
           >
             {day.isToday && (
-              <div className="absolute inset-0 rounded-lg border-2 pointer-events-none" style={{ borderColor: "var(--color-brand-500)" }} />
+              <div className="absolute inset-0 rounded-md border-2 pointer-events-none" style={{ borderColor: "var(--signal)" }} />
             )}
             {day.total > 0 && (
-              <div className="absolute inset-0 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200" style={{ backgroundColor: "rgba(99,102,241,0.65)" }}>
-                <EyeOpenIcon className="w-3.5 h-3.5 text-white sm:hidden" />
-                <span className="hidden sm:block text-[9px] font-spartan font-semibold text-white text-center">View</span>
+              <div className="absolute inset-0 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200" style={{ backgroundColor: "color-mix(in srgb, var(--signal) 70%, transparent)" }}>
+                <EyeOpenIcon className="w-3.5 h-3.5 text-[var(--signal-ink)] sm:hidden" />
+                <span className="hidden sm:block std-mono text-[9px] uppercase text-[var(--signal-ink)] text-center">View</span>
               </div>
             )}
           </button>
           {day.total > 0 && (
-            <span className="text-[9px] font-spartan tabular-nums" style={{ color: "var(--color-text-tertiary)" }}>
+            <span className="std-mono text-[9px] tabular-nums text-[var(--ink-3)]">
               {day.completed}/{day.total}
             </span>
           )}
@@ -360,30 +349,30 @@ const WeekStrip = memo(({ habits, entries, onToggle, onEdit, fetchHabitEntries }
               backgroundColor: cell.isCurrentMonth ? cellColor(cell.pct) : "transparent",
               opacity: cell.isCurrentMonth ? 1 : 0.25,
               cursor: cell.total > 0 && cell.isCurrentMonth ? "pointer" : "default",
-              outline: expandedDate === cell.date ? "2px solid var(--color-brand-500)" : "none",
+              outline: expandedDate === cell.date ? "2px solid var(--signal)" : "none",
               outlineOffset: "1px",
             }}
             aria-label={`${cell.date}: ${cell.completed}/${cell.total}`}
           >
             <span
-              className="text-[10px] font-spartan font-medium leading-none"
+              className="std-mono text-[10px] leading-none tabular-nums"
               style={{
                 color: cell.isToday
-                  ? "var(--color-brand-500)"
+                  ? "var(--signal)"
                   : cell.isCurrentMonth
-                  ? "var(--color-text-secondary)"
-                  : "var(--color-text-tertiary)",
-                fontWeight: cell.isToday ? 800 : 500,
+                  ? "var(--ink-2)"
+                  : "var(--ink-3)",
+                fontWeight: cell.isToday ? 700 : 400,
               }}
             >
               {cell.day}
             </span>
             {cell.isToday && cell.isCurrentMonth && (
-              <div className="absolute inset-0 rounded-md border-2 pointer-events-none" style={{ borderColor: "var(--color-brand-500)" }} />
+              <div className="absolute inset-0 rounded-md border-2 pointer-events-none" style={{ borderColor: "var(--signal)" }} />
             )}
             {cell.total > 0 && cell.isCurrentMonth && (
-              <div className="absolute inset-0 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200" style={{ backgroundColor: "rgba(99,102,241,0.65)" }}>
-                <EyeOpenIcon className="w-3 h-3 text-white" />
+              <div className="absolute inset-0 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200" style={{ backgroundColor: "color-mix(in srgb, var(--signal) 70%, transparent)" }}>
+                <EyeOpenIcon className="w-3 h-3 text-[var(--signal-ink)]" />
               </div>
             )}
           </button>
@@ -392,7 +381,7 @@ const WeekStrip = memo(({ habits, entries, onToggle, onEdit, fetchHabitEntries }
     </div>
   );
 
-  // Year — 12 mini-month blocks in 3×4 grid
+  // Year — 12 mini-month blocks
   const renderYearGrid = () => (
     <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
       {yearData.map((m) => {
@@ -401,59 +390,43 @@ const WeekStrip = memo(({ habits, entries, onToggle, onEdit, fetchHabitEntries }
           <button
             key={m.month}
             onClick={() => handleMonthDrill(m.month)}
-            className="rounded-xl p-3 border transition-all duration-200 hover:border-[var(--color-brand-500)] text-left"
-            style={{
-              backgroundColor: "var(--color-surface-elevated)",
-              borderColor: "var(--color-border-primary)",
-            }}
+            className="std-card std-card-hover p-3 text-left"
           >
-            <span className="text-xs font-spartan font-semibold block mb-1.5" style={{ color: "var(--color-text-primary)" }}>
+            <span className="std-mono text-[10px] uppercase tracking-wider block mb-1.5 text-[var(--ink-2)]">
               {m.label}
             </span>
-            {/* Mini progress bar */}
-            <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "var(--color-surface-hover)" }}>
+            <div className="h-1.5 rounded-full overflow-hidden bg-[var(--surface-2)]">
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{
                   width: `${(m.pct * 100).toFixed(0)}%`,
-                  backgroundColor: m.pct >= 0.8 ? "var(--color-brand-500)" : m.pct >= 0.5 ? "rgba(99,102,241,0.5)" : "rgba(99,102,241,0.25)",
+                  backgroundColor: cellColor(m.pct >= 1 ? 1 : m.pct > 0 ? Math.max(0.5, m.pct) : 0),
                 }}
               />
             </div>
-            {pctLabel !== null && (
-              <span className="text-[10px] font-spartan tabular-nums mt-1 block" style={{ color: "var(--color-text-tertiary)" }}>
-                {pctLabel}%
-              </span>
-            )}
-            {pctLabel === null && (
-              <span className="text-[10px] font-spartan mt-1 block" style={{ color: "var(--color-text-tertiary)" }}>—</span>
-            )}
+            <span className="std-mono text-[10px] tabular-nums mt-1 block text-[var(--ink-3)]">
+              {pctLabel !== null ? `${pctLabel}%` : "—"}
+            </span>
           </button>
         );
       })}
     </div>
   );
 
-  // Expanded day panel (shared)
+  // Expanded day panel
   const renderExpandedDay = () => {
     if (!expandedDay) return null;
     return (
-      <div
-        className="mt-3 rounded-xl border overflow-hidden week-expand-enter"
-        style={{
-          backgroundColor: "var(--color-surface-elevated)",
-          borderColor: "var(--color-border-primary)",
-        }}
-      >
-        <div className="flex items-center justify-between px-4 py-2.5 border-b" style={{ borderColor: "var(--color-border-primary)" }}>
-          <span className="text-sm font-spartan font-semibold" style={{ color: "var(--color-text-primary)" }}>
+      <div className="std-card mt-3 overflow-hidden p-0 week-expand-enter">
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--line)]">
+          <span className="std-display text-sm font-bold text-[var(--ink)]">
             {expandedDay.dateObj.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
           </span>
-          <span className="text-xs font-spartan tabular-nums" style={{ color: "var(--color-text-tertiary)" }}>
+          <span className="std-mono text-[10px] tabular-nums uppercase text-[var(--ink-3)]">
             {expandedDay.completed}/{expandedDay.total} done
           </span>
         </div>
-        <div className="p-2 space-y-1.5">
+        <div>
           {expandedDay.scheduled.map((habit) => {
             const entry = entries[habit._id]?.[expandedDay.date];
             const isCompleted = !!(entry && entry.completed);
@@ -467,10 +440,9 @@ const WeekStrip = memo(({ habits, entries, onToggle, onEdit, fetchHabitEntries }
   };
 
   return (
-    <div data-tour="week-strip">
+    <div data-tour="week-strip" className="std-card p-4">
       {renderHeader()}
 
-      {/* View-specific grid */}
       <div data-tour="ws-grid" className="ws-view-fade">
         {view === "week" && renderWeekCells(weekData)}
         {view === "month" && renderMonthGrid()}

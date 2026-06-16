@@ -2,16 +2,26 @@ import React, { useMemo, useState, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useHabits } from "../contexts/HabitContext";
+import { useTheme } from "../contexts/ThemeContext";
 import { habitUtils as habitLogic } from "../utils/habitLogic";
 import HabitModal from "../components/ui/HabitModal";
 import SkeletonTransition from "../components/ui/SkeletonTransition";
 
-/* ── Redesigned dashboard components (Phase 6) ── */
+/* ── Legacy dashboard components (Phase 6) — Legacy design system ── */
 import GreetingBar from "../components/dashboard/GreetingBar";
 import StatPills from "../components/dashboard/StatPills";
 import TodayHabits from "../components/dashboard/TodayHabits";
 import WeekStrip from "../components/dashboard/WeekStrip";
 import InsightsNudge from "../components/dashboard/InsightsNudge";
+
+/* ── DRILL / Standard dashboard components — Standard design system ── */
+import GreetingBarStd from "../components/dashboard/GreetingBarStd";
+import StatPillsStd from "../components/dashboard/StatPillsStd";
+import TodayHabitsStd from "../components/dashboard/TodayHabitsStd";
+import WeekStripStd from "../components/dashboard/WeekStripStd";
+import InsightsNudgeStd from "../components/dashboard/InsightsNudgeStd";
+
+/* ── Shared ── */
 import StreakCelebration from "../components/dashboard/StreakCelebration";
 import DashboardTour from "../components/dashboard/DashboardTour";
 
@@ -25,8 +35,18 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { designSystem } = useTheme();
 
-  /* ── Dashboard editorial variant (DRILL) ── */
+  /* ── Design-system gate: Legacy keeps the original dashboard;
+       Standard renders the DRILL re-skin (Daybook / Mission Control). ── */
+  const isStd = designSystem === "standard";
+  const Greeting = isStd ? GreetingBarStd : GreetingBar;
+  const Stats = isStd ? StatPillsStd : StatPills;
+  const Insights = isStd ? InsightsNudgeStd : InsightsNudge;
+  const Today = isStd ? TodayHabitsStd : TodayHabits;
+  const Week = isStd ? WeekStripStd : WeekStrip;
+
+  /* ── DRILL editorial variant (Standard only) ── */
   const variant = user?.preferences?.dashboardStyle === "control" ? "control" : "daybook";
   const [isOnboardingHandoffLoading, setIsOnboardingHandoffLoading] = useState(
     Boolean(location.state?.fromOnboarding)
@@ -248,13 +268,13 @@ const Dashboard = () => {
 
   return (
     <SkeletonTransition isLoading={isDashboardLoading} skeleton={dashboardSkeleton}>
-    <div className="std p-4 sm:p-6 max-w-2xl mx-auto space-y-6">
+    <div className={`${isStd ? "std " : ""}p-4 sm:p-6 max-w-2xl mx-auto space-y-6`}>
       {/* 1. Compact greeting / status masthead */}
-      <GreetingBar userName={user?.name || user?.username || "User"} firstName={user?.firstName} variant={variant} />
+      <Greeting userName={user?.name || user?.username || "User"} firstName={user?.firstName} variant={variant} />
 
       {/* 2. Stat readout (only when habits exist) */}
       {habits.length > 0 && (
-        <StatPills
+        <Stats
           completed={stats.completed}
           total={stats.total}
           streak={stats.streak}
@@ -265,12 +285,12 @@ const Dashboard = () => {
 
       {/* 3. Insights nudge */}
       {user?.preferences?.aiDashboard !== false && (
-        <InsightsNudge habits={habits} entries={entries} variant={variant} />
+        <Insights habits={habits} entries={entries} variant={variant} />
       )}
 
       {/* 4. Today's habit checklist */}
       <div data-tour="today-habits">
-      <TodayHabits
+      <Today
         habits={todaysHabits}
         entries={entries}
         onToggle={handleToggle}
@@ -284,7 +304,7 @@ const Dashboard = () => {
       {/* 5. 7-day heatmap strip */}
       {habits.length > 0 && (
         <div className="pt-2">
-          <WeekStrip habits={habits} entries={entries} onToggle={handleToggleDate} onEdit={handleEditHabit} fetchHabitEntries={fetchHabitEntries} variant={variant} />
+          <Week habits={habits} entries={entries} onToggle={handleToggleDate} onEdit={handleEditHabit} fetchHabitEntries={fetchHabitEntries} variant={variant} />
         </div>
       )}
 
