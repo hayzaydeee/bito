@@ -448,20 +448,18 @@ const SettingsPage = ({ section }) => {
     };
 
     return (
-      <div className="min-h-screen page-container px-4 sm:px-6 py-10">
+      <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
         <div className="max-w-2xl mx-auto">
           <button
             onClick={() => navigate("/app/settings")}
-            className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] font-spartan mb-6 hover:text-[var(--color-text-primary)] transition-colors"
+            className="std-btn std-btn--sm mb-8 flex items-center gap-1.5"
           >
-            <ArrowLeftIcon className="w-4 h-4" />
-            Back to settings
+            <ArrowLeftIcon className="w-3.5 h-3.5" />
+            Settings
           </button>
-
-          <h1 className="text-2xl font-bold font-garamond text-[var(--color-text-primary)] mb-2">
-            AI Voice
-          </h1>
-          <p className="text-sm text-[var(--color-text-secondary)] font-spartan mb-8">
+          <p className="std-kicker text-[var(--ink-3)] mb-1">Customise</p>
+          <h1 className="std-display text-3xl text-[var(--ink)] mb-2">AI Voice</h1>
+          <p className="std-mono text-[11px] text-[var(--ink-3)] mb-8 leading-relaxed">
             Choose how Bito talks to you across insights, reports, and nudges.
             Pick the voice that sounds right — not the label that sounds right.
           </p>
@@ -482,23 +480,18 @@ const SettingsPage = ({ section }) => {
      ================================================================ */
   if (section === "habit-privacy") {
     return (
-      <div className="min-h-screen page-container px-4 sm:px-6 py-10">
+      <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
         <div className="max-w-2xl mx-auto">
-          {/* back */}
           <button
-            onClick={() =>
-              navigate(`/app/groups/${habitData?.groupId || ""}`)
-            }
-            className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] font-spartan mb-6 hover:text-[var(--color-text-primary)] transition-colors"
+            onClick={() => navigate(`/app/groups/${habitData?.groupId || ""}`)}
+            className="std-btn std-btn--sm mb-8 flex items-center gap-1.5"
           >
-            <ArrowLeftIcon className="w-4 h-4" />
-            Back to group
+            <ArrowLeftIcon className="w-3.5 h-3.5" />
+            Group
           </button>
-
-          <h1 className="text-2xl font-bold font-garamond text-[var(--color-text-primary)] mb-2">
-            Habit Privacy
-          </h1>
-          <p className="text-sm text-[var(--color-text-secondary)] font-spartan mb-8">
+          <p className="std-kicker text-[var(--ink-3)] mb-1">Sharing</p>
+          <h1 className="std-display text-3xl text-[var(--ink)] mb-8">Habit Privacy</h1>
+          <p className="std-mono text-[11px] text-[var(--ink-3)] -mt-6 mb-8 leading-relaxed">
             {habitData
               ? `Control sharing for "${habitData.name}"`
               : "Loading…"}
@@ -507,87 +500,48 @@ const SettingsPage = ({ section }) => {
           {!habitData ? (
             <div className="space-y-3">
               {[...Array(3)].map((_, i) => (
-                <div
-                  key={i}
-                  className="h-16 rounded-xl bg-[var(--color-surface-elevated)] animate-pulse"
-                />
+                <div key={i} className="h-16 std-card animate-pulse" />
               ))}
             </div>
           ) : (
             <>
               {/* habit card */}
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 mb-6">
+              <div className="std-card flex items-center gap-3 p-4 mb-6">
                 <span
-                  className="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
-                  style={{
-                    backgroundColor: `${habitData.color || "#4f46e5"}18`,
-                  }}
+                  className="w-10 h-10 rounded-[var(--r-btn)] flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: `${habitData.color || "var(--signal)"}18` }}
                 >
                   {habitData.icon ? <HabitIcon icon={habitData.icon} size={18} /> : <HabitIcon icon="Target" size={18} />}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)] truncate">
-                    {habitData.name}
-                  </p>
-                  <p className="text-xs text-[var(--color-text-tertiary)] font-spartan">
-                    {habitData.category || "No category"} · Adopted from
-                    group
+                  <p className="text-sm text-[var(--ink)] truncate">{habitData.name}</p>
+                  <p className="std-mono text-[10px] text-[var(--ink-3)]">
+                    {habitData.category || "No category"} · Group habit
                   </p>
                 </div>
               </div>
 
               {/* share level */}
               <Section title="Share Progress Level">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-[var(--line)]">
                   {[
-                    {
-                      value: "full",
-                      label: "Full Details",
-                      desc: "Completion dates, notes, and stats",
-                    },
-                    {
-                      value: "progress-only",
-                      label: "Progress Only",
-                      desc: "Completion rates and weekly summaries",
-                    },
-                    {
-                      value: "streaks-only",
-                      label: "Streaks Only",
-                      desc: "Current and best streak count",
-                    },
-                    {
-                      value: "private",
-                      label: "Private",
-                      desc: "Nothing shared with the group",
-                    },
+                    { value: "full",          label: "Full Details",   desc: "Completion dates, notes, and stats" },
+                    { value: "progress-only", label: "Progress Only",  desc: "Completion rates and weekly summaries" },
+                    { value: "streaks-only",  label: "Streaks Only",   desc: "Current and best streak count" },
+                    { value: "private",       label: "Private",        desc: "Nothing shared with the group" },
                   ].map((opt) => {
                     const active = habitPrivacy.shareProgress === opt.value;
                     return (
                       <button
                         key={opt.value}
-                        onClick={() =>
-                          setHabitPrivacy((p) => ({
-                            ...p,
-                            shareProgress: opt.value,
-                          }))
-                        }
-                        className={`text-left p-3 rounded-xl border transition-colors ${
-                          active
-                            ? "border-[var(--color-brand-500)] bg-[var(--color-brand-500)]/8"
-                            : "border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)]"
-                        }`}
+                        onClick={() => setHabitPrivacy((p) => ({ ...p, shareProgress: opt.value }))}
+                        className={`text-left p-4 bg-[var(--surface)] transition-colors hover:bg-[var(--surface-2)] ${active ? 'outline outline-2 outline-[var(--signal)] -outline-offset-2 z-10 relative' : ''}`}
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium font-spartan text-[var(--color-text-primary)]">
-                            {opt.label}
-                          </span>
-                          {active && (
-                            <CheckCircledIcon className="w-4 h-4 text-[var(--color-brand-500)]" />
-                          )}
+                          <span className="text-sm text-[var(--ink)]">{opt.label}</span>
+                          {active && <span className="w-2 h-2 rounded-full bg-[var(--signal)] flex-shrink-0" />}
                         </div>
-                        <p className="text-xs text-[var(--color-text-secondary)] font-spartan">
-                          {opt.desc}
-                        </p>
+                        <p className="std-mono text-[10px] text-[var(--ink-3)]">{opt.desc}</p>
                       </button>
                     );
                   })}
@@ -596,56 +550,33 @@ const SettingsPage = ({ section }) => {
 
               {/* toggles */}
               <Section title="Interaction">
-                <SettingRow
-                  label="Allow Encouragements"
-                  description="Let group members send you motivational messages"
-                >
-                  <Toggle
-                    checked={habitPrivacy.allowInteraction}
-                    onChange={(v) =>
-                      setHabitPrivacy((p) => ({ ...p, allowInteraction: v }))
-                    }
-                  />
+                <SettingRow label="Allow Encouragements" description="Let group members send you motivational messages">
+                  <Toggle checked={habitPrivacy.allowInteraction} onChange={(v) => setHabitPrivacy((p) => ({ ...p, allowInteraction: v }))} />
                 </SettingRow>
-                <SettingRow
-                  label="Show in Activity Feed"
-                  description="Completions appear in the group activity"
-                >
-                  <Toggle
-                    checked={habitPrivacy.shareInActivity}
-                    onChange={(v) =>
-                      setHabitPrivacy((p) => ({ ...p, shareInActivity: v }))
-                    }
-                  />
+                <SettingRow label="Show in Activity Feed" description="Completions appear in the group activity">
+                  <Toggle checked={habitPrivacy.shareInActivity} onChange={(v) => setHabitPrivacy((p) => ({ ...p, shareInActivity: v }))} />
                 </SettingRow>
               </Section>
 
               {/* actions */}
               <div className="flex items-center gap-3 mt-8">
                 <button
-                  onClick={() =>
-                    navigate(`/app/groups/${habitData.groupId}`)
-                  }
-                  className="flex-1 h-10 rounded-xl border border-[var(--color-border-primary)]/30 text-sm font-spartan font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+                  onClick={() => navigate(`/app/groups/${habitData.groupId}`)}
+                  className="std-btn flex-1 flex items-center justify-center"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={saveHabitPrivacy}
                   disabled={saving}
-                  className="flex-1 h-10 rounded-xl bg-[var(--color-brand-600)] text-white text-sm font-spartan font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="std-btn std-btn--signal flex-1 flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {saving ? (
-                    <>
-                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Saving…
-                    </>
+                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <>
-                      <CheckIcon className="w-4 h-4" />
-                      Save
-                    </>
+                    <CheckIcon className="w-3.5 h-3.5" />
                   )}
+                  {saving ? "Saving…" : "Save"}
                 </button>
               </div>
             </>
@@ -661,16 +592,14 @@ const SettingsPage = ({ section }) => {
      ================================================================ */
 
   const pageSkeleton = (
-    <div className="min-h-screen page-container px-4 sm:px-6 py-10">
-      <div className="max-w-2xl mx-auto space-y-4">
-        <div className="h-8 w-40 rounded-lg bg-[var(--color-surface-elevated)] animate-pulse" />
-        <div className="h-5 w-64 rounded bg-[var(--color-surface-elevated)] animate-pulse" />
-        <div className="mt-8 space-y-3">
-          {[...Array(6)].map((_, i) => (
-            <div
-              key={i}
-              className="h-16 rounded-xl bg-[var(--color-surface-elevated)] animate-pulse"
-            />
+    <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
+      <div className="max-w-2xl mx-auto space-y-4 animate-pulse">
+        <div className="h-3 w-20 rounded bg-[var(--surface-2)]" />
+        <div className="h-8 w-40 rounded bg-[var(--surface-2)]" />
+        <div className="std-rule" />
+        <div className="mt-8 space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-16 std-card bg-[var(--surface-2)]" />
           ))}
         </div>
       </div>
@@ -741,19 +670,19 @@ const SettingsPage = ({ section }) => {
 
   return (
     <SkeletonTransition isLoading={loading} skeleton={pageSkeleton}>
-    <div className="min-h-screen page-container px-4 sm:px-6 py-10">
+    <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
       <div className="max-w-2xl mx-auto">
         {/* ── header ──────────────────── */}
-        <h1 className="text-2xl font-bold font-garamond text-[var(--color-text-primary)] mb-1">
-          Settings
-        </h1>
-        <p className="text-sm text-[var(--color-text-secondary)] font-spartan mb-10">
-          Manage your account, preferences, and data.
+        <p className="std-kicker text-[var(--ink-3)] mb-1">Configuration</p>
+        <h1 className="std-display text-4xl text-[var(--ink)] mb-1">Settings</h1>
+        <p className="std-mono text-[10px] text-[var(--ink-3)] mb-6">
+          Account · Preferences · Data
         </p>
+        <div className="std-rule mb-10" />
 
         {/* ═══════ 1. PROFILE ═══════ */}
-        <Section title="Profile" icon={PersonIcon}>
-          <div className="flex items-center gap-4 p-4 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20">
+        <Section title="Profile">
+          <div className="flex items-center gap-4 px-5 py-4">
             <AvatarPicker
               currentAvatar={userProfile?.avatar}
               userName={userProfile?.firstName || userProfile?.name || userProfile?.email?.split("@")[0] || "User"}
@@ -764,226 +693,150 @@ const SettingsPage = ({ section }) => {
               size="md"
             />
             <div className="min-w-0 flex-1">
-              <p className="text-base font-medium font-spartan text-[var(--color-text-primary)] truncate">
+              <p className="std-display text-base text-[var(--ink)] truncate">
                 {userProfile?.name || "—"}
               </p>
               {userProfile?.username && (
-                <p className="text-sm text-[var(--color-text-tertiary)] font-spartan truncate">
+                <p className="std-mono text-[10px] text-[var(--ink-3)] truncate">
                   @{userProfile.username}
                 </p>
               )}
-              <p className="text-sm text-[var(--color-text-secondary)] font-spartan truncate">
+              <p className="std-mono text-[10px] text-[var(--ink-2)] truncate">
                 {userProfile?.email || "—"}
               </p>
               {userProfile?.hasGoogleAuth && (
-                <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mt-0.5">
-                  Connected: Google
-                </p>
+                <p className="std-mono text-[10px] text-[var(--ink-3)] mt-0.5">⊕ Google</p>
               )}
             </div>
           </div>
         </Section>
 
         {/* ═══════ 2. APPEARANCE ═══════ */}
-        <Section title="Appearance" icon={MoonIcon}>
-          {/* Design system (legacy | standard) — orthogonal to light/dark */}
-          <div className="mb-6">
-            <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)] mb-1">
-              Design system
-            </p>
-            <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mb-3 max-w-md">
+        <Section title="Appearance">
+          {/* Design system */}
+          <div className="px-5 py-4 border-b border-[var(--line)]">
+            <p className="std-kicker text-[10px] text-[var(--ink-3)] mb-1">Design System</p>
+            <p className="std-mono text-[10px] text-[var(--ink-3)] mb-3 max-w-md leading-relaxed">
               Switch between the original look (Legacy) and the new Standard design language.
-              Light / dark below applies within whichever you pick.
             </p>
             <DesignSystemSwitcher />
           </div>
 
           {/* Background grid — Standard layout only */}
           {designSystem === "standard" && (
-            <div className="mb-6 flex items-center justify-between gap-4">
+            <div className="px-5 py-4 border-b border-[var(--line)] flex items-center justify-between gap-4">
               <div className="min-w-0">
-                <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)] mb-1">
-                  Background grid
-                </p>
-                <p className="text-xs text-[var(--color-text-tertiary)] font-spartan max-w-md">
+                <p className="text-sm text-[var(--ink)]">Background grid</p>
+                <p className="std-mono text-[10px] text-[var(--ink-3)] mt-0.5">
                   Show the structural grid behind the Standard layout.
                 </p>
               </div>
-              <button
-                role="switch"
-                aria-checked={standardGrid}
-                onClick={() => changeStandardGrid(!standardGrid)}
-                className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
-                  standardGrid ? "bg-[var(--color-brand-500)]" : "bg-[var(--color-surface-hover)]"
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
-                    standardGrid ? "translate-x-5" : "translate-x-0"
-                  }`}
-                />
-              </button>
+              <Toggle
+                checked={standardGrid}
+                onChange={(v) => changeStandardGrid(v)}
+              />
             </div>
           )}
 
-          <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)] mb-3">
-            Theme
-          </p>
-          <AnimatedList className="grid grid-cols-4 gap-3">
-            {themeCards.map((t, i) => {
-              const active = settings.theme === t.value;
-              const Icon = t.icon;
-              return (
-                <motion.div key={t.value} variants={listItemVariants} custom={i}>
-                <button
-                  onClick={() => saveSetting("theme", t.value)}
-                  className={`relative rounded-xl border-2 overflow-hidden transition-all w-full ${
-                    active
-                      ? "border-[var(--color-brand-500)] ring-2 ring-[var(--color-brand-500)]/20"
-                      : "border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/50"
-                  }`}
-                >
-                  {/* mini preview */}
-                  <div
-                    className="h-20 p-3 flex flex-col justify-between"
-                    style={{ background: t.bg }}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <div
-                        className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: t.accent }}
-                      />
-                      <div
-                        className="h-1.5 w-12 rounded"
-                        style={{ backgroundColor: t.surface }}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <div
-                        className="h-1 w-16 rounded"
-                        style={{ backgroundColor: t.surface }}
-                      />
-                      <div
-                        className="h-1 w-10 rounded"
-                        style={{ backgroundColor: t.surface }}
-                      />
-                    </div>
-                  </div>
-                  {/* label */}
-                  <div
-                    className={`flex items-center justify-center gap-2 py-2.5 text-sm font-spartan font-medium ${
+          {/* Theme cards */}
+          <div className="px-5 py-4 border-b border-[var(--line)]">
+            <p className="std-kicker text-[10px] text-[var(--ink-3)] mb-3">Theme</p>
+            <AnimatedList className="grid grid-cols-4 gap-2">
+              {themeCards.map((t, i) => {
+                const active = settings.theme === t.value;
+                const Icon = t.icon;
+                return (
+                  <motion.div key={t.value} variants={listItemVariants} custom={i}>
+                  <button
+                    onClick={() => saveSetting("theme", t.value)}
+                    className={`relative rounded-[var(--r-card)] border overflow-hidden transition-all w-full ${
                       active
-                        ? "text-[var(--color-brand-600)] bg-[var(--color-brand-500)]/8"
-                        : "text-[var(--color-text-secondary)]"
+                        ? "border-[var(--signal)]"
+                        : "border-[var(--line)] hover:border-[var(--line-2,var(--signal))]"
                     }`}
+                    style={active ? { boxShadow: '0 0 0 2px color-mix(in srgb, var(--signal) 20%, transparent)' } : {}}
                   >
-                    <Icon className="w-3.5 h-3.5" />
-                    {t.label}
-                  </div>
-                  {active && (
-                    <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[var(--color-brand-500)] flex items-center justify-center">
-                      <CheckIcon className="w-3 h-3 text-white" />
+                    <div className="h-16 p-2.5 flex flex-col justify-between" style={{ background: t.bg }}>
+                      <div className="flex items-center gap-1">
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: t.accent }} />
+                        <div className="h-1 w-8 rounded" style={{ backgroundColor: t.surface }} />
+                      </div>
+                      <div className="space-y-0.5">
+                        <div className="h-0.5 w-10 rounded" style={{ backgroundColor: t.surface }} />
+                        <div className="h-0.5 w-6 rounded" style={{ backgroundColor: t.surface }} />
+                      </div>
                     </div>
-                  )}
-                </button>
-                </motion.div>
-              );
-            })}
-          </AnimatedList>
+                    <div className={`flex items-center justify-center gap-1.5 py-2 std-mono text-[10px] ${
+                      active ? 'text-[var(--signal)] bg-[color-mix(in_srgb,var(--signal)_8%,transparent)]' : 'text-[var(--ink-3)]'
+                    }`}>
+                      <Icon className="w-3 h-3" />
+                      {t.label}
+                    </div>
+                    {active && (
+                      <div className="absolute top-1.5 right-1.5 w-3 h-3 rounded-full bg-[var(--signal)] flex items-center justify-center">
+                        <CheckIcon className="w-2 h-2 text-white" />
+                      </div>
+                    )}
+                  </button>
+                  </motion.div>
+                );
+              })}
+            </AnimatedList>
+          </div>
         </Section>
 
         {/* ═══════ 2b. TEXT SIZE ═══════ */}
-        <Section title="Text Size" icon={GearIcon}>
-          <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mb-3">
-            Scale text and UI elements for better readability
-          </p>
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              {
-                value: "small",
-                label: "Small",
-                description: "Default",
-                textBarWidths: ["w-14", "w-10"],
-                textBarHeights: ["h-1", "h-[3px]"],
-                dotSize: "w-1.5 h-1.5",
-                headingHeight: "h-1.5",
-                headingWidth: "w-10",
-              },
-              {
-                value: "medium",
-                label: "Medium",
-                description: "Comfortable",
-                textBarWidths: ["w-14", "w-10"],
-                textBarHeights: ["h-1.5", "h-1"],
-                dotSize: "w-2 h-2",
-                headingHeight: "h-2",
-                headingWidth: "w-11",
-              },
-              {
-                value: "large",
-                label: "Large",
-                description: "Spacious",
-                textBarWidths: ["w-14", "w-10"],
-                textBarHeights: ["h-2", "h-1.5"],
-                dotSize: "w-2.5 h-2.5",
-                headingHeight: "h-2.5",
-                headingWidth: "w-12",
-              },
-            ].map((s) => {
-              const active = settings.scale === s.value;
-              return (
-                <button
-                  key={s.value}
-                  onClick={() => saveSetting("scale", s.value)}
-                  className={`relative rounded-xl border-2 overflow-hidden transition-all ${
-                    active
-                      ? "border-[var(--color-brand-500)] ring-2 ring-[var(--color-brand-500)]/20"
-                      : "border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/50"
-                  }`}
-                >
-                  {/* mini preview showing relative text sizes */}
-                  <div className="h-20 p-3 flex flex-col justify-between bg-[var(--color-surface-primary)]">
-                    {/* mock heading */}
-                    <div className="flex items-center gap-1.5">
-                      <div className={`${s.dotSize} rounded-full bg-[var(--color-brand-400)]`} />
-                      <div
-                        className={`${s.headingHeight} ${s.headingWidth} rounded bg-[var(--color-text-primary)]/25`}
-                      />
-                    </div>
-                    {/* mock body lines */}
-                    <div className="space-y-1">
-                      <div
-                        className={`${s.textBarHeights[0]} ${s.textBarWidths[0]} rounded bg-[var(--color-text-secondary)]/30`}
-                      />
-                      <div
-                        className={`${s.textBarHeights[1]} ${s.textBarWidths[1]} rounded bg-[var(--color-text-secondary)]/20`}
-                      />
-                    </div>
-                  </div>
-                  {/* label */}
-                  <div
-                    className={`flex flex-col items-center justify-center py-2.5 text-sm font-spartan font-medium ${
-                      active
-                        ? "text-[var(--color-brand-600)] bg-[var(--color-brand-500)]/8"
-                        : "text-[var(--color-text-secondary)]"
+        <Section title="Text Size">
+          <div className="px-5 py-4">
+            <p className="std-mono text-[10px] text-[var(--ink-3)] mb-3">
+              Scale text and UI elements for readability
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { value: "small",  label: "Small",  description: "Default",     dotSize: "w-1.5 h-1.5", headingH: "h-1.5", headingW: "w-10", barH: ["h-1",   "h-[3px]"] },
+                { value: "medium", label: "Medium", description: "Comfortable", dotSize: "w-2 h-2",     headingH: "h-2",   headingW: "w-11", barH: ["h-1.5", "h-1"]     },
+                { value: "large",  label: "Large",  description: "Spacious",    dotSize: "w-2.5 h-2.5", headingH: "h-2.5", headingW: "w-12", barH: ["h-2",   "h-1.5"]   },
+              ].map((s) => {
+                const active = settings.scale === s.value;
+                return (
+                  <button
+                    key={s.value}
+                    onClick={() => saveSetting("scale", s.value)}
+                    className={`relative rounded-[var(--r-card)] border overflow-hidden transition-all ${
+                      active ? "border-[var(--signal)]" : "border-[var(--line)] hover:border-[var(--line-2,var(--signal))]"
                     }`}
+                    style={active ? { boxShadow: '0 0 0 2px color-mix(in srgb, var(--signal) 20%, transparent)' } : {}}
                   >
-                    <span>{s.label}</span>
-                    <span className="text-[10px] font-normal opacity-60">{s.description}</span>
-                  </div>
-                  {active && (
-                    <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[var(--color-brand-500)] flex items-center justify-center">
-                      <CheckIcon className="w-3 h-3 text-white" />
+                    <div className="h-16 p-2.5 flex flex-col justify-between bg-[var(--surface)]">
+                      <div className="flex items-center gap-1.5">
+                        <div className={`${s.dotSize} rounded-full bg-[var(--signal)]`} />
+                        <div className={`${s.headingH} ${s.headingW} rounded bg-[var(--ink)]/20`} />
+                      </div>
+                      <div className="space-y-0.5">
+                        <div className={`${s.barH[0]} w-14 rounded bg-[var(--ink)]/15`} />
+                        <div className={`${s.barH[1]} w-10 rounded bg-[var(--ink)]/10`} />
+                      </div>
                     </div>
-                  )}
-                </button>
-              );
-            })}
+                    <div className={`flex flex-col items-center justify-center py-2 std-mono text-[10px] ${
+                      active ? 'text-[var(--signal)] bg-[color-mix(in_srgb,var(--signal)_8%,transparent)]' : 'text-[var(--ink-3)]'
+                    }`}>
+                      <span>{s.label}</span>
+                      <span className="opacity-60">{s.description}</span>
+                    </div>
+                    {active && (
+                      <div className="absolute top-1.5 right-1.5 w-3 h-3 rounded-full bg-[var(--signal)] flex items-center justify-center">
+                        <CheckIcon className="w-2 h-2 text-white" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </Section>
 
         {/* ═══════ 3. PREFERENCES ═══════ */}
-        <Section title="Preferences" icon={GearIcon}>
+        <Section title="Preferences">
           <SettingRow
             label="Timezone"
             description="Your local timezone for accurate tracking"
@@ -1039,7 +892,7 @@ const SettingsPage = ({ section }) => {
         </Section>
 
         {/* ═══════ 4. AI FEATURES ═══════ */}
-        <Section title="AI Features" icon={MagicWandIcon}>
+        <Section title="AI Features">
           <SettingRow
             label="Dashboard Insights"
             description="AI-powered nudges and tips on your dashboard"
@@ -1063,15 +916,13 @@ const SettingsPage = ({ section }) => {
           {/* ═══════ AI VOICE ═══════ */}
           <button
             onClick={() => navigate("/app/settings/personality")}
-            className="w-full mt-1 flex items-center justify-between p-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] transition-colors cursor-pointer"
+            className="w-full flex items-center justify-between px-5 py-4 hover:bg-[var(--surface-2)] transition-colors cursor-pointer border-t border-[var(--line)]"
           >
             <div className="flex items-center gap-3">
-              <ChatBubbleIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
+              <ChatBubbleIcon className="w-3.5 h-3.5 text-[var(--ink-3)]" />
               <div className="text-left">
-                <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)]">
-                  Customise how Bito talks to you
-                </p>
-                <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mt-0.5">
+                <p className="text-sm text-[var(--ink)]">AI Voice</p>
+                <p className="std-mono text-[10px] text-[var(--ink-3)] mt-0.5">
                   {(() => {
                     const p = userProfile?.aiPersonality || {};
                     const labels = {
@@ -1090,7 +941,7 @@ const SettingsPage = ({ section }) => {
                 </p>
               </div>
             </div>
-            <ChevronRightIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
+            <ChevronRightIcon className="w-3 h-3 text-[var(--ink-3)]" />
           </button>
         </Section>
 
@@ -1098,188 +949,115 @@ const SettingsPage = ({ section }) => {
         <NotificationSection saving={saving} settings={settings} saveSetting={saveSetting} />
 
         {/* ═══════ 5. PRIVACY ═══════ */}
-        <Section title="Privacy" icon={LockClosedIcon}>
-          <p className="text-xs text-[var(--color-text-secondary)] font-spartan mb-4">
-            Control which group members can view your dashboard and habit
-            progress.
-          </p>
-
+        <Section title="Privacy">
           {privacyLoading ? (
             <div className="flex items-center justify-center py-6">
-              <span className="w-5 h-5 border-2 border-[var(--color-brand-500)] border-t-transparent rounded-full animate-spin" />
+              <span className="w-4 h-4 border-2 border-[var(--signal)] border-t-transparent rounded-full animate-spin" />
             </div>
           ) : groups.length === 0 ? (
-            <p className="text-sm text-[var(--color-text-tertiary)] font-spartan text-center py-4">
-              You're not a member of any groups yet.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {groups.map((ws) => {
-                const pub = dashPerms[ws._id]?.isPublicToGroup ?? true;
-                return (
-                  <div
-                    key={ws._id}
-                    className="flex items-center justify-between p-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)] truncate">
-                        {ws.name}
-                      </p>
-                      <p className="text-xs text-[var(--color-text-tertiary)] font-spartan">
-                        {pub
-                          ? "Members can view your dashboard"
-                          : "Dashboard is private"}
-                      </p>
-                    </div>
-                    <Toggle
-                      checked={pub}
-                      onChange={(v) => toggleWsPublic(ws._id, v)}
-                    />
-                  </div>
-                );
-              })}
+            <div className="px-5 py-6">
+              <p className="std-mono text-[11px] text-[var(--ink-3)] text-center">
+                You're not a member of any groups yet.
+              </p>
             </div>
+          ) : (
+            groups.map((ws) => {
+              const pub = dashPerms[ws._id]?.isPublicToGroup ?? true;
+              return (
+                <SettingRow
+                  key={ws._id}
+                  label={ws.name}
+                  description={pub ? "Members can view your dashboard" : "Dashboard is private"}
+                >
+                  <Toggle checked={pub} onChange={(v) => toggleWsPublic(ws._id, v)} />
+                </SettingRow>
+              );
+            })
           )}
-
-          <div className="mt-4 flex items-start gap-2.5 p-3 rounded-xl bg-[var(--color-surface-elevated)]/60 border border-[var(--color-border-primary)]/10">
-            <InfoCircledIcon className="w-4 h-4 text-[var(--color-text-tertiary)] mt-0.5 flex-shrink-0" />
-            <p className="text-xs text-[var(--color-text-tertiary)] font-spartan leading-relaxed">
-              When dashboard sharing is on, members see a read-only view of your
-              habits and progress. Personal notes stay hidden.
+          <div className="px-5 py-3 flex items-start gap-2 border-t border-[var(--line)]">
+            <InfoCircledIcon className="w-3.5 h-3.5 text-[var(--ink-3)] mt-0.5 flex-shrink-0" />
+            <p className="std-mono text-[10px] text-[var(--ink-3)] leading-relaxed">
+              When sharing is on, members see a read-only view of your habits and progress. Personal notes stay hidden.
             </p>
           </div>
         </Section>
 
         {/* ═══════ 6. DATA ═══════ */}
-        <Section title="Data" icon={DownloadIcon}>
+        <Section title="Data">
           <button
             onClick={handleExport}
             disabled={exporting}
-            className="w-full flex items-center justify-between p-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-between px-5 py-4 hover:bg-[var(--surface-2)] transition-colors disabled:opacity-50"
           >
             <div className="flex items-center gap-3">
-              <DownloadIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
+              <DownloadIcon className="w-3.5 h-3.5 text-[var(--ink-3)]" />
               <div className="text-left">
-                <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)]">
-                  Export All Data
-                </p>
-                <p className="text-xs text-[var(--color-text-tertiary)] font-spartan">
+                <p className="text-sm text-[var(--ink)]">Export All Data</p>
+                <p className="std-mono text-[10px] text-[var(--ink-3)] mt-0.5">
                   Download your habits, entries, and journal as JSON
                 </p>
               </div>
             </div>
             {exporting ? (
-              <span className="w-4 h-4 border-2 border-[var(--color-brand-500)] border-t-transparent rounded-full animate-spin" />
+              <span className="w-3.5 h-3.5 border-2 border-[var(--signal)] border-t-transparent rounded-full animate-spin" />
             ) : (
-              <ChevronRightIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
+              <ChevronRightIcon className="w-3 h-3 text-[var(--ink-3)]" />
             )}
           </button>
         </Section>
 
         {/* ═══════ 7. ABOUT ═══════ */}
-        <Section title="About" icon={InfoCircledIcon}>
-          <div className="flex items-center justify-between p-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20">
+        <Section title="About">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--line)]">
             <div>
-              <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)]">
-                bito
-              </p>
-              <p className="text-xs text-[var(--color-text-tertiary)] font-spartan">
-                v1.0.0
-              </p>
+              <p className="std-display text-sm text-[var(--ink)]">bito</p>
+              <p className="std-mono text-[10px] text-[var(--ink-3)]">v1.0.0</p>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span className="text-xs text-[var(--color-text-tertiary)] font-spartan">
-                All systems operational
-              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span className="std-mono text-[10px] text-[var(--ink-3)]">All systems operational</span>
             </div>
           </div>
 
-          {/* Replay tour */}
-          <button
-            onClick={() => {
-              const uid = user?._id || user?.id || '';
-              const key = uid ? `bito_tour_completed_${uid}` : 'bito_tour_completed';
-              try { localStorage.removeItem(key); } catch {}
-              navigate('/app/dashboard');
-            }}
-            className="w-full mt-2 flex items-center justify-between p-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] transition-colors cursor-pointer"
-          >
-            <div className="flex items-center gap-2.5">
-              <DashboardIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
-              <span className="text-sm font-medium font-spartan text-[var(--color-text-primary)]">
-                Replay dashboard tour
-              </span>
-            </div>
-            <ChevronRightIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
-          </button>
-
-          {/* Replay analytics tour */}
-          <button
-            onClick={() => {
-              const uid = user?._id || user?.id || '';
-              const key = uid ? `bito_analytics_tour_completed_${uid}` : 'bito_analytics_tour_completed';
-              try { localStorage.removeItem(key); } catch {}
-              navigate('/app/analytics');
-            }}
-            className="w-full mt-2 flex items-center justify-between p-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] transition-colors cursor-pointer"
-          >
-            <div className="flex items-center gap-2.5">
-              <BarChartIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
-              <span className="text-sm font-medium font-spartan text-[var(--color-text-primary)]">
-                Replay analytics tour
-              </span>
-            </div>
-            <ChevronRightIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
-          </button>
-
-          {/* Replay journal tour */}
-          <button
-            onClick={() => {
-              const uid = user?._id || user?.id || '';
-              const key = uid ? `bito_journal_tour_completed_${uid}` : 'bito_journal_tour_completed';
-              try { localStorage.removeItem(key); } catch {}
-              navigate('/app/journal');
-            }}
-            className="w-full mt-2 flex items-center justify-between p-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 hover:bg-[var(--color-surface-hover)] transition-colors cursor-pointer"
-          >
-            <div className="flex items-center gap-2.5">
-              <ReaderIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
-              <span className="text-sm font-medium font-spartan text-[var(--color-text-primary)]">
-                Replay journal tour
-              </span>
-            </div>
-            <ChevronRightIcon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
-          </button>
+          {[
+            { key: 'dash',      Icon: DashboardIcon, label: 'Replay dashboard tour',  storageKey: (uid) => uid ? `bito_tour_completed_${uid}` : 'bito_tour_completed',               path: '/app/dashboard' },
+            { key: 'analytics', Icon: BarChartIcon,  label: 'Replay analytics tour',  storageKey: (uid) => uid ? `bito_analytics_tour_completed_${uid}` : 'bito_analytics_tour_completed', path: '/app/analytics'  },
+            { key: 'journal',   Icon: ReaderIcon,    label: 'Replay journal tour',     storageKey: (uid) => uid ? `bito_journal_tour_completed_${uid}` : 'bito_journal_tour_completed',     path: '/app/journal'    },
+          ].map(({ key, Icon, label, storageKey, path }) => (
+            <button
+              key={key}
+              onClick={() => {
+                const uid = user?._id || user?.id || '';
+                try { localStorage.removeItem(storageKey(uid)); } catch {}
+                navigate(path);
+              }}
+              className="w-full flex items-center justify-between px-5 py-4 hover:bg-[var(--surface-2)] transition-colors border-b border-[var(--line)] last:border-0"
+            >
+              <div className="flex items-center gap-2.5">
+                <Icon className="w-3.5 h-3.5 text-[var(--ink-3)]" />
+                <span className="text-sm text-[var(--ink)]">{label}</span>
+              </div>
+              <ChevronRightIcon className="w-3 h-3 text-[var(--ink-3)]" />
+            </button>
+          ))}
         </Section>
 
         
 
         {/* ═══════ 8. DANGER ZONE ═══════ */}
         <div className="mt-10 mb-20">
-          <div className="rounded-xl border border-red-500/30 p-5 space-y-6">
-            <h3 className="text-sm font-medium font-spartan text-red-500">
-              Danger Zone
-            </h3>
+          <p className="std-kicker text-[var(--ink-3)] mb-3">Danger Zone</p>
+          <div className="std-card overflow-hidden" style={{ borderColor: 'rgba(225,29,72,0.3)' }}>
 
             {/* ── Reset Completion Data ── */}
-            <div className="border-t border-red-500/15 pt-4">
-              <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)] mb-1">
-                Reset Completion Data
+            <div className="px-5 py-5 border-b border-red-500/10">
+              <p className="text-sm text-[var(--ink)] mb-1">Reset Completion Data</p>
+              <p className="std-mono text-[10px] text-[var(--ink-3)] mb-3 leading-relaxed">
+                Permanently deletes all completion history. Habits are kept, but streaks, rates, and entry history will be cleared.
               </p>
-              <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mb-3">
-                Permanently deletes all your completion history. Your habits are
-                kept, but streaks, completion rates, and entry history will be
-                cleared.
-              </p>
-
-              {/* Export nudge */}
-              <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mb-3">
-                We recommend{" "}
-                <button
-                  onClick={handleExport}
-                  className="underline text-[var(--color-brand-500)] hover:text-[var(--color-brand-600)] transition-colors"
-                >
+              <p className="std-mono text-[10px] text-[var(--ink-3)] mb-3">
+                Recommend{" "}
+                <button onClick={handleExport} className="underline text-[color:var(--signal)]">
                   exporting your data
                 </button>{" "}
                 first.
@@ -1288,54 +1066,48 @@ const SettingsPage = ({ section }) => {
               {!resetConfirm ? (
                 <button
                   onClick={() => setResetConfirm(true)}
-                  className="h-9 px-5 rounded-xl border border-red-500/40 text-sm font-spartan font-medium text-red-500 hover:bg-red-500/10 transition-colors"
+                  className="h-8 px-4 rounded-[var(--r-btn)] border border-red-500/40 std-mono text-[11px] text-red-500 hover:bg-red-500/10 transition-colors"
                 >
                   Reset Completion Data
                 </button>
               ) : (
                 <div className="space-y-3">
-                  {/* Optional date filter */}
                   <div>
-                    <label className="text-xs text-[var(--color-text-secondary)] font-spartan block mb-1">
+                    <label className="std-mono text-[10px] text-[var(--ink-3)] block mb-1">
                       Clear data before (optional — leave blank to reset all)
                     </label>
                     <input
                       type="date"
                       value={resetBefore}
                       onChange={(e) => setResetBefore(e.target.value)}
-                      className="h-9 px-3 rounded-lg border border-[var(--color-border-primary)]/30 bg-transparent text-sm font-spartan text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-red-500/30"
+                      className="h-8 px-3 rounded-[var(--r-btn)] border border-[var(--line)] bg-transparent std-mono text-[11px] text-[var(--ink)] focus:outline-none focus:border-red-500/50"
                     />
                   </div>
-
-                  <p className="text-xs text-[var(--color-text-secondary)] font-spartan">
-                    Type <strong>RESET</strong> to confirm:
+                  <p className="std-mono text-[10px] text-[var(--ink-3)]">
+                    Type <strong className="text-[var(--ink)]">RESET</strong> to confirm:
                   </p>
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                     <input
                       value={resetText}
                       onChange={(e) => setResetText(e.target.value)}
                       placeholder="RESET"
-                      className="flex-1 h-9 px-3 rounded-lg border border-red-500/30 bg-transparent text-base sm:text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-red-500/30"
+                      className="flex-1 h-8 px-3 rounded-[var(--r-btn)] border border-red-500/30 bg-transparent std-mono text-[11px] text-[var(--ink)] placeholder:text-[var(--ink-3)] focus:outline-none focus:border-red-500/60"
                     />
                     <button
                       onClick={handleResetAnalytics}
                       disabled={resetText !== "RESET" || resetting}
-                      className="h-9 px-5 rounded-lg bg-red-500 text-white text-sm font-spartan font-medium disabled:opacity-40 flex items-center gap-2"
+                      className="h-8 px-4 rounded-[var(--r-btn)] bg-red-500 text-white std-mono text-[11px] disabled:opacity-40 flex items-center gap-2"
                     >
                       {resetting ? (
-                        <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       ) : (
                         <TrashIcon className="w-3.5 h-3.5" />
                       )}
                       Confirm Reset
                     </button>
                     <button
-                      onClick={() => {
-                        setResetConfirm(false);
-                        setResetText("");
-                        setResetBefore("");
-                      }}
-                      className="h-9 px-3 rounded-lg text-sm font-spartan text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+                      onClick={() => { setResetConfirm(false); setResetText(""); setResetBefore(""); }}
+                      className="h-8 px-3 rounded-[var(--r-btn)] std-mono text-[11px] text-[var(--ink-3)] hover:bg-[var(--surface-2)] transition-colors"
                     >
                       Cancel
                     </button>
@@ -1345,48 +1117,42 @@ const SettingsPage = ({ section }) => {
             </div>
 
             {/* ── Delete Account ── */}
-            <div className="border-t border-red-500/15 pt-4">
-              <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)] mb-1">
-                Delete Account
-              </p>
-              <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mb-3">
-                Permanently delete your account and all associated data. This
-                cannot be undone.
+            <div className="px-5 py-5">
+              <p className="text-sm text-[var(--ink)] mb-1">Delete Account</p>
+              <p className="std-mono text-[10px] text-[var(--ink-3)] mb-3 leading-relaxed">
+                Permanently delete your account and all associated data. This cannot be undone.
               </p>
 
               {!deleteConfirm ? (
                 <button
                   onClick={() => setDeleteConfirm(true)}
-                  className="h-9 px-5 rounded-xl border border-red-500/40 text-sm font-spartan font-medium text-red-500 hover:bg-red-500/10 transition-colors"
+                  className="h-8 px-4 rounded-[var(--r-btn)] border border-red-500/40 std-mono text-[11px] text-red-500 hover:bg-red-500/10 transition-colors"
                 >
                   Delete Account
                 </button>
               ) : (
                 <div className="space-y-3">
-                  <p className="text-xs text-[var(--color-text-secondary)] font-spartan">
-                    Type <strong>DELETE</strong> to confirm:
+                  <p className="std-mono text-[10px] text-[var(--ink-3)]">
+                    Type <strong className="text-[var(--ink)]">DELETE</strong> to confirm:
                   </p>
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                     <input
                       value={deleteText}
                       onChange={(e) => setDeleteText(e.target.value)}
                       placeholder="DELETE"
-                      className="flex-1 h-9 px-3 rounded-lg border border-red-500/30 bg-transparent text-base sm:text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-red-500/30"
+                      className="flex-1 h-8 px-3 rounded-[var(--r-btn)] border border-red-500/30 bg-transparent std-mono text-[11px] text-[var(--ink)] placeholder:text-[var(--ink-3)] focus:outline-none focus:border-red-500/60"
                     />
                     <button
                       onClick={handleDelete}
                       disabled={deleteText !== "DELETE"}
-                      className="h-9 px-5 rounded-lg bg-red-500 text-white text-sm font-spartan font-medium disabled:opacity-40 flex items-center gap-2"
+                      className="h-8 px-4 rounded-[var(--r-btn)] bg-red-500 text-white std-mono text-[11px] disabled:opacity-40 flex items-center gap-2"
                     >
                       <TrashIcon className="w-3.5 h-3.5" />
                       Confirm
                     </button>
                     <button
-                      onClick={() => {
-                        setDeleteConfirm(false);
-                        setDeleteText("");
-                      }}
-                      className="h-9 px-3 rounded-lg text-sm font-spartan text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+                      onClick={() => { setDeleteConfirm(false); setDeleteText(""); }}
+                      className="h-8 px-3 rounded-[var(--r-btn)] std-mono text-[11px] text-[var(--ink-3)] hover:bg-[var(--surface-2)] transition-colors"
                     >
                       Cancel
                     </button>
@@ -1398,10 +1164,9 @@ const SettingsPage = ({ section }) => {
         </div>
       </div>
 
-      {/* saving indicator */}
       {saving && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 shadow-lg text-xs font-spartan text-[var(--color-text-secondary)]">
-          <span className="w-3.5 h-3.5 border-2 border-[var(--color-brand-500)] border-t-transparent rounded-full animate-spin" />
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 std-card shadow-lg std-mono text-[11px] text-[var(--ink-3)]">
+          <span className="w-3 h-3 border-2 border-[var(--signal)] border-t-transparent rounded-full animate-spin" />
           Saving…
         </div>
       )}
@@ -1450,8 +1215,7 @@ const NotificationSection = ({ saving, settings, saveSetting }) => {
   };
 
   return (
-    <Section title="Notifications" icon={BellIcon}>
-      {/* Push notifications */}
+    <Section title="Notifications">
       <SettingRow
         label="Push Notifications"
         description={
@@ -1470,39 +1234,31 @@ const NotificationSection = ({ saving, settings, saveSetting }) => {
         />
       </SettingRow>
 
-      {/* Test notification button */}
       {isSubscribed && (
-        <div className="ml-1 mb-3">
+        <div className="px-5 pb-3 -mt-1">
           <button
             onClick={handleTest}
             disabled={testSending}
-            className="text-xs font-spartan font-medium text-[var(--color-brand-500)] hover:text-[var(--color-brand-600)] transition-colors disabled:opacity-50"
+            className="std-mono text-[10px] text-[var(--signal)] hover:underline disabled:opacity-50 transition-colors"
           >
-            {testSending ? 'Sending…' : testResult === 'sent' ? '✓ Test sent!' : testResult === 'error' ? '✗ Failed' : 'Send test notification'}
+            {testSending ? 'Sending…' : testResult === 'sent' ? '✓ Sent!' : testResult === 'error' ? '✗ Failed' : 'Send test notification'}
           </button>
         </div>
       )}
 
-      <div className="border-t border-[var(--color-border-primary)]/10 pt-3 mt-1">
-        {/* Email notifications */}
-        <SettingRow
-          label="Email Updates"
-          description="Weekly reports and summaries"
-        >
-          <Toggle
-            checked={settings.emailNotifications}
-            onChange={(v) => saveSetting("emailNotifications", v)}
-            disabled={saving}
-          />
-        </SettingRow>
-      </div>
+      <SettingRow label="Email Updates" description="Weekly reports and summaries">
+        <Toggle
+          checked={settings.emailNotifications}
+          onChange={(v) => saveSetting("emailNotifications", v)}
+          disabled={saving}
+        />
+      </SettingRow>
 
-      {/* Permission info */}
       {supported && permission === 'denied' && (
-        <div className="flex items-start gap-2 mt-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
-          <ExclamationTriangleIcon className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
-          <p className="text-xs font-spartan text-[var(--color-text-secondary)]">
-            Notifications are blocked by your browser. To enable them, click the lock icon in your address bar and allow notifications for this site.
+        <div className="px-5 py-3 flex items-start gap-2 border-t border-[var(--line)]">
+          <ExclamationTriangleIcon className="w-3.5 h-3.5 text-[var(--ember,#f59e0b)] mt-0.5 flex-shrink-0" />
+          <p className="std-mono text-[10px] text-[var(--ink-3)] leading-relaxed">
+            Notifications are blocked by your browser. Enable in the address-bar site settings.
           </p>
         </div>
       )}
@@ -1510,33 +1266,27 @@ const NotificationSection = ({ saving, settings, saveSetting }) => {
   );
 };
 
-const Section = ({ title, icon: Icon, children }) => (
+/* ── DRILL: section wrapper ──────────────────────────────── */
+const Section = ({ title, icon: _icon, children }) => (
   <div className="mb-8">
-    <div className="flex items-center gap-2 mb-3">
-      {Icon && (
-        <Icon className="w-4 h-4 text-[var(--color-text-tertiary)]" />
-      )}
-      <h2 className="text-xs font-medium font-spartan text-[var(--color-text-tertiary)] uppercase tracking-wider">
-        {title}
-      </h2>
+    <p className="std-kicker text-[var(--ink-3)] mb-3">{title}</p>
+    <div className="std-card overflow-hidden">
+      {children}
     </div>
-    {children}
   </div>
 );
 
-/** A single setting row — label + description on left, control on right */
+/* ── DRILL: setting row — label+description left, control right ── */
 const SettingRow = ({ label, description, disabled, children }) => (
   <div
-    className={`flex items-center justify-between py-3 ${
-      disabled ? "opacity-50" : ""
+    className={`flex items-center justify-between px-5 py-4 border-b border-[var(--line)] last:border-0 ${
+      disabled ? "opacity-40" : ""
     }`}
   >
-    <div className="min-w-0 flex-1 pr-4">
-      <p className="text-sm font-medium font-spartan text-[var(--color-text-primary)]">
-        {label}
-      </p>
+    <div className="min-w-0 flex-1 pr-6">
+      <p className="text-sm text-[var(--ink)]">{label}</p>
       {description && (
-        <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mt-0.5">
+        <p className="std-mono text-[10px] text-[var(--ink-3)] mt-0.5 leading-relaxed">
           {description}
         </p>
       )}
@@ -1545,7 +1295,7 @@ const SettingRow = ({ label, description, disabled, children }) => (
   </div>
 );
 
-/** Simple toggle switch */
+/* ── DRILL: toggle switch ─────────────────────────────────── */
 const Toggle = ({ checked, onChange, disabled }) => (
   <button
     type="button"
@@ -1553,58 +1303,52 @@ const Toggle = ({ checked, onChange, disabled }) => (
     aria-checked={checked}
     disabled={disabled}
     onClick={() => !disabled && onChange(!checked)}
-    className={`relative w-11 h-6 rounded-full transition-colors ${
-      checked
-        ? "bg-[var(--color-brand-500)]"
-        : "bg-[var(--color-border-primary)]/40"
-    } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+    className={`relative w-10 h-5 rounded-full transition-colors flex-shrink-0 ${
+      checked ? "bg-[var(--signal)]" : "bg-[var(--line-2,var(--line))]"
+    } ${disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
   >
     <span
-      className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+      className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
         checked ? "translate-x-5" : "translate-x-0"
       }`}
     />
   </button>
 );
 
-/** Native select styled to match design system */
+/* ── DRILL: select input ──────────────────────────────────── */
 const SelectInput = ({ value, options, onChange, disabled }) => (
   <select
     value={value}
     onChange={(e) => onChange(e.target.value)}
     disabled={disabled}
-    className="h-9 px-3 pr-8 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 text-base sm:text-sm font-spartan text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)]/30 disabled:opacity-50 appearance-none cursor-pointer"
+    className="h-8 px-3 pr-8 rounded-[var(--r-btn)] bg-[var(--surface-2)] border border-[var(--line)] std-mono text-[11px] text-[var(--ink)] focus:outline-none focus:border-[var(--signal)] disabled:opacity-40 appearance-none cursor-pointer transition-colors"
     style={{
       backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-      backgroundPosition: "right 0.5rem center",
+      backgroundPosition: "right 0.4rem center",
       backgroundRepeat: "no-repeat",
-      backgroundSize: "1.25em 1.25em",
+      backgroundSize: "1.1em 1.1em",
     }}
   >
     {options.map((o) => (
-      <option key={o.value} value={o.value}>
-        {o.label}
-      </option>
+      <option key={o.value} value={o.value}>{o.label}</option>
     ))}
   </select>
 );
 
-/** Toast notification */
+/* ── DRILL: toast notification ───────────────────────────── */
 const Toast = ({ toast }) => {
   if (!toast) return null;
+  const isError = toast.type === "error";
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
       <div
-        className={`flex items-center gap-2.5 px-5 py-3 rounded-xl shadow-lg text-sm font-spartan font-medium ${
-          toast.type === "error"
-            ? "bg-red-500 text-white"
-            : "bg-[var(--color-brand-600)] text-white"
-        }`}
+        className="std-card flex items-center gap-2.5 px-5 py-3 shadow-lg std-mono text-[12px] text-[var(--ink)]"
+        style={{ borderLeftWidth: 2, borderLeftColor: isError ? 'var(--rose, #e11d48)' : 'var(--signal)' }}
       >
-        {toast.type === "error" ? (
-          <ExclamationTriangleIcon className="w-4 h-4" />
+        {isError ? (
+          <ExclamationTriangleIcon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--rose, #e11d48)' }} />
         ) : (
-          <CheckCircledIcon className="w-4 h-4" />
+          <CheckCircledIcon className="w-3.5 h-3.5 flex-shrink-0 text-[var(--signal)]" />
         )}
         {toast.message}
       </div>
