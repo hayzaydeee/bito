@@ -1,0 +1,199 @@
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useHabits } from '../contexts/HabitContext';
+import { useAuth } from '../contexts/AuthContext';
+import TimeRangePillsStd from '../components/analytics/TimeRangePillsStd';
+import MetricCardsStd from '../components/analytics/MetricCardsStd';
+import CompletionAreaChart from '../components/analytics/CompletionAreaChart';
+import StreakBarChart from '../components/analytics/StreakBarChart';
+import TopHabitsList from '../components/analytics/TopHabitsList';
+import AnalyticsInsights from '../components/analytics/AnalyticsInsights';
+import HabitStreakChart from '../components/analytics/HabitStreakChart';
+import AnalyticsTour from '../components/analytics/AnalyticsTour';
+
+const LS_KEY = 'bito_analytics_timeRange';
+
+/* ─────────────────────────────────────────────────────────────────────
+   AnalyticsPageStd — DRILL "Signal Observatory" variant.
+   Architecture: Standard DS shows this; Legacy DS keeps AnalyticsPage.
+   Chart sub-components are reused as-is — they use var(--color-*) tokens
+   that auto-map to the DRILL palette under the .std scope.
+───────────────────────────────────────────────────────────────────── */
+const AnalyticsPageStd = () => {
+  const { habits, entries, isLoading, fetchHabitEntries } = useHabits();
+  const { user } = useAuth();
+
+  /* ── time range ────────────────────────────── */
+  const [timeRange, setTimeRange] = useState(() => {
+    try {
+      const saved = localStorage.getItem(LS_KEY);
+      if (saved && ['7d', '30d', '90d', 'all'].includes(saved)) return saved;
+    } catch { /* ignore */ }
+    return 'all';
+  });
+
+  const handleTimeRangeChange = useCallback((v) => {
+    setTimeRange(v);
+    try { localStorage.setItem(LS_KEY, v); } catch { /* ignore */ }
+  }, []);
+
+  /* ── account age ───────────────────────────── */
+  const accountAgeDays = (() => {
+    if (!user?.createdAt) return 365;
+    const diff = Date.now() - new Date(user.createdAt).getTime();
+    return Math.max(1, Math.ceil(diff / 86400000));
+  })();
+
+  const effectiveAccountAgeDays = useMemo(() => {
+    let earliestMs = null;
+    habits.forEach(habit => {
+      const hEntries = entries[habit._id] || {};
+      Object.values(hEntries).forEach(entry => {
+        if (!entry?.date) return;
+        const ms = new Date(entry.date).getTime();
+        if (!isNaN(ms) && (earliestMs === null || ms < earliestMs)) earliestMs = ms;
+      });
+    });
+    if (earliestMs === null) return habits.length > 0 ? 1 : accountAgeDays;
+    return Math.max(1, Math.ceil((Date.now() - earliestMs) / 86400000));
+  }, [habits, entries, accountAgeDays]);
+
+  const hasAnyEntries = useMemo(() =>
+    habits.some(habit =>
+      Object.values(entries[habit._id] || {}).some(e => e?.completed)
+    ), [habits, entries]);
+
+  /* ── analytics reset → snap to 7d ─────────── */
+  useEffect(() => {
+    const handleReset = () => {
+      setTimeRange('7d');
+      try { localStorage.setItem(LS_KEY, '7d'); } catch { /* ignore */ }
+    };
+    window.addEventListener('analyticsReset', handleReset);
+    return () => window.removeEventListener('analyticsReset', handleReset);
+  }, []);
+
+  /* ── fetch entries for visible range ──────── */
+  useEffect(() => {
+    if (!habits.length) return;
+    const days = timeRange === 'all' ? accountAgeDays : parseInt(timeRange) || 30;
+    const end = new Date();
+    const start = new Date(end);
+    start.setDate(start.getDate() - days);
+    habits.forEach(h => fetchHabitEntries(h._id, start.toISOString(), end.toISOString()));
+  }, [habits.length, timeRange]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const activeCount = habits.filter(h => h.isActive !== false && !h.isArchived).length;
+  const windowLabel = timeRange === 'all' ? `${effectiveAccountAgeDays}D TOTAL` : `${timeRange.toUpperCase()} WINDOW`;
+
+  /* ── loading skeleton ─────────────────────── */
+  if (isLoading) {
+    return (
+      <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
+        <div className="max-w-5xl mx-auto space-y-6 animate-pulse">
+          <div className="h-12 bg-[var(--surface-2)] rounded w-48" />
+          <div className="h-24 bg-[var(--surface-2)] rounded std-card" />
+          <div className="h-56 bg-[var(--surface-2)] rounded std-card" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
+      <div className="max-w-5xl mx-auto space-y-8">
+
+        {/* ── Masthead ──────────────────────────── */}
+        <div data-tour="analytics-header">
+          <p className="std-kicker text-[var(--signal)] mb-1">Signal Report</p>
+          <div className="flex items-end justify-between gap-4 flex-wrap">
+            <h1 className="std-display text-4xl sm:text-5xl font-bold text-[var(--ink)] leading-none">
+              Analytics
+            </h1>
+            <TimeRangePillsStd value={timeRange} onChange={handleTimeRangeChange} />
+          </div>
+          <p className="std-mono text-[11px] text-[var(--ink-3)] mt-2 tracking-wider uppercase">
+            {String(activeCount).padStart(2, '0')} Active Habits · {windowLabel}
+          </p>
+          <div className="std-rule mt-4" />
+        </div>
+
+        {/* ── Empty state ──────────────────────── */}
+        {habits.length > 0 && !hasAnyEntries && (
+          <div className="std-card p-5 border-l-2 border-l-[var(--line-2)]">
+            <p className="std-mono text-xs text-[var(--ink-3)]">
+              No completion data yet. Start checking off habits to see your signal here.
+            </p>
+          </div>
+        )}
+
+        {/* ── Metric ledger strip ──────────────── */}
+        <div data-tour="analytics-metrics">
+          <MetricCardsStd
+            habits={habits}
+            entries={entries}
+            timeRange={timeRange}
+            accountAgeDays={effectiveAccountAgeDays}
+          />
+        </div>
+
+        {/* ── Daily completion area chart ──────── */}
+        <div data-tour="analytics-charts">
+          <div className="std-card p-5 sm:p-6">
+            <p className="std-kicker text-[var(--ink-3)] mb-5">Daily Performance</p>
+            <CompletionAreaChart
+              habits={habits}
+              entries={entries}
+              timeRange={timeRange}
+              accountAgeDays={effectiveAccountAgeDays}
+            />
+          </div>
+        </div>
+
+        {/* ── Streaks + Top habits 2-col ────────── */}
+        <div className="grid gap-4 lg:grid-cols-2" data-tour="analytics-streaks-grid">
+          <div className="std-card p-5 sm:p-6">
+            <p className="std-kicker text-[var(--ink-3)] mb-5">Current Streaks</p>
+            <StreakBarChart habits={habits} entries={entries} />
+          </div>
+          <div className="std-card p-5 sm:p-6">
+            <p className="std-kicker text-[var(--ink-3)] mb-5">Top Habits</p>
+            <TopHabitsList
+              habits={habits}
+              entries={entries}
+              timeRange={timeRange}
+              accountAgeDays={effectiveAccountAgeDays}
+            />
+          </div>
+        </div>
+
+        {/* ── Streak timeline ───────────────────── */}
+        {habits.length > 0 && (
+          <div data-tour="analytics-streak-timeline">
+            <div className="std-card p-5 sm:p-6">
+              <p className="std-kicker text-[var(--ink-3)] mb-5">Streak Timeline</p>
+              <HabitStreakChart
+                habits={habits}
+                entries={entries}
+                timeRange={timeRange}
+                maxHabitsDisplayed={5}
+                accountAgeDays={effectiveAccountAgeDays}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* ── AI Insights ──────────────────────── */}
+        {user?.preferences?.aiAnalytics !== false && (
+          <div data-tour="analytics-ai-insights">
+            <p className="std-kicker text-[var(--ink-3)] mb-3">Signal Intelligence</p>
+            <AnalyticsInsights timeRange={timeRange} />
+          </div>
+        )}
+
+        <AnalyticsTour userId={user?._id || user?.id} />
+      </div>
+    </div>
+  );
+};
+
+export default AnalyticsPageStd;

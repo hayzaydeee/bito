@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useHabits } from '../contexts/HabitContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
+import AnalyticsPageStd from './AnalyticsPageStd';
 import TimeRangePills from '../components/analytics/TimeRangePills';
 import MetricCards from '../components/analytics/MetricCards';
 import CompletionAreaChart from '../components/analytics/CompletionAreaChart';
@@ -13,7 +15,7 @@ import AnalyticsTour from '../components/analytics/AnalyticsTour';
 
 const LS_KEY = 'bito_analytics_timeRange';
 
-const AnalyticsPage = () => {
+const AnalyticsPageLegacy = () => {
   const { habits, entries, isLoading, fetchHabitEntries } = useHabits();
   const { user } = useAuth();
 
@@ -168,6 +170,11 @@ const AnalyticsPage = () => {
       <AnalyticsTour userId={user?._id || user?.id} />
     </div>
   );
+};
+
+const AnalyticsPage = () => {
+  const { designSystem } = useTheme();
+  return designSystem === 'standard' ? <AnalyticsPageStd /> : <AnalyticsPageLegacy />;
 };
 
 export default AnalyticsPage;
