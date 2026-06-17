@@ -60,7 +60,7 @@ const CompassCard = ({ compass, index = 0, onOpen, onArchive, archiveLoading }) 
         accent={accentColor}
         active={isActive}
         onClick={() => onOpen(t)}
-        minHeight={196}
+        minHeight={160}
         icon={
           <span
             className="w-11 h-11 rounded-[10px] flex items-center justify-center border flex-shrink-0"

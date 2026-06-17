@@ -55,7 +55,8 @@ const GroupDetailHeader = ({ group, groupId, members }) => {
 
   return (
     <>
-      <div className="flex items-center justify-between gap-4">
+      <div>
+        <div className="flex items-center justify-between gap-4">
         {/* left: back + icon + name */}
         <div className="flex items-center gap-4 min-w-0">
           <button
@@ -107,8 +108,10 @@ const GroupDetailHeader = ({ group, groupId, members }) => {
           </button>
         </div>
       </div>
+      <div className="std-rule mt-4" />
+    </div>
 
-      {/* QR Modal */}
+    {/* QR Modal */}
       {showQR && qrSrc && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"

@@ -33,6 +33,8 @@ const FeatureHeader = ({ kicker, title, stats, actions }) => (
         {stats}
       </p>
     )}
+    
+    <div className="std-rule mt-4" />
   </div>
 );
 
