@@ -51,7 +51,7 @@ const CompassListPage = () => {
   // ── Suite preview (if redirected from multi-goal generation) ──
   if (activeSuite) {
     return (
-      <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
+      <div className="std h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-12">
         <div className="max-w-5xl mx-auto">
           <SuitePreview
             suite={activeSuite}

@@ -86,7 +86,7 @@ const Layout = () => {
           leftOffset={contentLeft}
         />
         <div
-          className="h-full overflow-hidden flex flex-col"
+          className="h-full overflow-hidden relative"
           style={{ paddingLeft: contentLeft, paddingTop: 80, paddingRight: 12, paddingBottom: 12 }}
         >
           <AnimatePresence mode="wait">
@@ -132,7 +132,7 @@ const Layout = () => {
 
         {/* Content Pane */}
         <div
-          className="flex-1 overflow-hidden flex flex-col"
+          className="flex-1 overflow-hidden relative"
           style={{
             backgroundColor: "var(--color-bg-primary)",
             paddingBottom: isMobile ? "calc(64px + env(safe-area-inset-bottom, 0px))" : "0",

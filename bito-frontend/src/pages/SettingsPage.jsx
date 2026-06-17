@@ -618,7 +618,7 @@ const SettingsPage = ({ section }) => {
      ================================================================ */
 
   const pageSkeleton = (
-    <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-10">
+    <div className="std h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-10">
       <div className="max-w-2xl mx-auto space-y-8 animate-pulse">
         <div>
           <div className="h-3 w-20 rounded bg-[var(--surface-2)] mb-2" />

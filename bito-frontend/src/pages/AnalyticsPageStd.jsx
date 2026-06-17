@@ -88,7 +88,7 @@ const AnalyticsPageStd = () => {
   /* ── loading skeleton ─────────────────────── */
   if (isLoading) {
     return (
-      <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
+      <div className="std h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-12">
         <div className="max-w-5xl mx-auto space-y-6 animate-pulse">
           <div className="h-12 bg-[var(--surface-2)] rounded w-48" />
           <div className="h-24 bg-[var(--surface-2)] rounded std-card" />

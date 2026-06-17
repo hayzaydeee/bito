@@ -4,7 +4,7 @@ import React, { memo } from "react";
  * HabitsSkeleton — DRILL loading placeholder ("The Roster").
  */
 const HabitsSkeleton = memo(() => (
-  <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
+  <div className="std h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-12">
     <div className="max-w-6xl mx-auto animate-pulse">
       {/* Masthead */}
       <div className="mb-10 pb-7 sm:pb-8 border-b border-[var(--line-2)] flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">

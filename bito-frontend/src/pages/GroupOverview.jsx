@@ -274,7 +274,7 @@ const GroupOverview = () => {
   /* ── skeleton ────────────────────────── */
 
   const overviewSkeleton = (
-    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-7 sm:py-10">
+    <div className="grp grp-surface h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-10">
       <div className="max-w-5xl mx-auto space-y-8">
         <div className="h-16 grp-card animate-pulse" />
         <div className="grid grid-cols-3 gap-3">
@@ -296,7 +296,7 @@ const GroupOverview = () => {
 
   if (!group && !loading) {
     return (
-      <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-7 sm:py-10">
+      <div className="grp grp-surface h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-10">
         <div className="max-w-5xl mx-auto text-center py-24">
           <p className="grp-kicker mb-3">Error — 404</p>
           <h1 className="grp-display text-3xl font-bold text-[var(--ink)] mb-3">

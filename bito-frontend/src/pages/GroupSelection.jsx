@@ -140,7 +140,7 @@ const GroupSelection = () => {
   /* ── loading skeleton ───────────────── */
 
   const groupsSkeleton = (
-    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-7 sm:py-10">
+    <div className="grp grp-surface h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-10">
       <div className="max-w-5xl mx-auto space-y-4">
         <div className="h-3 w-40 bg-[var(--surface-2)] animate-pulse" />
         <div className="h-12 w-64 bg-[var(--surface-2)] animate-pulse" />

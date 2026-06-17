@@ -193,7 +193,7 @@ const GroupSettings = () => {
   /* ── skeleton ────────────────────────── */
 
   const settingsSkeleton = (
-    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-7 sm:py-10">
+    <div className="grp grp-surface h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-10">
       <div className="max-w-2xl mx-auto space-y-8 animate-pulse">
         <div>
           <div className="h-3 w-20 rounded bg-[var(--surface-2)] mb-2" />
@@ -213,7 +213,7 @@ const GroupSettings = () => {
 
   if (error && !group) {
     return (
-      <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-10 flex items-center justify-center">
+      <div className="grp grp-surface h-full flex flex-col min-h-0 px-4 sm:px-8 py-10 flex items-center justify-center">
         <div className="text-center">
           <p className="grp-mono text-[12px] text-[var(--rose)] mb-4">{error}</p>
           <button
