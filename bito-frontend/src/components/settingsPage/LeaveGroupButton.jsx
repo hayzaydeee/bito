@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SignOut, WarningCircle, X } from '@phosphor-icons/react';
+import { SignOut, X } from '@phosphor-icons/react';
 import { groupsAPI } from '../../services/api';
 import AnimatedModal from '../ui/AnimatedModal';
 
@@ -28,27 +28,30 @@ const LeaveGroupButton = ({ group, isOwner }) => {
       
       await groupsAPI.leaveGroup(group._id);
       
-      // Redirect to dashboard after successfully leaving
       navigate('/app');
     } catch (err) {
       console.error('Error leaving group:', err);
-      setError(err.message || 'Failed to Leave Group. Please try again.');
+      setError(err.message || 'Failed to leave group. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Don't show leave button if user is the only owner
   if (isOwner && group?.members?.filter(m => m.role === 'owner').length <= 1) {
     return (
-      <div className="mt-8 grp-card bg-[var(--ember-bg)] border border-[var(--ember-border)] p-4 flex gap-3">
-        <WarningCircle size={20} weight="fill" className="text-[var(--ember)] flex-shrink-0 mt-0.5" />
-        <div>
-          <h4 className="grp-display font-bold text-[14px] text-[var(--ember)] mb-1">Cannot Leave Group</h4>
-          <p className="text-[13px] text-[var(--ember)] opacity-90">
-            As the only owner of this group, you cannot leave. You must either transfer ownership to another member
-            or delete the group.
+      <div className="flex items-center justify-between gap-4 px-5 py-4 opacity-70">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-[var(--ink)] flex items-center gap-2">
+            Leave Group
           </p>
+          <p className="text-sm text-[var(--ink-2)] mt-0.5">
+            As the only owner, you must transfer ownership or delete the group instead.
+          </p>
+        </div>
+        <div className="flex-shrink-0">
+          <button className="grp-btn grp-btn--sm" disabled>
+            Leave
+          </button>
         </div>
       </div>
     );
@@ -56,99 +59,76 @@ const LeaveGroupButton = ({ group, isOwner }) => {
 
   return (
     <>
-      <div className="mt-8 grp-card bg-[var(--rose-bg)] border border-[var(--rose-border)] p-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <p className="grp-display text-[15px] font-bold text-[var(--rose)] mb-0.5">
-              Leave Group
-            </p>
-            <p className="text-[13px] text-[var(--rose)] opacity-80">
-              You will lose access to all group data
-            </p>
-          </div>
+      <div className="flex items-center justify-between gap-4 px-5 py-4">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-[var(--ink)]">Leave Group</p>
+          <p className="text-sm text-[var(--ink-2)] mt-0.5">You will lose access to all group data</p>
+        </div>
+        <div className="flex-shrink-0">
           <button
             onClick={openConfirmDialog}
-            className="grp-btn flex items-center gap-2 flex-shrink-0 !bg-[var(--rose)] !text-[var(--bg)] !border-transparent hover:opacity-90"
+            className="grp-btn grp-btn--sm bg-[var(--rose)] border-[var(--rose)] text-[#1a0509] hover:brightness-110"
             disabled={isLoading}
           >
-            <SignOut size={16} weight="bold" />
-            {isLoading ? 'Processing...' : 'Leave Group'}
+            {isLoading ? 'Processing...' : 'Leave'}
           </button>
         </div>
       </div>
 
-      <AnimatedModal isOpen={isConfirmDialogOpen} onClose={closeConfirmDialog} maxWidth="max-w-md">
-        <div className="p-6 relative">
-          <button 
-            className="absolute top-4 right-4 text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors p-1"
-            onClick={closeConfirmDialog}
-          >
-            <X size={20} weight="bold" />
-          </button>
-          
-          <div className="text-center mb-6 mt-2">
-            <div className="w-14 h-14 rounded-2xl bg-[var(--rose-bg)] flex items-center justify-center mx-auto mb-5 border border-[var(--rose-border)]">
-              <SignOut size={28} weight="fill" className="text-[var(--rose)]" />
+      <AnimatedModal isOpen={isConfirmDialogOpen} onClose={closeConfirmDialog} maxWidth="max-w-sm">
+        <div className="grp bg-[var(--surface)] rounded-[16px] border border-[var(--line-2)] p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2.5">
+              <span className="w-8 h-8 rounded-[9px] bg-[var(--rose)]/15 flex items-center justify-center">
+                <SignOut size={16} className="text-[var(--rose)]" />
+              </span>
+              <h2 className="grp-display text-xl font-bold text-[var(--ink)]">
+                Leave Group
+              </h2>
             </div>
-            <h2 className="grp-display text-2xl font-bold text-[var(--ink)] mb-2">
-              Leave Group
-            </h2>
-            <p className="text-[14px] text-[var(--ink-2)]">
-              You are about to leave <strong className="text-[var(--ink)] font-bold">{group?.name}</strong>
-            </p>
+            <button
+              onClick={closeConfirmDialog}
+              className="w-8 h-8 flex items-center justify-center rounded-[9px] text-[var(--ink-3)] hover:text-[var(--ink)] hover:bg-[var(--surface-2)] transition-colors"
+            >
+              <X size={14} weight="bold" />
+            </button>
           </div>
-          
-          <div className="space-y-5">
-            <div>
-              <p className="text-[13px] text-[var(--ink)] font-bold mb-3 uppercase tracking-wider grp-mono">
-                You'll lose access to:
-              </p>
-              <ul className="space-y-2">
-                {[
-                  "All group habits and trackers",
-                  "Your progress history in this group",
-                  "Team analytics and insights"
-                ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-2.5 text-[14px] text-[var(--ink-2)]">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--rose)] opacity-50" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
+
+          <div className="space-y-4">
+            <p className="text-[14px] text-[var(--ink)]">
+              You are about to leave <strong className="font-bold text-[var(--ink)]">{group?.name}</strong>. You'll lose access to:
+            </p>
             
-            <div className="p-3.5 bg-[var(--ember-bg)] border border-[var(--ember-border)] rounded-[10px] flex items-start gap-2.5">
-              <WarningCircle size={18} weight="fill" className="text-[var(--ember)] flex-shrink-0 mt-0.5" />
-              <p className="text-[13px] text-[var(--ember)] leading-relaxed">
+            <ul className="space-y-2 mb-6">
+              {[
+                "All group habits and trackers",
+                "Your progress history in this group",
+                "Team analytics and insights"
+              ].map((item, i) => (
+                <li key={i} className="flex items-center gap-2.5 text-[14px] text-[var(--ink-2)]">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[var(--rose)] opacity-50" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            
+            <div className="p-3 bg-[var(--rose)]/10 border border-[var(--rose)]/20 rounded-[10px] flex items-start gap-2.5">
+              <p className="text-[13px] text-[var(--rose)] leading-relaxed font-medium">
                 This action cannot be undone. You will need a new invitation to rejoin.
               </p>
             </div>
             
             {error && (
-              <div className="p-3.5 bg-[var(--rose-bg)] border border-[var(--rose-border)] rounded-[10px]">
-                <p className="text-[13px] text-[var(--rose)] font-medium">
-                  {error}
-                </p>
-              </div>
+              <p className="mt-1.5 grp-mono text-[11px] text-[var(--rose)]">{error}</p>
             )}
             
-            <div className="flex gap-3 pt-2">
-              <button
-                onClick={closeConfirmDialog}
-                className="grp-btn flex-1 !bg-transparent !border-[var(--line-2)] hover:!bg-[var(--surface-2)]"
-                disabled={isLoading}
-              >
-                Cancel
-              </button>
-              
-              <button
-                onClick={handleleaveGroup}
-                disabled={isLoading}
-                className="grp-btn flex-1 !bg-[var(--rose)] !text-[var(--bg)] !border-transparent hover:opacity-90 disabled:opacity-50"
-              >
-                {isLoading ? 'Leaving...' : 'Confirm & Leave'}
-              </button>
-            </div>
+            <button
+              onClick={handleleaveGroup}
+              disabled={isLoading}
+              className="grp-btn w-full bg-[var(--rose)] border-[var(--rose)] text-[#1a0509] hover:brightness-110 disabled:opacity-40 disabled:pointer-events-none mt-2"
+            >
+              {isLoading ? "Leaving…" : "Confirm & Leave"}
+            </button>
           </div>
         </div>
       </AnimatedModal>
