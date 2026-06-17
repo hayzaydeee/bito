@@ -180,7 +180,7 @@ const JournalPageV2 = () => {
             onOpenYesterday={openYesterday}
             onOpenList={openList}
             onOpenStream={openStream}
-            onOpenSearch={openSearch}
+
             onOpenArchive={openArchive}
             onSelectDate={openDateFromHome}
             onAddMicro={handleAddMicroFromHome}

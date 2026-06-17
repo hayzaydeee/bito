@@ -27,7 +27,7 @@ const JournalHome = ({
   onOpenYesterday,
   onOpenList,
   onOpenStream,
-  onOpenSearch,
+
   onOpenArchive,
   onSelectDate,
   onAddMicro,
@@ -166,7 +166,7 @@ const JournalHome = ({
             <ReadingRoomCard
               onOpenList={onOpenList}
               onOpenStream={onOpenStream}
-              onOpenSearch={onOpenSearch}
+
               onOpenArchive={onOpenArchive}
               onSelectDate={onSelectDate}
             />
