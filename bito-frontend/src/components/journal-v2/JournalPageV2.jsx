@@ -10,7 +10,7 @@ import JournalEntryList from './JournalEntryList';
 import JournalHome from './JournalHome';
 import JournalPrivacySettings, { AIOptInNudge } from './JournalPrivacy';
 import JournalTour from './JournalTour';
-import { MagnifyingGlassIcon, Cross2Icon } from '@radix-ui/react-icons';
+import { MagnifyingGlassIcon, Cross2Icon, LockClosedIcon, LockOpen1Icon } from '@radix-ui/react-icons';
 import { ArrowLeft } from '@phosphor-icons/react';
 import { journalV2Service } from '../../services/journalV2Service';
 import { userAPI } from '../../services/api';
