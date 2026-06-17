@@ -52,7 +52,7 @@ const CompassListPage = () => {
   if (activeSuite) {
     return (
       <div className="std h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-12">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-5xl mx-auto w-full">
           <SuitePreview
             suite={activeSuite}
             onBack={() => setActiveSuite(null)}

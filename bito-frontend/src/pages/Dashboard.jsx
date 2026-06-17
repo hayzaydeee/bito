@@ -226,7 +226,7 @@ const Dashboard = () => {
 
   /* ── Loading skeleton ── */
   const dashboardSkeleton = (
-    <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-6 w-full">
       {isOnboardingHandoffLoading && (
         <div
           className="rounded-xl border px-4 py-3 text-sm font-spartan"

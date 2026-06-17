@@ -275,7 +275,7 @@ const GroupOverview = () => {
 
   const overviewSkeleton = (
     <div className="grp grp-surface h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-10">
-      <div className="max-w-5xl mx-auto space-y-8">
+      <div className="max-w-5xl mx-auto space-y-8 w-full">
         <div className="h-16 grp-card animate-pulse" />
         <div className="grid grid-cols-3 gap-3">
           {[...Array(3)].map((_, i) => (

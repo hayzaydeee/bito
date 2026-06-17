@@ -141,7 +141,7 @@ const GroupSelection = () => {
 
   const groupsSkeleton = (
     <div className="grp grp-surface h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-10">
-      <div className="max-w-5xl mx-auto space-y-4">
+      <div className="max-w-5xl mx-auto space-y-4 w-full">
         <div className="h-3 w-40 bg-[var(--surface-2)] animate-pulse" />
         <div className="h-12 w-64 bg-[var(--surface-2)] animate-pulse" />
         <div className="h-4 w-80 bg-[var(--surface-2)] animate-pulse" />
@@ -196,7 +196,7 @@ const GroupSelection = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
-        <div className="max-w-5xl mx-auto space-y-8">
+        <div className="max-w-5xl mx-auto space-y-8 w-full">
 
         {/* empty state */}
         {groups.length === 0 ? (
