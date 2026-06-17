@@ -19,6 +19,7 @@ const GroupSelection = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [joinModalMode, setJoinModalMode] = useState("code");
   const [showMobileActions, setShowMobileActions] = useState(false);
   const [toast, setToast] = useState(null);
   const [joining, setJoining] = useState(false);
@@ -56,7 +57,11 @@ const GroupSelection = () => {
     }
   }, [location.state]);
 
-  const openJoinModal = () => { setJoinError(null); setShowJoinModal(true); };
+  const openJoinModal = (mode = "code") => { 
+    setJoinError(null); 
+    setJoinModalMode(mode);
+    setShowJoinModal(true); 
+  };
 
   const fetchGroups = async () => {
     try {
@@ -269,6 +274,7 @@ const GroupSelection = () => {
         onJoin={handleJoin}
         joining={joining}
         joinError={joinError}
+        initialScan={joinModalMode === "scan"}
       />
 
       {/* mobile group actions drawer */}

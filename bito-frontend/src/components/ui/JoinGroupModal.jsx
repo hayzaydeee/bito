@@ -29,8 +29,9 @@ function extractCode(raw) {
  *   onJoin    — (code: string) => void
  *   joining   — boolean
  *   joinError — string | null
+ *   initialScan — boolean
  */
-const JoinGroupModal = ({ isOpen, onClose, onJoin, joining, joinError }) => {
+const JoinGroupModal = ({ isOpen, onClose, onJoin, joining, joinError, initialScan = false }) => {
   const [code, setCode] = useState("");
   const [scanning, setScanning] = useState(false);
   const [cameraError, setCameraError] = useState(null);
@@ -42,10 +43,10 @@ const JoinGroupModal = ({ isOpen, onClose, onJoin, joining, joinError }) => {
 
   /* Focus text input when modal opens */
   useEffect(() => {
-    if (isOpen && !scanning) {
+    if (isOpen && !scanning && !initialScan) {
       setTimeout(() => inputRef.current?.focus(), 120);
     }
-  }, [isOpen, scanning]);
+  }, [isOpen, scanning, initialScan]);
 
   /* Reset on close */
   useEffect(() => {
@@ -129,6 +130,13 @@ const JoinGroupModal = ({ isOpen, onClose, onJoin, joining, joinError }) => {
       );
     }
   }, [scanFrame]);
+
+  /* Trigger scanner on open if initialScan is true */
+  useEffect(() => {
+    if (isOpen && initialScan && hasBarcodeDetector) {
+      startScanner();
+    }
+  }, [isOpen, initialScan, startScanner]);
 
   /* ── handlers ────────────────────────────────────────────────── */
 

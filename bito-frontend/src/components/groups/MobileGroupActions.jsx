@@ -95,31 +95,30 @@ const MobileGroupActions = ({
 
             <form onSubmit={handleJoinSubmit} className="space-y-3">
               <label className="text-xs font-mono uppercase tracking-wider text-[var(--ink-3)] flex items-center justify-between">
-                <span>Join by Code</span>
-                <button 
-                  type="button"
-                  onClick={() => { onClose(); onOpenJoinModal?.(); }}
-                  className="flex items-center gap-1.5 text-[var(--signal)] hover:text-[var(--signal-hover)]"
-                >
-                  <QrCode size={14} weight="bold" />
-                  <span>Scan QR</span>
-                </button>
+                <span>Join by Code or QR</span>
               </label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <input
                   type="text"
                   placeholder="Paste invite code..."
                   value={inviteCode}
-                  onChange={(e) => setInviteCode(e.target.value)}
-                  className="flex-1 bg-transparent border border-[var(--line)] rounded-xl px-4 py-3 text-[var(--ink)] placeholder:text-[var(--ink-4)] focus:outline-none focus:border-[var(--signal)] font-mono text-sm uppercase"
+                  onChange={(e) => {
+                    const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10);
+                    setInviteCode(val);
+                    // Automatically try to join when standard code lengths are reached
+                    if (val.length === 6 || val.length === 10) {
+                      onJoinGroup(val);
+                    }
+                  }}
+                  className="flex-1 bg-transparent border border-[var(--line)] rounded-xl px-4 py-3 text-[var(--ink)] placeholder:text-[var(--ink-4)] focus:outline-none focus:border-[var(--signal)] font-mono text-sm uppercase tracking-widest text-center"
                 />
                 <button 
-                  type="submit" 
-                  disabled={!inviteCode.trim()}
-                  className="grp-btn disabled:opacity-50 disabled:cursor-not-allowed"
+                  type="button"
+                  onClick={() => { onClose(); onOpenJoinModal?.("scan"); }}
+                  className="flex items-center justify-center w-12 h-12 bg-[var(--surface-2)] text-[var(--signal)] rounded-xl hover:bg-[var(--surface-3)] transition-colors flex-shrink-0"
+                  aria-label="Scan QR Code"
                 >
-                  <UserPlus size={16} weight="bold" />
-                  Join
+                  <QrCode size={20} weight="bold" />
                 </button>
               </div>
             </form>
