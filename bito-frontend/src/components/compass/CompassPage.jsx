@@ -410,7 +410,7 @@ const CompassPage = () => {
     return (
       <>
         {discardModalEl}
-        <div className="min-h-screen std px-4 sm:px-6 py-10">
+        <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-10">
           <div className="max-w-5xl mx-auto">
             <GeneratingOverlay step={generatingStep} />
           </div>
@@ -426,7 +426,7 @@ const CompassPage = () => {
       return (
         <>
           {discardModalEl}
-          <div className="min-h-screen std px-4 sm:px-6 py-10">
+          <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-10">
           <div className="max-w-5xl mx-auto">
             <SuitePreview
               suite={activeSuite}
@@ -510,7 +510,7 @@ const CompassPage = () => {
   // ── Create ──
   if (view === "create") {
     return (
-      <div className="min-h-screen std px-4 sm:px-6 py-10">
+      <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-10">
         <div className="max-w-5xl mx-auto">
           <GoalInput
             goalText={goalText}
@@ -537,8 +537,8 @@ const CompassPage = () => {
   return (
     <>
       {discardModalEl}
-      <div className="min-h-screen std px-4 sm:px-6 py-8 sm:py-10">
-      <div className="max-w-5xl mx-auto">
+      <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-10">
+      <div className="max-w-5xl mx-auto space-y-8">
         {/* Header — shared Feature-Home masthead (twin of Groups home) */}
         <FeatureHeader
           kicker="The Compass — Systems"

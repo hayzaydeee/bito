@@ -140,8 +140,8 @@ const GroupSelection = () => {
   /* ── loading skeleton ───────────────── */
 
   const groupsSkeleton = (
-    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-7 sm:py-12">
-      <div className="max-w-6xl mx-auto space-y-4">
+    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-7 sm:py-10">
+      <div className="max-w-5xl mx-auto space-y-4">
         <div className="h-3 w-40 bg-[var(--surface-2)] animate-pulse" />
         <div className="h-12 w-64 bg-[var(--surface-2)] animate-pulse" />
         <div className="h-4 w-80 bg-[var(--surface-2)] animate-pulse" />
@@ -158,8 +158,8 @@ const GroupSelection = () => {
 
   return (
     <SkeletonTransition isLoading={isLoading} skeleton={groupsSkeleton}>
-    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-7 sm:py-12">
-      <div className="max-w-6xl mx-auto">
+    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-7 sm:py-10">
+      <div className="max-w-5xl mx-auto space-y-8">
 
         {/* header — shared Feature-Home masthead */}
         <FeatureHeader

@@ -228,8 +228,8 @@ const HabitsPage = () => {
 
   return (
     <SkeletonTransition isLoading={isLoading} skeleton={<HabitsSkeleton />}>
-    <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
-      <div className="max-w-6xl mx-auto">
+    <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-10">
+      <div className="max-w-5xl mx-auto space-y-8">
         {/* Header — shared Feature-Home masthead (twin of Compass / Groups home) */}
         <div data-tour="habits-header">
           <FeatureHeader
@@ -263,7 +263,7 @@ const HabitsPage = () => {
 
         {/* Slim filter row — search + status */}
         {hasAnyHabits && (
-          <div className="flex items-center gap-2 flex-wrap mb-6 -mt-2" data-tour="habits-filters">
+          <div className="flex items-center gap-2 flex-wrap" data-tour="habits-filters">
             <div className="flex-1 min-w-[180px] relative">
               <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--ink-3)]" />
               <input
