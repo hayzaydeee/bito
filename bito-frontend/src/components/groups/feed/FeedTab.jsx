@@ -125,7 +125,7 @@ const FeedTab = ({
       {/* ── Main feed ── */}
       <div className="flex-1 min-w-0">
         {/* toolbar */}
-        <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
+        <div className="flex items-center justify-between gap-3 mb-5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-1">
           <FeedFilters active={filter} onChange={handleFilterChange} />
           <FeedDensityToggle density={density} onChange={setDensity} />
         </div>
