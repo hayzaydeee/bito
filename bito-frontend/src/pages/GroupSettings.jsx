@@ -193,13 +193,16 @@ const GroupSettings = () => {
   /* ── skeleton ────────────────────────── */
 
   const settingsSkeleton = (
-    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-7 sm:py-12">
-      <div className="max-w-2xl mx-auto space-y-4">
-        <div className="h-8 w-48 bg-[var(--surface-2)] animate-pulse" />
-        <div className="h-5 w-64 bg-[var(--surface-2)] animate-pulse" />
-        <div className="mt-8 space-y-6">
+    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-7 sm:py-10">
+      <div className="max-w-2xl mx-auto space-y-8 animate-pulse">
+        <div>
+          <div className="h-3 w-20 rounded bg-[var(--surface-2)] mb-2" />
+          <div className="h-10 w-48 rounded bg-[var(--surface-2)] mb-4" />
+          <div className="grp-rule" />
+        </div>
+        <div className="space-y-8">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-24 grp-card animate-pulse" />
+            <div key={i} className="h-32 grp-card bg-[var(--surface-2)]" />
           ))}
         </div>
       </div>
@@ -228,47 +231,52 @@ const GroupSettings = () => {
 
   return (
     <SkeletonTransition isLoading={loading} skeleton={settingsSkeleton}>
-    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-7 sm:py-12">
-      <div className="max-w-2xl mx-auto">
+    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-7 sm:py-10">
+      <div className="max-w-2xl mx-auto space-y-8">
         {/* header */}
-        <div className="flex items-center justify-between mb-10 pb-7 border-b border-[var(--line-2)]">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate(`/app/groups/${groupId}`)}
-              className="w-10 h-10 rounded-[10px] bg-[var(--surface)] border border-[var(--line-2)] flex items-center justify-center hover:bg-[var(--surface-2)] hover:border-[var(--line-3)] transition-colors text-[var(--ink-2)] hover:text-[var(--ink)]"
-            >
-              <ArrowLeftIcon className="w-4 h-4" />
-            </button>
-            <div>
-              <p className="grp-kicker mb-1">Group — Configuration</p>
-              <h1 className="grp-display text-3xl font-bold text-[var(--ink)] leading-none">
+        <div className="grp-rise" style={{ animationDelay: "40ms" }}>
+          <button
+            onClick={() => navigate(`/app/groups/${groupId}`)}
+            className="grp-btn grp-btn--sm mb-6 flex items-center gap-1.5"
+          >
+            <ArrowLeftIcon className="w-3.5 h-3.5" />
+            Group
+          </button>
+          
+          <div className="flex items-end justify-between gap-4 flex-wrap mb-1">
+            <div className="min-w-0">
+              <p className="grp-kicker text-[var(--signal)] mb-1.5">Group — Configuration</p>
+              <h1 className="grp-display text-4xl sm:text-5xl font-bold text-[var(--ink)] leading-none">
                 Settings
               </h1>
-              <p className="grp-mono text-[11px] text-[var(--ink-3)] mt-1.5 uppercase tracking-wider">
-                {group?.name}
-              </p>
             </div>
-          </div>
 
-          {canEdit && (
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="grp-btn grp-btn--signal disabled:opacity-60"
-            >
-              {saving ? (
-                <>
-                  <UpdateIcon className="w-3.5 h-3.5 animate-spin" />
-                  Saving…
-                </>
-              ) : (
-                <>
-                  <CheckIcon className="w-3.5 h-3.5" />
-                  Save
-                </>
-              )}
-            </button>
-          )}
+            {canEdit && (
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="grp-btn grp-btn--signal disabled:opacity-60"
+                >
+                  {saving ? (
+                    <>
+                      <UpdateIcon className="w-3.5 h-3.5 animate-spin" />
+                      Saving…
+                    </>
+                  ) : (
+                    <>
+                      <CheckIcon className="w-3.5 h-3.5" />
+                      Save
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+          <p className="grp-mono text-[11px] text-[var(--ink-3)] mt-2 uppercase tracking-wider">
+            {group?.name}
+          </p>
+          <div className="grp-rule mt-4" />
         </div>
 
         {/* ── General ─────────────────── */}
@@ -520,7 +528,7 @@ const GroupSettings = () => {
 
 function Section({ title, icon, danger = false, children }) {
   return (
-    <section className="mb-7">
+    <section>
       <div className="flex items-center gap-2 mb-3">
         <span className={danger ? "text-[var(--rose)]" : "text-[var(--ink-3)]"}>
           {icon}

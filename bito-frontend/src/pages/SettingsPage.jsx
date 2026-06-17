@@ -448,21 +448,30 @@ const SettingsPage = ({ section }) => {
     };
 
     return (
-      <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
-        <div className="max-w-2xl mx-auto">
-          <button
-            onClick={() => navigate("/app/settings")}
-            className="std-btn std-btn--sm mb-8 flex items-center gap-1.5"
-          >
-            <ArrowLeftIcon className="w-3.5 h-3.5" />
-            Settings
-          </button>
-          <p className="std-kicker text-[var(--ink-3)] mb-1">Customise</p>
-          <h1 className="std-display text-3xl text-[var(--ink)] mb-2">AI Voice</h1>
-          <p className="std-mono text-[11px] text-[var(--ink-3)] mb-8 leading-relaxed">
-            Choose how Bito talks to you across insights, reports, and nudges.
-            Pick the voice that sounds right — not the label that sounds right.
-          </p>
+      <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-10">
+        <div className="max-w-2xl mx-auto space-y-8">
+          <div className="std-rise" style={{ animationDelay: "40ms" }}>
+            <button
+              onClick={() => navigate("/app/settings")}
+              className="std-btn std-btn--sm mb-6 flex items-center gap-1.5"
+            >
+              <ArrowLeftIcon className="w-3.5 h-3.5" />
+              Settings
+            </button>
+            <div className="flex items-end justify-between gap-4 flex-wrap mb-1">
+              <div className="min-w-0">
+                <p className="std-kicker text-[var(--signal)] mb-1.5">Customise</p>
+                <h1 className="std-display text-4xl sm:text-5xl font-bold text-[var(--ink)] leading-none">
+                  AI Voice
+                </h1>
+              </div>
+            </div>
+            <p className="std-mono text-[11px] text-[var(--ink-3)] mt-2 uppercase tracking-wider">
+              Choose how Bito talks to you across insights, reports, and nudges.
+              Pick the voice that sounds right — not the label that sounds right.
+            </p>
+            <div className="std-rule mt-4" />
+          </div>
 
           <PersonalityQuiz
             currentPersonality={personality}
@@ -480,22 +489,31 @@ const SettingsPage = ({ section }) => {
      ================================================================ */
   if (section === "habit-privacy") {
     return (
-      <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
-        <div className="max-w-2xl mx-auto">
-          <button
-            onClick={() => navigate(`/app/groups/${habitData?.groupId || ""}`)}
-            className="std-btn std-btn--sm mb-8 flex items-center gap-1.5"
-          >
-            <ArrowLeftIcon className="w-3.5 h-3.5" />
-            Group
-          </button>
-          <p className="std-kicker text-[var(--ink-3)] mb-1">Sharing</p>
-          <h1 className="std-display text-3xl text-[var(--ink)] mb-8">Habit Privacy</h1>
-          <p className="std-mono text-[11px] text-[var(--ink-3)] -mt-6 mb-8 leading-relaxed">
-            {habitData
-              ? `Control sharing for "${habitData.name}"`
-              : "Loading…"}
-          </p>
+      <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-10">
+        <div className="max-w-2xl mx-auto space-y-8">
+          <div className="std-rise" style={{ animationDelay: "40ms" }}>
+            <button
+              onClick={() => navigate(`/app/groups/${habitData?.groupId || ""}`)}
+              className="std-btn std-btn--sm mb-6 flex items-center gap-1.5"
+            >
+              <ArrowLeftIcon className="w-3.5 h-3.5" />
+              Group
+            </button>
+            <div className="flex items-end justify-between gap-4 flex-wrap mb-1">
+              <div className="min-w-0">
+                <p className="std-kicker text-[var(--signal)] mb-1.5">Sharing</p>
+                <h1 className="std-display text-4xl sm:text-5xl font-bold text-[var(--ink)] leading-none">
+                  Habit Privacy
+                </h1>
+              </div>
+            </div>
+            <p className="std-mono text-[11px] text-[var(--ink-3)] mt-2 uppercase tracking-wider">
+              {habitData
+                ? `Control sharing for "${habitData.name}"`
+                : "Loading…"}
+            </p>
+            <div className="std-rule mt-4" />
+          </div>
 
           {!habitData ? (
             <div className="space-y-3">
@@ -592,14 +610,16 @@ const SettingsPage = ({ section }) => {
      ================================================================ */
 
   const pageSkeleton = (
-    <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
-      <div className="max-w-2xl mx-auto space-y-4 animate-pulse">
-        <div className="h-3 w-20 rounded bg-[var(--surface-2)]" />
-        <div className="h-8 w-40 rounded bg-[var(--surface-2)]" />
-        <div className="std-rule" />
-        <div className="mt-8 space-y-4">
+    <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-10">
+      <div className="max-w-2xl mx-auto space-y-8 animate-pulse">
+        <div>
+          <div className="h-3 w-20 rounded bg-[var(--surface-2)] mb-2" />
+          <div className="h-10 w-48 rounded bg-[var(--surface-2)] mb-4" />
+          <div className="std-rule" />
+        </div>
+        <div className="space-y-8">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-16 std-card bg-[var(--surface-2)]" />
+            <div key={i} className="h-32 std-card bg-[var(--surface-2)]" />
           ))}
         </div>
       </div>
@@ -670,15 +690,23 @@ const SettingsPage = ({ section }) => {
 
   return (
     <SkeletonTransition isLoading={loading} skeleton={pageSkeleton}>
-    <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
-      <div className="max-w-2xl mx-auto">
+    <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-10">
+      <div className="max-w-2xl mx-auto space-y-8">
         {/* ── header ──────────────────── */}
-        <p className="std-kicker text-[var(--ink-3)] mb-1">Configuration</p>
-        <h1 className="std-display text-4xl text-[var(--ink)] mb-1">Settings</h1>
-        <p className="std-mono text-[10px] text-[var(--ink-3)] mb-6">
-          Account · Preferences · Data
-        </p>
-        <div className="std-rule mb-10" />
+        <div className="std-rise" style={{ animationDelay: "40ms" }}>
+          <div className="flex items-end justify-between gap-4 flex-wrap mb-1">
+            <div className="min-w-0">
+              <p className="std-kicker text-[var(--signal)] mb-1.5">Configuration</p>
+              <h1 className="std-display text-4xl sm:text-5xl font-bold text-[var(--ink)] leading-none">
+                Settings
+              </h1>
+            </div>
+          </div>
+          <p className="std-mono text-[11px] text-[var(--ink-3)] mt-2 uppercase tracking-wider">
+            Account · Preferences · Data
+          </p>
+          <div className="std-rule mt-4" />
+        </div>
 
         {/* ═══════ 1. PROFILE ═══════ */}
         <Section title="Profile">
@@ -1268,7 +1296,7 @@ const NotificationSection = ({ saving, settings, saveSetting }) => {
 
 /* ── DRILL: section wrapper ──────────────────────────────── */
 const Section = ({ title, icon: _icon, children }) => (
-  <div className="mb-8">
+  <div>
     <p className="std-kicker text-[var(--ink-3)] mb-3">{title}</p>
     <div className="std-card overflow-hidden">
       {children}
