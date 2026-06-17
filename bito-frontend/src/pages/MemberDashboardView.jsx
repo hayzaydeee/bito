@@ -127,8 +127,8 @@ const MemberDashboardView = () => {
   /* ── skeleton ────────────────────────── */
 
   const memberSkeleton = (
-    <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
-      <div className="max-w-3xl mx-auto space-y-4 animate-pulse">
+    <div className="std h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-12">
+      <div className="max-w-3xl mx-auto space-y-4 animate-pulse w-full">
         <div className="flex items-center gap-4 mb-8">
           <div className="w-10 h-10 rounded-[var(--r-card)] bg-[var(--surface-2)]" />
           <div className="w-11 h-11 rounded-full bg-[var(--surface-2)]" />
@@ -151,8 +151,8 @@ const MemberDashboardView = () => {
 
   if (error) {
     return (
-      <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
-        <div className="max-w-3xl mx-auto text-center py-20">
+      <div className="std h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-12">
+        <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">\n          <div className="max-w-3xl mx-auto text-center py-20 w-full">
           <Warning size={40} weight="duotone" className="mx-auto mb-4" style={{ color: 'var(--ember, #f59e0b)' }} />
           <p className="std-display text-xl text-[var(--ink)] mb-2">Something went wrong</p>
           <p className="std-mono text-[11px] text-[var(--ink-3)] mb-6">{error}</p>
@@ -170,8 +170,8 @@ const MemberDashboardView = () => {
   return (
     <SkeletonTransition isLoading={loading} skeleton={memberSkeleton}>
     {member ? (
-    <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
-      <div className="max-w-3xl mx-auto">
+    <div className="std h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-12">
+      <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">\n        <div className="max-w-3xl mx-auto w-full">
         {/* header */}
         <div className="flex items-center gap-4 mb-8">
           <button

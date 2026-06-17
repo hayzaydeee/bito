@@ -39,7 +39,7 @@ const CompassCreatePage = () => {
   // ── Generating overlay ──
   if (generating) {
     return (
-      <div className="std min-h-screen px-4 sm:px-6 py-10 flex items-center justify-center">
+      <div className="std h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-10 items-center justify-center">
         <GeneratingOverlay step={generatingStep} />
       </div>
     );
@@ -47,13 +47,14 @@ const CompassCreatePage = () => {
 
   return (
     <motion.div
-      className="std min-h-screen px-4 sm:px-6 py-10"
+      className="std h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-10"
       variants={pageVariants}
       initial="initial"
       animate="animate"
       exit="exit"
     >
-      <div className="max-w-5xl mx-auto">
+      <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
+        <div className="max-w-5xl mx-auto w-full">
         <GoalInput
           goalText={goalText}
           setGoalText={setGoalText}

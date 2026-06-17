@@ -410,8 +410,8 @@ const CompassPage = () => {
     return (
       <>
         {discardModalEl}
-        <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-10">
-          <div className="max-w-5xl mx-auto">
+        <div className="std h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-10 items-center justify-center">
+          <div className="max-w-5xl mx-auto w-full">
             <GeneratingOverlay step={generatingStep} />
           </div>
         </div>
@@ -426,9 +426,10 @@ const CompassPage = () => {
       return (
         <>
           {discardModalEl}
-          <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-10">
-          <div className="max-w-5xl mx-auto">
-            <SuitePreview
+          <div className="std h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-10">
+          <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
+            <div className="max-w-5xl mx-auto w-full">
+              <SuitePreview
               suite={activeSuite}
               onBack={() => {
                 setView("list");
@@ -455,9 +456,10 @@ const CompassPage = () => {
               applyLoading={applyLoading}
               onArchive={handleArchive}
               error={error}
-            />
+              />
+            </div>
           </div>
-        </div>
+          </div>
         </>
       );
     }
@@ -510,9 +512,10 @@ const CompassPage = () => {
   // ── Create ──
   if (view === "create") {
     return (
-      <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-10">
-        <div className="max-w-5xl mx-auto">
-          <GoalInput
+      <div className="std h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-10">
+        <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
+          <div className="max-w-5xl mx-auto w-full">
+            <GoalInput
             goalText={goalText}
             setGoalText={setGoalText}
             onGenerate={handleGenerate}
@@ -529,6 +532,7 @@ const CompassPage = () => {
             goalAnalysis={clarification?.goalAnalysis}
           />
         </div>
+        </div>
       </div>
     );
   }
@@ -537,8 +541,9 @@ const CompassPage = () => {
   return (
     <>
       {discardModalEl}
-      <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-10">
-      <div className="max-w-5xl mx-auto space-y-8">
+      <div className="std h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-10">
+      <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
+        <div className="max-w-5xl mx-auto space-y-8 w-full">
         {/* Header — shared Feature-Home masthead (twin of Groups home) */}
         <FeatureHeader
           kicker="The Compass — Systems"
