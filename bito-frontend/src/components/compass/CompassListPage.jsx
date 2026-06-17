@@ -52,7 +52,7 @@ const CompassListPage = () => {
   if (activeSuite) {
     return (
       <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <SuitePreview
             suite={activeSuite}
             onBack={() => setActiveSuite(null)}
@@ -100,7 +100,7 @@ const CompassListPage = () => {
         animate="animate"
         exit="exit"
       >
-        <div className="max-w-6xl mx-auto space-y-8">
+        <div className="max-w-5xl mx-auto space-y-8">
           {/* Header — shared Feature-Home masthead (twin of Groups home) */}
           <FeatureHeader
             kicker="The Engine Room"
