@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion"; // eslint-disable-line no-unused-vars
 import { PlusIcon } from "@radix-ui/react-icons";
-import { UserPlus, CaretDown } from "@phosphor-icons/react";
+import { UserPlus, QrCode } from "@phosphor-icons/react";
 
 const drawerVariants = {
   initial: { y: "100%", opacity: 0.5 },
@@ -28,7 +28,8 @@ const MobileGroupActions = ({
   isOpen,
   onClose,
   onCreateGroup,
-  onJoinGroup
+  onJoinGroup,
+  onOpenJoinModal
 }) => {
   const [inviteCode, setInviteCode] = useState("");
 
@@ -72,7 +73,7 @@ const MobileGroupActions = ({
           animate="animate"
           exit="exit"
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 sm:hidden"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}
+          style={{ backgroundColor: "rgba(0,0,0,0.8)", backdropFilter: "blur(4px)" }}
           onClick={handleBackdropClick}
         >
           <motion.div
@@ -81,7 +82,7 @@ const MobileGroupActions = ({
             initial="initial"
             animate="animate"
             exit="exit"
-            className="w-full bg-[var(--surface-1)] sm:rounded-2xl rounded-t-2xl shadow-xl overflow-hidden pb-8 pt-4 px-6 flex flex-col gap-6"
+            className="w-full bg-[var(--surface)] border-t border-[var(--line-2)] sm:rounded-2xl rounded-t-2xl shadow-xl overflow-hidden pb-8 pt-4 px-6 flex flex-col gap-6"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Handle bar */}
@@ -93,8 +94,16 @@ const MobileGroupActions = ({
             </div>
 
             <form onSubmit={handleJoinSubmit} className="space-y-3">
-              <label className="text-xs font-mono uppercase tracking-wider text-[var(--ink-3)]">
-                Join by Code
+              <label className="text-xs font-mono uppercase tracking-wider text-[var(--ink-3)] flex items-center justify-between">
+                <span>Join by Code</span>
+                <button 
+                  type="button"
+                  onClick={() => { onClose(); onOpenJoinModal?.(); }}
+                  className="flex items-center gap-1.5 text-[var(--signal)] hover:text-[var(--signal-hover)]"
+                >
+                  <QrCode size={14} weight="bold" />
+                  <span>Scan QR</span>
+                </button>
               </label>
               <div className="flex gap-2">
                 <input

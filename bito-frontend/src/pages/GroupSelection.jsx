@@ -198,10 +198,10 @@ const GroupSelection = () => {
               </div>
               
               {/* Mobile Actions */}
-              <div className="sm:hidden flex w-full">
+              <div className="sm:hidden flex">
                 <button 
                   onClick={() => setShowMobileActions(true)} 
-                  className="grp-btn grp-btn--signal w-full justify-center"
+                  className="grp-btn grp-btn--signal w-auto"
                 >
                   <List size={15} weight="bold" />
                   Actions
@@ -277,6 +277,7 @@ const GroupSelection = () => {
         onClose={() => setShowMobileActions(false)}
         onCreateGroup={() => setShowCreateModal(true)}
         onJoinGroup={handleJoin}
+        onOpenJoinModal={openJoinModal}
       />
 
       {/* toast */}
