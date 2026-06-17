@@ -177,6 +177,15 @@ router.delete('/:id', validateObjectId('id'), async (req, res) => {
     // Delete all entries for this habit
     await HabitEntry.deleteMany({ habitId: habit._id });
     
+    // Remove habit from compass appliedResources if it belongs to one
+    if (habit.compassId) {
+      const mongoose = require('mongoose');
+      await mongoose.model('Compass').updateOne(
+        { _id: habit.compassId },
+        { $pull: { 'appliedResources.habitIds': habit._id } }
+      );
+    }
+
     // Delete the habit
     await Habit.findByIdAndDelete(habit._id);
 

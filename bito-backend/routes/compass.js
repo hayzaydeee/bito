@@ -884,8 +884,18 @@ router.post('/:id/discard', async (req, res) => {
           result.habitsDeleted++;
           result.habitNames.push(habit.name);
         }
+      } else if (mode === 'keep_habits') {
+        // Archive any upcoming (unactivated) habits, as the compass will never reach them
+        const habits = await Habit.find({ _id: { $in: habitIds }, userId: req.user._id });
+        for (const habit of habits) {
+          if (!habit.isActive && !habit.isArchived) {
+            habit.isArchived = true;
+            await habit.save();
+            result.habitsArchived++;
+            result.habitNames.push(habit.name);
+          }
+        }
       }
-      // mode === 'keep_habits' — do nothing to habits
     }
 
     // Archive the compass itself

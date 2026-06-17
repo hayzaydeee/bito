@@ -132,6 +132,11 @@ const HabitsPage = () => {
         showArchived = archivedItems;
       }
 
+      // If the compass itself is archived/discarded, it has no future phases
+      if (compass?.status === "archived") {
+        showUpcoming = [];
+      }
+
       if (showCurrent.length || showArchived.length || showUpcoming.length) {
         compasses.push({ compass, current: showCurrent, archived: showArchived, upcomingByPhase: showUpcoming });
       }
