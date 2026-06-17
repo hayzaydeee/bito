@@ -31,7 +31,7 @@ function extractCode(raw) {
  *   joinError — string | null
  *   initialScan — boolean
  */
-const JoinGroupModal = ({ isOpen, onClose, onJoin, joining, joinError, initialScan = false }) => {
+const JoinGroupModal = ({ isOpen, onClose, onJoin, joining, joinError, joinSuccess, initialScan = false }) => {
   const [code, setCode] = useState("");
   const [scanning, setScanning] = useState(false);
   const [cameraError, setCameraError] = useState(null);
