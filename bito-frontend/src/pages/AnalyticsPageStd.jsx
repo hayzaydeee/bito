@@ -9,6 +9,7 @@ import TopHabitsList from '../components/analytics/TopHabitsList';
 import AnalyticsInsightsStd from '../components/analytics/AnalyticsInsightsStd';
 import HabitStreakChart from '../components/analytics/HabitStreakChart';
 import AnalyticsTour from '../components/analytics/AnalyticsTour';
+import FeatureHeader from '../components/shared/standard/FeatureHeader';
 
 const LS_KEY = 'bito_analytics_timeRange';
 
@@ -104,22 +105,23 @@ const AnalyticsPageStd = () => {
 
         {/* ── Masthead ──────────────────────────── */}
         <div data-tour="analytics-header">
-          <p className="std-kicker text-[var(--signal)] mb-1">Signal Report</p>
-          <div className="flex items-end justify-between gap-4 flex-wrap">
-            <h1 className="std-display text-4xl sm:text-5xl font-bold text-[var(--ink)] leading-none">
-              Analytics
-            </h1>
-            <TimeRangePillsStd value={timeRange} onChange={handleTimeRangeChange} />
-          </div>
-          <p className="std-mono text-[11px] text-[var(--ink-3)] mt-2 tracking-wider uppercase">
-            {String(activeCount).padStart(2, '0')} Active Habits · {windowLabel}
-          </p>
-          <div className="std-rule mt-4" />
+          <FeatureHeader
+            kicker="Signal Report"
+            title="Analytics"
+            stats={
+              <>
+                <span className="text-[var(--signal)]">{String(activeCount).padStart(2, '0')}</span> ACTIVE HABITS
+                {"  ·  "}
+                <span className="text-[var(--ink-2)]">{windowLabel}</span>
+              </>
+            }
+            actions={<TimeRangePillsStd value={timeRange} onChange={handleTimeRangeChange} />}
+          />
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
-        <div className="max-w-5xl mx-auto space-y-8">
+        <div className="max-w-5xl mx-auto space-y-8 pb-12">
         {/* ── Empty state ──────────────────────── */}
         {habits.length > 0 && !hasAnyEntries && (
           <div className="std-card p-5 border-l-2 border-l-[var(--line-2)]">
