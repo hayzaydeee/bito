@@ -7,15 +7,30 @@ import JournalDayFeed from './JournalDayFeed';
 import JournalStream from './JournalStream';
 import JournalArchiveView from './JournalArchiveView';
 import JournalEntryList from './JournalEntryList';
+import JournalHome from './JournalHome';
 import JournalPrivacySettings, { AIOptInNudge } from './JournalPrivacy';
 import JournalTour from './JournalTour';
-import { ArchiveIcon, MagnifyingGlassIcon, Cross2Icon, LockClosedIcon, LockOpen1Icon, ListBulletIcon, FileTextIcon, RowsIcon } from '@radix-ui/react-icons';
+import { MagnifyingGlassIcon, Cross2Icon } from '@radix-ui/react-icons';
+import { ArrowLeft } from '@phosphor-icons/react';
 import { journalV2Service } from '../../services/journalV2Service';
 import { userAPI } from '../../services/api';
 
 /* ═══════════════════════════════════════════════════════════════
-   JournalPageV2 — Fluid Writing Surface + Micro-Journal Feed
+   JournalPageV2 — Orchestrator with Journal Home
+   Default view is 'home'. Navigates into day / list / stream /
+   archive sub-views, each with a back-to-home button.
    ═══════════════════════════════════════════════════════════════ */
+
+const todayStr = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+const yesterdayStr = () => {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
 
 const JournalPageV2 = () => {
   const { isAuthenticated, user, updateUser } = useAuth();
@@ -24,16 +39,15 @@ const JournalPageV2 = () => {
   const journal = useJournal();
 
   // Local UI state
-  const [showArchive, setShowArchive] = useState(false);
   const [showPrivacySettings, setShowPrivacySettings] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState(null);
   const [searchLoading, setSearchLoading] = useState(false);
   const [forceJournalTour, setForceJournalTour] = useState(false);
-  const [activeView, setActiveView] = useState(
-    user?.preferences?.journalDefaultView || 'day'
-  );
+
+  // View state — 'home' is the default landing
+  const [activeView, setActiveView] = useState('home');
 
   // AI privacy state from user profile
   const journalAI = user?.preferences?.journalAI || {};
@@ -50,19 +64,13 @@ const JournalPageV2 = () => {
 
   const showNudgeBanner = shouldShowNudge && entryCount >= 7;
 
-  // Update AI privacy settings (persist to backend + update local state)
+  // Update AI privacy settings
   const handleUpdateAISettings = useCallback(async (settings) => {
     try {
       const newJournalAI = { ...journalAI, ...settings };
       const newPreferences = { ...user?.preferences, journalAI: newJournalAI };
-
-      // Persist to backend
       await userAPI.updateProfile({ preferences: newPreferences });
-
-      // Update local user state
-      if (updateUser) {
-        updateUser({ preferences: newPreferences });
-      }
+      if (updateUser) updateUser({ preferences: newPreferences });
     } catch (error) {
       console.error('Error updating AI settings:', error);
     }
@@ -92,32 +100,43 @@ const JournalPageV2 = () => {
     setSearchResults(null);
   }, []);
 
-  // Contextual date label for header
-  const headerDateLabel = useMemo(() => {
-    const d = new Date(journal.selectedDate + 'T12:00:00');
-    const now = new Date();
-    const isToday =
-      d.getFullYear() === now.getFullYear() &&
-      d.getMonth() === now.getMonth() &&
-      d.getDate() === now.getDate();
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const isYesterday =
-      d.getFullYear() === yesterday.getFullYear() &&
-      d.getMonth() === yesterday.getMonth() &&
-      d.getDate() === yesterday.getDate();
+  /* ── Navigation handlers ──────────────────────────────────── */
+  const goHome = useCallback(() => {
+    setActiveView('home');
+    clearSearch();
+  }, [clearSearch]);
 
-    const fullDate = d.toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    });
+  const openToday = useCallback(() => {
+    journal.selectDate(todayStr());
+    setActiveView('day');
+  }, [journal]);
 
-    if (isToday) return `Today, ${d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`;
-    if (isYesterday) return `Yesterday, ${d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`;
-    return fullDate;
-  }, [journal.selectedDate]);
+  const openYesterday = useCallback(() => {
+    journal.selectDate(yesterdayStr());
+    setActiveView('day');
+  }, [journal]);
+
+  const openList = useCallback(() => setActiveView('list'), []);
+  const openStream = useCallback(() => setActiveView('stream'), []);
+  const openArchive = useCallback(() => setActiveView('archive'), []);
+
+  const openSearch = useCallback(() => {
+    setShowSearch(true);
+  }, []);
+
+  const openDateFromHome = useCallback((dateStr) => {
+    journal.selectDate(dateStr);
+    setActiveView('day');
+  }, [journal]);
+
+  const handleAddMicroFromHome = useCallback((text) => {
+    // Ensure we're on today's date for micro entries from home
+    const today = todayStr();
+    if (journal.selectedDate !== today) {
+      journal.selectDate(today);
+    }
+    journal.addMicro(text);
+  }, [journal]);
 
   // Not authenticated
   if (!isAuthenticated) {
@@ -130,85 +149,117 @@ const JournalPageV2 = () => {
     );
   }
 
-  // Archive view
-  if (showArchive) {
-    return <JournalArchiveView onClose={() => setShowArchive(false)} />;
+  // Archive view (full-page takeover)
+  if (activeView === 'archive') {
+    return <JournalArchiveView onClose={goHome} />;
   }
 
+  /* ── Home view ───────────────────────────────────────────── */
+  if (activeView === 'home') {
+    return (
+      <div className="journal-v2-page std flex flex-col h-full overflow-clip w-full">
+        {/* AI opt-in nudge */}
+        {showNudgeBanner && (
+          <div className="flex-shrink-0 px-4 sm:px-8 pt-4">
+            <div className="max-w-5xl mx-auto">
+              <AIOptInNudge
+                onStartTour={() => setShowPrivacySettings(true)}
+                onDismiss={handleDismissNudge}
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="flex-1 overflow-y-auto">
+          <JournalHome
+            wordCount={journal.wordCount}
+            mood={journal.mood}
+            energy={journal.energy}
+            micros={journal.micros}
+            selectedDate={journal.selectedDate}
+            onOpenToday={openToday}
+            onOpenYesterday={openYesterday}
+            onOpenList={openList}
+            onOpenStream={openStream}
+            onOpenSearch={openSearch}
+            onOpenArchive={openArchive}
+            onSelectDate={openDateFromHome}
+            onAddMicro={handleAddMicroFromHome}
+            journalAI={journalAI}
+            onOpenIntelligence={() => setShowPrivacySettings(true)}
+          />
+        </div>
+
+        {/* Privacy settings modal */}
+        {showPrivacySettings && (
+          <JournalPrivacySettings
+            journalAI={journalAI}
+            onUpdate={handleUpdateAISettings}
+            onClose={() => setShowPrivacySettings(false)}
+          />
+        )}
+
+        {/* Journal tour */}
+        <JournalTour
+          userId={user?._id || user?.id}
+          forceShow={forceJournalTour}
+          onComplete={() => setForceJournalTour(false)}
+        />
+      </div>
+    );
+  }
+
+  /* ── Sub-views (day / list / stream) ─────────────────────── */
   return (
     <div className="journal-v2-page std flex flex-col h-full overflow-clip p-4 sm:p-6 max-w-5xl mx-auto w-full">
       {/* ── Top bar ─────────────────────────────────────────── */}
       <div className="flex-shrink-0 pb-3">
-        <div className="flex items-end justify-between mb-3 gap-3">
-          {/* Left: kicker + Title */}
-          <div className="min-w-0">
-            <p className="std-kicker mb-1.5">The Ledger — Journal</p>
-            <h1 className="std-display text-[28px] sm:text-[34px] font-bold leading-none truncate" style={{ color: 'var(--ink)' }}>
+        <div className="flex items-center justify-between mb-3 gap-3">
+          {/* Left: back button + context */}
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              onClick={goHome}
+              className="flex items-center gap-1.5 std-btn std-btn--sm"
+              aria-label="Back to Journal Home"
+            >
+              <ArrowLeft size={14} weight="bold" />
               Journal
-            </h1>
+            </button>
+
+            {/* View label */}
+            {activeView === 'day' && (
+              <span className="std-kicker text-[var(--ink-3)]">Day View</span>
+            )}
+            {activeView === 'list' && (
+              <span className="std-kicker text-[var(--ink-3)]">All Entries</span>
+            )}
+            {activeView === 'stream' && (
+              <span className="std-kicker text-[var(--ink-3)]">Timeline</span>
+            )}
           </div>
 
-          {/* Right: Accessory icons */}
+          {/* Right: search + intelligence */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Journal Intelligence button */}
+            {/* Search toggle */}
+            <button
+              onClick={() => showSearch ? clearSearch() : setShowSearch(true)}
+              className="w-9 h-9 flex items-center justify-center rounded-[10px] border border-[var(--line-2)] text-[var(--ink-3)] hover:text-[var(--ink)] hover:bg-[var(--surface-2)] transition-colors"
+              aria-label={showSearch ? 'Close search' : 'Search journal'}
+            >
+              {showSearch ? <Cross2Icon className="w-4 h-4" /> : <MagnifyingGlassIcon className="w-4 h-4" />}
+            </button>
+
+            {/* Intelligence button */}
             <button
               onClick={() => setShowPrivacySettings(true)}
               className="std-btn std-btn--signal std-btn--sm"
               aria-label="Journal Intelligence settings"
-              data-tour="journal-intelligence"
             >
               {journalAI?.insightNudges || journalAI?.contentAnalysis || journalAI?.weeklySummaries
                 ? <LockOpen1Icon className="w-3.5 h-3.5" />
                 : <LockClosedIcon className="w-3.5 h-3.5" />
               }
               Intelligence
-            </button>
-
-            {/* View toggle: Day / List */}
-            <div
-              className="flex items-center rounded-[10px] border border-[var(--line-2)] bg-[var(--bg-2)] p-0.5"
-              data-tour="journal-view-toggle"
-            >
-              {[
-                { id: 'day', Icon: FileTextIcon, label: 'Day view' },
-                { id: 'list', Icon: ListBulletIcon, label: 'Ledger view' },
-                { id: 'stream', Icon: RowsIcon, label: 'Stream view' },
-              ].map(({ id, Icon, label }) => (
-                <button
-                  key={id}
-                  onClick={() => setActiveView(id)}
-                  className="p-1.5 rounded-[7px] transition-colors"
-                  style={{
-                    backgroundColor: activeView === id ? 'var(--surface-2)' : 'transparent',
-                    color: activeView === id ? 'var(--signal)' : 'var(--ink-3)',
-                  }}
-                  aria-label={label}
-                  title={label}
-                >
-                  <Icon className="w-4 h-4" />
-                </button>
-              ))}
-            </div>
-
-            {/* Search toggle */}
-            <button
-              onClick={() => showSearch ? clearSearch() : setShowSearch(true)}
-              className="w-9 h-9 flex items-center justify-center rounded-[10px] border border-[var(--line-2)] text-[var(--ink-3)] hover:text-[var(--ink)] hover:bg-[var(--surface-2)] transition-colors"
-              aria-label={showSearch ? 'Close search' : 'Search journal'}
-              data-tour="journal-search"
-            >
-              {showSearch ? <Cross2Icon className="w-4 h-4" /> : <MagnifyingGlassIcon className="w-4 h-4" />}
-            </button>
-
-            {/* Archive link */}
-            <button
-              onClick={() => setShowArchive(true)}
-              className="w-9 h-9 flex items-center justify-center rounded-[10px] border border-[var(--line-2)] text-[var(--ink-3)] hover:text-[var(--ink)] hover:bg-[var(--surface-2)] transition-colors"
-              aria-label="View archive"
-              title="View archived entries"
-              data-tour="journal-archive"
-            >
-              <ArchiveIcon className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -249,6 +300,7 @@ const JournalPageV2 = () => {
                       onClick={() => {
                         const dateStr = new Date(entry.date).toISOString().split('T')[0];
                         journal.selectDate(dateStr);
+                        setActiveView('day');
                         clearSearch();
                       }}
                       className="w-full text-left px-3 py-2 rounded-[8px] hover:bg-[var(--surface-2)] transition-colors"
@@ -292,7 +344,7 @@ const JournalPageV2 = () => {
         </div>
       )}
 
-      {/* ── Day feed (main content) ─────────────────────────── */}
+      {/* ── Content area ───────────────────────────────────── */}
       <div className="flex-1 overflow-hidden">
         {activeView === 'list' ? (
           <JournalEntryList
@@ -310,33 +362,33 @@ const JournalPageV2 = () => {
           />
         ) : (
           <JournalDayFeed
-          selectedDate={journal.selectedDate}
-          longform={journal.longform}
-          micros={journal.micros}
-          isLoading={journal.isLoading}
-          mood={journal.mood}
-          energy={journal.energy}
-          tags={journal.tags}
-          wordCount={journal.wordCount}
-          saveStatus={journal.saveStatus}
-          onMoodChange={journal.changeMood}
-          onEnergyChange={journal.changeEnergy}
-          onAddTag={journal.addTag}
-          onRemoveTag={journal.removeTag}
-          onAddMicro={journal.addMicro}
-          onEditMicro={journal.editMicro}
-          onDeleteMicro={journal.deleteMicro}
-          editorSlot={
-            <BlockNoteEditor
-              key={journal.selectedDate}
-              initialContent={journal.longform?.richContent}
-              onChange={journal.handleEditorChange}
-              onReady={journal.handleEditorReady}
-              placeholder="Start writing..."
-              className="prose prose-lg max-w-none font-garamond journal-v2-editor"
-            />
-          }
-        />
+            selectedDate={journal.selectedDate}
+            longform={journal.longform}
+            micros={journal.micros}
+            isLoading={journal.isLoading}
+            mood={journal.mood}
+            energy={journal.energy}
+            tags={journal.tags}
+            wordCount={journal.wordCount}
+            saveStatus={journal.saveStatus}
+            onMoodChange={journal.changeMood}
+            onEnergyChange={journal.changeEnergy}
+            onAddTag={journal.addTag}
+            onRemoveTag={journal.removeTag}
+            onAddMicro={journal.addMicro}
+            onEditMicro={journal.editMicro}
+            onDeleteMicro={journal.deleteMicro}
+            editorSlot={
+              <BlockNoteEditor
+                key={journal.selectedDate}
+                initialContent={journal.longform?.richContent}
+                onChange={journal.handleEditorChange}
+                onReady={journal.handleEditorReady}
+                placeholder="Start writing..."
+                className="prose prose-lg max-w-none font-garamond journal-v2-editor"
+              />
+            }
+          />
         )}
       </div>
 
