@@ -48,7 +48,10 @@ const GroupOverview = () => {
   const [members, setMembers] = useState([]);
   const [challenges, setChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("feed");
+  const [activeTab, setActiveTab] = useState(() => {
+    try { const v = localStorage.getItem(`bito:grptab:${groupId}`); if (['feed','members','habits','challenges','leaderboard'].includes(v)) return v; } catch {}
+    return 'feed';
+  });
 
   /* ── modal state ──────────────────────── */
   const [showAddHabitModal, setShowAddHabitModal] = useState(false);
@@ -364,7 +367,7 @@ const GroupOverview = () => {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => { setActiveTab(tab.id); try { localStorage.setItem(`bito:grptab:${groupId}`, tab.id); } catch {} }}
                 className={`grp-tab whitespace-nowrap ${active ? "grp-tab--active" : ""}`}
               >
                 {tab.label}

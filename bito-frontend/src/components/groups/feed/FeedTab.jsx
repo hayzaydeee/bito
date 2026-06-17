@@ -27,7 +27,10 @@ const FeedTab = ({
   activeChallenge,
 }) => {
   const [density, setDensity] = useFeedDensity();
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState(() => {
+    try { const v = localStorage.getItem(`bito:feedfilter:${groupId}`); if (['all','streaks','kudos'].includes(v)) return v; } catch {}
+    return 'all';
+  });
   const [activities, setActivities] = useState(initialActivities);
   const [reactions, setReactions] = useState({}); // { activityId: { [type]: count } }
   const [myReactions, setMyReactions] = useState({}); // { activityId: type }
@@ -62,6 +65,7 @@ const FeedTab = ({
   const handleFilterChange = (id) => {
     setFilter(id);
     fetchFiltered(id);
+    try { localStorage.setItem(`bito:feedfilter:${groupId}`, id); } catch {}
   };
 
   /* Reaction toggle */

@@ -168,7 +168,10 @@ const buildDayStats = (dates, habits, entries) =>
 
 const WeekStrip = memo(({ habits, entries, onToggle, onEdit, fetchHabitEntries }) => {
   const [weekStartDay] = useWeekStartDay();
-  const [view, setView] = useState("week"); // week | month | year
+  const [view, setView] = useState(() => {
+    try { const v = localStorage.getItem('bito:weekstrip:view'); if (['week','month','year'].includes(v)) return v; } catch {}
+    return 'week';
+  }); // week | month | year
   const [anchor, setAnchor] = useState(() => new Date());
   const [expandedDate, setExpandedDate] = useState(null);
 
@@ -176,6 +179,7 @@ const WeekStrip = memo(({ habits, entries, onToggle, onEdit, fetchHabitEntries }
   const handleViewChange = useCallback((v) => {
     setView(v);
     setExpandedDate(null);
+    try { localStorage.setItem('bito:weekstrip:view', v); } catch {}
   }, []);
 
   // Navigation

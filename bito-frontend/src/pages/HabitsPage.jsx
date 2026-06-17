@@ -33,8 +33,14 @@ const HabitsPage = () => {
 
   // UI state
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("active");
-  const [groupMode, setGroupMode] = useState("grouped"); // grouped | flat
+  const [statusFilter, setStatusFilter] = useState(() => {
+    try { const v = localStorage.getItem('bito:habits:statusFilter'); if (['active','archived','all'].includes(v)) return v; } catch {}
+    return 'active';
+  });
+  const [groupMode, setGroupMode] = useState(() => {
+    try { const v = localStorage.getItem('bito:habits:groupMode'); if (['grouped','flat'].includes(v)) return v; } catch {}
+    return 'grouped';
+  }); // grouped | flat
   const [selectedHabit, setSelectedHabit] = useState(null);
   const [showCreateWizard, setShowCreateWizard] = useState(false);
   const [editingHabit, setEditingHabit] = useState(null);
@@ -282,7 +288,7 @@ const HabitsPage = () => {
               {["active", "archived", "all"].map((key) => (
                 <button
                   key={key}
-                  onClick={() => setStatusFilter(key)}
+                  onClick={() => { setStatusFilter(key); try { localStorage.setItem('bito:habits:statusFilter', key); } catch {} }}
                   className="px-3 py-2 std-mono text-[10px] uppercase tracking-wider transition-colors"
                   style={
                     statusFilter === key
@@ -301,7 +307,7 @@ const HabitsPage = () => {
                 {["grouped", "flat"].map((key) => (
                   <button
                     key={key}
-                    onClick={() => setGroupMode(key)}
+                    onClick={() => { setGroupMode(key); try { localStorage.setItem('bito:habits:groupMode', key); } catch {} }}
                     className="px-3 py-2 std-mono text-[10px] uppercase tracking-wider transition-colors"
                     style={
                       groupMode === key
