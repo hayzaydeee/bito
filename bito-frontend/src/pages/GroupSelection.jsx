@@ -225,7 +225,7 @@ const GroupSelection = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
-        <div className="max-w-5xl mx-auto space-y-8 w-full">
+        <div className="max-w-5xl mx-auto space-y-8 w-full pb-12">
 
         {/* empty state */}
         {groups.length === 0 ? (
