@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
-import { LockClosedIcon, LockOpen1Icon } from '@radix-ui/react-icons';
-import { Notebook, SquaresFour } from '@phosphor-icons/react';
+import { Notebook, SquaresFour, Lock, LockOpen } from '@phosphor-icons/react';
 import TodaysDeskCard from './TodaysDeskCard';
 import ReadingRoomCard from './ReadingRoomCard';
 import PeriodicalCards from './PeriodicalCards';
@@ -119,8 +118,8 @@ const JournalHome = ({
                 aria-label="Journal Intelligence settings"
               >
                 {aiActive
-                  ? <LockOpen1Icon className="w-3.5 h-3.5" />
-                  : <LockClosedIcon className="w-3.5 h-3.5" />
+                  ? <LockOpen size={14} weight="bold" />
+                  : <Lock size={14} weight="bold" />
                 }
                 Intelligence
               </button>

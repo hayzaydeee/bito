@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
-import { ArrowRightIcon } from '@radix-ui/react-icons';
-import { MagnifyingGlass, ListBullets, ClockCounterClockwise, Archive } from '@phosphor-icons/react';
-import { journalV2Service } from '../../services/journalV2Service';
 import {
+  ArrowRight, MagnifyingGlass, ListBullets, ClockCounterClockwise, Archive,
   SmileyAngry, SmileySad, SmileyMeh, Smiley, SmileyWink,
   BatteryEmpty, BatteryLow, BatteryMedium, BatteryHigh, BatteryFull,
 } from '@phosphor-icons/react';
+import { journalV2Service } from '../../services/journalV2Service';
 
 /* ═══════════════════════════════════════════════════════════════
    ReadingRoomCard — "Reading Room" on Journal Home
@@ -83,7 +82,7 @@ const RecentRow = memo(({ entry, onSelect }) => {
               {entry.wordCount} w
             </span>
           )}
-          <ArrowRightIcon className="w-3 h-3 text-[var(--ink-3)] flex-shrink-0 self-center opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+          <ArrowRight size={12} weight="bold" className="text-[var(--ink-3)] flex-shrink-0 self-center opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
         </div>
         {entry.preview && (
           <p className="mt-0.5 text-[12px] text-[var(--ink-3)] leading-relaxed line-clamp-1">

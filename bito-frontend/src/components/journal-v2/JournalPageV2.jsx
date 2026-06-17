@@ -10,8 +10,7 @@ import JournalEntryList from './JournalEntryList';
 import JournalHome from './JournalHome';
 import JournalPrivacySettings, { AIOptInNudge } from './JournalPrivacy';
 import JournalTour from './JournalTour';
-import { MagnifyingGlassIcon, Cross2Icon, LockClosedIcon, LockOpen1Icon } from '@radix-ui/react-icons';
-import { ArrowLeft } from '@phosphor-icons/react';
+import { ArrowLeft, MagnifyingGlass, X, Lock, LockOpen } from '@phosphor-icons/react';
 import { journalV2Service } from '../../services/journalV2Service';
 import { userAPI } from '../../services/api';
 
@@ -246,7 +245,7 @@ const JournalPageV2 = () => {
               className="w-9 h-9 flex items-center justify-center rounded-[10px] border border-[var(--line-2)] text-[var(--ink-3)] hover:text-[var(--ink)] hover:bg-[var(--surface-2)] transition-colors"
               aria-label={showSearch ? 'Close search' : 'Search journal'}
             >
-              {showSearch ? <Cross2Icon className="w-4 h-4" /> : <MagnifyingGlassIcon className="w-4 h-4" />}
+              {showSearch ? <X size={16} weight="bold" /> : <MagnifyingGlass size={16} weight="bold" />}
             </button>
 
             {/* Intelligence button */}
@@ -256,8 +255,8 @@ const JournalPageV2 = () => {
               aria-label="Journal Intelligence settings"
             >
               {journalAI?.insightNudges || journalAI?.contentAnalysis || journalAI?.weeklySummaries
-                ? <LockOpen1Icon className="w-3.5 h-3.5" />
-                : <LockClosedIcon className="w-3.5 h-3.5" />
+                ? <LockOpen size={14} weight="bold" />
+                : <Lock size={14} weight="bold" />
               }
               Intelligence
             </button>
@@ -268,7 +267,7 @@ const JournalPageV2 = () => {
         {showSearch && (
           <div className="mb-3">
             <div className="flex items-center gap-2 std-input">
-              <MagnifyingGlassIcon className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--ink-3)' }} />
+              <MagnifyingGlass size={16} weight="bold" className="flex-shrink-0" style={{ color: 'var(--ink-3)' }} />
               <input
                 type="text"
                 value={searchQuery}
