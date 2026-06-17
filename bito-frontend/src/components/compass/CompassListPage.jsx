@@ -100,7 +100,7 @@ const CompassListPage = () => {
         animate="animate"
         exit="exit"
       >
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto space-y-8">
           {/* Header — shared Feature-Home masthead (twin of Groups home) */}
           <FeatureHeader
             kicker="The Engine Room"
