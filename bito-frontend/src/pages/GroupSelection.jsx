@@ -24,6 +24,7 @@ const GroupSelection = () => {
   const [toast, setToast] = useState(null);
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState(null);
+  const [joinSuccess, setJoinSuccess] = useState(false);
 
   /* ── helpers ─────────────────────────── */
 
@@ -59,6 +60,7 @@ const GroupSelection = () => {
 
   const openJoinModal = (mode = "code") => { 
     setJoinError(null); 
+    setJoinSuccess(false);
     setJoinModalMode(mode);
     setShowJoinModal(true); 
   };
@@ -116,14 +118,19 @@ const GroupSelection = () => {
     if (!code || joining) return;
     setJoining(true);
     setJoinError(null);
+    setJoinSuccess(false);
     try {
       const res = await groupsAPI.joinByCode(code);
       if (res.success) {
-        setShowJoinModal(false);
-        setShowMobileActions(false);
-        navigate(`/app/groups/${res.group.id}`, {
-          state: { notification: { message: res.message, type: "success" } },
-        });
+        setJoinSuccess(true);
+        setTimeout(() => {
+          setShowJoinModal(false);
+          setShowMobileActions(false);
+          setJoinSuccess(false);
+          navigate(`/app/groups/${res.group.id}`, {
+            state: { notification: { message: res.message, type: "success" } },
+          });
+        }, 1500);
       } else {
         setJoinError(res.error || "Invalid invite code.");
       }
@@ -274,6 +281,7 @@ const GroupSelection = () => {
         onJoin={handleJoin}
         joining={joining}
         joinError={joinError}
+        joinSuccess={joinSuccess}
         initialScan={joinModalMode === "scan"}
       />
 
@@ -284,6 +292,9 @@ const GroupSelection = () => {
         onCreateGroup={() => setShowCreateModal(true)}
         onJoinGroup={handleJoin}
         onOpenJoinModal={openJoinModal}
+        joining={joining}
+        joinError={joinError}
+        joinSuccess={joinSuccess}
       />
 
       {/* toast */}

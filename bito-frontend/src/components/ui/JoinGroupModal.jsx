@@ -226,6 +226,9 @@ const JoinGroupModal = ({ isOpen, onClose, onJoin, joining, joinError, initialSc
               {joinError && (
                 <p className="mt-1.5 grp-mono text-[11px] text-[var(--rose)]">{joinError}</p>
               )}
+              {joinSuccess && (
+                <p className="mt-1.5 grp-mono text-[11px] text-[var(--signal)]">Valid code! Joining...</p>
+              )}
             </div>
 
             {/* QR scan button — shown only on touch/mobile */}

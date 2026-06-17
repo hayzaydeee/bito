@@ -29,7 +29,10 @@ const MobileGroupActions = ({
   onClose,
   onCreateGroup,
   onJoinGroup,
-  onOpenJoinModal
+  onOpenJoinModal,
+  joining,
+  joinError,
+  joinSuccess
 }) => {
   const [inviteCode, setInviteCode] = useState("");
 
@@ -58,7 +61,7 @@ const MobileGroupActions = ({
 
   const handleJoinSubmit = (e) => {
     e.preventDefault();
-    if (inviteCode.trim()) {
+    if (inviteCode.trim() && !joining && !joinSuccess) {
       onJoinGroup(inviteCode.trim());
     }
   };
@@ -93,8 +96,8 @@ const MobileGroupActions = ({
               <p className="text-sm text-[var(--ink-3)] font-spartan">Join an existing group or create a new one.</p>
             </div>
 
-            <form onSubmit={handleJoinSubmit} className="space-y-3">
-              <label className="text-xs font-mono uppercase tracking-wider text-[var(--ink-3)] flex items-center justify-between">
+            <form onSubmit={handleJoinSubmit} className="space-y-1">
+              <label className="text-xs font-mono uppercase tracking-wider text-[var(--ink-3)] flex items-center justify-between mb-2">
                 <span>Join by Code or QR</span>
               </label>
               <div className="flex gap-2 items-center">
@@ -102,24 +105,31 @@ const MobileGroupActions = ({
                   type="text"
                   placeholder="Paste invite code..."
                   value={inviteCode}
+                  disabled={joining || joinSuccess}
                   onChange={(e) => {
                     const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10);
                     setInviteCode(val);
                     // Automatically try to join when standard code lengths are reached
-                    if (val.length === 6 || val.length === 10) {
+                    if ((val.length === 6 || val.length === 10) && !joining && !joinSuccess) {
                       onJoinGroup(val);
                     }
                   }}
-                  className="flex-1 bg-transparent border border-[var(--line)] rounded-xl px-4 py-3 text-[var(--ink)] placeholder:text-[var(--ink-4)] focus:outline-none focus:border-[var(--signal)] font-mono text-sm uppercase tracking-widest text-center"
+                  className="flex-1 bg-transparent border border-[var(--line)] rounded-xl px-4 py-3 text-[var(--ink)] placeholder:text-[var(--ink-4)] focus:outline-none focus:border-[var(--signal)] font-mono text-sm uppercase tracking-widest text-center disabled:opacity-50"
                 />
                 <button 
                   type="button"
+                  disabled={joining || joinSuccess}
                   onClick={() => { onClose(); onOpenJoinModal?.("scan"); }}
-                  className="flex items-center justify-center w-12 h-12 bg-[var(--surface-2)] text-[var(--signal)] rounded-xl hover:bg-[var(--surface-3)] transition-colors flex-shrink-0"
+                  className="flex items-center justify-center w-12 h-12 bg-[var(--surface-2)] text-[var(--signal)] rounded-xl hover:bg-[var(--surface-3)] transition-colors flex-shrink-0 disabled:opacity-50"
                   aria-label="Scan QR Code"
                 >
                   <QrCode size={20} weight="bold" />
                 </button>
+              </div>
+              <div className="h-5 px-2 flex items-center">
+                {joining && <p className="text-[10px] text-[var(--ink-3)] font-mono uppercase tracking-widest animate-pulse">Verifying code...</p>}
+                {joinError && <p className="text-[10px] text-red-500 font-mono uppercase tracking-widest">{joinError}</p>}
+                {joinSuccess && <p className="text-[10px] text-[var(--signal)] font-mono uppercase tracking-widest">Valid code! Joining...</p>}
               </div>
             </form>
 
