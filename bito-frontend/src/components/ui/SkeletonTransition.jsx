@@ -32,6 +32,7 @@ const SkeletonTransition = ({ isLoading, skeleton, children }) => {
           initial="initial"
           animate="initial"
           exit="exit"
+          className="h-full w-full relative"
         >
           {skeleton}
         </motion.div>
@@ -41,6 +42,7 @@ const SkeletonTransition = ({ isLoading, skeleton, children }) => {
           variants={getVariants(contentEnterVariants)}
           initial="initial"
           animate="animate"
+          className="h-full w-full relative"
         >
           {children}
         </motion.div>
