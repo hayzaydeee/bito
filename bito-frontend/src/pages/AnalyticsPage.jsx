@@ -12,6 +12,7 @@ import TopHabitsList from '../components/analytics/TopHabitsList';
 import AnalyticsInsights from '../components/analytics/AnalyticsInsights';
 import HabitStreakChart from '../components/analytics/HabitStreakChart';
 import AnalyticsTour from '../components/analytics/AnalyticsTour';
+import FeatureHeader from '../components/shared/standard/FeatureHeader';
 
 const LS_KEY = 'bito_analytics_timeRange';
 
@@ -91,29 +92,47 @@ const AnalyticsPageLegacy = () => {
   /* ── loading skeleton ─────────────────────── */
   if (isLoading) {
     return (
-      <div className="page-container p-4 sm:p-6 max-w-5xl mx-auto space-y-4">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-[var(--color-surface-elevated)] rounded w-40" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-24 bg-[var(--color-surface-elevated)] rounded-xl" />
-            ))}
+      <div className="page-container h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-10">
+        <div className="max-w-5xl mx-auto space-y-4 w-full">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-[var(--color-surface-elevated)] rounded w-40" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-24 bg-[var(--color-surface-elevated)] rounded-xl" />
+              ))}
+            </div>
+            <div className="h-56 bg-[var(--color-surface-elevated)] rounded-xl" />
           </div>
-          <div className="h-56 bg-[var(--color-surface-elevated)] rounded-xl" />
         </div>
       </div>
     );
   }
 
+  const activeCount = habits.filter(h => h.isActive !== false && !h.isArchived).length;
+  const windowLabel = timeRange === 'all' ? `${effectiveAccountAgeDays}D TOTAL` : `${timeRange.toUpperCase()} WINDOW`;
+
   return (
-    <div className="page-container p-4 sm:p-6 max-w-5xl mx-auto space-y-6">
-      {/* ── Header row ─────────────────────────── */}
-      <div className="flex items-center justify-between flex-wrap gap-3" data-tour="analytics-header">
-        <h1 className="text-2xl font-garamond font-bold text-[var(--color-text-primary)]">
-          Analytics
-        </h1>
-        <TimeRangePills value={timeRange} onChange={handleTimeRangeChange} />
+    <div className="page-container h-full flex flex-col min-h-0 space-y-0 px-4 sm:px-8 py-7 sm:py-10">
+      <div className="max-w-5xl mx-auto flex-shrink-0 space-y-8 pb-8 w-full">
+        {/* ── Header row ─────────────────────────── */}
+        <div data-tour="analytics-header">
+          <FeatureHeader
+            kicker="Signal Report"
+            title="Analytics"
+            stats={
+              <>
+                <span className="text-[var(--signal)]">{String(activeCount).padStart(2, '0')}</span> ACTIVE HABITS
+                {"  ·  "}
+                <span className="text-[var(--ink-2)]">{windowLabel}</span>
+              </>
+            }
+            actions={<TimeRangePills value={timeRange} onChange={handleTimeRangeChange} />}
+          />
+        </div>
       </div>
+
+      <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
+        <div className="max-w-5xl mx-auto space-y-8 pb-12">
 
       {/* ── Empty state after reset ─────────────── */}
       {habits.length > 0 && !hasAnyEntries && (
@@ -168,6 +187,8 @@ const AnalyticsPageLegacy = () => {
 
       {/* ── Analytics tour ─────────────────────── */}
       <AnalyticsTour userId={user?._id || user?.id} />
+        </div>
+      </div>
     </div>
   );
 };
