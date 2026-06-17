@@ -233,7 +233,7 @@ const HabitsPage = () => {
         {/* Header — shared Feature-Home masthead (twin of Compass / Groups home) */}
         <div data-tour="habits-header">
           <FeatureHeader
-            kicker=""
+            kicker="The Repository"
             title="Habits"
             stats={
               hasAnyHabits ? (

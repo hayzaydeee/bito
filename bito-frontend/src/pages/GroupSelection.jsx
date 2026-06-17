@@ -163,7 +163,7 @@ const GroupSelection = () => {
 
         {/* header — shared Feature-Home masthead */}
         <FeatureHeader
-          kicker=""
+          kicker="The Basecamps"
           title="Groups"
           stats={
             groups.length > 0 ? (
