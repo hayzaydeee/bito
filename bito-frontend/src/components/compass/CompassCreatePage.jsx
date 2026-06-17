@@ -68,6 +68,7 @@ const CompassCreatePage = () => {
           onUpdateAnswer={updateClarificationAnswer}
           goalAnalysis={clarification?.goalAnalysis}
         />
+        </div>
       </div>
     </motion.div>
   );

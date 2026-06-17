@@ -152,13 +152,15 @@ const MemberDashboardView = () => {
   if (error) {
     return (
       <div className="std h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-12">
-        <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">\n          <div className="max-w-3xl mx-auto text-center py-20 w-full">
-          <Warning size={40} weight="duotone" className="mx-auto mb-4" style={{ color: 'var(--ember, #f59e0b)' }} />
-          <p className="std-display text-xl text-[var(--ink)] mb-2">Something went wrong</p>
-          <p className="std-mono text-[11px] text-[var(--ink-3)] mb-6">{error}</p>
-          <div className="flex items-center justify-center gap-3">
-            <button onClick={fetchData} className="std-btn std-btn--signal">Try Again</button>
-            <button onClick={() => navigate(`/app/groups/${groupId}`)} className="std-btn">Back to Group</button>
+        <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
+          <div className="max-w-3xl mx-auto text-center py-20 w-full">
+            <Warning size={40} weight="duotone" className="mx-auto mb-4" style={{ color: 'var(--ember, #f59e0b)' }} />
+            <p className="std-display text-xl text-[var(--ink)] mb-2">Something went wrong</p>
+            <p className="std-mono text-[11px] text-[var(--ink-3)] mb-6">{error}</p>
+            <div className="flex items-center justify-center gap-3">
+              <button onClick={fetchData} className="std-btn std-btn--signal">Try Again</button>
+              <button onClick={() => navigate(`/app/groups/${groupId}`)} className="std-btn">Back to Group</button>
+            </div>
           </div>
         </div>
       </div>
@@ -169,98 +171,100 @@ const MemberDashboardView = () => {
 
   return (
     <SkeletonTransition isLoading={loading} skeleton={memberSkeleton}>
-    {member ? (
-    <div className="std h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-12">
-      <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">\n        <div className="max-w-3xl mx-auto w-full">
-        {/* header */}
-        <div className="flex items-center gap-4 mb-8">
-          <button
-            onClick={() => navigate(`/app/groups/${groupId}`)}
-            className="std-btn std-btn--sm w-10 h-10 flex items-center justify-center p-0 flex-shrink-0"
-          >
-            <ArrowLeftIcon className="w-3.5 h-3.5" />
-          </button>
-
-          <div className="w-11 h-11 rounded-full bg-[var(--signal)] flex items-center justify-center text-white std-mono text-sm font-bold flex-shrink-0">
-            {memberName.charAt(0)?.toUpperCase() || "?"}
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <h1 className="std-display text-2xl text-[var(--ink)] truncate">{memberName}</h1>
-            <div className="flex items-center gap-1.5 std-mono text-[10px] text-[var(--ink-3)]">
-              <EyeOpenIcon className="w-3 h-3" />
-              Read-only view
-            </div>
-          </div>
-        </div>
-
-        {/* summary strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-[var(--line)] rounded-[var(--r-card)] overflow-hidden mb-8">
-          <StatCard label="Habits" value={habits.length} />
-          <StatCard label="Today" value={`${todayTotal}/${habits.length}`} />
-          <StatCard label="Personal" value={habits.filter((h) => !h.isGroupHabit).length} />
-          <StatCard label="Group"    value={habits.filter((h) => h.isGroupHabit).length} />
-        </div>
-
-        {/* empty state */}
-        {habits.length === 0 && (
-          <div className="std-card p-10 text-center">
-            <ClipboardText size={36} weight="duotone" className="mx-auto mb-3" style={{ color: 'var(--ink-3)' }} />
-            <p className="std-display text-base text-[var(--ink)] mb-1">No habits yet</p>
-            <p className="std-mono text-[11px] text-[var(--ink-3)]">
-              {memberName} hasn't created any habits to track yet.
-            </p>
-          </div>
-        )}
-
-        {/* habit list */}
-        {habits.length > 0 && (
-          <section>
-            <p className="std-kicker text-[var(--ink-3)] mb-3">Habits — Last 7 Days</p>
-            <div className="std-card overflow-hidden">
-              {habitStats.map((h, idx) => (
-                <div
-                  key={h._id}
-                  className={`flex items-center gap-4 px-5 py-3 ${idx < habitStats.length - 1 ? 'border-b border-[var(--line)]' : ''}`}
+      {member ? (
+        <div className="std h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-12">
+          <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
+            <div className="max-w-3xl mx-auto w-full">
+              {/* header */}
+              <div className="flex items-center gap-4 mb-8">
+                <button
+                  onClick={() => navigate(`/app/groups/${groupId}`)}
+                  className="std-btn std-btn--sm w-10 h-10 flex items-center justify-center p-0 flex-shrink-0"
                 >
-                  <span className="flex-shrink-0 text-[var(--ink-3)]">
-                    <HabitIcon icon={h.icon || "Target"} size={15} />
-                  </span>
+                  <ArrowLeftIcon className="w-3.5 h-3.5" />
+                </button>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm text-[var(--ink)] truncate">{h.name}</p>
-                      {h.isGroupHabit && (
-                        <span className="std-mono text-[10px] px-1.5 py-0.5 border border-[var(--line)] rounded-[var(--r-pill)] text-[var(--ink-3)]">
-                          group
-                        </span>
-                      )}
-                    </div>
-                    <p className="std-mono text-[10px] text-[var(--ink-3)]">{h.weekDone}/7 this week</p>
-                  </div>
+                <div className="w-11 h-11 rounded-full bg-[var(--signal)] flex items-center justify-center text-white std-mono text-sm font-bold flex-shrink-0">
+                  {memberName.charAt(0)?.toUpperCase() || "?"}
+                </div>
 
-                  {/* 7-day dots */}
-                  <div className="flex gap-1 flex-shrink-0">
-                    {last7.map((day) => {
-                      const done = !!(entries[h._id] || {})[day]?.completed;
-                      return (
-                        <div
-                          key={day}
-                          className="w-2.5 h-2.5 rounded-full transition-colors"
-                          style={{ background: done ? 'var(--signal)' : 'var(--line)' }}
-                          title={`${day}: ${done ? "Done" : "Missed"}`}
-                        />
-                      );
-                    })}
+                <div className="flex-1 min-w-0">
+                  <h1 className="std-display text-2xl text-[var(--ink)] truncate">{memberName}</h1>
+                  <div className="flex items-center gap-1.5 std-mono text-[10px] text-[var(--ink-3)]">
+                    <EyeOpenIcon className="w-3 h-3" />
+                    Read-only view
                   </div>
                 </div>
-              ))}
+              </div>
+
+              {/* summary strip */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-[var(--line)] rounded-[var(--r-card)] overflow-hidden mb-8">
+                <StatCard label="Habits" value={habits.length} />
+                <StatCard label="Today" value={`${todayTotal}/${habits.length}`} />
+                <StatCard label="Personal" value={habits.filter((h) => !h.isGroupHabit).length} />
+                <StatCard label="Group"    value={habits.filter((h) => h.isGroupHabit).length} />
+              </div>
+
+              {/* empty state */}
+              {habits.length === 0 && (
+                <div className="std-card p-10 text-center">
+                  <ClipboardText size={36} weight="duotone" className="mx-auto mb-3" style={{ color: 'var(--ink-3)' }} />
+                  <p className="std-display text-base text-[var(--ink)] mb-1">No habits yet</p>
+                  <p className="std-mono text-[11px] text-[var(--ink-3)]">
+                    {memberName} hasn't created any habits to track yet.
+                  </p>
+                </div>
+              )}
+
+              {/* habit list */}
+              {habits.length > 0 && (
+                <section>
+                  <p className="std-kicker text-[var(--ink-3)] mb-3">Habits — Last 7 Days</p>
+                  <div className="std-card overflow-hidden">
+                    {habitStats.map((h, idx) => (
+                      <div
+                        key={h._id}
+                        className={`flex items-center gap-4 px-5 py-3 ${idx < habitStats.length - 1 ? 'border-b border-[var(--line)]' : ''}`}
+                      >
+                        <span className="flex-shrink-0 text-[var(--ink-3)]">
+                          <HabitIcon icon={h.icon || "Target"} size={15} />
+                        </span>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm text-[var(--ink)] truncate">{h.name}</p>
+                            {h.isGroupHabit && (
+                              <span className="std-mono text-[10px] px-1.5 py-0.5 border border-[var(--line)] rounded-[var(--r-pill)] text-[var(--ink-3)]">
+                                group
+                              </span>
+                            )}
+                          </div>
+                          <p className="std-mono text-[10px] text-[var(--ink-3)]">{h.weekDone}/7 this week</p>
+                        </div>
+
+                        {/* 7-day dots */}
+                        <div className="flex gap-1 flex-shrink-0">
+                          {last7.map((day) => {
+                            const done = !!(entries[h._id] || {})[day]?.completed;
+                            return (
+                              <div
+                                key={day}
+                                className="w-2.5 h-2.5 rounded-full transition-colors"
+                                style={{ background: done ? 'var(--signal)' : 'var(--line)' }}
+                                title={`${day}: ${done ? "Done" : "Missed"}`}
+                              />
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
             </div>
-          </section>
-        )}
-      </div>
-    </div>
-    ) : null}
+          </div>
+        </div>
+      ) : null}
     </SkeletonTransition>
   );
 };
