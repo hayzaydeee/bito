@@ -92,7 +92,7 @@ const AnalyticsPageLegacy = () => {
   /* ── loading skeleton ─────────────────────── */
   if (isLoading) {
     return (
-      <div className="page-container h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-10">
+      <div className="std page-container h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-10">
         <div className="max-w-5xl mx-auto space-y-4 w-full">
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-[var(--color-surface-elevated)] rounded w-40" />
@@ -112,7 +112,7 @@ const AnalyticsPageLegacy = () => {
   const windowLabel = timeRange === 'all' ? `${effectiveAccountAgeDays}D TOTAL` : `${timeRange.toUpperCase()} WINDOW`;
 
   return (
-    <div className="page-container h-full flex flex-col min-h-0 space-y-0 px-4 sm:px-8 py-7 sm:py-10">
+    <div className="std page-container h-full flex flex-col min-h-0 space-y-0 px-4 sm:px-8 py-7 sm:py-10">
       <div className="max-w-5xl mx-auto flex-shrink-0 space-y-8 pb-8 w-full">
         {/* ── Header row ─────────────────────────── */}
         <div data-tour="analytics-header">
