@@ -55,7 +55,7 @@ const GroupDetailHeader = ({ group, groupId, members }) => {
 
   return (
     <>
-      <div className="flex items-center justify-between gap-4 mb-7">
+      <div className="flex items-center justify-between gap-4">
         {/* left: back + icon + name */}
         <div className="flex items-center gap-4 min-w-0">
           <button
@@ -74,7 +74,7 @@ const GroupDetailHeader = ({ group, groupId, members }) => {
           </span>
 
           <div className="min-w-0">
-            <h1 className="grp-display text-[23px] sm:text-[34px] font-bold text-[var(--ink)] truncate leading-[0.95]">
+            <h1 className="grp-display text-4xl sm:text-5xl font-bold text-[var(--ink)] truncate leading-none">
               {group?.name}
             </h1>
             <p className="grp-mono text-[11px] text-[var(--ink-3)] mt-1 truncate uppercase tracking-wider">
