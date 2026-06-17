@@ -28,7 +28,7 @@ const LeaveGroupButton = ({ group, isOwner }) => {
       
       await groupsAPI.leaveGroup(group._id);
       
-      navigate('/app');
+      navigate('/app/groups');
     } catch (err) {
       console.error('Error leaving group:', err);
       setError(err.message || 'Failed to leave group. Please try again.');

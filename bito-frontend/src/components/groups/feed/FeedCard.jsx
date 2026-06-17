@@ -11,6 +11,7 @@ import {
   Star,
   Heart,
   MapPin,
+  SignOut,
 } from "@phosphor-icons/react";
 import ReactionPicker from "./ReactionPicker";
 import { groupsAPI } from "../../../services/api";
@@ -49,6 +50,7 @@ function activityLabel(type) {
     habit_adopted:       "adopted",
     streak_milestone:    "milestone",
     member_joined:       "new member",
+    member_left:         "left group",
     habit_created:       "created habit",
     habit_deleted:       "removed habit",
     challenge_started:   "challenge",
@@ -65,6 +67,7 @@ function accentColor(type) {
     habit_completed:     "#a78bfa",
     streak_milestone:    "#ff7a3c",
     member_joined:       "#6f9bff",
+    member_left:         "#79766e",
     kudos:               "#ff5d73",
     challenge_joined:    "#36d6c3",
     challenge_started:   "#ffc24b",
@@ -82,6 +85,7 @@ function avatarBg(type) {
     habit_completed:     "linear-gradient(135deg,#7c5cf0,#a78bfa)",
     streak_milestone:    "linear-gradient(135deg,#ea580c,#ff7a3c)",
     member_joined:       "linear-gradient(135deg,#3b6fd6,#6f9bff)",
+    member_left:         "linear-gradient(135deg,#4b5563,#79766e)",
     kudos:               "linear-gradient(135deg,#e11d48,#ff5d73)",
     challenge_joined:    "linear-gradient(135deg,#0d9488,#36d6c3)",
     challenge_started:   "linear-gradient(135deg,#b45309,#ffc24b)",
@@ -100,6 +104,7 @@ function activityIcon(type, size = 12) {
     habit_adopted:       <PlusCircle  {...props} />,
     streak_milestone:    <Fire        {...props} />,
     member_joined:       <HandWaving  {...props} />,
+    member_left:         <SignOut     {...props} />,
     habit_created:       <Target      {...props} />,
     habit_deleted:       <Trash       {...props} />,
     challenge_started:   <Trophy      {...props} />,
@@ -123,6 +128,8 @@ function activityDescription(a) {
       return `${name} hit a milestone on ${a.data?.habitName || "a habit"}`;
     case "member_joined":
       return `${name} joined the group`;
+    case "member_left":
+      return `${name} left the group`;
     case "habit_created":
       return `${name} created ${a.data?.habitName || "a group habit"}`;
     case "habit_deleted":
@@ -151,6 +158,8 @@ function activityTitle(a) {
       return `${a.data?.streakCount ? `${a.data.streakCount} day` : ""} streak on ${a.data?.habitName || "a habit"}`;
     case "member_joined":
       return "Joined the group";
+    case "member_left":
+      return "Left the group";
     case "habit_created":
       return a.data?.habitName || "New group habit";
     case "kudos":
