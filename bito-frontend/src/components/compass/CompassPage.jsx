@@ -481,8 +481,8 @@ const CompassPage = () => {
     return (
       <>
         {discardModalEl}
-        <div className="h-[calc(100dvh-3.5rem)] std overflow-hidden">
-        <div className="max-w-5xl mx-auto h-full">
+        <div className="std h-full flex flex-col min-h-0 w-full">
+        <div className="max-w-5xl mx-auto h-full w-full flex flex-col min-h-0">
           <CompassDetail
             compass={activecompass}
             onBack={() => {
