@@ -688,6 +688,7 @@ const CompassPage = () => {
           </div>
         )}
       </div>
+      </div>
     </div>
     </>
   );
