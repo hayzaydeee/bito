@@ -94,13 +94,13 @@ const CompassListPage = () => {
     <>
       {discardModalEl}
       <motion.div
-        className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12"
-        variants={pageVariants}
-        initial="initial"
-        animate="animate"
-        exit="exit"
-      >
-        <div className="max-w-5xl mx-auto space-y-8">
+      className="std px-4 sm:px-8 py-7 sm:py-10 h-full flex flex-col min-h-0 space-y-0"
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+    >
+      <div className="max-w-5xl mx-auto flex-shrink-0 space-y-8 pb-8 w-full">
           {/* Header — shared Feature-Home masthead (twin of Groups home) */}
           <FeatureHeader
             kicker="The Engine Room"
@@ -130,6 +130,10 @@ const CompassListPage = () => {
               </motion.button>
             }
           />
+        </div>
+
+        <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
+          <div className="max-w-5xl mx-auto space-y-8">
 
           {error && (
             <p className="text-sm text-red-400 font-spartan mb-4">{error}</p>
@@ -240,6 +244,7 @@ const CompassListPage = () => {
               )}
             </div>
           )}
+        </div>
         </div>
       </motion.div>
     </>

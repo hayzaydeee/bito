@@ -268,20 +268,24 @@ const Dashboard = () => {
 
   return (
     <SkeletonTransition isLoading={isDashboardLoading} skeleton={dashboardSkeleton}>
-    <div className={`${isStd ? "std " : ""}p-4 sm:p-6 max-w-2xl mx-auto space-y-6`}>
-      {/* 1. Compact greeting / status masthead */}
-      <Greeting userName={user?.name || user?.username || "User"} firstName={user?.firstName} variant={variant} />
+    <div className={`${isStd ? "std " : ""}p-4 sm:p-6 max-w-2xl mx-auto h-full flex flex-col min-h-0 space-y-0`}>
+      <div className="flex-shrink-0 space-y-6 pb-6">
+        {/* 1. Compact greeting / status masthead */}
+        <Greeting userName={user?.name || user?.username || "User"} firstName={user?.firstName} variant={variant} />
 
-      {/* 2. Stat readout (only when habits exist) */}
-      {habits.length > 0 && (
-        <Stats
-          completed={stats.completed}
-          total={stats.total}
-          streak={stats.streak}
-          weeklyProgress={stats.weeklyProgress}
-          variant={variant}
-        />
-      )}
+        {/* 2. Stat readout (only when habits exist) */}
+        {habits.length > 0 && (
+          <Stats
+            completed={stats.completed}
+            total={stats.total}
+            streak={stats.streak}
+            weeklyProgress={stats.weeklyProgress}
+            variant={variant}
+          />
+        )}
+      </div>
+
+      <div className="flex-1 overflow-y-auto min-h-0 space-y-6 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-6 sm:px-6">
 
       {/* 3. Insights nudge */}
       {user?.preferences?.aiDashboard !== false && (
@@ -343,6 +347,8 @@ const Dashboard = () => {
           />
         );
       })}
+
+      </div>
 
       {/* Unified habit modal — add or edit based on currentHabit */}
       <HabitModal

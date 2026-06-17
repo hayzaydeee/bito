@@ -74,8 +74,8 @@ const JournalHome = ({
   const aiActive = journalAI?.insightNudges || journalAI?.contentAnalysis || journalAI?.weeklySummaries;
 
   return (
-    <div className="std min-h-full px-4 sm:px-8 py-7 sm:py-10">
-      <div className="max-w-5xl mx-auto space-y-8">
+    <div className="std px-4 sm:px-8 py-7 sm:py-10 h-full flex flex-col min-h-0 space-y-0">
+      <div className="max-w-5xl mx-auto flex-shrink-0 space-y-8 pb-8 w-full">
 
         {/* ── Masthead ──────────────────────────────── */}
         <div>
@@ -137,41 +137,45 @@ const JournalHome = ({
 
           <div className="std-rule mt-4" />
         </div>
+      </div>
 
-        {/* ── Home Layout ──────────────────────────── */}
-        {homeLayout === 'periodical' ? (
-          <PeriodicalCards
-            wordCount={wordCount}
-            microCount={microCount}
-            mood={mood}
-            energy={energy}
-            onOpenToday={onOpenToday}
-            onOpenList={onOpenList}
-            onOpenStream={onOpenStream}
-            onOpenArchive={onOpenArchive}
-            onAddMicro={onAddMicro}
-          />
-        ) : (
-          <div className="space-y-6">
-            <TodaysDeskCard
+      <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
+        <div className="max-w-5xl mx-auto space-y-8">
+          {/* ── Home Layout ──────────────────────────── */}
+          {homeLayout === 'periodical' ? (
+            <PeriodicalCards
               wordCount={wordCount}
+              microCount={microCount}
               mood={mood}
               energy={energy}
-              microCount={microCount}
-              hasYesterday={yesterdayHasContent}
               onOpenToday={onOpenToday}
-              onOpenYesterday={onOpenYesterday}
-              onAddMicro={onAddMicro}
-            />
-            <ReadingRoomCard
               onOpenList={onOpenList}
               onOpenStream={onOpenStream}
-
               onOpenArchive={onOpenArchive}
-              onSelectDate={onSelectDate}
+              onAddMicro={onAddMicro}
             />
-          </div>
-        )}
+          ) : (
+            <div className="space-y-6">
+              <TodaysDeskCard
+                wordCount={wordCount}
+                mood={mood}
+                energy={energy}
+                microCount={microCount}
+                hasYesterday={yesterdayHasContent}
+                onOpenToday={onOpenToday}
+                onOpenYesterday={onOpenYesterday}
+                onAddMicro={onAddMicro}
+              />
+              <ReadingRoomCard
+                onOpenList={onOpenList}
+                onOpenStream={onOpenStream}
+
+                onOpenArchive={onOpenArchive}
+                onSelectDate={onSelectDate}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

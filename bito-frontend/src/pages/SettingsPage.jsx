@@ -448,8 +448,8 @@ const SettingsPage = ({ section }) => {
     };
 
     return (
-      <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-10">
-        <div className="max-w-2xl mx-auto space-y-8">
+      <div className="std px-4 sm:px-8 py-7 sm:py-10 h-full flex flex-col min-h-0 space-y-0">
+        <div className="max-w-2xl mx-auto flex-shrink-0 space-y-8 pb-8 w-full">
           <div className="std-rise" style={{ animationDelay: "40ms" }}>
             <button
               onClick={() => navigate("/app/settings")}
@@ -472,13 +472,17 @@ const SettingsPage = ({ section }) => {
             </p>
             <div className="std-rule mt-4" />
           </div>
+        </div>
 
-          <PersonalityQuiz
-            currentPersonality={personality}
-            onSave={handlePersonalitySave}
-            onReset={handlePersonalityReset}
-            saving={saving}
-          />
+        <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
+          <div className="max-w-2xl mx-auto space-y-8">
+            <PersonalityQuiz
+              currentPersonality={personality}
+              onSave={handlePersonalitySave}
+              onReset={handlePersonalityReset}
+              saving={saving}
+            />
+          </div>
         </div>
       </div>
     );
@@ -489,8 +493,8 @@ const SettingsPage = ({ section }) => {
      ================================================================ */
   if (section === "habit-privacy") {
     return (
-      <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-10">
-        <div className="max-w-2xl mx-auto space-y-8">
+      <div className="std px-4 sm:px-8 py-7 sm:py-10 h-full flex flex-col min-h-0 space-y-0">
+        <div className="max-w-2xl mx-auto flex-shrink-0 space-y-8 pb-8 w-full">
           <div className="std-rise" style={{ animationDelay: "40ms" }}>
             <button
               onClick={() => navigate(`/app/groups/${habitData?.groupId || ""}`)}
@@ -514,15 +518,18 @@ const SettingsPage = ({ section }) => {
             </p>
             <div className="std-rule mt-4" />
           </div>
+        </div>
 
-          {!habitData ? (
-            <div className="space-y-3">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-16 std-card animate-pulse" />
-              ))}
-            </div>
-          ) : (
-            <>
+        <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
+          <div className="max-w-2xl mx-auto space-y-8">
+            {!habitData ? (
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-16 std-card animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <>
               {/* habit card */}
               <div className="std-card flex items-center gap-3 p-4 mb-6">
                 <span
@@ -599,6 +606,7 @@ const SettingsPage = ({ section }) => {
               </div>
             </>
           )}
+          </div>
         </div>
         <Toast toast={toast} />
       </div>
@@ -690,8 +698,8 @@ const SettingsPage = ({ section }) => {
 
   return (
     <SkeletonTransition isLoading={loading} skeleton={pageSkeleton}>
-    <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-10">
-      <div className="max-w-2xl mx-auto space-y-8">
+    <div className="std px-4 sm:px-8 py-7 sm:py-10 h-full flex flex-col min-h-0 space-y-0">
+      <div className="max-w-2xl mx-auto flex-shrink-0 space-y-8 pb-8 w-full">
         {/* ── header ──────────────────── */}
         <div className="std-rise" style={{ animationDelay: "40ms" }}>
           <div className="flex items-end justify-between gap-4 flex-wrap mb-1">
@@ -707,6 +715,10 @@ const SettingsPage = ({ section }) => {
           </p>
           <div className="std-rule mt-4" />
         </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
+        <div className="max-w-2xl mx-auto space-y-8">
 
         {/* ═══════ 1. PROFILE ═══════ */}
         <Section title="Profile">
@@ -1189,6 +1201,7 @@ const SettingsPage = ({ section }) => {
               )}
             </div>
           </div>
+        </div>
         </div>
       </div>
 

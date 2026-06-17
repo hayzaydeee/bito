@@ -342,8 +342,8 @@ const GroupOverview = () => {
   return (
     <SkeletonTransition isLoading={loading} skeleton={overviewSkeleton}>
     {group ? (
-    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-7 sm:py-10">
-      <div className="max-w-5xl mx-auto space-y-8">
+    <div className="grp grp-surface px-4 sm:px-8 py-7 sm:py-10 h-full flex flex-col min-h-0 space-y-0">
+      <div className="max-w-5xl mx-auto flex-shrink-0 space-y-8 pb-8 w-full">
 
         {/* ── Header ──────────────────────── */}
         <GroupDetailHeader group={group} groupId={groupId} members={members} />
@@ -374,7 +374,11 @@ const GroupOverview = () => {
           })}
         </div>
 
-        {/* ── Tab content ─────────────────── */}
+        </div>
+
+        <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
+          <div className="max-w-5xl mx-auto space-y-8">
+          {/* ── Tab content ─────────────────── */}
 
         {activeTab === "feed" && (
           <FeedTab
@@ -432,8 +436,8 @@ const GroupOverview = () => {
             canManage={canManage}
           />
         )}
-
-      </div>
+          </div>
+        </div>
 
       {/* ── Modals ──────────────────────── */}
 

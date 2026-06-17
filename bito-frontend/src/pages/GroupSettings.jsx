@@ -231,8 +231,8 @@ const GroupSettings = () => {
 
   return (
     <SkeletonTransition isLoading={loading} skeleton={settingsSkeleton}>
-    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-7 sm:py-10">
-      <div className="max-w-2xl mx-auto space-y-8">
+    <div className="grp grp-surface px-4 sm:px-8 py-7 sm:py-10 h-full flex flex-col min-h-0 space-y-0">
+      <div className="max-w-2xl mx-auto flex-shrink-0 space-y-8 pb-8 w-full">
         {/* header */}
         <div className="grp-rise" style={{ animationDelay: "40ms" }}>
           <button
@@ -278,6 +278,10 @@ const GroupSettings = () => {
           </p>
           <div className="grp-rule mt-4" />
         </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
+        <div className="max-w-2xl mx-auto space-y-8">
 
         {/* ── General ─────────────────── */}
         <Section title="General" icon={<InfoCircledIcon className="w-4 h-4" />}>
@@ -516,6 +520,7 @@ const GroupSettings = () => {
             </SettingRow>
           )}
         </Section>
+        </div>
       </div>
     </div>
     </SkeletonTransition>

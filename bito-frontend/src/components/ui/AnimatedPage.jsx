@@ -22,7 +22,7 @@ const AnimatedPage = ({ children, className = "", ...props }) => {
       initial="initial"
       animate="animate"
       exit="exit"
-      className={`min-h-full relative ${className}`}
+      className={`h-full min-h-0 flex flex-col relative ${className}`}
       {...props}
     >
       {children}

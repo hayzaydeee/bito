@@ -158,8 +158,8 @@ const GroupSelection = () => {
 
   return (
     <SkeletonTransition isLoading={isLoading} skeleton={groupsSkeleton}>
-    <div className="grp grp-surface min-h-screen px-4 sm:px-8 py-7 sm:py-10">
-      <div className="max-w-5xl mx-auto space-y-8">
+    <div className="grp grp-surface px-4 sm:px-8 py-7 sm:py-10 h-full flex flex-col min-h-0 space-y-0">
+      <div className="max-w-5xl mx-auto flex-shrink-0 space-y-8 pb-8 w-full">
 
         {/* header — shared Feature-Home masthead */}
         <FeatureHeader
@@ -193,6 +193,10 @@ const GroupSelection = () => {
             </>
           }
         />
+      </div>
+
+      <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
+        <div className="max-w-5xl mx-auto space-y-8">
 
         {/* empty state */}
         {groups.length === 0 ? (
@@ -232,6 +236,7 @@ const GroupSelection = () => {
             ))}
           </AnimatedList>
         )}
+        </div>
       </div>
 
       {/* create modal */}

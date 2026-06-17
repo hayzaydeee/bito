@@ -233,8 +233,8 @@ const HabitsPage = () => {
 
   return (
     <SkeletonTransition isLoading={isLoading} skeleton={<HabitsSkeleton />}>
-    <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-10">
-      <div className="max-w-5xl mx-auto space-y-8">
+    <div className="std px-4 sm:px-8 py-7 sm:py-10 h-full flex flex-col min-h-0 space-y-0">
+      <div className="max-w-5xl mx-auto flex-shrink-0 space-y-8 pb-8 w-full">
         {/* Header — shared Feature-Home masthead (twin of Compass / Groups home) */}
         <div data-tour="habits-header">
           <FeatureHeader
@@ -316,8 +316,11 @@ const HabitsPage = () => {
             )}
           </div>
         )}
+      </div>
 
-        {/* Collection */}
+      <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
+        <div className="max-w-5xl mx-auto space-y-8">
+          {/* Collection */}
         {showGrouped ? (
           groupedEmpty ? (
             <HabitsEmptyState
@@ -374,6 +377,7 @@ const HabitsPage = () => {
             ))}
           </AnimatedList>
         )}
+        </div>
       </div>
 
       {/* Slide-over detail panel */}

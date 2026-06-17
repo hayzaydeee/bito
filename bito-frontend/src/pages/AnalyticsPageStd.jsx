@@ -99,8 +99,8 @@ const AnalyticsPageStd = () => {
   }
 
   return (
-    <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
-      <div className="max-w-5xl mx-auto space-y-8">
+    <div className="std px-4 sm:px-8 py-7 sm:py-12 h-full flex flex-col min-h-0 space-y-0">
+      <div className="max-w-5xl mx-auto flex-shrink-0 space-y-8 pb-8 w-full">
 
         {/* ── Masthead ──────────────────────────── */}
         <div data-tour="analytics-header">
@@ -116,7 +116,10 @@ const AnalyticsPageStd = () => {
           </p>
           <div className="std-rule mt-4" />
         </div>
+      </div>
 
+      <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
+        <div className="max-w-5xl mx-auto space-y-8">
         {/* ── Empty state ──────────────────────── */}
         {habits.length > 0 && !hasAnyEntries && (
           <div className="std-card p-5 border-l-2 border-l-[var(--line-2)]">
@@ -194,6 +197,7 @@ const AnalyticsPageStd = () => {
         )}
 
         <AnalyticsTour userId={user?._id || user?.id} />
+        </div>
       </div>
     </div>
   );
