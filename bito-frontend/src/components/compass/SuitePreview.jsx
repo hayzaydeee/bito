@@ -194,7 +194,7 @@ const SuitePreview = ({
       </div>
 
       {/* Caveat */}
-      <p className="std-mono text-[10px] uppercase tracking-wide text-[var(--ink-3)] text-center">
+      <p className="std-mono text-[10px] uppercase tracking-wide text-[var(--ink-3)] text-center pb-8 sm:pb-8">
         Click each compass to preview, refine, or apply individually.
       </p>
     </div>

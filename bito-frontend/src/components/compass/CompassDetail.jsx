@@ -358,7 +358,7 @@ const CompassDetail = ({
       {/* Pinned action bar — preview mode */}
       {isPreview && (
         <motion.div
-          className="flex-shrink-0 border-t border-[var(--line-2)] px-4 sm:px-6 py-4 bg-[var(--bg)]"
+          className="flex-shrink-0 border-t border-[var(--line-2)] px-4 sm:px-6 pt-4 pb-12 sm:pb-12 bg-[var(--bg)]"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ ...springs.soft, delay: 0.2 }}
@@ -406,7 +406,7 @@ const CompassDetail = ({
       {/* Pinned action bar — active mode (living plan) */}
       {isActive && canRefine && (
         <motion.div
-          className="flex-shrink-0 border-t border-[var(--line-2)] px-4 sm:px-6 py-4 bg-[var(--bg)]"
+          className="flex-shrink-0 border-t border-[var(--line-2)] px-4 sm:px-6 pt-4 pb-12 sm:pb-12 bg-[var(--bg)]"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ ...springs.soft, delay: 0.2 }}
