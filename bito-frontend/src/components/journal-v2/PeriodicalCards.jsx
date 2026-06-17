@@ -17,7 +17,7 @@ const TodayIssueCard = ({ wordCount, microCount, mood, energy, hasContent, onOpe
   return (
     <div
       className="std-card std-card-hover cursor-pointer journal-home-periodical-today"
-      style={{ borderLeft: '3px solid var(--signal)' }}
+      style={{ borderTop: '3px solid var(--signal)' }}
     >
       <div className="p-5 sm:p-6">
         <p className="std-kicker text-[var(--signal)] mb-2">Today</p>

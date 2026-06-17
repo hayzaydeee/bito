@@ -46,7 +46,7 @@ const TodaysDeskCard = ({
   const hasContent = wordCount > 0 || microCount > 0;
 
   return (
-    <div className="std-card journal-home-desk-card" style={{ borderLeft: '3px solid var(--signal)' }}>
+    <div className="std-card journal-home-desk-card" style={{ borderTop: '3px solid var(--signal)' }}>
       <div className="p-5 sm:p-7">
         {/* Kicker */}
         <p className="std-kicker text-[var(--signal)] mb-3">Today's Desk</p>
