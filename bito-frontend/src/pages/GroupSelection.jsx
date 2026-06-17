@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { PlusIcon } from "@radix-ui/react-icons";
-import { Users, UserPlus } from "@phosphor-icons/react";
+import { Users, UserPlus, List } from "@phosphor-icons/react";
 import { groupsAPI } from "../services/api";
 import GroupCreationModal from "../components/ui/GroupCreationModal";
 import JoinGroupModal from "../components/ui/JoinGroupModal";
@@ -9,6 +9,7 @@ import GroupCard from "../components/groups/GroupCard";
 import FeatureHeader from "../components/shared/standard/FeatureHeader";
 import SkeletonTransition from "../components/ui/SkeletonTransition";
 import AnimatedList from "../components/ui/AnimatedList";
+import MobileGroupActions from "../components/groups/MobileGroupActions";
 import "../components/groups/groups-theme.css";
 
 const GroupSelection = () => {
@@ -18,6 +19,7 @@ const GroupSelection = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showMobileActions, setShowMobileActions] = useState(false);
   const [toast, setToast] = useState(null);
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState(null);
@@ -113,6 +115,7 @@ const GroupSelection = () => {
       const res = await groupsAPI.joinByCode(code);
       if (res.success) {
         setShowJoinModal(false);
+        setShowMobileActions(false);
         navigate(`/app/groups/${res.group.id}`, {
           state: { notification: { message: res.message, type: "success" } },
         });
@@ -180,16 +183,30 @@ const GroupSelection = () => {
           }
           actions={
             <>
-              <button onClick={openJoinModal} className="grp-btn">
-                <UserPlus size={15} weight="bold" />
-                Join
-              </button>
-              {groups.length > 0 && (
-                <button onClick={() => setShowCreateModal(true)} className="grp-btn grp-btn--signal">
-                  <PlusIcon className="w-4 h-4" />
-                  New Group
+              {/* Desktop Actions */}
+              <div className="hidden sm:flex gap-2">
+                <button onClick={openJoinModal} className="grp-btn">
+                  <UserPlus size={15} weight="bold" />
+                  Join
                 </button>
-              )}
+                {groups.length > 0 && (
+                  <button onClick={() => setShowCreateModal(true)} className="grp-btn grp-btn--signal">
+                    <PlusIcon className="w-4 h-4" />
+                    New Group
+                  </button>
+                )}
+              </div>
+              
+              {/* Mobile Actions */}
+              <div className="sm:hidden flex w-full">
+                <button 
+                  onClick={() => setShowMobileActions(true)} 
+                  className="grp-btn grp-btn--signal w-full justify-center"
+                >
+                  <List size={15} weight="bold" />
+                  Actions
+                </button>
+              </div>
             </>
           }
         />
@@ -252,6 +269,14 @@ const GroupSelection = () => {
         onJoin={handleJoin}
         joining={joining}
         joinError={joinError}
+      />
+
+      {/* mobile group actions drawer */}
+      <MobileGroupActions
+        isOpen={showMobileActions}
+        onClose={() => setShowMobileActions(false)}
+        onCreateGroup={() => setShowCreateModal(true)}
+        onJoinGroup={handleJoin}
       />
 
       {/* toast */}
