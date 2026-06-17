@@ -86,7 +86,7 @@ async function generateKickstartInsights({ user, habits }) {
           { role: 'user', content: userMessage },
         ],
         temperature,
-        max_tokens: 300,
+        max_tokens: 600,
       });
 
       const text = completion.choices?.[0]?.message?.content;

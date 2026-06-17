@@ -1,10 +1,10 @@
 /**
  * Optional LLM Enrichment Layer (Layer 2)
  *
- * When CLAUDE_API_KEY is configured, this module enriches the rule-based
+ * When OPENAI_API_KEY is configured, this module enriches the rule-based
  * insights with natural language summaries and open-ended pattern discovery.
  *
- * Uses the Anthropic SDK via the shared llmClient singleton.
+ * Uses the OpenAI SDK via the shared llmClient singleton.
  * If the key is absent or the call fails, it falls back gracefully
  * and returns the original insights untouched.
  */
@@ -222,7 +222,7 @@ async function callLLM(ruleInsights, dataSummary, personality = DEFAULT_PERSONAL
         { role: 'user', content: userMessage },
       ],
       temperature,
-      max_tokens: 300,
+      max_tokens: 600,
     });
 
     const text = completion.choices?.[0]?.message?.content;
@@ -259,7 +259,7 @@ async function callLLM(ruleInsights, dataSummary, personality = DEFAULT_PERSONAL
  */
 async function enrichWithLLM(ruleInsights, habits, entries, journalEntries, personality, feature = 'insight-enrichment') {
   if (!isLLMAvailable()) {
-    console.log('[Insights] LLM not available (no CLAUDE_API_KEY)');
+    console.log('[Insights] LLM not available (no OPENAI_API_KEY)');
     return { insights: ruleInsights, summary: null, llmUsed: false };
   }
 

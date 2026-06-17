@@ -302,7 +302,7 @@ class WeeklyReportService {
           },
         ],
         temperature,
-        max_tokens: 200,
+        max_tokens: 350,
       });
 
       return completion.choices[0]?.message?.content?.trim() || this._getStaticInsights(stats, habitBreakdown);

@@ -608,7 +608,7 @@ async function generateAnalyticsReport(ruleInsights, analyticsData, rangeDays, p
   try {
     client = _getLLMClient();
   } catch (err) {
-    console.warn('[Analytics] Failed to create Anthropic client:', err.message);
+    console.warn('[Analytics] Failed to create OpenAI client:', err.message);
     return buildFallbackSections(ruleInsights, analyticsData);
   }
 
@@ -631,7 +631,7 @@ async function generateAnalyticsReport(ruleInsights, analyticsData, rangeDays, p
         { role: 'user', content: userMessage },
       ],
       temperature,
-      max_tokens: 800,
+      max_tokens: 1500,
     });
 
     const text = completion.choices?.[0]?.message?.content;
@@ -768,7 +768,7 @@ async function answerAnalyticsQueryWithLLM({ query, analyticsData, habits, perso
         },
       ],
       temperature,
-      max_tokens: 450,
+      max_tokens: 700,
     });
 
     const text = completion.choices?.[0]?.message?.content;
