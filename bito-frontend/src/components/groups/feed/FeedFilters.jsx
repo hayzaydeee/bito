@@ -10,7 +10,6 @@ const FILTERS = [
   { id: "all",     label: "All" },
   { id: "streaks", label: "Streaks" },
   { id: "kudos",   label: "Kudos" },
-  { id: "members", label: "Members" },
 ];
 
 /**
@@ -22,7 +21,6 @@ export function filterToTypes(filterId) {
     all:     null,
     streaks: "streak_milestone",
     kudos:   "kudos",
-    members: "member_joined,member_left",
   };
   return map[filterId] ?? null;
 }
