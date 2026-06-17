@@ -1,15 +1,10 @@
-import React, { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createPortal } from 'react-dom';
-import { 
-  ExitIcon, 
-  Cross2Icon, 
-  ExclamationTriangleIcon 
-} from '@radix-ui/react-icons';
+import { SignOut, WarningCircle, X } from '@phosphor-icons/react';
 import { groupsAPI } from '../../services/api';
+import AnimatedModal from '../ui/AnimatedModal';
 
 const LeaveGroupButton = ({ group, isOwner }) => {
-  const modalRef = useRef(null);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -46,16 +41,14 @@ const LeaveGroupButton = ({ group, isOwner }) => {
   // Don't show leave button if user is the only owner
   if (isOwner && group?.members?.filter(m => m.role === 'owner').length <= 1) {
     return (
-      <div className="mt-8 p-4 border border-amber-300 bg-amber-50 rounded-lg">
-        <div className="flex items-start gap-3">
-          <ExclamationTriangleIcon className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <h4 className="font-medium text-amber-800 mb-1">Cannot Leave Group</h4>
-            <p className="text-sm text-amber-700">
-              As the only owner of this group, you cannot leave. You must either transfer ownership to another member
-              or delete the group.
-            </p>
-          </div>
+      <div className="mt-8 grp-card bg-[var(--ember-bg)] border border-[var(--ember-border)] p-4 flex gap-3">
+        <WarningCircle size={20} weight="fill" className="text-[var(--ember)] flex-shrink-0 mt-0.5" />
+        <div>
+          <h4 className="grp-display font-bold text-[14px] text-[var(--ember)] mb-1">Cannot Leave Group</h4>
+          <p className="text-[13px] text-[var(--ember)] opacity-90">
+            As the only owner of this group, you cannot leave. You must either transfer ownership to another member
+            or delete the group.
+          </p>
         </div>
       </div>
     );
@@ -63,119 +56,102 @@ const LeaveGroupButton = ({ group, isOwner }) => {
 
   return (
     <>
-      <div className="flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800/30">
-        <div>
-          <p className="font-medium text-red-800 dark:text-red-200 font-outfit">
-            Leave Group
-          </p>
-          <p className="text-sm text-red-600 dark:text-red-300 font-outfit">
-            You will lose access to all group data
-          </p>
+      <div className="mt-8 grp-card bg-[var(--rose-bg)] border border-[var(--rose-border)] p-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <p className="grp-display text-[15px] font-bold text-[var(--rose)] mb-0.5">
+              Leave Group
+            </p>
+            <p className="text-[13px] text-[var(--rose)] opacity-80">
+              You will lose access to all group data
+            </p>
+          </div>
+          <button
+            onClick={openConfirmDialog}
+            className="grp-btn flex items-center gap-2 flex-shrink-0 !bg-[var(--rose)] !text-[var(--bg)] !border-transparent hover:opacity-90"
+            disabled={isLoading}
+          >
+            <SignOut size={16} weight="bold" />
+            {isLoading ? 'Processing...' : 'Leave Group'}
+          </button>
         </div>
-        <button
-          onClick={openConfirmDialog}
-          className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors font-outfit"
-          disabled={isLoading}
-        >
-          <ExitIcon className="w-4 h-4" />
-          {isLoading ? 'Processing...' : 'Leave Group'}
-        </button>
       </div>
 
-      {/* Confirmation Dialog */}
-      {isConfirmDialogOpen && createPortal(
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-200 animate-fade-in" 
+      <AnimatedModal isOpen={isConfirmDialogOpen} onClose={closeConfirmDialog} maxWidth="max-w-md">
+        <div className="p-6 relative">
+          <button 
+            className="absolute top-4 right-4 text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors p-1"
             onClick={closeConfirmDialog}
-          />
-          
-          {/* Modal */}
-          <div 
-            ref={modalRef}
-            className="relative bg-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)] shadow-xl p-6 w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto z-10 transform transition-all duration-200 animate-zoom-in"
-            onClick={(e) => e.stopPropagation()}
           >
-            {/* Close button */}
-            <button 
-              className="absolute top-4 right-4 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
-              onClick={closeConfirmDialog}
-            >
-              <Cross2Icon className="w-5 h-5" />
-            </button>
-            
-            {/* Header */}
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center mx-auto mb-4">
-                <ExitIcon className="w-8 h-8 text-white" />
-              </div>
-              <div className="text-2xl font-dmSerif gradient-text mb-2">
-                Leave Group
-              </div>
-              <p className="text-sm text-[var(--color-text-secondary)] font-outfit mb-5">
-                You are about to leave <strong>{group?.name}</strong>
-              </p>
+            <X size={20} weight="bold" />
+          </button>
+          
+          <div className="text-center mb-6 mt-2">
+            <div className="w-14 h-14 rounded-2xl bg-[var(--rose-bg)] flex items-center justify-center mx-auto mb-5 border border-[var(--rose-border)]">
+              <SignOut size={28} weight="fill" className="text-[var(--rose)]" />
             </div>
-            
-            {/* Content */}
-            <div className="space-y-4">
-              <p className="text-sm text-[var(--color-text-secondary)]">
+            <h2 className="grp-display text-2xl font-bold text-[var(--ink)] mb-2">
+              Leave Group
+            </h2>
+            <p className="text-[14px] text-[var(--ink-2)]">
+              You are about to leave <strong className="text-[var(--ink)] font-bold">{group?.name}</strong>
+            </p>
+          </div>
+          
+          <div className="space-y-5">
+            <div>
+              <p className="text-[13px] text-[var(--ink)] font-bold mb-3 uppercase tracking-wider grp-mono">
                 You'll lose access to:
               </p>
-              
-              <ul className="list-disc pl-5 text-sm text-[var(--color-text-secondary)] space-y-1">
-                <li>All group habits and trackers</li>
-                <li>Your progress history in this group</li>
-                <li>Team analytics and insights</li>
+              <ul className="space-y-2">
+                {[
+                  "All group habits and trackers",
+                  "Your progress history in this group",
+                  "Team analytics and insights"
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-2.5 text-[14px] text-[var(--ink-2)]">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--rose)] opacity-50" />
+                    {item}
+                  </li>
+                ))}
               </ul>
-              
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                <div className="flex items-start gap-2">
-                  <ExclamationTriangleIcon className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-amber-800">
-                    This action cannot be undone. You will need a new invitation to rejoin.
-                  </p>
-                </div>
+            </div>
+            
+            <div className="p-3.5 bg-[var(--ember-bg)] border border-[var(--ember-border)] rounded-[10px] flex items-start gap-2.5">
+              <WarningCircle size={18} weight="fill" className="text-[var(--ember)] flex-shrink-0 mt-0.5" />
+              <p className="text-[13px] text-[var(--ember)] leading-relaxed">
+                This action cannot be undone. You will need a new invitation to rejoin.
+              </p>
+            </div>
+            
+            {error && (
+              <div className="p-3.5 bg-[var(--rose-bg)] border border-[var(--rose-border)] rounded-[10px]">
+                <p className="text-[13px] text-[var(--rose)] font-medium">
+                  {error}
+                </p>
               </div>
+            )}
+            
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={closeConfirmDialog}
+                className="grp-btn flex-1 !bg-transparent !border-[var(--line-2)] hover:!bg-[var(--surface-2)]"
+                disabled={isLoading}
+              >
+                Cancel
+              </button>
               
-              {/* Action buttons */}
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-600">
-                    {error}
-                  </p>
-                </div>
-              )}
-              
-              <div className="flex gap-3 pt-4">
-                <button
-                  onClick={closeConfirmDialog}
-                  className="flex-1 px-4 py-2 rounded-lg border border-[var(--color-border-primary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-all duration-200 font-outfit text-sm"
-                >
-                  Cancel
-                </button>
-                
-                <button
-                  onClick={handleleaveGroup}
-                  disabled={isLoading}
-                  className="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-all duration-200 font-outfit text-sm disabled:opacity-50"
-                >
-                  {isLoading ? (
-                    <span className="flex items-center justify-center">
-                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
-                      Leaving...
-                    </span>
-                  ) : (
-                    'Confirm & Leave'
-                  )}
-                </button>
-              </div>
+              <button
+                onClick={handleleaveGroup}
+                disabled={isLoading}
+                className="grp-btn flex-1 !bg-[var(--rose)] !text-[var(--bg)] !border-transparent hover:opacity-90 disabled:opacity-50"
+              >
+                {isLoading ? 'Leaving...' : 'Confirm & Leave'}
+              </button>
             </div>
           </div>
-        </div>,
-        document.body
-      )}
+        </div>
+      </AnimatedModal>
     </>
   );
 };

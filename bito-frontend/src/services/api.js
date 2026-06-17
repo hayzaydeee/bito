@@ -348,6 +348,13 @@ export const groupsAPI = {
     });
   },
 
+  // Leave group
+  leaveGroup: async (groupId) => {
+    return apiRequest(`/api/groups/${groupId}/leave`, {
+      method: 'POST',
+    });
+  },
+
   // Get group overview
   getGroupOverview: async (groupId) => {
     return apiRequest(`/api/groups/${groupId}/overview`);
