@@ -37,8 +37,10 @@ import GridStylePicker from "../components/ui/GridStylePicker";
 import GridAnimationPicker from "../components/ui/GridAnimationPicker";
 import SkeletonTransition from "../components/ui/SkeletonTransition";
 import AnimatedList from "../components/ui/AnimatedList";
+import ProfileEditModal from "../components/ui/ProfileEditModal";
 import { motion } from "framer-motion";
 import { listItemVariants } from "../utils/motion";
+import { Pencil1Icon } from "@radix-ui/react-icons";
 
 /* ================================================================
    SettingsPage — sectioned list layout (no widget grid)
@@ -67,6 +69,7 @@ const SettingsPage = ({ section }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
 
   const [settings, setSettings] = useState({
     emailNotifications: true,
@@ -1276,6 +1279,16 @@ const SettingsPage = ({ section }) => {
         </div>
       )}
 
+      <ProfileEditModal
+        isOpen={isEditProfileOpen}
+        onClose={() => setIsEditProfileOpen(false)}
+        userProfile={userProfile}
+        onSave={(updatedUser) => {
+          setUserProfile((prev) => ({ ...prev, ...updatedUser }));
+          if (updateUser) updateUser(updatedUser);
+          showToast("Profile updated");
+        }}
+      />
       <Toast toast={toast} />
     </div>
     </SkeletonTransition>
