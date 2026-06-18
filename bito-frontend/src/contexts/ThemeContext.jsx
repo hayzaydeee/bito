@@ -326,10 +326,9 @@ export const ThemeProvider = ({ children }) => {
     gridStyle,
     changeGridStyle,
     gridStyleOptions: [
-      { value: 'crosshatch', label: 'Grid',     icon: 'crosshatch' },
-      { value: 'dot',        label: 'Dots',     icon: 'dot' },
-      { value: 'diagonal',   label: 'Lines',    icon: 'diagonal' },
-      { value: 'none',       label: 'None',     icon: 'none' },
+      { value: 'crosshatch', label: 'Crosshatch', icon: 'crosshatch' },
+      { value: 'dot',        label: 'Dots',       icon: 'dot' },
+      { value: 'diagonal',   label: 'Lines',      icon: 'diagonal' },
     ],
 
     // Theme options for UI

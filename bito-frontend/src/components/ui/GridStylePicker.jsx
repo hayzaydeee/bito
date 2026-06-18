@@ -40,20 +40,12 @@ const GridPreviews = {
       <line x1="16" y1="24" x2="24" y2="16" stroke="currentColor" strokeWidth="0.4" strokeOpacity="0.25" />
     </svg>
   ),
-  none: (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ display: 'block' }}>
-      <rect width="24" height="24" rx="3" fill="currentColor" fillOpacity="0.04" />
-      <line x1="8" y1="8" x2="16" y2="16" stroke="currentColor" strokeWidth="1" strokeOpacity="0.35" strokeLinecap="round" />
-      <line x1="16" y1="8" x2="8" y2="16" stroke="currentColor" strokeWidth="1" strokeOpacity="0.35" strokeLinecap="round" />
-    </svg>
-  ),
 };
 
 const LABELS = {
-  crosshatch: 'Cross',
+  crosshatch: 'Crosshatch',
   dot:        'Dot',
   diagonal:   'Diagonal',
-  none:       'None',
 };
 
 const GridStylePicker = () => {
