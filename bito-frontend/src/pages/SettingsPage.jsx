@@ -33,6 +33,8 @@ import usePushNotifications from "../hooks/usePushNotifications";
 import PersonalityQuiz from "../components/settingsPage/PersonalityQuiz";
 import AvatarPicker from "../components/ui/AvatarPicker";
 import DesignSystemSwitcher from "../components/ui/DesignSystemSwitcher";
+import LivelyThemePicker from "../components/ui/LivelyThemePicker";
+import GridStylePicker from "../components/ui/GridStylePicker";
 import SkeletonTransition from "../components/ui/SkeletonTransition";
 import AnimatedList from "../components/ui/AnimatedList";
 import { motion } from "framer-motion";
@@ -764,17 +766,36 @@ const SettingsPage = ({ section }) => {
 
           {/* Background grid — Standard layout only */}
           {designSystem === "standard" && (
-            <div className="px-5 py-4 border-b border-[var(--line)] flex items-center justify-between gap-4">
-              <div className="min-w-0">
-                <p className="text-sm text-[var(--ink)]">Background grid</p>
-                <p className="std-mono text-[10px] text-[var(--ink-3)] mt-0.5">
-                  Show the structural grid behind the Standard layout.
-                </p>
+            <div className="px-5 py-4 border-b border-[var(--line)]">
+              <div className="flex items-center justify-between gap-4 mb-0">
+                <div className="min-w-0">
+                  <p className="text-sm text-[var(--ink)]">Background grid</p>
+                  <p className="std-mono text-[10px] text-[var(--ink-3)] mt-0.5">
+                    Show the structural grid behind the Standard layout.
+                  </p>
+                </div>
+                <Toggle
+                  checked={standardGrid}
+                  onChange={(v) => changeStandardGrid(v)}
+                />
               </div>
-              <Toggle
-                checked={standardGrid}
-                onChange={(v) => changeStandardGrid(v)}
-              />
+              {standardGrid && (
+                <div className="mt-3">
+                  <p className="std-kicker text-[9px] text-[var(--ink-3)] mb-2">Grid style</p>
+                  <GridStylePicker />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Lively color world — Standard only */}
+          {designSystem === "standard" && (
+            <div className="px-5 py-4 border-b border-[var(--line)]">
+              <p className="std-kicker text-[10px] text-[var(--ink-3)] mb-1">Color world</p>
+              <p className="std-mono text-[10px] text-[var(--ink-3)] mb-3 max-w-md leading-relaxed">
+                Choose a color theme for your Standard layout. The whole app shifts to match.
+              </p>
+              <LivelyThemePicker />
             </div>
           )}
 

@@ -20,9 +20,16 @@ export const ThemeProvider = ({ children }) => {
   const [designSystem, setDesignSystem] = useState('legacy');
   // Standard-layout background grid (on by default)
   const [standardGrid, setStandardGrid] = useState(true);
+  // Lively color theme (Standard DS only). Free: indigo, obsidian. Premium: the rest.
+  const [livelyTheme, setLivelyTheme] = useState('indigo');
+  // Custom hue (0-359) used when livelyTheme === 'custom'
+  const [livelyHue, setLivelyHue] = useState(220);
+  // Grid style for the Standard surface background
+  const [gridStyle, setGridStyle] = useState('crosshatch');
   const [systemTheme, setSystemTheme] = useState('dark');
   const [isLoading, setIsLoading] = useState(true);
   const initializedForRef = useRef(undefined); // tracks which user id we've initialized from
+  const livelyHueDebounceRef = useRef(null);
 
   // Detect system theme preference
   useEffect(() => {
@@ -56,6 +63,12 @@ export const ThemeProvider = ({ children }) => {
     }
     setDesignSystem(user?.preferences?.designSystem === 'standard' ? 'standard' : 'legacy');
     setStandardGrid(user?.preferences?.standardGrid !== false);
+    // Lively: load stored value as-is — the picker UI handles the premium gate.
+    // TODO: enforce server-side when billing is fully wired.
+    const storedLively = user?.preferences?.livelyTheme || 'indigo';
+    setLivelyTheme(storedLively);
+    setLivelyHue(typeof user?.preferences?.livelyHue === 'number' ? user.preferences.livelyHue : 220);
+    setGridStyle(user?.preferences?.gridStyle || 'crosshatch');
     setIsLoading(false);
   }, [user, authLoading]);
 
@@ -101,6 +114,21 @@ export const ThemeProvider = ({ children }) => {
   useEffect(() => {
     document.documentElement.setAttribute('data-grid', standardGrid ? 'on' : 'off');
   }, [standardGrid]);
+
+  // Apply lively theme attribute
+  useEffect(() => {
+    document.documentElement.setAttribute('data-lively', livelyTheme);
+  }, [livelyTheme]);
+
+  // Apply custom hue CSS property (only matters when livelyTheme === 'custom')
+  useEffect(() => {
+    document.documentElement.style.setProperty('--lively-hue', String(livelyHue));
+  }, [livelyHue]);
+
+  // Apply grid style attribute
+  useEffect(() => {
+    document.documentElement.setAttribute('data-grid-style', gridStyle);
+  }, [gridStyle]);
 
   const changeTheme = async (newTheme) => {
     setTheme(newTheme);
@@ -164,6 +192,64 @@ export const ThemeProvider = ({ children }) => {
     }
   };
 
+  const changeLivelyTheme = async (name) => {
+    setLivelyTheme(name);
+
+    if (user) {
+      try {
+        await userAPI.updateProfile({
+          preferences: { ...user.preferences, livelyTheme: name }
+        });
+        if (updateUser) {
+          updateUser({ preferences: { ...user.preferences, livelyTheme: name } });
+        }
+      } catch (error) {
+        console.error('Failed to save lively theme:', error);
+        setLivelyTheme(user.preferences?.livelyTheme || 'indigo');
+      }
+    }
+  };
+
+  const changeLivelyHue = (hue) => {
+    const value = Math.min(359, Math.max(0, Math.round(hue)));
+    setLivelyHue(value);
+
+    // Debounce API write — CSS updates instantly via the useEffect above
+    if (livelyHueDebounceRef.current) clearTimeout(livelyHueDebounceRef.current);
+    livelyHueDebounceRef.current = setTimeout(async () => {
+      if (user) {
+        try {
+          await userAPI.updateProfile({
+            preferences: { ...user.preferences, livelyHue: value }
+          });
+          if (updateUser) {
+            updateUser({ preferences: { ...user.preferences, livelyHue: value } });
+          }
+        } catch (error) {
+          console.error('Failed to save lively hue:', error);
+        }
+      }
+    }, 300);
+  };
+
+  const changeGridStyle = async (style) => {
+    setGridStyle(style);
+
+    if (user) {
+      try {
+        await userAPI.updateProfile({
+          preferences: { ...user.preferences, gridStyle: style }
+        });
+        if (updateUser) {
+          updateUser({ preferences: { ...user.preferences, gridStyle: style } });
+        }
+      } catch (error) {
+        console.error('Failed to save grid style:', error);
+        setGridStyle(user.preferences?.gridStyle || 'crosshatch');
+      }
+    }
+  };
+
   const getEffectiveTheme = () => {
     return theme === 'auto' ? systemTheme : theme;
   };
@@ -190,6 +276,31 @@ export const ThemeProvider = ({ children }) => {
     designSystemOptions: [
       { value: 'legacy', label: 'Legacy', description: 'The original purple & serif look' },
       { value: 'standard', label: 'Standard', description: 'New black/white + accent design language' }
+    ],
+
+    // Lively color themes (Standard DS only)
+    livelyTheme,
+    livelyHue,
+    changeLivelyTheme,
+    changeLivelyHue,
+    livelyOptions: [
+      { value: 'indigo',   label: 'Indigo',   tier: 'free',    previewDark: '#a78bfa', previewLight: '#6f4ee6' },
+      { value: 'obsidian', label: 'Obsidian', tier: 'free',    previewDark: 'hsl(270,22%,66%)', previewLight: 'hsl(268,30%,34%)' },
+      { value: 'forest',   label: 'Forest',   tier: 'premium', previewDark: 'hsl(152,65%,48%)', previewLight: 'hsl(155,52%,30%)' },
+      { value: 'ember',    label: 'Ember',    tier: 'premium', previewDark: 'hsl(18,100%,62%)', previewLight: 'hsl(18,78%,40%)' },
+      { value: 'ocean',    label: 'Ocean',    tier: 'premium', previewDark: 'hsl(210,82%,62%)', previewLight: 'hsl(210,68%,38%)' },
+      { value: 'rose',     label: 'Rose',     tier: 'premium', previewDark: 'hsl(342,82%,68%)', previewLight: 'hsl(342,62%,40%)' },
+      { value: 'custom',   label: 'Custom',   tier: 'premium', previewDark: null, previewLight: null },
+    ],
+
+    // Grid style
+    gridStyle,
+    changeGridStyle,
+    gridStyleOptions: [
+      { value: 'crosshatch', label: 'Grid',     icon: 'crosshatch' },
+      { value: 'dot',        label: 'Dots',     icon: 'dot' },
+      { value: 'diagonal',   label: 'Lines',    icon: 'diagonal' },
+      { value: 'none',       label: 'None',     icon: 'none' },
     ],
 
     // Theme options for UI

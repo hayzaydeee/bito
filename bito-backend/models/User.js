@@ -144,6 +144,22 @@ const userSchema = new mongoose.Schema({  // Basic user information
       type: Boolean,
       default: true
     },
+    livelyTheme: {
+      type: String,
+      enum: ['indigo', 'obsidian', 'forest', 'ember', 'ocean', 'rose', 'custom'],
+      default: 'indigo'
+    },
+    livelyHue: {
+      type: Number,
+      min: 0,
+      max: 359,
+      default: 220 // indigo hue
+    },
+    gridStyle: {
+      type: String,
+      enum: ['crosshatch', 'dot', 'diagonal', 'none'],
+      default: 'crosshatch'
+    },
     timezone: {
       type: String,
       default: 'UTC'

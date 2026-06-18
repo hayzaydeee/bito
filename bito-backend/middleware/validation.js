@@ -57,6 +57,18 @@ const validateUserUpdate = [
     .optional()
     .isIn(['light', 'dark', 'auto', 'bw'])
     .withMessage('Theme must be light, dark, auto, or bw'),
+  body('preferences.livelyTheme')
+    .optional()
+    .isIn(['indigo', 'obsidian', 'forest', 'ember', 'ocean', 'rose', 'custom'])
+    .withMessage('Invalid lively theme'),
+  body('preferences.livelyHue')
+    .optional()
+    .isInt({ min: 0, max: 359 })
+    .withMessage('Lively hue must be an integer between 0 and 359'),
+  body('preferences.gridStyle')
+    .optional()
+    .isIn(['crosshatch', 'dot', 'diagonal', 'none'])
+    .withMessage('Grid style must be crosshatch, dot, diagonal, or none'),
   body('preferences.scale')
     .optional()
     .isIn(['small', 'medium', 'large'])
