@@ -716,33 +716,62 @@ const SettingsPage = ({ section }) => {
       <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
         <div className="max-w-2xl md:max-w-3xl mx-auto space-y-8">
 
-        {/* â•â•â•â•â•â•â• 1. PROFILE â•â•â•â•â•â•â• */}
+        {/* â• â• â• â• â• â• â•  1. PROFILE â• â• â• â• â• â• â•  */}
         <Section title="Profile">
-          <div className="flex items-center gap-4 px-5 py-4">
-            <AvatarPicker
-              currentAvatar={userProfile?.avatar}
-              userName={userProfile?.firstName || userProfile?.name || userProfile?.email?.split("@")[0] || "User"}
-              onAvatarChange={(url) => {
-                setUserProfile((prev) => ({ ...prev, avatar: url }));
-                if (updateUser) updateUser({ avatar: url });
-              }}
-              size="md"
-            />
-            <div className="min-w-0 flex-1">
-              <p className="std-display text-base text-[var(--ink)] truncate">
-                {userProfile?.name || "—"}
-              </p>
-              {userProfile?.username && (
-                <p className="std-mono text-[10px] text-[var(--ink-3)] truncate">
-                  @{userProfile.username}
-                </p>
-              )}
-              <p className="std-mono text-[10px] text-[var(--ink-2)] truncate">
-                {userProfile?.email || "—"}
-              </p>
-              {userProfile?.hasGoogleAuth && (
-                <p className="std-mono text-[10px] text-[var(--ink-3)] mt-0.5">⊕ Google</p>
-              )}
+          <div className="relative overflow-hidden rounded-[var(--r-card)] border border-[var(--line)]">
+            {/* Background banner */}
+            <div className="absolute top-0 left-0 right-0 h-24 bg-[var(--surface-2)]" />
+            <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-[var(--signal)]/20 to-[var(--signal)]/5" />
+            
+            <div className="relative px-6 pt-16 pb-6 flex flex-col sm:flex-row sm:items-end gap-5">
+              <div className="flex-shrink-0 relative group">
+                <div className="rounded-full ring-4 ring-[var(--surface)] bg-[var(--surface)] relative z-10">
+                  <AvatarPicker
+                    currentAvatar={userProfile?.avatar}
+                    userName={userProfile?.firstName || userProfile?.name || userProfile?.email?.split("@")[0] || "User"}
+                    onAvatarChange={(url) => {
+                      setUserProfile((prev) => ({ ...prev, avatar: url }));
+                      if (updateUser) updateUser({ avatar: url });
+                    }}
+                    size="lg"
+                  />
+                </div>
+              </div>
+              
+              <div className="min-w-0 flex-1 pt-2 sm:pt-0 pb-1">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <h2 className="std-display text-2xl font-bold text-[var(--ink)] truncate mb-1">
+                      {userProfile?.name || "—"}
+                    </h2>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      {userProfile?.username && (
+                        <p className="std-mono text-[11px] text-[var(--ink-2)] truncate">
+                          @{userProfile.username}
+                        </p>
+                      )}
+                      <p className="std-mono text-[11px] text-[var(--ink-2)] truncate">
+                        {userProfile?.email || "—"}
+                      </p>
+                      {userProfile?.hasGoogleAuth && (
+                        <div className="flex items-center gap-1 text-[var(--ink-3)] std-mono text-[10px] mt-0.5 sm:mt-0">
+                          <svg className="w-3 h-3" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/>
+                          </svg>
+                          Google
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setIsEditProfileOpen(true)}
+                    className="std-btn std-btn--sm flex items-center gap-1.5 flex-shrink-0"
+                  >
+                    <Pencil1Icon className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Edit Profile</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </Section>
