@@ -26,6 +26,8 @@ export const ThemeProvider = ({ children }) => {
   const [livelyHue, setLivelyHue] = useState(220);
   // Grid style for the Standard surface background
   const [gridStyle, setGridStyle] = useState('crosshatch');
+  // Accent mode: complement (default, shows craft) or native
+  const [accentMode, setAccentMode] = useState('complement');
   const [systemTheme, setSystemTheme] = useState('dark');
   const [isLoading, setIsLoading] = useState(true);
   const initializedForRef = useRef(undefined); // tracks which user id we've initialized from
@@ -63,12 +65,12 @@ export const ThemeProvider = ({ children }) => {
     }
     setDesignSystem(user?.preferences?.designSystem === 'standard' ? 'standard' : 'legacy');
     setStandardGrid(user?.preferences?.standardGrid !== false);
-    // Lively: load stored value as-is — the picker UI handles the premium gate.
-    // TODO: enforce server-side when billing is fully wired.
+    // Lively: load stored value, silently migrating 'obsidian' → 'mineral'
     const storedLively = user?.preferences?.livelyTheme || 'indigo';
-    setLivelyTheme(storedLively);
+    setLivelyTheme(storedLively === 'obsidian' ? 'mineral' : storedLively);
     setLivelyHue(typeof user?.preferences?.livelyHue === 'number' ? user.preferences.livelyHue : 220);
     setGridStyle(user?.preferences?.gridStyle || 'crosshatch');
+    setAccentMode(user?.preferences?.accentMode || 'complement');
     setIsLoading(false);
   }, [user, authLoading]);
 
@@ -129,6 +131,11 @@ export const ThemeProvider = ({ children }) => {
   useEffect(() => {
     document.documentElement.setAttribute('data-grid-style', gridStyle);
   }, [gridStyle]);
+
+  // Apply accent mode attribute
+  useEffect(() => {
+    document.documentElement.setAttribute('data-accent', accentMode);
+  }, [accentMode]);
 
   const changeTheme = async (newTheme) => {
     setTheme(newTheme);
@@ -250,6 +257,24 @@ export const ThemeProvider = ({ children }) => {
     }
   };
 
+  const changeAccentMode = async (mode) => {
+    setAccentMode(mode);
+
+    if (user) {
+      try {
+        await userAPI.updateProfile({
+          preferences: { ...user.preferences, accentMode: mode }
+        });
+        if (updateUser) {
+          updateUser({ preferences: { ...user.preferences, accentMode: mode } });
+        }
+      } catch (error) {
+        console.error('Failed to save accent mode:', error);
+        setAccentMode(user.preferences?.accentMode || 'complement');
+      }
+    }
+  };
+
   const getEffectiveTheme = () => {
     return theme === 'auto' ? systemTheme : theme;
   };
@@ -284,14 +309,18 @@ export const ThemeProvider = ({ children }) => {
     changeLivelyTheme,
     changeLivelyHue,
     livelyOptions: [
-      { value: 'indigo',   label: 'Indigo',   tier: 'free',    previewDark: '#a78bfa', previewLight: '#6f4ee6' },
-      { value: 'obsidian', label: 'Obsidian', tier: 'free',    previewDark: 'hsl(270,22%,66%)', previewLight: 'hsl(268,30%,34%)' },
-      { value: 'forest',   label: 'Forest',   tier: 'premium', previewDark: 'hsl(152,65%,48%)', previewLight: 'hsl(155,52%,30%)' },
-      { value: 'ember',    label: 'Ember',    tier: 'premium', previewDark: 'hsl(18,100%,62%)', previewLight: 'hsl(18,78%,40%)' },
-      { value: 'ocean',    label: 'Ocean',    tier: 'premium', previewDark: 'hsl(210,82%,62%)', previewLight: 'hsl(210,68%,38%)' },
-      { value: 'rose',     label: 'Rose',     tier: 'premium', previewDark: 'hsl(342,82%,68%)', previewLight: 'hsl(342,62%,40%)' },
-      { value: 'custom',   label: 'Custom',   tier: 'premium', previewDark: null, previewLight: null },
+      { value: 'indigo',   label: 'Indigo',   tier: 'free',    previewDark: '#141418', signalDark: '#a78bfa',           previewLight: '#ffffff', signalLight: '#6f4ee6' },
+      { value: 'mineral',  label: 'Mineral',  tier: 'free',    previewDark: 'hsl(30,9%,13%)', signalDark: 'hsl(212,80%,64%)', previewLight: 'hsl(32,14%,99%)', signalLight: 'hsl(32,72%,34%)' },
+      { value: 'forest',   label: 'Forest',   tier: 'free',    previewDark: 'hsl(152,18%,12%)', signalDark: 'hsl(332,82%,68%)', previewLight: 'hsl(150,10%,99%)', signalLight: 'hsl(155,54%,30%)' },
+      { value: 'ember',    label: 'Ember',    tier: 'premium', previewDark: 'hsl(18,22%,13%)', signalDark: 'hsl(198,84%,62%)', previewLight: 'hsl(24,16%,99%)', signalLight: 'hsl(18,78%,36%)' },
+      { value: 'ocean',    label: 'Ocean',    tier: 'premium', previewDark: 'hsl(214,24%,13%)', signalDark: 'hsl(34,90%,58%)', previewLight: 'hsl(210,14%,99%)', signalLight: 'hsl(210,66%,36%)' },
+      { value: 'rose',     label: 'Rose',     tier: 'premium', previewDark: 'hsl(340,20%,13%)', signalDark: 'hsl(162,72%,52%)', previewLight: 'hsl(340,12%,99%)', signalLight: 'hsl(342,64%,36%)' },
+      { value: 'custom',   label: 'Custom',   tier: 'premium', previewDark: null, signalDark: null, previewLight: null, signalLight: null },
     ],
+
+    // Accent mode
+    accentMode,
+    changeAccentMode,
 
     // Grid style
     gridStyle,

@@ -146,7 +146,7 @@ const userSchema = new mongoose.Schema({  // Basic user information
     },
     livelyTheme: {
       type: String,
-      enum: ['indigo', 'obsidian', 'forest', 'ember', 'ocean', 'rose', 'custom'],
+      enum: ['indigo', 'obsidian', 'mineral', 'forest', 'ember', 'ocean', 'rose', 'custom'],
       default: 'indigo'
     },
     livelyHue: {
@@ -159,6 +159,11 @@ const userSchema = new mongoose.Schema({  // Basic user information
       type: String,
       enum: ['crosshatch', 'dot', 'diagonal', 'none'],
       default: 'crosshatch'
+    },
+    accentMode: {
+      type: String,
+      enum: ['complement', 'native'],
+      default: 'complement'
     },
     timezone: {
       type: String,

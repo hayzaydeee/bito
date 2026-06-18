@@ -755,95 +755,141 @@ const SettingsPage = ({ section }) => {
 
         {/* ═══════ 2. APPEARANCE ═══════ */}
         <Section title="Appearance">
-          {/* Design system */}
+          {/* ── Design Language ─────────────────── */}
           <div className="px-5 py-4 border-b border-[var(--line)]">
-            <p className="std-kicker text-[10px] text-[var(--ink-3)] mb-1">Design System</p>
+            <p className="std-kicker text-[10px] text-[var(--ink-3)] mb-1">Design Language</p>
             <p className="std-mono text-[10px] text-[var(--ink-3)] mb-3 max-w-md leading-relaxed">
               Switch between the original look (Legacy) and the new Standard design language.
             </p>
             <DesignSystemSwitcher />
           </div>
 
-          {/* Background grid — Standard layout only */}
+          {/* ── Standard-only block ─────────────── */}
           {designSystem === "standard" && (
-            <div className="px-5 py-4 border-b border-[var(--line)]">
-              <div className="flex items-center justify-between gap-4 mb-0">
-                <div className="min-w-0">
-                  <p className="text-sm text-[var(--ink)]">Background grid</p>
-                  <p className="std-mono text-[10px] text-[var(--ink-3)] mt-0.5">
-                    Show the structural grid behind the Standard layout.
-                  </p>
-                </div>
-                <Toggle
-                  checked={standardGrid}
-                  onChange={(v) => changeStandardGrid(v)}
-                />
+            <>
+              {/* Color World — preview + swatches + signal toggle */}
+              <div className="px-5 py-5 border-b border-[var(--line)]">
+                <p className="std-kicker text-[10px] text-[var(--ink-3)] mb-0.5">Color World</p>
+                <p className="std-mono text-[10px] text-[var(--ink-3)] mb-4 leading-relaxed">
+                  Your whole environment shifts. Hover swatches to preview before committing.
+                </p>
+                <LivelyThemePicker />
               </div>
-              {standardGrid && (
-                <div className="mt-3">
-                  <p className="std-kicker text-[9px] text-[var(--ink-3)] mb-2">Grid style</p>
-                  <GridStylePicker />
+
+              {/* Brightness */}
+              <div className="px-5 py-4 border-b border-[var(--line)]">
+                <p className="std-kicker text-[10px] text-[var(--ink-3)] mb-3">Brightness</p>
+                <AnimatedList className="grid grid-cols-4 gap-2">
+                  {themeCards.map((t, i) => {
+                    const active = settings.theme === t.value;
+                    const Icon = t.icon;
+                    return (
+                      <motion.div key={t.value} variants={listItemVariants} custom={i}>
+                        <button
+                          onClick={() => saveSetting("theme", t.value)}
+                          className={`relative rounded-[var(--r-card)] border overflow-hidden transition-all w-full ${
+                            active
+                              ? "border-[var(--signal)]"
+                              : "border-[var(--line)] hover:border-[var(--line-2,var(--signal))]"
+                          }`}
+                          style={active ? { boxShadow: '0 0 0 2px color-mix(in srgb, var(--signal) 20%, transparent)' } : {}}
+                        >
+                          <div className="h-16 p-2.5 flex flex-col justify-between" style={{ background: t.bg }}>
+                            <div className="flex items-center gap-1">
+                              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: t.accent }} />
+                              <div className="h-1 w-8 rounded" style={{ backgroundColor: t.surface }} />
+                            </div>
+                            <div className="space-y-0.5">
+                              <div className="h-0.5 w-10 rounded" style={{ backgroundColor: t.surface }} />
+                              <div className="h-0.5 w-6 rounded" style={{ backgroundColor: t.surface }} />
+                            </div>
+                          </div>
+                          <div className={`flex items-center justify-center gap-1.5 py-2 std-mono text-[10px] ${
+                            active ? 'text-[var(--signal)] bg-[color-mix(in_srgb,var(--signal)_8%,transparent)]' : 'text-[var(--ink-3)]'
+                          }`}>
+                            <Icon className="w-3 h-3" />
+                            {t.label}
+                          </div>
+                          {active && (
+                            <div className="absolute top-1.5 right-1.5 w-3 h-3 rounded-full bg-[var(--signal)] flex items-center justify-center">
+                              <CheckIcon className="w-2 h-2 text-white" />
+                            </div>
+                          )}
+                        </button>
+                      </motion.div>
+                    );
+                  })}
+                </AnimatedList>
+              </div>
+
+              {/* Surface Grid */}
+              <div className="px-5 py-4 border-b border-[var(--line)]">
+                <div className="flex items-center justify-between gap-4 mb-0">
+                  <div className="min-w-0">
+                    <p className="text-sm text-[var(--ink)]">Background grid</p>
+                    <p className="std-mono text-[10px] text-[var(--ink-3)] mt-0.5">
+                      Show the structural grid behind the layout.
+                    </p>
+                  </div>
+                  <Toggle checked={standardGrid} onChange={(v) => changeStandardGrid(v)} />
                 </div>
-              )}
-            </div>
+                {standardGrid && (
+                  <div className="mt-3">
+                    <p className="std-kicker text-[9px] text-[var(--ink-3)] mb-2">Grid style</p>
+                    <GridStylePicker />
+                  </div>
+                )}
+              </div>
+            </>
           )}
 
-          {/* Lively color world — Standard only */}
-          {designSystem === "standard" && (
+          {/* Legacy-only: Brightness cards */}
+          {designSystem !== "standard" && (
             <div className="px-5 py-4 border-b border-[var(--line)]">
-              <p className="std-kicker text-[10px] text-[var(--ink-3)] mb-1">Color world</p>
-              <p className="std-mono text-[10px] text-[var(--ink-3)] mb-3 max-w-md leading-relaxed">
-                Choose a color theme for your Standard layout. The whole app shifts to match.
-              </p>
-              <LivelyThemePicker />
+              <p className="std-kicker text-[10px] text-[var(--ink-3)] mb-3">Theme</p>
+              <AnimatedList className="grid grid-cols-4 gap-2">
+                {themeCards.map((t, i) => {
+                  const active = settings.theme === t.value;
+                  const Icon = t.icon;
+                  return (
+                    <motion.div key={t.value} variants={listItemVariants} custom={i}>
+                      <button
+                        onClick={() => saveSetting("theme", t.value)}
+                        className={`relative rounded-[var(--r-card)] border overflow-hidden transition-all w-full ${
+                          active
+                            ? "border-[var(--signal)]"
+                            : "border-[var(--line)] hover:border-[var(--line-2,var(--signal))]"
+                        }`}
+                        style={active ? { boxShadow: '0 0 0 2px color-mix(in srgb, var(--signal) 20%, transparent)' } : {}}
+                      >
+                        <div className="h-16 p-2.5 flex flex-col justify-between" style={{ background: t.bg }}>
+                          <div className="flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: t.accent }} />
+                            <div className="h-1 w-8 rounded" style={{ backgroundColor: t.surface }} />
+                          </div>
+                          <div className="space-y-0.5">
+                            <div className="h-0.5 w-10 rounded" style={{ backgroundColor: t.surface }} />
+                            <div className="h-0.5 w-6 rounded" style={{ backgroundColor: t.surface }} />
+                          </div>
+                        </div>
+                        <div className={`flex items-center justify-center gap-1.5 py-2 std-mono text-[10px] ${
+                          active ? 'text-[var(--signal)] bg-[color-mix(in_srgb,var(--signal)_8%,transparent)]' : 'text-[var(--ink-3)]'
+                        }`}>
+                          <Icon className="w-3 h-3" />
+                          {t.label}
+                        </div>
+                        {active && (
+                          <div className="absolute top-1.5 right-1.5 w-3 h-3 rounded-full bg-[var(--signal)] flex items-center justify-center">
+                            <CheckIcon className="w-2 h-2 text-white" />
+                          </div>
+                        )}
+                      </button>
+                    </motion.div>
+                  );
+                })}
+              </AnimatedList>
             </div>
           )}
-
-          {/* Theme cards */}
-          <div className="px-5 py-4 border-b border-[var(--line)]">
-            <p className="std-kicker text-[10px] text-[var(--ink-3)] mb-3">Theme</p>
-            <AnimatedList className="grid grid-cols-4 gap-2">
-              {themeCards.map((t, i) => {
-                const active = settings.theme === t.value;
-                const Icon = t.icon;
-                return (
-                  <motion.div key={t.value} variants={listItemVariants} custom={i}>
-                  <button
-                    onClick={() => saveSetting("theme", t.value)}
-                    className={`relative rounded-[var(--r-card)] border overflow-hidden transition-all w-full ${
-                      active
-                        ? "border-[var(--signal)]"
-                        : "border-[var(--line)] hover:border-[var(--line-2,var(--signal))]"
-                    }`}
-                    style={active ? { boxShadow: '0 0 0 2px color-mix(in srgb, var(--signal) 20%, transparent)' } : {}}
-                  >
-                    <div className="h-16 p-2.5 flex flex-col justify-between" style={{ background: t.bg }}>
-                      <div className="flex items-center gap-1">
-                        <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: t.accent }} />
-                        <div className="h-1 w-8 rounded" style={{ backgroundColor: t.surface }} />
-                      </div>
-                      <div className="space-y-0.5">
-                        <div className="h-0.5 w-10 rounded" style={{ backgroundColor: t.surface }} />
-                        <div className="h-0.5 w-6 rounded" style={{ backgroundColor: t.surface }} />
-                      </div>
-                    </div>
-                    <div className={`flex items-center justify-center gap-1.5 py-2 std-mono text-[10px] ${
-                      active ? 'text-[var(--signal)] bg-[color-mix(in_srgb,var(--signal)_8%,transparent)]' : 'text-[var(--ink-3)]'
-                    }`}>
-                      <Icon className="w-3 h-3" />
-                      {t.label}
-                    </div>
-                    {active && (
-                      <div className="absolute top-1.5 right-1.5 w-3 h-3 rounded-full bg-[var(--signal)] flex items-center justify-center">
-                        <CheckIcon className="w-2 h-2 text-white" />
-                      </div>
-                    )}
-                  </button>
-                  </motion.div>
-                );
-              })}
-            </AnimatedList>
-          </div>
         </Section>
 
         {/* ═══════ 2b. TEXT SIZE ═══════ */}

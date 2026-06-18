@@ -102,11 +102,477 @@
 }
 
 /* ══════════════════════════════════════════════════════════
-   LIVELY PALETTES
-   Each theme overrides only the color tokens — type, radii,
-   and utility classes are inherited unchanged from above.
-   Selector order: [data-lively] beats the no-lively default.
+   LIVELY V2 — Immersive colour worlds
+   
+   Architecture: per-theme blocks define the full surface stack
+   plus --_sig-n (native) and --_sig-c (complement) signal pairs.
+   --signal is set to the mode default within each block.
+   
+   Accent overrides use a 4-attribute selector (0,4,0) which beats
+   the 3-attribute theme block (0,3,0) in the cascade.
+   
+   Immersive (dark/bw): complement signal by default (shows craft).
+     Exception: Indigo uses native (brand integrity).
+   Daylight (light):    native signal by default.
+   
+   B/W inherits the active colour world's dark palette.
    ══════════════════════════════════════════════════════════ */
+
+/* ════ INDIGO (free) — brand home, barely-tinted dark ═════ */
+[data-ds="standard"][data-lively="indigo"][data-theme="dark"],
+[data-ds="standard"][data-lively="indigo"][data-theme="bw"] {
+  --bg:        #050507;
+  --bg-2:      #0e0e12;
+  --surface:   #141418;
+  --surface-2: #1c1c22;
+  --line:      rgba(244, 241, 234, 0.10);
+  --line-2:    rgba(244, 241, 234, 0.20);
+  --line-3:    rgba(244, 241, 234, 0.34);
+  --ink:   #f3efe6;
+  --ink-2: #b4b0a7;
+  --ink-3: #79766e;
+  --ember: #ff7a3c;
+  --cobalt: #6f9bff;
+  --rose:  #ff5d73;
+  /* signal pairs */
+  --_sig-n:  #a78bfa;
+  --_sig-n2: #c4adff;
+  --_sig-nk: #160f2e;
+  --_sig-c:  hsl(44, 96%, 56%);   /* amber — warm editorial complement */
+  --_sig-c2: hsl(46, 98%, 66%);
+  --_sig-ck: hsl(44, 60%, 10%);
+  /* Indigo dark default: native (brand integrity) */
+  --signal:     var(--_sig-n);
+  --signal-2:   var(--_sig-n2);
+  --signal-ink: var(--_sig-nk);
+}
+/* Indigo dark + complement override */
+[data-ds="standard"][data-lively="indigo"][data-theme="dark"][data-accent="complement"],
+[data-ds="standard"][data-lively="indigo"][data-theme="bw"][data-accent="complement"] {
+  --signal:     var(--_sig-c);
+  --signal-2:   var(--_sig-c2);
+  --signal-ink: var(--_sig-ck);
+}
+/* Indigo light */
+[data-ds="standard"][data-lively="indigo"][data-theme="light"] {
+  --bg:        #f4f2ea;
+  --bg-2:      #ffffff;
+  --surface:   #ffffff;
+  --surface-2: #f1efe7;
+  --line:      rgba(22, 20, 15, 0.09);
+  --line-2:    rgba(22, 20, 15, 0.16);
+  --line-3:    rgba(22, 20, 15, 0.30);
+  --ink:   #16140f;
+  --ink-2: #57534a;
+  --ink-3: #8a857a;
+  --ember: #e0632a;
+  --cobalt: #3f6fe0;
+  --rose:  #e0445c;
+  --_sig-n:  #6f4ee6;
+  --_sig-n2: #5a3fd0;
+  --_sig-nk: #ffffff;
+  --_sig-c:  hsl(44, 78%, 40%);
+  --_sig-c2: hsl(44, 72%, 34%);
+  --_sig-ck: #ffffff;
+  --signal:     var(--_sig-n);
+  --signal-2:   var(--_sig-n2);
+  --signal-ink: var(--_sig-nk);
+}
+[data-ds="standard"][data-lively="indigo"][data-theme="light"][data-accent="complement"] {
+  --signal:     var(--_sig-c);
+  --signal-2:   var(--_sig-c2);
+  --signal-ink: var(--_sig-ck);
+}
+
+/* ════ MINERAL (free) — volcanic basalt, warm near-neutral ═══ */
+/* obsidian selector kept for silent migration of existing prefs */
+[data-ds="standard"][data-lively="mineral"][data-theme="dark"],
+[data-ds="standard"][data-lively="mineral"][data-theme="bw"],
+[data-ds="standard"][data-lively="obsidian"][data-theme="dark"],
+[data-ds="standard"][data-lively="obsidian"][data-theme="bw"] {
+  --bg:        hsl(30, 10%, 6%);
+  --bg-2:      hsl(30,  9%, 10%);
+  --surface:   hsl(30,  9%, 13%);
+  --surface-2: hsl(30,  8%, 17%);
+  --line:      rgba(235, 225, 210, 0.10);
+  --line-2:    rgba(235, 225, 210, 0.20);
+  --line-3:    rgba(235, 225, 210, 0.34);
+  --ink:   hsl(30, 14%, 93%);
+  --ink-2: hsl(30,  8%, 66%);
+  --ink-3: hsl(30,  6%, 48%);
+  --ember: #ff7a3c;
+  --cobalt: #6f9bff;
+  --rose:  #ff5d73;
+  /* signal pairs */
+  --_sig-n:  hsl(32, 88%, 60%);   /* amber-gold native */
+  --_sig-n2: hsl(34, 90%, 70%);
+  --_sig-nk: hsl(30, 60%,  8%);
+  --_sig-c:  hsl(212, 80%, 64%);  /* cobalt complement */
+  --_sig-c2: hsl(214, 84%, 74%);
+  --_sig-ck: hsl(214, 50%,  8%);
+  /* default dark: complement (cobalt on warm-dark) */
+  --signal:     var(--_sig-c);
+  --signal-2:   var(--_sig-c2);
+  --signal-ink: var(--_sig-ck);
+}
+[data-ds="standard"][data-lively="mineral"][data-theme="dark"][data-accent="native"],
+[data-ds="standard"][data-lively="mineral"][data-theme="bw"][data-accent="native"],
+[data-ds="standard"][data-lively="obsidian"][data-theme="dark"][data-accent="native"],
+[data-ds="standard"][data-lively="obsidian"][data-theme="bw"][data-accent="native"] {
+  --signal:     var(--_sig-n);
+  --signal-2:   var(--_sig-n2);
+  --signal-ink: var(--_sig-nk);
+}
+[data-ds="standard"][data-lively="mineral"][data-theme="light"],
+[data-ds="standard"][data-lively="obsidian"][data-theme="light"] {
+  --bg:        hsl(32, 20%, 95%);
+  --bg-2:      hsl(32, 14%, 99%);
+  --surface:   hsl(32, 14%, 99%);
+  --surface-2: hsl(32, 16%, 92%);
+  --line:      rgba(100, 80, 60, 0.09);
+  --line-2:    rgba(100, 80, 60, 0.16);
+  --line-3:    rgba(100, 80, 60, 0.30);
+  --ink:   hsl(30, 28%, 10%);
+  --ink-2: hsl(30, 16%, 44%);
+  --ink-3: hsl(30, 10%, 62%);
+  --ember: #e0632a;
+  --cobalt: #3f6fe0;
+  --rose:  #e0445c;
+  --_sig-n:  hsl(32, 72%, 34%);
+  --_sig-n2: hsl(32, 66%, 28%);
+  --_sig-nk: #ffffff;
+  --_sig-c:  hsl(212, 68%, 38%);
+  --_sig-c2: hsl(212, 62%, 32%);
+  --_sig-ck: #ffffff;
+  --signal:     var(--_sig-n);
+  --signal-2:   var(--_sig-n2);
+  --signal-ink: var(--_sig-nk);
+}
+[data-ds="standard"][data-lively="mineral"][data-theme="light"][data-accent="complement"],
+[data-ds="standard"][data-lively="obsidian"][data-theme="light"][data-accent="complement"] {
+  --signal:     var(--_sig-c);
+  --signal-2:   var(--_sig-c2);
+  --signal-ink: var(--_sig-ck);
+}
+
+/* ════ FOREST (free) — old-growth, deep emerald ══════════════ */
+[data-ds="standard"][data-lively="forest"][data-theme="dark"],
+[data-ds="standard"][data-lively="forest"][data-theme="bw"] {
+  --bg:        hsl(152, 26%, 5%);
+  --bg-2:      hsl(152, 22%, 9%);
+  --surface:   hsl(152, 18%, 12%);
+  --surface-2: hsl(152, 15%, 16%);
+  --line:      rgba(190, 230, 200, 0.10);
+  --line-2:    rgba(190, 230, 200, 0.20);
+  --line-3:    rgba(190, 230, 200, 0.34);
+  --ink:   hsl(150, 18%, 93%);
+  --ink-2: hsl(150, 10%, 66%);
+  --ink-3: hsl(150,  7%, 47%);
+  --ember: hsl(36, 96%, 58%);
+  --cobalt: hsl(198, 80%, 55%);
+  --rose:  hsl(332, 80%, 66%);
+  /* signal pairs */
+  --_sig-n:  hsl(152, 78%, 55%);  /* bright emerald native */
+  --_sig-n2: hsl(150, 82%, 65%);
+  --_sig-nk: hsl(152, 40%,  6%);
+  --_sig-c:  hsl(332, 82%, 68%);  /* rose-magenta complement */
+  --_sig-c2: hsl(334, 85%, 76%);
+  --_sig-ck: hsl(332, 40%,  8%);
+  /* default dark: complement (rose on green) */
+  --signal:     var(--_sig-c);
+  --signal-2:   var(--_sig-c2);
+  --signal-ink: var(--_sig-ck);
+}
+[data-ds="standard"][data-lively="forest"][data-theme="dark"][data-accent="native"],
+[data-ds="standard"][data-lively="forest"][data-theme="bw"][data-accent="native"] {
+  --signal:     var(--_sig-n);
+  --signal-2:   var(--_sig-n2);
+  --signal-ink: var(--_sig-nk);
+}
+[data-ds="standard"][data-lively="forest"][data-theme="light"] {
+  --bg:        hsl(150, 18%, 95%);
+  --bg-2:      hsl(150, 10%, 99%);
+  --surface:   hsl(150, 10%, 99%);
+  --surface-2: hsl(150, 16%, 92%);
+  --line:      rgba(60, 120, 80, 0.09);
+  --line-2:    rgba(60, 120, 80, 0.16);
+  --line-3:    rgba(60, 120, 80, 0.30);
+  --ink:   hsl(155, 28%, 10%);
+  --ink-2: hsl(152, 14%, 42%);
+  --ink-3: hsl(150,  8%, 60%);
+  --ember: #e0632a;
+  --cobalt: #3f6fe0;
+  --rose:  #e0445c;
+  --_sig-n:  hsl(155, 54%, 30%);
+  --_sig-n2: hsl(155, 48%, 24%);
+  --_sig-nk: #ffffff;
+  --_sig-c:  hsl(332, 62%, 38%);
+  --_sig-c2: hsl(332, 56%, 32%);
+  --_sig-ck: #ffffff;
+  --signal:     var(--_sig-n);
+  --signal-2:   var(--_sig-n2);
+  --signal-ink: var(--_sig-nk);
+}
+[data-ds="standard"][data-lively="forest"][data-theme="light"][data-accent="complement"] {
+  --signal:     var(--_sig-c);
+  --signal-2:   var(--_sig-c2);
+  --signal-ink: var(--_sig-ck);
+}
+
+/* ════ EMBER (premium) — scorched amber, sky complement ══════ */
+[data-ds="standard"][data-lively="ember"][data-theme="dark"],
+[data-ds="standard"][data-lively="ember"][data-theme="bw"] {
+  --bg:        hsl(18, 30%, 6%);
+  --bg-2:      hsl(18, 26%, 10%);
+  --surface:   hsl(18, 22%, 13%);
+  --surface-2: hsl(18, 18%, 17%);
+  --line:      rgba(235, 200, 175, 0.10);
+  --line-2:    rgba(235, 200, 175, 0.20);
+  --line-3:    rgba(235, 200, 175, 0.34);
+  --ink:   hsl(28, 22%, 93%);
+  --ink-2: hsl(24, 12%, 66%);
+  --ink-3: hsl(20,  8%, 48%);
+  --ember: hsl(22, 96%, 58%);
+  --cobalt: hsl(198, 80%, 55%);
+  --rose:  hsl(340, 80%, 66%);
+  --_sig-n:  hsl(22, 96%, 60%);   /* bright orange native */
+  --_sig-n2: hsl(24, 98%, 70%);
+  --_sig-nk: hsl(18, 60%,  8%);
+  --_sig-c:  hsl(198, 84%, 62%);  /* sky cobalt complement */
+  --_sig-c2: hsl(200, 86%, 72%);
+  --_sig-ck: hsl(200, 50%,  8%);
+  --signal:     var(--_sig-c);
+  --signal-2:   var(--_sig-c2);
+  --signal-ink: var(--_sig-ck);
+}
+[data-ds="standard"][data-lively="ember"][data-theme="dark"][data-accent="native"],
+[data-ds="standard"][data-lively="ember"][data-theme="bw"][data-accent="native"] {
+  --signal:     var(--_sig-n);
+  --signal-2:   var(--_sig-n2);
+  --signal-ink: var(--_sig-nk);
+}
+[data-ds="standard"][data-lively="ember"][data-theme="light"] {
+  --bg:        hsl(24, 24%, 96%);
+  --bg-2:      hsl(24, 16%, 99%);
+  --surface:   hsl(24, 16%, 99%);
+  --surface-2: hsl(24, 20%, 92%);
+  --line:      rgba(140, 90, 50, 0.09);
+  --line-2:    rgba(140, 90, 50, 0.16);
+  --line-3:    rgba(140, 90, 50, 0.30);
+  --ink:   hsl(20, 32%, 10%);
+  --ink-2: hsl(20, 18%, 44%);
+  --ink-3: hsl(20, 10%, 62%);
+  --ember: #e0632a;
+  --cobalt: #3f6fe0;
+  --rose:  #e0445c;
+  --_sig-n:  hsl(18, 78%, 36%);
+  --_sig-n2: hsl(18, 72%, 30%);
+  --_sig-nk: #ffffff;
+  --_sig-c:  hsl(198, 68%, 38%);
+  --_sig-c2: hsl(198, 62%, 32%);
+  --_sig-ck: #ffffff;
+  --signal:     var(--_sig-n);
+  --signal-2:   var(--_sig-n2);
+  --signal-ink: var(--_sig-nk);
+}
+[data-ds="standard"][data-lively="ember"][data-theme="light"][data-accent="complement"] {
+  --signal:     var(--_sig-c);
+  --signal-2:   var(--_sig-c2);
+  --signal-ink: var(--_sig-ck);
+}
+
+/* ════ OCEAN (premium) — midnight blue, amber complement ═════ */
+[data-ds="standard"][data-lively="ocean"][data-theme="dark"],
+[data-ds="standard"][data-lively="ocean"][data-theme="bw"] {
+  --bg:        hsl(214, 34%, 6%);
+  --bg-2:      hsl(214, 28%, 10%);
+  --surface:   hsl(214, 24%, 13%);
+  --surface-2: hsl(214, 20%, 17%);
+  --line:      rgba(180, 210, 240, 0.10);
+  --line-2:    rgba(180, 210, 240, 0.20);
+  --line-3:    rgba(180, 210, 240, 0.34);
+  --ink:   hsl(210, 18%, 93%);
+  --ink-2: hsl(210, 10%, 66%);
+  --ink-3: hsl(210,  6%, 47%);
+  --ember: hsl(36, 96%, 58%);
+  --cobalt: hsl(210, 84%, 64%);
+  --rose:  hsl(340, 80%, 66%);
+  --_sig-n:  hsl(210, 84%, 64%);  /* bright ocean native */
+  --_sig-n2: hsl(212, 86%, 74%);
+  --_sig-nk: hsl(214, 50%,  8%);
+  --_sig-c:  hsl(34, 90%, 58%);   /* amber-gold complement */
+  --_sig-c2: hsl(36, 92%, 68%);
+  --_sig-ck: hsl(34, 60%,  8%);
+  --signal:     var(--_sig-c);
+  --signal-2:   var(--_sig-c2);
+  --signal-ink: var(--_sig-ck);
+}
+[data-ds="standard"][data-lively="ocean"][data-theme="dark"][data-accent="native"],
+[data-ds="standard"][data-lively="ocean"][data-theme="bw"][data-accent="native"] {
+  --signal:     var(--_sig-n);
+  --signal-2:   var(--_sig-n2);
+  --signal-ink: var(--_sig-nk);
+}
+[data-ds="standard"][data-lively="ocean"][data-theme="light"] {
+  --bg:        hsl(210, 22%, 96%);
+  --bg-2:      hsl(210, 14%, 99%);
+  --surface:   hsl(210, 14%, 99%);
+  --surface-2: hsl(210, 18%, 92%);
+  --line:      rgba(40, 80, 140, 0.09);
+  --line-2:    rgba(40, 80, 140, 0.16);
+  --line-3:    rgba(40, 80, 140, 0.30);
+  --ink:   hsl(210, 32%, 10%);
+  --ink-2: hsl(210, 16%, 42%);
+  --ink-3: hsl(210,  9%, 60%);
+  --ember: #e0632a;
+  --cobalt: #3f6fe0;
+  --rose:  #e0445c;
+  --_sig-n:  hsl(210, 66%, 36%);
+  --_sig-n2: hsl(210, 60%, 30%);
+  --_sig-nk: #ffffff;
+  --_sig-c:  hsl(34, 78%, 40%);
+  --_sig-c2: hsl(34, 72%, 34%);
+  --_sig-ck: #ffffff;
+  --signal:     var(--_sig-n);
+  --signal-2:   var(--_sig-n2);
+  --signal-ink: var(--_sig-nk);
+}
+[data-ds="standard"][data-lively="ocean"][data-theme="light"][data-accent="complement"] {
+  --signal:     var(--_sig-c);
+  --signal-2:   var(--_sig-c2);
+  --signal-ink: var(--_sig-ck);
+}
+
+/* ════ ROSE (premium) — deep wine, seafoam complement ════════ */
+[data-ds="standard"][data-lively="rose"][data-theme="dark"],
+[data-ds="standard"][data-lively="rose"][data-theme="bw"] {
+  --bg:        hsl(340, 28%, 6%);
+  --bg-2:      hsl(340, 24%, 10%);
+  --surface:   hsl(340, 20%, 13%);
+  --surface-2: hsl(340, 16%, 17%);
+  --line:      rgba(240, 200, 215, 0.10);
+  --line-2:    rgba(240, 200, 215, 0.20);
+  --line-3:    rgba(240, 200, 215, 0.34);
+  --ink:   hsl(340, 16%, 93%);
+  --ink-2: hsl(340,  9%, 66%);
+  --ink-3: hsl(340,  6%, 47%);
+  --ember: hsl(36, 96%, 58%);
+  --cobalt: hsl(198, 80%, 55%);
+  --rose:  hsl(342, 82%, 68%);
+  --_sig-n:  hsl(342, 82%, 68%);  /* bright rose native */
+  --_sig-n2: hsl(344, 84%, 76%);
+  --_sig-nk: hsl(342, 40%,  8%);
+  --_sig-c:  hsl(162, 72%, 52%);  /* mint-seafoam complement */
+  --_sig-c2: hsl(164, 74%, 62%);
+  --_sig-ck: hsl(162, 44%,  6%);
+  --signal:     var(--_sig-c);
+  --signal-2:   var(--_sig-c2);
+  --signal-ink: var(--_sig-ck);
+}
+[data-ds="standard"][data-lively="rose"][data-theme="dark"][data-accent="native"],
+[data-ds="standard"][data-lively="rose"][data-theme="bw"][data-accent="native"] {
+  --signal:     var(--_sig-n);
+  --signal-2:   var(--_sig-n2);
+  --signal-ink: var(--_sig-nk);
+}
+[data-ds="standard"][data-lively="rose"][data-theme="light"] {
+  --bg:        hsl(340, 20%, 96%);
+  --bg-2:      hsl(340, 12%, 99%);
+  --surface:   hsl(340, 12%, 99%);
+  --surface-2: hsl(340, 18%, 92%);
+  --line:      rgba(140, 60, 80, 0.09);
+  --line-2:    rgba(140, 60, 80, 0.16);
+  --line-3:    rgba(140, 60, 80, 0.30);
+  --ink:   hsl(342, 28%, 10%);
+  --ink-2: hsl(340, 14%, 42%);
+  --ink-3: hsl(338,  8%, 60%);
+  --ember: #e0632a;
+  --cobalt: #3f6fe0;
+  --rose:  #e0445c;
+  --_sig-n:  hsl(342, 64%, 36%);
+  --_sig-n2: hsl(342, 58%, 30%);
+  --_sig-nk: #ffffff;
+  --_sig-c:  hsl(162, 54%, 32%);
+  --_sig-c2: hsl(162, 48%, 26%);
+  --_sig-ck: #ffffff;
+  --signal:     var(--_sig-n);
+  --signal-2:   var(--_sig-n2);
+  --signal-ink: var(--_sig-nk);
+}
+[data-ds="standard"][data-lively="rose"][data-theme="light"][data-accent="complement"] {
+  --signal:     var(--_sig-c);
+  --signal-2:   var(--_sig-c2);
+  --signal-ink: var(--_sig-ck);
+}
+
+/* ════ CUSTOM (premium) — user-chosen hue ═══════════════════ */
+@property --lively-hue {
+  syntax: '<number>';
+  initial-value: 220;
+  inherits: true;
+}
+[data-ds="standard"][data-lively="custom"][data-theme="dark"],
+[data-ds="standard"][data-lively="custom"][data-theme="bw"] {
+  --bg:        hsl(var(--lively-hue), 26%, 5%);
+  --bg-2:      hsl(var(--lively-hue), 22%, 9%);
+  --surface:   hsl(var(--lively-hue), 18%, 12%);
+  --surface-2: hsl(var(--lively-hue), 15%, 16%);
+  --line:      rgba(200, 220, 215, 0.10);
+  --line-2:    rgba(200, 220, 215, 0.20);
+  --line-3:    rgba(200, 220, 215, 0.34);
+  --ink:   hsl(var(--lively-hue), 15%, 93%);
+  --ink-2: hsl(var(--lively-hue),  8%, 66%);
+  --ink-3: hsl(var(--lively-hue),  5%, 47%);
+  --ember: hsl(36, 96%, 58%);
+  --cobalt: hsl(198, 80%, 55%);
+  --rose:  hsl(332, 80%, 66%);
+  --_comp-hue: calc(var(--lively-hue) + 180);
+  --_sig-n:  hsl(var(--lively-hue), 78%, 55%);
+  --_sig-n2: hsl(var(--lively-hue), 82%, 65%);
+  --_sig-nk: hsl(var(--lively-hue), 40%,  6%);
+  --_sig-c:  hsl(var(--_comp-hue), 80%, 64%);
+  --_sig-c2: hsl(var(--_comp-hue), 82%, 72%);
+  --_sig-ck: hsl(var(--_comp-hue), 44%,  8%);
+  --signal:     var(--_sig-c);
+  --signal-2:   var(--_sig-c2);
+  --signal-ink: var(--_sig-ck);
+}
+[data-ds="standard"][data-lively="custom"][data-theme="dark"][data-accent="native"],
+[data-ds="standard"][data-lively="custom"][data-theme="bw"][data-accent="native"] {
+  --signal:     var(--_sig-n);
+  --signal-2:   var(--_sig-n2);
+  --signal-ink: var(--_sig-nk);
+}
+[data-ds="standard"][data-lively="custom"][data-theme="light"] {
+  --bg:        hsl(var(--lively-hue), 18%, 95%);
+  --bg-2:      hsl(var(--lively-hue), 10%, 99%);
+  --surface:   hsl(var(--lively-hue), 10%, 99%);
+  --surface-2: hsl(var(--lively-hue), 14%, 92%);
+  --line:      rgba(100, 100, 100, 0.09);
+  --line-2:    rgba(100, 100, 100, 0.16);
+  --line-3:    rgba(100, 100, 100, 0.30);
+  --ink:   hsl(var(--lively-hue), 24%, 10%);
+  --ink-2: hsl(var(--lively-hue), 12%, 42%);
+  --ink-3: hsl(var(--lively-hue),  7%, 60%);
+  --ember: #e0632a;
+  --cobalt: #3f6fe0;
+  --rose:  #e0445c;
+  --_comp-hue: calc(var(--lively-hue) + 180);
+  --_sig-n:  hsl(var(--lively-hue), 68%, 32%);
+  --_sig-n2: hsl(var(--lively-hue), 62%, 26%);
+  --_sig-nk: #ffffff;
+  --_sig-c:  hsl(var(--_comp-hue), 62%, 36%);
+  --_sig-c2: hsl(var(--_comp-hue), 56%, 30%);
+  --_sig-ck: #ffffff;
+  --signal:     var(--_sig-n);
+  --signal-2:   var(--_sig-n2);
+  --signal-ink: var(--_sig-nk);
+}
+[data-ds="standard"][data-lively="custom"][data-theme="light"][data-accent="complement"] {
+  --signal:     var(--_sig-c);
+  --signal-2:   var(--_sig-c2);
+  --signal-ink: var(--_sig-ck);
+}
 
 /* ── INDIGO (explicit) — same values as default, for clean switching ── */
 [data-ds="standard"][data-lively="indigo"][data-theme="dark"],

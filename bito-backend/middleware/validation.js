@@ -59,7 +59,7 @@ const validateUserUpdate = [
     .withMessage('Theme must be light, dark, auto, or bw'),
   body('preferences.livelyTheme')
     .optional()
-    .isIn(['indigo', 'obsidian', 'forest', 'ember', 'ocean', 'rose', 'custom'])
+    .isIn(['indigo', 'obsidian', 'mineral', 'forest', 'ember', 'ocean', 'rose', 'custom'])
     .withMessage('Invalid lively theme'),
   body('preferences.livelyHue')
     .optional()
@@ -69,6 +69,10 @@ const validateUserUpdate = [
     .optional()
     .isIn(['crosshatch', 'dot', 'diagonal', 'none'])
     .withMessage('Grid style must be crosshatch, dot, diagonal, or none'),
+  body('preferences.accentMode')
+    .optional()
+    .isIn(['complement', 'native'])
+    .withMessage('Accent mode must be complement or native'),
   body('preferences.scale')
     .optional()
     .isIn(['small', 'medium', 'large'])
