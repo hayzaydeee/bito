@@ -825,12 +825,12 @@ const SettingsPage = ({ section }) => {
                   <Toggle checked={standardGrid} onChange={(v) => changeStandardGrid(v)} />
                 </div>
                 {standardGrid && (
-                  <div className="mt-4 space-y-5">
-                    <div>
+                  <div className="mt-4 flex flex-col md:flex-row md:justify-center gap-5 md:gap-12">
+                    <div className="flex-1 md:flex-none">
                       <p className="std-kicker text-[9px] text-[var(--ink-3)] mb-2 text-center">Grid style</p>
                       <GridStylePicker />
                     </div>
-                    <div>
+                    <div className="flex-1 md:flex-none">
                       <p className="std-kicker text-[9px] text-[var(--ink-3)] mb-2 text-center">Hover & Animation</p>
                       <GridAnimationPicker />
                     </div>
