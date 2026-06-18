@@ -48,7 +48,7 @@ const LivelyThemePicker = () => {
   if (designSystem !== 'standard') return null;
 
   // TODO: replace with real subscription check when billing is wired
-  const isPremium = false;
+  const isPremium = true; // TEMP UNLOCK for testing
 
   const handleSwatchClick = (option) => {
     if (option.tier === 'premium' && !isPremium) return;
