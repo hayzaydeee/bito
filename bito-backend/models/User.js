@@ -157,7 +157,7 @@ const userSchema = new mongoose.Schema({  // Basic user information
     },
     gridStyle: {
       type: String,
-      enum: ['crosshatch', 'dot', 'diagonal', 'none'],
+      enum: ['crosshatch', 'dot', 'diagonal', 'none', 'x-hatch'],
       default: 'crosshatch'
     },
     accentMode: {

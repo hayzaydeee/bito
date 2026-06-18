@@ -689,6 +689,26 @@ html:not([data-ds="standard"]) .std {
   background-size: 40px 40px;
 }
 
+/* X-Hatch — diagonals intersecting from both directions */
+[data-grid-style="x-hatch"] .std-surface::before {
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 27px,
+      var(--line) 27px,
+      var(--line) 28px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 27px,
+      var(--line) 27px,
+      var(--line) 28px
+    );
+  background-size: 40px 40px;
+}
+
 /* None — same as grid off, but via style value */
 [data-grid-style="none"] .std-surface::before {
   display: none;

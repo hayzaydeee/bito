@@ -40,12 +40,26 @@ const GridPreviews = {
       <line x1="16" y1="24" x2="24" y2="16" stroke="currentColor" strokeWidth="0.4" strokeOpacity="0.25" />
     </svg>
   ),
+  'x-hatch': (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ display: 'block' }}>
+      <rect width="24" height="24" rx="3" fill="currentColor" fillOpacity="0.04" />
+      <line x1="0"  y1="12" x2="12" y2="0"  stroke="currentColor" strokeWidth="0.8" strokeOpacity="0.5" />
+      <line x1="6"  y1="24" x2="24" y2="6"  stroke="currentColor" strokeWidth="0.8" strokeOpacity="0.5" />
+      <line x1="0"  y1="20" x2="4"  y2="16" stroke="currentColor" strokeWidth="0.4" strokeOpacity="0.25" />
+      <line x1="16" y1="24" x2="24" y2="16" stroke="currentColor" strokeWidth="0.4" strokeOpacity="0.25" />
+      <line x1="24" y1="12" x2="12" y2="0"  stroke="currentColor" strokeWidth="0.8" strokeOpacity="0.5" />
+      <line x1="18" y1="24" x2="0"  y2="6"  stroke="currentColor" strokeWidth="0.8" strokeOpacity="0.5" />
+      <line x1="24" y1="20" x2="20" y2="16" stroke="currentColor" strokeWidth="0.4" strokeOpacity="0.25" />
+      <line x1="8"  y1="24" x2="0"  y2="16" stroke="currentColor" strokeWidth="0.4" strokeOpacity="0.25" />
+    </svg>
+  ),
 };
 
 const LABELS = {
-  crosshatch: 'Crosshatch',
+  crosshatch: 'Cross',
   dot:        'Dot',
   diagonal:   'Diagonal',
+  'x-hatch':  'Crosshatch',
 };
 
 const GridStylePicker = () => {
