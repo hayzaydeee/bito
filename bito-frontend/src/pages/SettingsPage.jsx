@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import HabitIcon from "../components/shared/HabitIcon";
 import { useNavigate } from "react-router-dom";
 import {
@@ -34,6 +34,7 @@ import AvatarPicker from "../components/ui/AvatarPicker";
 import DesignSystemSwitcher from "../components/ui/DesignSystemSwitcher";
 import LivelyThemePicker from "../components/ui/LivelyThemePicker";
 import GridStylePicker from "../components/ui/GridStylePicker";
+import GridAnimationPicker from "../components/ui/GridAnimationPicker";
 import SkeletonTransition from "../components/ui/SkeletonTransition";
 import AnimatedList from "../components/ui/AnimatedList";
 import { motion } from "framer-motion";
@@ -824,9 +825,15 @@ const SettingsPage = ({ section }) => {
                   <Toggle checked={standardGrid} onChange={(v) => changeStandardGrid(v)} />
                 </div>
                 {standardGrid && (
-                  <div className="mt-3">
-                    <p className="std-kicker text-[9px] text-[var(--ink-3)] mb-2">Grid style</p>
-                    <GridStylePicker />
+                  <div className="mt-4 space-y-5">
+                    <div>
+                      <p className="std-kicker text-[9px] text-[var(--ink-3)] mb-2 text-center">Grid style</p>
+                      <GridStylePicker />
+                    </div>
+                    <div>
+                      <p className="std-kicker text-[9px] text-[var(--ink-3)] mb-2 text-center">Hover & Animation</p>
+                      <GridAnimationPicker />
+                    </div>
                   </div>
                 )}
               </div>

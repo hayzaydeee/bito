@@ -8,6 +8,7 @@ import StandardSidebar from "./standard/StandardSidebar";
 import StandardTopBar from "./standard/StandardTopBar";
 import AnimatedPage from "../ui/AnimatedPage";
 import HabitCreationWizard from "../ui/HabitCreationWizard";
+import AuroraBackground from "../ui/AuroraBackground";
 import { useAuth, withAuth } from "../../contexts/AuthContext";
 import { useHabits } from "../../contexts/HabitContext";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -76,6 +77,7 @@ const Layout = () => {
     const contentLeft = sidebarWidth + 24; // left-3 gap + 12px gutter
     return (
       <div className="std std-surface h-screen relative overflow-hidden" style={{ background: "var(--bg)" }}>
+        <AuroraBackground />
         <StandardSidebar
           isCollapsed={isMenuCollapsed}
           onToggle={() => setIsMenuCollapsed(!isMenuCollapsed)}

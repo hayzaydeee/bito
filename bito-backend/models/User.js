@@ -160,6 +160,11 @@ const userSchema = new mongoose.Schema({  // Basic user information
       enum: ['crosshatch', 'dot', 'diagonal', 'none', 'x-hatch'],
       default: 'crosshatch'
     },
+    gridAnimation: {
+      type: String,
+      enum: ['none', 'reactive', 'breathe', 'drift', 'aurora'],
+      default: 'none'
+    },
     accentMode: {
       type: String,
       enum: ['complement', 'native'],

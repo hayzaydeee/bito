@@ -26,6 +26,8 @@ export const ThemeProvider = ({ children }) => {
   const [livelyHue, setLivelyHue] = useState(220);
   // Grid style for the Standard surface background
   const [gridStyle, setGridStyle] = useState('crosshatch');
+  // Animated grid style
+  const [gridAnimation, setGridAnimation] = useState('none');
   // Accent mode: complement (default, shows craft) or native
   const [accentMode, setAccentMode] = useState('complement');
   const [systemTheme, setSystemTheme] = useState('dark');
@@ -70,6 +72,7 @@ export const ThemeProvider = ({ children }) => {
     setLivelyTheme(storedLively === 'obsidian' ? 'mineral' : storedLively);
     setLivelyHue(typeof user?.preferences?.livelyHue === 'number' ? user.preferences.livelyHue : 220);
     setGridStyle(user?.preferences?.gridStyle || 'crosshatch');
+    setGridAnimation(user?.preferences?.gridAnimation || 'none');
     setAccentMode(user?.preferences?.accentMode || 'complement');
     setIsLoading(false);
   }, [user, authLoading]);
@@ -131,6 +134,31 @@ export const ThemeProvider = ({ children }) => {
   useEffect(() => {
     document.documentElement.setAttribute('data-grid-style', gridStyle);
   }, [gridStyle]);
+
+  // Apply grid animation attribute
+  useEffect(() => {
+    document.documentElement.setAttribute('data-grid-anim', gridAnimation);
+  }, [gridAnimation]);
+
+  // Reactive grid mouse tracking
+  useEffect(() => {
+    if (gridAnimation !== 'reactive') return;
+    
+    let rAF;
+    const handleMouseMove = (e) => {
+      if (rAF) cancelAnimationFrame(rAF);
+      rAF = requestAnimationFrame(() => {
+        document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+        document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (rAF) cancelAnimationFrame(rAF);
+    };
+  }, [gridAnimation]);
 
   // Apply accent mode attribute
   useEffect(() => {
@@ -257,6 +285,24 @@ export const ThemeProvider = ({ children }) => {
     }
   };
 
+  const changeGridAnimation = async (anim) => {
+    setGridAnimation(anim);
+
+    if (user) {
+      try {
+        await userAPI.updateProfile({
+          preferences: { ...user.preferences, gridAnimation: anim }
+        });
+        if (updateUser) {
+          updateUser({ preferences: { ...user.preferences, gridAnimation: anim } });
+        }
+      } catch (error) {
+        console.error('Failed to save grid animation:', error);
+        setGridAnimation(user.preferences?.gridAnimation || 'none');
+      }
+    }
+  };
+
   const changeAccentMode = async (mode) => {
     setAccentMode(mode);
 
@@ -330,6 +376,17 @@ export const ThemeProvider = ({ children }) => {
       { value: 'dot',        label: 'Dots',       icon: 'dot' },
       { value: 'diagonal',   label: 'Lines',      icon: 'diagonal' },
       { value: 'x-hatch',    label: 'Crosshatch', icon: 'x-hatch' },
+    ],
+
+    // Grid animation
+    gridAnimation,
+    changeGridAnimation,
+    gridAnimationOptions: [
+      { value: 'none',     label: 'Static' },
+      { value: 'reactive', label: 'Reactive' },
+      { value: 'breathe',  label: 'Breathe' },
+      { value: 'drift',    label: 'Drift' },
+      { value: 'aurora',   label: 'Aurora' },
     ],
 
     // Theme options for UI

@@ -714,6 +714,77 @@ html:not([data-ds="standard"]) .std {
   display: none;
 }
 
+/* ── Grid Animations (data-grid-anim attribute) ───────────── */
+/* 1. Reactive cursor glow */
+[data-grid-anim="reactive"] .std-surface::before {
+  -webkit-mask-image: radial-gradient(400px circle at var(--mouse-x, 50vw) var(--mouse-y, 50vh), black 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0.15) 80%, transparent 100%);
+  mask-image: radial-gradient(400px circle at var(--mouse-x, 50vw) var(--mouse-y, 50vh), black 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0.15) 80%, transparent 100%);
+  opacity: 1; /* Brighter glow */
+}
+
+/* 2. Breathe */
+@keyframes std-breathe {
+  0%, 100% { opacity: 0.2; }
+  50%      { opacity: 0.9; }
+}
+[data-grid-anim="breathe"] .std-surface::before {
+  animation: std-breathe 8s ease-in-out infinite;
+}
+
+/* 3. Drift */
+/* 1160px is the LCM of 58 (crosshatch), 40 (diagonal/x-hatch), and 28 (dot) — ensures seamless looping for all styles */
+@keyframes std-drift {
+  from { background-position: 0px 0px; }
+  to   { background-position: 1160px 1160px; }
+}
+[data-grid-anim="drift"] .std-surface::before {
+  animation: std-drift 300s linear infinite;
+}
+
+/* 4. Aurora blobs */
+.aurora-blob {
+  position: absolute;
+  filter: blur(120px);
+  opacity: 0.6;
+  border-radius: 50%;
+  animation: aurora-float 20s infinite alternate ease-in-out;
+  mix-blend-mode: screen;
+}
+
+.theme-light .aurora-blob {
+  mix-blend-mode: multiply;
+  opacity: 0.3;
+}
+
+.aurora-blob-1 {
+  top: 0%; left: -10%;
+  width: 50vw; height: 60vh;
+  background: var(--signal);
+  animation-duration: 25s;
+}
+
+.aurora-blob-2 {
+  bottom: -10%; right: -10%;
+  width: 60vw; height: 50vh;
+  background: var(--signal-2);
+  animation-duration: 28s;
+  animation-delay: -5s;
+}
+
+.aurora-blob-3 {
+  top: 30%; left: 30%;
+  width: 40vw; height: 40vh;
+  background: var(--ember);
+  animation-duration: 22s;
+  animation-delay: -10s;
+}
+
+@keyframes aurora-float {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(8vw, 6vh) scale(1.1); }
+  100% { transform: translate(-5vw, 8vh) scale(0.9); }
+}
+
 /* ── Typography helpers ──────────────────────────────────── */
 .std-display, .grp-display { font-family: var(--f-display); font-optical-sizing: auto; letter-spacing: -0.01em; }
 .std-mono, .grp-mono { font-family: var(--f-mono); }

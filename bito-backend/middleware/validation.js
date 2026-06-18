@@ -69,6 +69,10 @@ const validateUserUpdate = [
     .optional()
     .isIn(['crosshatch', 'dot', 'diagonal', 'none', 'x-hatch'])
     .withMessage('Grid style must be crosshatch, dot, diagonal, none, or x-hatch'),
+  body('preferences.gridAnimation')
+    .optional()
+    .isIn(['none', 'reactive', 'breathe', 'drift', 'aurora'])
+    .withMessage('Grid animation must be none, reactive, breathe, drift, or aurora'),
   body('preferences.accentMode')
     .optional()
     .isIn(['complement', 'native'])
