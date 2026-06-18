@@ -67,8 +67,8 @@ const validateUserUpdate = [
     .withMessage('Lively hue must be an integer between 0 and 359'),
   body('preferences.gridStyle')
     .optional()
-    .isIn(['crosshatch', 'dot', 'diagonal', 'none'])
-    .withMessage('Grid style must be crosshatch, dot, diagonal, or none'),
+    .isIn(['crosshatch', 'dot', 'diagonal', 'none', 'x-hatch'])
+    .withMessage('Grid style must be crosshatch, dot, diagonal, none, or x-hatch'),
   body('preferences.accentMode')
     .optional()
     .isIn(['complement', 'native'])
