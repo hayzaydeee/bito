@@ -225,10 +225,10 @@
 }
 [data-ds="standard"][data-lively="mineral"][data-theme="light"],
 [data-ds="standard"][data-lively="obsidian"][data-theme="light"] {
-  --bg:        hsl(212, 30%, 94%);
-  --bg-2:      hsl(212, 24%, 98%);
-  --surface:   hsl(212, 24%, 98%);
-  --surface-2: hsl(212, 28%, 91%);
+  --bg:        hsl(212, 45%, 92%);
+  --bg-2:      hsl(212, 35%, 96%);
+  --surface:   hsl(212, 35%, 96%);
+  --surface-2: hsl(212, 40%, 88%);
   --line:      rgba(40, 70, 110, 0.09);
   --line-2:    rgba(40, 70, 110, 0.16);
   --line-3:    rgba(40, 70, 110, 0.30);

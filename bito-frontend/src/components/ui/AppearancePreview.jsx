@@ -36,8 +36,8 @@ const TOKENS = {
       nativeInk: 'hsl(214,50%,8%)',  complementInk: 'hsl(30,60%,8%)',
     },
     light: {
-      bg: 'hsl(212,30%,94%)', bgLine: 'rgba(40,70,110,0.09)',
-      surface: 'hsl(212,24%,98%)', surface2: 'hsl(212,28%,91%)',
+      bg: 'hsl(212,45%,92%)', bgLine: 'rgba(40,70,110,0.09)',
+      surface: 'hsl(212,35%,96%)', surface2: 'hsl(212,40%,88%)',
       ink: 'hsl(212,34%,10%)', ink2: 'hsl(212,20%,44%)', ink3: 'hsl(212,14%,62%)',
       native: 'hsl(212,68%,38%)',    complement: 'hsl(32,72%,34%)',
       nativeInk: '#ffffff',          complementInk: '#ffffff',
