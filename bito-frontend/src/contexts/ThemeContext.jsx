@@ -310,7 +310,7 @@ export const ThemeProvider = ({ children }) => {
     changeLivelyHue,
     livelyOptions: [
       { value: 'indigo',   label: 'Indigo',   tier: 'free',    previewDark: '#141418', signalDark: '#a78bfa',           previewLight: '#ffffff', signalLight: '#6f4ee6' },
-      { value: 'mineral',  label: 'Mineral',  tier: 'free',    previewDark: 'hsl(30,9%,13%)', signalDark: 'hsl(212,80%,64%)', previewLight: 'hsl(32,14%,99%)', signalLight: 'hsl(32,72%,34%)' },
+      { value: 'mineral',  label: 'Mineral',  tier: 'free',    previewDark: 'hsl(30,9%,13%)', signalDark: 'hsl(32,88%,60%)',  previewLight: 'hsl(32,14%,99%)', signalLight: 'hsl(212,68%,38%)' },
       { value: 'forest',   label: 'Forest',   tier: 'free',    previewDark: 'hsl(152,18%,12%)', signalDark: 'hsl(332,82%,68%)', previewLight: 'hsl(150,10%,99%)', signalLight: 'hsl(155,54%,30%)' },
       { value: 'ember',    label: 'Ember',    tier: 'premium', previewDark: 'hsl(18,22%,13%)', signalDark: 'hsl(198,84%,62%)', previewLight: 'hsl(24,16%,99%)', signalLight: 'hsl(18,78%,36%)' },
       { value: 'ocean',    label: 'Ocean',    tier: 'premium', previewDark: 'hsl(214,24%,13%)', signalDark: 'hsl(34,90%,58%)', previewLight: 'hsl(210,14%,99%)', signalLight: 'hsl(210,66%,36%)' },

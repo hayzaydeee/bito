@@ -203,14 +203,14 @@
   --ember: #ff7a3c;
   --cobalt: #6f9bff;
   --rose:  #ff5d73;
-  /* signal pairs */
-  --_sig-n:  hsl(32, 88%, 60%);   /* amber-gold native */
-  --_sig-n2: hsl(34, 90%, 70%);
-  --_sig-nk: hsl(30, 60%,  8%);
-  --_sig-c:  hsl(212, 80%, 64%);  /* cobalt complement */
-  --_sig-c2: hsl(214, 84%, 74%);
-  --_sig-ck: hsl(214, 50%,  8%);
-  /* default dark: complement (cobalt on warm-dark) */
+  /* signal pairs — cobalt is native to stone, amber is warm complement */
+  --_sig-n:  hsl(212, 80%, 64%);  /* cobalt native — steely mineral */
+  --_sig-n2: hsl(214, 84%, 74%);
+  --_sig-nk: hsl(214, 50%,  8%);
+  --_sig-c:  hsl(32, 88%, 60%);   /* amber complement — warm contrast */
+  --_sig-c2: hsl(34, 90%, 70%);
+  --_sig-ck: hsl(30, 60%,  8%);
+  /* default dark: complement (amber warmth on cool basalt) */
   --signal:     var(--_sig-c);
   --signal-2:   var(--_sig-c2);
   --signal-ink: var(--_sig-ck);
@@ -238,11 +238,11 @@
   --ember: #e0632a;
   --cobalt: #3f6fe0;
   --rose:  #e0445c;
-  --_sig-n:  hsl(32, 72%, 34%);
-  --_sig-n2: hsl(32, 66%, 28%);
+  --_sig-n:  hsl(212, 68%, 38%);  /* cobalt native */
+  --_sig-n2: hsl(212, 62%, 32%);
   --_sig-nk: #ffffff;
-  --_sig-c:  hsl(212, 68%, 38%);
-  --_sig-c2: hsl(212, 62%, 32%);
+  --_sig-c:  hsl(32, 72%, 34%);   /* amber complement */
+  --_sig-c2: hsl(32, 66%, 28%);
   --_sig-ck: #ffffff;
   --signal:     var(--_sig-n);
   --signal-2:   var(--_sig-n2);

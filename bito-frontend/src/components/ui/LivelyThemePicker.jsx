@@ -96,6 +96,7 @@ const LivelyThemePicker = () => {
           display: 'flex',
           gap: 8,
           flexWrap: 'wrap',
+          justifyContent: 'center',
         }}>
           {livelyOptions.map(option => {
             const locked = option.tier === 'premium' && !isPremium;
