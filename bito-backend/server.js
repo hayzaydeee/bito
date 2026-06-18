@@ -230,18 +230,23 @@ app.use(notFound);
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
-// Database connection
-const connectDB = async () => {
+// Database connection with retry logic
+const connectDB = async (attempt = 1, maxAttempts = 5) => {
   try {
     const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/bito-db', {
-      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      serverSelectionTimeoutMS: 15000, // 15s — enough for Atlas cold-start SRV resolution
     });
-    
     console.log(`MongoDB Connected: ${conn.connection.host}`);
     return true;
   } catch (error) {
-    console.error('Database connection error:', error.message);
-    console.log('Server will start without database connection. Please ensure MongoDB is running.');
+    console.error(`Database connection error (attempt ${attempt}/${maxAttempts}):`, error.message);
+    if (attempt < maxAttempts) {
+      const delay = Math.min(attempt * 3000, 15000); // 3s, 6s, 9s, 12s, 15s
+      console.log(`Retrying in ${delay / 1000}s...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return connectDB(attempt + 1, maxAttempts);
+    }
+    console.log('All connection attempts failed. Server running without database.');
     return false;
   }
 };
@@ -263,24 +268,32 @@ if (require.main === module) {
     console.log(`API documentation: http://localhost:${PORT}/api`);
   });
 
-  // Try to connect to database after server starts
-  connectDB().then((connected) => {
-    if (!connected) {
-      console.log('\n⚠️  WARNING: MongoDB is not connected!');
-      console.log('   To use all features, please:');
-      console.log('   1. Install MongoDB: https://www.mongodb.com/try/download/community');
-      console.log('   2. Start MongoDB service');
-      console.log('   3. Restart this server');
-      console.log('   OR use MongoDB Atlas cloud database');
-    } else {
-      console.log('\n✅ Database connected successfully!');
-      console.log('   You can now use all API features.');
-
-      // Start cron jobs after DB is connected
+  // Try to connect to database after server starts (with retry)
+  let cronStarted = false;
+  const startCronJobs = () => {
+    if (!cronStarted) {
+      cronStarted = true;
       reminderService.start();
       weeklyReportService.start();
       challengeService.start();
+      console.log('✅ Cron jobs started.');
     }
+  };
+
+  connectDB().then((connected) => {
+    if (!connected) {
+      console.log('\n⚠️  WARNING: MongoDB is not connected after all retries.');
+      console.log('   Check your MONGODB_URI and Atlas cluster status.');
+    } else {
+      console.log('\n✅ Database connected successfully!');
+      startCronJobs();
+    }
+  });
+
+  // Also start cron jobs if mongoose reconnects after a dropped connection
+  mongoose.connection.on('reconnected', () => {
+    console.log('Database reconnected.');
+    startCronJobs();
   });
 
   // Handle MongoDB connection errors after initial connection
