@@ -8,7 +8,6 @@ import {
   MoonIcon,
   SunIcon,
   DesktopIcon,
-  Half2Icon,
   LockClosedIcon,
   DownloadIcon,
   TrashIcon,
@@ -665,15 +664,6 @@ const SettingsPage = ({ section }) => {
       accent: "#4f46e5",
       surface: "#ccc",
     },
-    {
-      value: "bw",
-      label: "B/W",
-      icon: Half2Icon,
-      bg: "#000000",
-      fg: "#f0f0f0",
-      accent: "#888",
-      surface: "#222",
-    },
   ];
 
   const timezones = [
@@ -776,10 +766,10 @@ const SettingsPage = ({ section }) => {
                 <LivelyThemePicker />
               </div>
 
-              {/* Brightness */}
+              {/* Theme */}
               <div className="px-5 py-4 border-b border-[var(--line)]">
-                <p className="std-kicker text-[10px] text-[var(--ink-3)] mb-3">Brightness</p>
-                <AnimatedList className="grid grid-cols-4 gap-2">
+                <p className="std-kicker text-[10px] text-[var(--ink-3)] mb-3">Theme</p>
+                <AnimatedList className="grid grid-cols-3 gap-3">
                   {themeCards.map((t, i) => {
                     const active = settings.theme === t.value;
                     const Icon = t.icon;
@@ -843,11 +833,11 @@ const SettingsPage = ({ section }) => {
             </>
           )}
 
-          {/* Legacy-only: Brightness cards */}
+          {/* Legacy-only: Theme cards */}
           {designSystem !== "standard" && (
             <div className="px-5 py-4 border-b border-[var(--line)]">
               <p className="std-kicker text-[10px] text-[var(--ink-3)] mb-3">Theme</p>
-              <AnimatedList className="grid grid-cols-4 gap-2">
+              <AnimatedList className="grid grid-cols-3 gap-3">
                 {themeCards.map((t, i) => {
                   const active = settings.theme === t.value;
                   const Icon = t.icon;

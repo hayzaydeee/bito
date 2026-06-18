@@ -132,7 +132,7 @@ const userSchema = new mongoose.Schema({  // Basic user information
   preferences: {
     theme: {
       type: String,
-      enum: ['light', 'dark', 'auto', 'bw'],
+      enum: ['light', 'dark', 'auto'],
       default: 'auto'
     },
     designSystem: {

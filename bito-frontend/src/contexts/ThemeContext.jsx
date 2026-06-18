@@ -334,11 +334,10 @@ export const ThemeProvider = ({ children }) => {
 
     // Theme options for UI
     themeOptions: [
-      { value: 'light', label: 'Light', description: 'Light theme' },
-      { value: 'dark', label: 'Dark', description: 'Dark theme' },
-      { value: 'auto', label: 'Auto', description: 'Follow system preference' },
-      { value: 'bw', label: 'B/W', description: 'High contrast' }
-    ]
+      { value: 'light', label: 'Light', description: 'Light mode' },
+      { value: 'dark',  label: 'Dark',  description: 'Dark mode' },
+      { value: 'auto',  label: 'System', description: 'Follow system' },
+    ],
   };
 
   return (

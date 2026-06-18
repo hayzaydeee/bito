@@ -55,8 +55,8 @@ const validateUserUpdate = [
     .withMessage('Please provide a valid email'),
   body('preferences.theme')
     .optional()
-    .isIn(['light', 'dark', 'auto', 'bw'])
-    .withMessage('Theme must be light, dark, auto, or bw'),
+    .isIn(['light', 'dark', 'auto'])
+    .withMessage('Theme must be light, dark, or auto'),
   body('preferences.livelyTheme')
     .optional()
     .isIn(['indigo', 'obsidian', 'mineral', 'forest', 'ember', 'ocean', 'rose', 'custom'])
