@@ -121,10 +121,10 @@ class WeeklyReportService {
     // Skip if user has no habits (new user, nothing to report)
     if (!habits.length) return;
 
-    // Skip if user doesn't have enough data yet (requires growing tier for a full weekly report)
+    // Skip if user doesn't have enough data yet (seedling tier)
     const tierInfo = await getUserInsightTier(user._id);
-    if (tierInfo.tier !== 'growing') {
-      console.log(`[WeeklyReport] Skipping ${user.email} — ${tierInfo.tier} tier (${tierInfo.daysActive} days active, ${tierInfo.entryCount} entries)`);
+    if (tierInfo.tier === 'seedling') {
+      console.log(`[WeeklyReport] Skipping ${user.email} — seedling tier (${tierInfo.entryCount} entries)`);
       return;
     }
 
