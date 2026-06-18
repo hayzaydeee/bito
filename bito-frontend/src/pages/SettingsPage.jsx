@@ -701,7 +701,7 @@ const SettingsPage = ({ section }) => {
   return (
     <SkeletonTransition isLoading={loading} skeleton={pageSkeleton}>
     <div className="std px-4 sm:px-8 py-7 sm:py-10 h-full flex flex-col min-h-0 space-y-0">
-      <div className="max-w-2xl mx-auto flex-shrink-0 space-y-8 pb-8 w-full">
+      <div className="max-w-2xl md:max-w-3xl mx-auto flex-shrink-0 space-y-8 pb-8 w-full">
         {/* ── header ──────────────────── */}
         <div className="std-rise" style={{ animationDelay: "40ms" }}>
           <div className="flex items-end justify-between gap-4 flex-wrap mb-1">
@@ -720,7 +720,7 @@ const SettingsPage = ({ section }) => {
       </div>
 
       <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
-        <div className="max-w-2xl mx-auto space-y-8">
+        <div className="max-w-2xl md:max-w-3xl mx-auto space-y-8">
 
         {/* ═══════ 1. PROFILE ═══════ */}
         <Section title="Profile">

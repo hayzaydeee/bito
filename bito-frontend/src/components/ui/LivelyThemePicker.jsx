@@ -5,16 +5,12 @@ import AppearancePreview from './AppearancePreview';
 import AccentModeToggle from './AccentModeToggle';
 
 /* ─────────────────────────────────────────────────────────────
-   LivelyThemePicker V2
+   LivelyThemePicker V2.1
    
-   Palette chip cards (not circles) — each chip shows:
-     - bg colour strip (top)
-     - surface + signal dot (bottom)
-     - label in mono
-   
-   Live preview strip driven by hover: hovered theme is shown
-   in AppearancePreview without affecting the real app.
-   Clicking confirms the selection.
+   - Single unified chip row (free + premium together)
+   - Free chips are full opacity; premium are locked with overlay
+   - Preview scales taller on md+ breakpoint
+   - AccentModeToggle inline below chips
    ───────────────────────────────────────────────────────────── */
 
 const LivelyThemePicker = () => {
@@ -65,106 +61,97 @@ const LivelyThemePicker = () => {
     changeLivelyTheme(option.value);
   };
 
-  const freeOptions    = livelyOptions.filter(o => o.tier === 'free');
-  const premiumOptions = livelyOptions.filter(o => o.tier === 'premium');
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
       {/* ── Live preview strip ─────────────────────────────── */}
-      <AppearancePreview
-        livelyTheme={livelyTheme}
-        accentMode={accentMode}
-        effectiveTheme={effectiveTheme}
-        hovered={hoveredTheme}
-      />
-
-      {/* ── Free tier swatches ────────────────────────────── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <span style={{ fontSize: 9, fontFamily: 'var(--f-mono)', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>
-          Free
-        </span>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {freeOptions.map(option => (
-            <PaletteChip
-              key={option.value}
-              option={option}
-              active={livelyTheme === option.value}
-              locked={false}
-              isDark={isDark}
-              livelyHue={livelyHue}
-              onClick={() => handleSwatchClick(option)}
-              onHoverEnter={() => setHoveredTheme(option.value)}
-              onHoverLeave={() => setHoveredTheme(null)}
-            />
-          ))}
-        </div>
+      {/* Taller on md+ via inline CSS since we can't use Tailwind in JSX inline styles */}
+      <div className="h-[118px] md:h-[160px]" style={{ position: 'relative' }}>
+        <AppearancePreview
+          livelyTheme={livelyTheme}
+          accentMode={accentMode}
+          effectiveTheme={effectiveTheme}
+          hovered={hoveredTheme}
+          fill
+        />
       </div>
 
-      {/* ── Premium tier swatches ─────────────────────────── */}
+      {/* ── All theme swatches in one row ─────────────────── */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <span style={{ fontSize: 9, fontFamily: 'var(--f-mono)', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>
-          Premium
-        </span>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {premiumOptions.map(option => (
-            <div key={option.value} style={{ position: 'relative' }}>
-              <PaletteChip
-                option={option}
-                active={livelyTheme === option.value}
-                locked={!isPremium}
-                isDark={isDark}
-                livelyHue={livelyHue}
-                onClick={() => handleSwatchClick(option)}
-                onHoverEnter={() => { if (isPremium) setHoveredTheme(option.value); }}
-                onHoverLeave={() => setHoveredTheme(null)}
-              />
-              {/* Custom hue popover */}
-              {option.value === 'custom' && customOpen && isPremium && (
-                <div
-                  ref={customRef}
-                  style={{
-                    position: 'absolute',
-                    bottom: 'calc(100% + 12px)',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    background: 'var(--surface)',
-                    border: '1px solid var(--line-2)',
-                    borderRadius: 12,
-                    padding: '12px 14px',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-                    zIndex: 100,
-                    width: 180,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 8,
-                  }}
-                >
-                  <span style={{ fontSize: 9, fontFamily: 'var(--f-mono)', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>Hue</span>
-                  <input
-                    type="range" min={0} max={359} value={livelyHue}
-                    onChange={(e) => changeLivelyHue(Number(e.target.value))}
-                    style={{
-                      width: '100%', appearance: 'none', height: 6, borderRadius: 999,
-                      background: 'linear-gradient(to right,hsl(0,72%,58%),hsl(60,72%,58%),hsl(120,72%,58%),hsl(180,72%,58%),hsl(240,72%,58%),hsl(300,72%,58%),hsl(360,72%,58%))',
-                      cursor: 'pointer', outline: 'none', border: 'none',
-                    }}
-                  />
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div style={{ width: 14, height: 14, borderRadius: '50%', background: `hsl(${livelyHue},72%,58%)` }} />
-                    <span style={{ fontSize: 10, fontFamily: 'var(--f-mono)', color: 'var(--ink-2)' }}>{livelyHue}&deg;</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
+        {/* Tier legend inline */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 9, fontFamily: 'var(--f-mono)', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>
+            Palette
+          </span>
+          {!isPremium && (
+            <span style={{ fontSize: 9, fontFamily: 'var(--f-mono)', letterSpacing: '0.08em', color: 'var(--ink-3)' }}>
+              <span style={{ color: 'var(--signal)', fontWeight: 700 }}>●</span>
+              {' '}Premium locked
+            </span>
+          )}
         </div>
-        {!isPremium && (
-          <p style={{ margin: '2px 0 0', fontSize: 11, fontFamily: 'var(--f-sans)', color: 'var(--ink-3)', lineHeight: 1.5 }}>
-            Ember, Ocean, Rose &amp; Custom are{' '}
-            <span style={{ color: 'var(--signal)', fontWeight: 600 }}>Premium</span>.
-          </p>
-        )}
+
+        {/* Single unified chip row — wraps naturally on narrow screens */}
+        <div style={{
+          display: 'flex',
+          gap: 8,
+          flexWrap: 'wrap',
+        }}>
+          {livelyOptions.map(option => {
+            const locked = option.tier === 'premium' && !isPremium;
+            return (
+              <div key={option.value} style={{ position: 'relative' }}>
+                <PaletteChip
+                  option={option}
+                  active={livelyTheme === option.value}
+                  locked={locked}
+                  isDark={isDark}
+                  livelyHue={livelyHue}
+                  onClick={() => handleSwatchClick(option)}
+                  onHoverEnter={() => { if (!locked) setHoveredTheme(option.value); }}
+                  onHoverLeave={() => setHoveredTheme(null)}
+                />
+                {/* Custom hue popover */}
+                {option.value === 'custom' && customOpen && isPremium && (
+                  <div
+                    ref={customRef}
+                    style={{
+                      position: 'absolute',
+                      bottom: 'calc(100% + 12px)',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      background: 'var(--surface)',
+                      border: '1px solid var(--line-2)',
+                      borderRadius: 12,
+                      padding: '12px 14px',
+                      boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                      zIndex: 100,
+                      width: 180,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 8,
+                    }}
+                  >
+                    <span style={{ fontSize: 9, fontFamily: 'var(--f-mono)', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>Hue</span>
+                    <input
+                      type="range" min={0} max={359} value={livelyHue}
+                      onChange={(e) => changeLivelyHue(Number(e.target.value))}
+                      style={{
+                        width: '100%', appearance: 'none', height: 6, borderRadius: 999,
+                        background: 'linear-gradient(to right,hsl(0,72%,58%),hsl(60,72%,58%),hsl(120,72%,58%),hsl(180,72%,58%),hsl(240,72%,58%),hsl(300,72%,58%),hsl(360,72%,58%))',
+                        cursor: 'pointer', outline: 'none', border: 'none',
+                      }}
+                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div style={{ width: 14, height: 14, borderRadius: '50%', background: `hsl(${livelyHue},72%,58%)` }} />
+                      <span style={{ fontSize: 10, fontFamily: 'var(--f-mono)', color: 'var(--ink-2)' }}>{livelyHue}&deg;</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* ── Signal accent toggle ──────────────────────────── */}
@@ -192,14 +179,8 @@ const PaletteChip = ({ option, active, locked, isDark, livelyHue, onClick, onHov
     chipSignal = isDark ? option.signalDark   : option.signalLight;
   }
 
-  // Fallback for null (shouldn't happen but guard)
   chipBg     = chipBg     || 'var(--surface)';
   chipSignal = chipSignal || 'var(--signal)';
-
-  // The "environment" bg is slightly lighter/darker than chip bg
-  const envBg = isDark
-    ? 'color-mix(in srgb, ' + chipBg + ' 60%, #000000 40%)'
-    : 'color-mix(in srgb, ' + chipBg + ' 60%, #ffffff 40%)';
 
   return (
     <button
@@ -223,10 +204,10 @@ const PaletteChip = ({ option, active, locked, isDark, livelyHue, onClick, onHov
         outline: active ? `2px solid var(--signal)` : 'none',
         outlineOffset: 2,
         cursor: locked ? 'not-allowed' : 'pointer',
-        opacity: locked ? 0.5 : 1,
+        opacity: locked ? 0.45 : 1,
         padding: 0,
         background: 'transparent',
-        transition: 'transform 0.15s ease, outline 0.15s ease, border-color 0.15s ease',
+        transition: 'transform 0.15s ease, outline 0.15s ease, border-color 0.15s ease, opacity 0.15s ease',
         boxShadow: active
           ? '0 0 0 4px color-mix(in srgb, var(--signal) 18%, transparent)'
           : 'none',
@@ -238,14 +219,21 @@ const PaletteChip = ({ option, active, locked, isDark, livelyHue, onClick, onHov
       onBlur={(e)      => { e.currentTarget.style.transform = 'translateY(0)'; }}
     >
       {/* Top: bg colour strip */}
-      <div style={{ height: 28, background: chipBg, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{
+        height: 28,
+        background: chipBg,
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
         {locked && <Lock size={10} weight="fill" style={{ color: 'rgba(255,255,255,0.7)', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }} />}
         {isCustom && !locked && (
           <span style={{ fontSize: 7, fontFamily: 'var(--f-mono)', fontWeight: 700, color: `hsl(${livelyHue},40%,80%)`, letterSpacing: '0.08em' }}>HUE</span>
         )}
       </div>
 
-      {/* Bottom: surface + signal dot */}
+      {/* Bottom: surface + label + signal dot */}
       <div style={{
         height: 24,
         background: 'var(--surface)',
@@ -253,6 +241,7 @@ const PaletteChip = ({ option, active, locked, isDark, livelyHue, onClick, onHov
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '0 6px',
+        gap: 2,
       }}>
         <span style={{
           fontSize: 7,
@@ -263,14 +252,14 @@ const PaletteChip = ({ option, active, locked, isDark, livelyHue, onClick, onHov
           color: active ? 'var(--ink)' : 'var(--ink-3)',
           whiteSpace: 'nowrap',
           overflow: 'hidden',
-          maxWidth: 36,
+          maxWidth: 34,
           textOverflow: 'ellipsis',
         }}>
           {isCustom ? `${livelyHue}°` : option.label}
         </span>
         <div style={{
-          width: 8,
-          height: 8,
+          width: 7,
+          height: 7,
           borderRadius: '50%',
           background: chipSignal,
           flexShrink: 0,

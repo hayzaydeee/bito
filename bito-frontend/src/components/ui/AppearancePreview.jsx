@@ -142,11 +142,10 @@ export const getPreviewTokens = (livelyTheme, accentMode, effectiveTheme) => {
 };
 
 /* ── Component ── */
-const AppearancePreview = ({ livelyTheme, accentMode, effectiveTheme, hovered }) => {
+const AppearancePreview = ({ livelyTheme, accentMode, effectiveTheme, hovered, fill }) => {
   // `hovered` is the theme being hovered over — shows that world instead of the active one
   const theme = hovered || livelyTheme;
   const tok = getPreviewTokens(theme, accentMode, effectiveTheme);
-  const isDark = effectiveTheme === 'dark' || effectiveTheme === 'bw';
 
   return (
     <div
@@ -154,7 +153,7 @@ const AppearancePreview = ({ livelyTheme, accentMode, effectiveTheme, hovered })
         background: tok.bg,
         borderRadius: 10,
         overflow: 'hidden',
-        height: 118,
+        height: fill ? '100%' : 118,
         display: 'flex',
         transition: 'background 0.22s ease',
         border: `1px solid ${tok.bgLine}`,
