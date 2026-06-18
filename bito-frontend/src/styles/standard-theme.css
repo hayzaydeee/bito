@@ -190,16 +190,16 @@
 [data-ds="standard"][data-lively="mineral"][data-theme="bw"],
 [data-ds="standard"][data-lively="obsidian"][data-theme="dark"],
 [data-ds="standard"][data-lively="obsidian"][data-theme="bw"] {
-  --bg:        hsl(30, 10%, 6%);
-  --bg-2:      hsl(30,  9%, 10%);
-  --surface:   hsl(30,  9%, 13%);
-  --surface-2: hsl(30,  8%, 17%);
-  --line:      rgba(235, 225, 210, 0.10);
-  --line-2:    rgba(235, 225, 210, 0.20);
-  --line-3:    rgba(235, 225, 210, 0.34);
-  --ink:   hsl(30, 14%, 93%);
-  --ink-2: hsl(30,  8%, 66%);
-  --ink-3: hsl(30,  6%, 48%);
+  --bg:        hsl(212, 12%, 6%);
+  --bg-2:      hsl(212, 10%, 10%);
+  --surface:   hsl(212, 10%, 13%);
+  --surface-2: hsl(212, 9%, 17%);
+  --line:      rgba(210, 225, 235, 0.10);
+  --line-2:    rgba(210, 225, 235, 0.20);
+  --line-3:    rgba(210, 225, 235, 0.34);
+  --ink:   hsl(212, 14%, 93%);
+  --ink-2: hsl(212, 8%, 66%);
+  --ink-3: hsl(212, 6%, 48%);
   --ember: #ff7a3c;
   --cobalt: #6f9bff;
   --rose:  #ff5d73;
@@ -225,16 +225,16 @@
 }
 [data-ds="standard"][data-lively="mineral"][data-theme="light"],
 [data-ds="standard"][data-lively="obsidian"][data-theme="light"] {
-  --bg:        hsl(32, 20%, 95%);
-  --bg-2:      hsl(32, 14%, 99%);
-  --surface:   hsl(32, 14%, 99%);
-  --surface-2: hsl(32, 16%, 92%);
-  --line:      rgba(100, 80, 60, 0.09);
-  --line-2:    rgba(100, 80, 60, 0.16);
-  --line-3:    rgba(100, 80, 60, 0.30);
-  --ink:   hsl(30, 28%, 10%);
-  --ink-2: hsl(30, 16%, 44%);
-  --ink-3: hsl(30, 10%, 62%);
+  --bg:        hsl(212, 20%, 95%);
+  --bg-2:      hsl(212, 14%, 99%);
+  --surface:   hsl(212, 14%, 99%);
+  --surface-2: hsl(212, 16%, 92%);
+  --line:      rgba(60, 80, 100, 0.09);
+  --line-2:    rgba(60, 80, 100, 0.16);
+  --line-3:    rgba(60, 80, 100, 0.30);
+  --ink:   hsl(212, 28%, 10%);
+  --ink-2: hsl(212, 16%, 44%);
+  --ink-3: hsl(212, 10%, 62%);
   --ember: #e0632a;
   --cobalt: #3f6fe0;
   --rose:  #e0445c;

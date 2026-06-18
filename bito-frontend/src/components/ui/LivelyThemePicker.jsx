@@ -173,11 +173,11 @@ const PaletteChip = ({ option, active, locked, isDark, livelyHue, onClick, onHov
   // Chip colours — bg top strip and signal dot
   let chipBg, chipSignal;
   if (isCustom) {
-    chipBg     = `hsl(${livelyHue}, 26%, ${isDark ? '5%' : '95%'})`;
-    chipSignal = `hsl(${livelyHue}, 78%, 55%)`;
+    chipBg     = `hsl(${livelyHue}, 78%, 55%)`;
+    chipSignal = `hsl(${(livelyHue + 180) % 360}, 80%, 64%)`;
   } else {
-    chipBg     = isDark ? option.previewDark  : option.previewLight;
-    chipSignal = isDark ? option.signalDark   : option.signalLight;
+    chipBg     = option.native;
+    chipSignal = option.complement;
   }
 
   chipBg     = chipBg     || 'var(--surface)';
