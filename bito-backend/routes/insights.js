@@ -102,6 +102,7 @@ router.get('/', async (req, res) => {
           generatedAt: kickstart?.generatedAt || new Date().toISOString(),
           tier: tierInfo.tier,
           entryCount: tierInfo.entryCount,
+          daysActive: tierInfo.daysActive,
           thresholds: tierInfo.thresholds,
           cached: false,
         },
@@ -114,7 +115,7 @@ router.get('/', async (req, res) => {
       if (cached) {
         return res.json({
           success: true,
-          data: { ...cached, cached: true, tier: tierInfo.tier, entryCount: tierInfo.entryCount, thresholds: tierInfo.thresholds },
+          data: { ...cached, cached: true, tier: tierInfo.tier, entryCount: tierInfo.entryCount, daysActive: tierInfo.daysActive, thresholds: tierInfo.thresholds },
         });
       }
     }
@@ -156,6 +157,7 @@ router.get('/', async (req, res) => {
       generatedAt: new Date().toISOString(),
       tier: tierInfo.tier,
       entryCount: tierInfo.entryCount,
+      daysActive: tierInfo.daysActive,
       thresholds: tierInfo.thresholds,
     };
 
@@ -201,6 +203,7 @@ router.get('/analytics', async (req, res) => {
           generatedAt: new Date().toISOString(),
           tier: tierInfo.tier,
           entryCount: tierInfo.entryCount,
+          daysActive: tierInfo.daysActive,
           thresholds: tierInfo.thresholds,
           cached: false,
         },
@@ -211,7 +214,7 @@ router.get('/analytics', async (req, res) => {
     if (!forceRefresh) {
       const cached = getCached(cacheKey);
       if (cached) {
-        return res.json({ success: true, data: { ...cached, cached: true, tier: tierInfo.tier, entryCount: tierInfo.entryCount, thresholds: tierInfo.thresholds } });
+        return res.json({ success: true, data: { ...cached, cached: true, tier: tierInfo.tier, entryCount: tierInfo.entryCount, daysActive: tierInfo.daysActive, thresholds: tierInfo.thresholds } });
       }
     }
 
@@ -261,6 +264,7 @@ router.get('/analytics', async (req, res) => {
       generatedAt: new Date().toISOString(),
       tier: tierInfo.tier,
       entryCount: tierInfo.entryCount,
+      daysActive: tierInfo.daysActive,
       thresholds: tierInfo.thresholds,
     };
     delete sections._llmUsed;
