@@ -41,8 +41,6 @@ const ProfileEditModal = ({ isOpen, onClose, userProfile, onSave }) => {
       // If username changed, we could check availability but updateProfile might handle it.
       // Wait, updateProfile might fail if username is taken.
       const res = await userAPI.updateProfile({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
         username: formData.username,
       });
 
@@ -89,28 +87,7 @@ const ProfileEditModal = ({ isOpen, onClose, userProfile, onSave }) => {
           </div>
         )}
 
-        <FormRow>
-          <FormField label="First Name">
-            <input
-              type="text"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-              className={INPUT_CLS}
-              placeholder="Jane"
-            />
-          </FormField>
-          <FormField label="Last Name">
-            <input
-              type="text"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-              className={INPUT_CLS}
-              placeholder="Doe"
-            />
-          </FormField>
-        </FormRow>
+        {/* FormRow for first and last name removed as per request */}
 
         <FormField
           label="Username"
