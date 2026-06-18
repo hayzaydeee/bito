@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import HabitIcon from "../components/shared/HabitIcon";
 import { useNavigate } from "react-router-dom";
 import {
@@ -40,17 +40,17 @@ import { motion } from "framer-motion";
 import { listItemVariants } from "../utils/motion";
 
 /* ================================================================
-   SettingsPage — sectioned list layout (no widget grid)
+   SettingsPage â€” sectioned list layout (no widget grid)
 
    Sections:
-     1. Profile       — avatar, name, email, connected accounts
-     2. Appearance    — theme preview cards (light / dark / auto)
-     3. Preferences   — timezone, week start day
-     4. Notifications — email toggle, coming-soon push
-     5. Privacy       — dashboard sharing per group
-     6. Data          — export
-     7. About         — version, status
-     8. Danger Zone   — delete account (red border)
+     1. Profile       â€” avatar, name, email, connected accounts
+     2. Appearance    â€” theme preview cards (light / dark / auto)
+     3. Preferences   â€” timezone, week start day
+     4. Notifications â€” email toggle, coming-soon push
+     5. Privacy       â€” dashboard sharing per group
+     6. Data          â€” export
+     7. About         â€” version, status
+     8. Danger Zone   â€” delete account (red border)
 
    Sub-route: /settings/habit-privacy/:habitId
    ================================================================ */
@@ -61,7 +61,7 @@ const SettingsPage = ({ section }) => {
   const { scale: currentScale, changeScale } = useScale();
   const navigate = useNavigate();
 
-  /* ── core state ───────────────────────── */
+  /* â”€â”€ core state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -77,7 +77,7 @@ const SettingsPage = ({ section }) => {
     aiAnalytics: true,
   });
 
-  /* ── habit-privacy sub-route state ────── */
+  /* â”€â”€ habit-privacy sub-route state â”€â”€â”€â”€â”€â”€ */
   const [habitData, setHabitData] = useState(null);
   const [habitPrivacy, setHabitPrivacy] = useState({
     shareProgress: "progress-only",
@@ -85,18 +85,18 @@ const SettingsPage = ({ section }) => {
     shareInActivity: true,
   });
 
-  /* ── privacy / group state ────────── */
+  /* â”€â”€ privacy / group state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   const [groups, setGroups] = useState([]);
   const [dashPerms, setDashPerms] = useState({});
   const [privacyLoading, setPrivacyLoading] = useState(false);
 
-  /* ── toast helper ─────────────────────── */
+  /* â”€â”€ toast helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   const showToast = useCallback((message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   }, []);
 
-  /* ── load profile ─────────────────────── */
+  /* â”€â”€ load profile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   useEffect(() => {
     if (!user) return;
     (async () => {
@@ -123,9 +123,9 @@ const SettingsPage = ({ section }) => {
         setLoading(false);
       }
     })();
-  }, [user]);
+  }, [user?._id]);
 
-  /* ── load groups for privacy section */
+  /* â”€â”€ load groups for privacy section */
   useEffect(() => {
     if (!user) return;
     (async () => {
@@ -171,9 +171,9 @@ const SettingsPage = ({ section }) => {
         setPrivacyLoading(false);
       }
     })();
-  }, [user]);
+  }, [user?._id]);
 
-  /* ── load habit data (sub-route) ──────── */
+  /* â”€â”€ load habit data (sub-route) â”€â”€â”€â”€â”€â”€â”€â”€ */
   useEffect(() => {
     if (section !== "habit-privacy") return;
     const id = window.location.pathname.split("/").pop();
@@ -209,7 +209,7 @@ const SettingsPage = ({ section }) => {
     })();
   }, [section]);
 
-  /* ── save a backend-supported setting ── */
+  /* â”€â”€ save a backend-supported setting â”€â”€ */
   const saveSetting = async (key, value) => {
     const prev = settings[key];
     setSettings((p) => ({ ...p, [key]: value }));
@@ -266,7 +266,7 @@ const SettingsPage = ({ section }) => {
     }
   };
 
-  /* ── toggle group dashboard sharing ─ */
+  /* â”€â”€ toggle group dashboard sharing â”€ */
   const toggleWsPublic = async (wsId, isPublic) => {
     const prev = dashPerms[wsId];
     setDashPerms((p) => ({
@@ -303,7 +303,7 @@ const SettingsPage = ({ section }) => {
     }
   };
 
-  /* ── export ───────────────────────────── */
+  /* â”€â”€ export â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   const [exporting, setExporting] = useState(false);
 
   const handleExport = async () => {
@@ -320,7 +320,7 @@ const SettingsPage = ({ section }) => {
         `bito-export-${new Date().toISOString().split("T")[0]}.json`
       );
       a.click();
-      showToast("Data exported — check your downloads");
+      showToast("Data exported â€” check your downloads");
     } catch {
       showToast("Export failed", "error");
     } finally {
@@ -328,11 +328,11 @@ const SettingsPage = ({ section }) => {
     }
   };
 
-  /* ── delete account ───────────────────── */
+  /* â”€â”€ delete account â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleteText, setDeleteText] = useState("");
 
-  /* ── analytics reset ──────────────────── */
+  /* â”€â”€ analytics reset â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   const [resetConfirm, setResetConfirm] = useState(false);
   const [resetText, setResetText] = useState("");
   const [resetBefore, setResetBefore] = useState("");
@@ -345,7 +345,7 @@ const SettingsPage = ({ section }) => {
         password: "confirmed",
         confirmDeletion: "DELETE_MY_ACCOUNT",
       });
-      showToast("Account deleted. Logging out…");
+      showToast("Account deleted. Logging outâ€¦");
       setTimeout(() => (window.location.href = "/"), 2000);
     } catch (e) {
       showToast(e.message || "Deletion failed", "error");
@@ -361,7 +361,7 @@ const SettingsPage = ({ section }) => {
       });
       const { habitEntriesDeleted, habitsReset } = res.data || {};
       showToast(
-        `Reset complete — ${habitEntriesDeleted ?? 0} entries deleted, ${habitsReset ?? 0} habits cleared`
+        `Reset complete â€” ${habitEntriesDeleted ?? 0} entries deleted, ${habitsReset ?? 0} habits cleared`
       );
       window.dispatchEvent(new CustomEvent('analyticsReset'));
       setResetConfirm(false);
@@ -374,7 +374,7 @@ const SettingsPage = ({ section }) => {
     }
   };
 
-  /* ── habit privacy save ───────────────── */
+  /* â”€â”€ habit privacy save â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   const saveHabitPrivacy = async () => {
     if (!habitData) return;
     try {
@@ -469,7 +469,7 @@ const SettingsPage = ({ section }) => {
             </div>
             <p className="std-mono text-[11px] text-[var(--ink-3)] mt-2 uppercase tracking-wider">
               Choose how Bito talks to you across insights, reports, and nudges.
-              Pick the voice that sounds right — not the label that sounds right.
+              Pick the voice that sounds right â€” not the label that sounds right.
             </p>
             <div className="std-rule mt-4" />
           </div>
@@ -515,7 +515,7 @@ const SettingsPage = ({ section }) => {
             <p className="std-mono text-[11px] text-[var(--ink-3)] mt-2 uppercase tracking-wider">
               {habitData
                 ? `Control sharing for "${habitData.name}"`
-                : "Loading…"}
+                : "Loadingâ€¦"}
             </p>
             <div className="std-rule mt-4" />
           </div>
@@ -542,7 +542,7 @@ const SettingsPage = ({ section }) => {
                 <div className="min-w-0 flex-1">
                   <p className="text-sm text-[var(--ink)] truncate">{habitData.name}</p>
                   <p className="std-mono text-[10px] text-[var(--ink-3)]">
-                    {habitData.category || "No category"} · Group habit
+                    {habitData.category || "No category"} Â· Group habit
                   </p>
                 </div>
               </div>
@@ -602,7 +602,7 @@ const SettingsPage = ({ section }) => {
                   ) : (
                     <CheckIcon className="w-3.5 h-3.5" />
                   )}
-                  {saving ? "Saving…" : "Save"}
+                  {saving ? "Savingâ€¦" : "Save"}
                 </button>
               </div>
             </>
@@ -635,7 +635,7 @@ const SettingsPage = ({ section }) => {
     </div>
   );
 
-  /* ── theme cards config ───────────────── */
+  /* â”€â”€ theme cards config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   const themeCards = [
     {
       value: "light",
@@ -692,7 +692,7 @@ const SettingsPage = ({ section }) => {
     <SkeletonTransition isLoading={loading} skeleton={pageSkeleton}>
     <div className="std px-4 sm:px-8 py-7 sm:py-10 h-full flex flex-col min-h-0 space-y-0">
       <div className="max-w-2xl md:max-w-3xl mx-auto flex-shrink-0 space-y-8 pb-8 w-full">
-        {/* ── header ──────────────────── */}
+        {/* â”€â”€ header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="std-rise" style={{ animationDelay: "40ms" }}>
           <div className="flex items-end justify-between gap-4 flex-wrap mb-1">
             <div className="min-w-0">
@@ -703,7 +703,7 @@ const SettingsPage = ({ section }) => {
             </div>
           </div>
           <p className="std-mono text-[11px] text-[var(--ink-3)] mt-2 uppercase tracking-wider">
-            Account · Preferences · Data
+            Account Â· Preferences Â· Data
           </p>
           <div className="std-rule mt-4" />
         </div>
@@ -712,7 +712,7 @@ const SettingsPage = ({ section }) => {
       <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
         <div className="max-w-2xl md:max-w-3xl mx-auto space-y-8">
 
-        {/* ═══════ 1. PROFILE ═══════ */}
+        {/* â•â•â•â•â•â•â• 1. PROFILE â•â•â•â•â•â•â• */}
         <Section title="Profile">
           <div className="flex items-center gap-4 px-5 py-4">
             <AvatarPicker
@@ -726,7 +726,7 @@ const SettingsPage = ({ section }) => {
             />
             <div className="min-w-0 flex-1">
               <p className="std-display text-base text-[var(--ink)] truncate">
-                {userProfile?.name || "—"}
+                {userProfile?.name || "â€”"}
               </p>
               {userProfile?.username && (
                 <p className="std-mono text-[10px] text-[var(--ink-3)] truncate">
@@ -734,18 +734,18 @@ const SettingsPage = ({ section }) => {
                 </p>
               )}
               <p className="std-mono text-[10px] text-[var(--ink-2)] truncate">
-                {userProfile?.email || "—"}
+                {userProfile?.email || "â€”"}
               </p>
               {userProfile?.hasGoogleAuth && (
-                <p className="std-mono text-[10px] text-[var(--ink-3)] mt-0.5">⊕ Google</p>
+                <p className="std-mono text-[10px] text-[var(--ink-3)] mt-0.5">âŠ• Google</p>
               )}
             </div>
           </div>
         </Section>
 
-        {/* ═══════ 2. APPEARANCE ═══════ */}
+        {/* â•â•â•â•â•â•â• 2. APPEARANCE â•â•â•â•â•â•â• */}
         <Section title="Appearance">
-          {/* ── Design Language ─────────────────── */}
+          {/* â”€â”€ Design Language â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div className="px-5 py-4 border-b border-[var(--line)]">
             <p className="std-kicker text-[10px] text-[var(--ink-3)] mb-1">Design Language</p>
             <p className="std-mono text-[10px] text-[var(--ink-3)] mb-3 max-w-md leading-relaxed">
@@ -754,10 +754,10 @@ const SettingsPage = ({ section }) => {
             <DesignSystemSwitcher />
           </div>
 
-          {/* ── Standard-only block ─────────────── */}
+          {/* â”€â”€ Standard-only block â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           {designSystem === "standard" && (
             <>
-              {/* Color World — preview + swatches + signal toggle */}
+              {/* Color World â€” preview + swatches + signal toggle */}
               <div className="px-5 py-5 border-b border-[var(--line)]">
                 <p className="std-kicker text-[10px] text-[var(--ink-3)] mb-0.5">Color World</p>
                 <p className="std-mono text-[10px] text-[var(--ink-3)] mb-4 leading-relaxed">
@@ -882,7 +882,7 @@ const SettingsPage = ({ section }) => {
           )}
         </Section>
 
-        {/* ═══════ 2b. TEXT SIZE ═══════ */}
+        {/* â•â•â•â•â•â•â• 2b. TEXT SIZE â•â•â•â•â•â•â• */}
         <Section title="Text Size">
           <div className="px-5 py-4">
             <p className="std-mono text-[10px] text-[var(--ink-3)] mb-3">
@@ -932,7 +932,7 @@ const SettingsPage = ({ section }) => {
           </div>
         </Section>
 
-        {/* ═══════ 3. PREFERENCES ═══════ */}
+        {/* â•â•â•â•â•â•â• 3. PREFERENCES â•â•â•â•â•â•â• */}
         <Section title="Preferences">
           <SettingRow
             label="Timezone"
@@ -988,7 +988,7 @@ const SettingsPage = ({ section }) => {
           )}
         </Section>
 
-        {/* ═══════ 4. AI FEATURES ═══════ */}
+        {/* â•â•â•â•â•â•â• 4. AI FEATURES â•â•â•â•â•â•â• */}
         <Section title="AI Features">
           <SettingRow
             label="Dashboard Insights"
@@ -1010,7 +1010,7 @@ const SettingsPage = ({ section }) => {
               disabled={saving}
             />
           </SettingRow>
-          {/* ═══════ AI VOICE ═══════ */}
+          {/* â•â•â•â•â•â•â• AI VOICE â•â•â•â•â•â•â• */}
           <button
             onClick={() => navigate("/app/settings/personality")}
             className="w-full flex items-center justify-between px-5 py-4 hover:bg-[var(--surface-2)] transition-colors cursor-pointer border-t border-[var(--line)]"
@@ -1033,7 +1033,7 @@ const SettingsPage = ({ section }) => {
                       labels.focus[p.focus] || "Balanced",
                       labels.verbosity[p.verbosity] || "Concise",
                       labels.accountability[p.accountability] || "Gentle",
-                    ].join(" · ");
+                    ].join(" Â· ");
                   })()}
                 </p>
               </div>
@@ -1042,10 +1042,10 @@ const SettingsPage = ({ section }) => {
           </button>
         </Section>
 
-        {/* ═══════ 5. NOTIFICATIONS ═══════ */}
+        {/* â•â•â•â•â•â•â• 5. NOTIFICATIONS â•â•â•â•â•â•â• */}
         <NotificationSection saving={saving} settings={settings} saveSetting={saveSetting} />
 
-        {/* ═══════ 5. PRIVACY ═══════ */}
+        {/* â•â•â•â•â•â•â• 5. PRIVACY â•â•â•â•â•â•â• */}
         <Section title="Privacy">
           {privacyLoading ? (
             <div className="flex items-center justify-center py-6">
@@ -1079,7 +1079,7 @@ const SettingsPage = ({ section }) => {
           </div>
         </Section>
 
-        {/* ═══════ 6. DATA ═══════ */}
+        {/* â•â•â•â•â•â•â• 6. DATA â•â•â•â•â•â•â• */}
         <Section title="Data">
           <button
             onClick={handleExport}
@@ -1103,7 +1103,7 @@ const SettingsPage = ({ section }) => {
           </button>
         </Section>
 
-        {/* ═══════ 7. ABOUT ═══════ */}
+        {/* â•â•â•â•â•â•â• 7. ABOUT â•â•â•â•â•â•â• */}
         <Section title="About">
           <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--line)]">
             <div>
@@ -1141,12 +1141,12 @@ const SettingsPage = ({ section }) => {
 
         
 
-        {/* ═══════ 8. DANGER ZONE ═══════ */}
+        {/* â•â•â•â•â•â•â• 8. DANGER ZONE â•â•â•â•â•â•â• */}
         <div className="mt-10 mb-20">
           <p className="std-kicker text-[var(--ink-3)] mb-3">Danger Zone</p>
           <div className="std-card overflow-hidden" style={{ borderColor: 'rgba(225,29,72,0.3)' }}>
 
-            {/* ── Reset Completion Data ── */}
+            {/* â”€â”€ Reset Completion Data â”€â”€ */}
             <div className="px-5 py-5 border-b border-red-500/10">
               <p className="text-sm text-[var(--ink)] mb-1">Reset Completion Data</p>
               <p className="std-mono text-[10px] text-[var(--ink-3)] mb-3 leading-relaxed">
@@ -1171,7 +1171,7 @@ const SettingsPage = ({ section }) => {
                 <div className="space-y-3">
                   <div>
                     <label className="std-mono text-[10px] text-[var(--ink-3)] block mb-1">
-                      Clear data before (optional — leave blank to reset all)
+                      Clear data before (optional â€” leave blank to reset all)
                     </label>
                     <input
                       type="date"
@@ -1213,7 +1213,7 @@ const SettingsPage = ({ section }) => {
               )}
             </div>
 
-            {/* ── Delete Account ── */}
+            {/* â”€â”€ Delete Account â”€â”€ */}
             <div className="px-5 py-5">
               <p className="text-sm text-[var(--ink)] mb-1">Delete Account</p>
               <p className="std-mono text-[10px] text-[var(--ink-3)] mb-3 leading-relaxed">
@@ -1265,7 +1265,7 @@ const SettingsPage = ({ section }) => {
       {saving && (
         <div className="fixed bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 std-card shadow-lg std-mono text-[11px] text-[var(--ink-3)]">
           <span className="w-3 h-3 border-2 border-[var(--signal)] border-t-transparent rounded-full animate-spin" />
-          Saving…
+          Savingâ€¦
         </div>
       )}
 
@@ -1280,7 +1280,7 @@ const SettingsPage = ({ section }) => {
    ================================================================ */
 
 /** Section wrapper with optional icon */
-/** ═══════ Notification Section (Phase 16) ═══════ */
+/** â•â•â•â•â•â•â• Notification Section (Phase 16) â•â•â•â•â•â•â• */
 const NotificationSection = ({ saving, settings, saveSetting }) => {
   const { permission, isSubscribed, isLoading, supported, subscribe, unsubscribe, sendTest } = usePushNotifications();
   const [testSending, setTestSending] = useState(false);
@@ -1320,7 +1320,7 @@ const NotificationSection = ({ saving, settings, saveSetting }) => {
           !supported
             ? 'Not supported in this browser'
             : permission === 'denied'
-              ? 'Blocked — enable in browser settings'
+              ? 'Blocked â€” enable in browser settings'
               : 'Habit reminders & achievement alerts'
         }
         disabled={!supported || permission === 'denied'}
@@ -1339,7 +1339,7 @@ const NotificationSection = ({ saving, settings, saveSetting }) => {
             disabled={testSending}
             className="std-mono text-[10px] text-[var(--signal)] hover:underline disabled:opacity-50 transition-colors"
           >
-            {testSending ? 'Sending…' : testResult === 'sent' ? '✓ Sent!' : testResult === 'error' ? '✗ Failed' : 'Send test notification'}
+            {testSending ? 'Sendingâ€¦' : testResult === 'sent' ? 'âœ“ Sent!' : testResult === 'error' ? 'âœ— Failed' : 'Send test notification'}
           </button>
         </div>
       )}
@@ -1364,7 +1364,7 @@ const NotificationSection = ({ saving, settings, saveSetting }) => {
   );
 };
 
-/* ── DRILL: section wrapper ──────────────────────────────── */
+/* â”€â”€ DRILL: section wrapper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const Section = ({ title, icon: _icon, children }) => (
   <div>
     <p className="std-kicker text-[var(--ink-3)] mb-3">{title}</p>
@@ -1374,7 +1374,7 @@ const Section = ({ title, icon: _icon, children }) => (
   </div>
 );
 
-/* ── DRILL: setting row — label+description left, control right ── */
+/* â”€â”€ DRILL: setting row â€” label+description left, control right â”€â”€ */
 const SettingRow = ({ label, description, disabled, children }) => (
   <div
     className={`flex items-center justify-between px-5 py-4 border-b border-[var(--line)] last:border-0 ${
@@ -1393,7 +1393,7 @@ const SettingRow = ({ label, description, disabled, children }) => (
   </div>
 );
 
-/* ── DRILL: toggle switch ─────────────────────────────────── */
+/* â”€â”€ DRILL: toggle switch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const Toggle = ({ checked, onChange, disabled }) => (
   <button
     type="button"
@@ -1413,7 +1413,7 @@ const Toggle = ({ checked, onChange, disabled }) => (
   </button>
 );
 
-/* ── DRILL: select input ──────────────────────────────────── */
+/* â”€â”€ DRILL: select input â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const SelectInput = ({ value, options, onChange, disabled }) => (
   <select
     value={value}
@@ -1433,7 +1433,7 @@ const SelectInput = ({ value, options, onChange, disabled }) => (
   </select>
 );
 
-/* ── DRILL: toast notification ───────────────────────────── */
+/* â”€â”€ DRILL: toast notification â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const Toast = ({ toast }) => {
   if (!toast) return null;
   const isError = toast.type === "error";
@@ -1455,3 +1455,4 @@ const Toast = ({ toast }) => {
 };
 
 export default SettingsPage;
+
