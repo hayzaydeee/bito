@@ -846,7 +846,7 @@ const SettingsPage = ({ section }) => {
               </div>
 
               {/* Surface Grid */}
-              <div className="px-5 py-4 border-b border-[var(--line)]">
+              <div className="hidden md:block px-5 py-4 border-b border-[var(--line)]">
                 <div className="flex items-center justify-between gap-4 mb-0">
                   <div className="min-w-0">
                     <p className="text-sm text-[var(--ink)]">Background grid</p>
