@@ -136,6 +136,9 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
+CLAUDE.md
+VRRBOSE.md
+
 docs
 
 groupsRedesign
