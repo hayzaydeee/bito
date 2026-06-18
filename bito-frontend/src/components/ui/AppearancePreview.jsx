@@ -29,16 +29,16 @@ const TOKENS = {
   },
   mineral: {
     dark: {
-      bg: 'hsl(212,12%,6%)', bgLine: 'rgba(210,225,235,0.10)',
-      surface: 'hsl(212,10%,13%)', surface2: 'hsl(212,9%,17%)',
-      ink: 'hsl(212,14%,93%)', ink2: 'hsl(212,8%,66%)', ink3: 'hsl(212,6%,48%)',
+      bg: 'hsl(212,30%,7%)', bgLine: 'rgba(200,220,240,0.10)',
+      surface: 'hsl(212,24%,13%)', surface2: 'hsl(212,20%,17%)',
+      ink: 'hsl(212,20%,93%)', ink2: 'hsl(212,14%,66%)', ink3: 'hsl(212,10%,48%)',
       native: 'hsl(212,80%,64%)',     complement: 'hsl(32,88%,60%)',
       nativeInk: 'hsl(214,50%,8%)',  complementInk: 'hsl(30,60%,8%)',
     },
     light: {
-      bg: 'hsl(212,20%,95%)', bgLine: 'rgba(60,80,100,0.09)',
-      surface: 'hsl(212,14%,99%)', surface2: 'hsl(212,16%,92%)',
-      ink: 'hsl(212,28%,10%)', ink2: 'hsl(212,16%,44%)', ink3: 'hsl(212,10%,62%)',
+      bg: 'hsl(212,30%,94%)', bgLine: 'rgba(40,70,110,0.09)',
+      surface: 'hsl(212,24%,98%)', surface2: 'hsl(212,28%,91%)',
+      ink: 'hsl(212,34%,10%)', ink2: 'hsl(212,20%,44%)', ink3: 'hsl(212,14%,62%)',
       native: 'hsl(212,68%,38%)',    complement: 'hsl(32,72%,34%)',
       nativeInk: '#ffffff',          complementInk: '#ffffff',
     },
