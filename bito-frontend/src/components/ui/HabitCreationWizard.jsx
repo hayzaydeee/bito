@@ -409,28 +409,18 @@ const HabitCreationWizard = ({ isOpen, onClose, onSave, userId }) => {
         </div>
       </div>
 
-      {/* Description (collapsed) */}
-      {!showDescription ? (
-        <button
-          type="button"
-          onClick={() => setShowDescription(true)}
-          className="text-xs text-[var(--color-brand-500)] font-outfit hover:underline"
-        >
-          + Add a description
-        </button>
-      ) : (
-        <div>
-          <label className="text-xs font-medium text-[var(--color-text-primary)] font-outfit block mb-1">
-            Description
-          </label>
-          <textarea
-            value={formData.description}
-            onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
-            className="w-full h-16 px-3 py-2 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/40 rounded-xl text-[var(--color-text-primary)] font-outfit placeholder-[var(--color-text-tertiary)] focus:outline-none focus:border-[var(--color-brand-500)] transition-colors resize-none text-sm"
-            placeholder="Add a note or target for yourself..."
-          />
-        </div>
-      )}
+      {/* Description */}
+      <div>
+        <label className="text-xs font-medium text-[var(--color-text-primary)] font-outfit block mb-1">
+          Description
+        </label>
+        <textarea
+          value={formData.description}
+          onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
+          className="w-full h-16 px-3 py-2 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/40 rounded-xl text-[var(--color-text-primary)] font-outfit placeholder-[var(--color-text-tertiary)] focus:outline-none focus:border-[var(--color-brand-500)] transition-colors resize-none text-sm"
+          placeholder="Add a note or target for yourself..."
+        />
+      </div>
     </div>
   );
 

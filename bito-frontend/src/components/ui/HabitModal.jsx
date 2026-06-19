@@ -415,25 +415,15 @@ const AddMode = ({ isOpen, onClose, onSave, userId }) => {
       </div>
       <StyleSection formData={formData} setFormData={setFormData} />
       {/* Description */}
-      {!showDescription ? (
-        <button
-          type="button"
-          onClick={() => setShowDescription(true)}
-          className="std-mono text-[10px] uppercase tracking-wider text-[var(--signal)] hover:underline"
-        >
-          + Add a description
-        </button>
-      ) : (
-        <div>
-          <label className={fieldLabelCls}>Description</label>
-          <textarea
-            value={formData.description}
-            onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
-            className={`${inputCls} h-16 py-2 resize-none`}
-            placeholder="Add a note or target for yourself..."
-          />
-        </div>
-      )}
+      <div>
+        <label className={fieldLabelCls}>Description</label>
+        <textarea
+          value={formData.description}
+          onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
+          className={`${inputCls} h-16 py-2 resize-none`}
+          placeholder="Add a note or target for yourself..."
+        />
+      </div>
     </div>
   );
 
@@ -731,25 +721,15 @@ const EditMode = ({ isOpen, onClose, habit, onSave, onDelete, onArchive }) => {
             <IconPicker value={formData.icon} onChange={(icon) => setFormData((p) => ({ ...p, icon }))} />
 
             {/* Description */}
-            {!showDescription ? (
-              <button
-                type="button"
-                onClick={() => setShowDescription(true)}
-                className="std-mono text-[10px] uppercase tracking-wider text-[var(--signal)] hover:underline"
-              >
-                + Add a description
-              </button>
-            ) : (
-              <div>
-                <label className={fieldLabelCls}>Description</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
-                  className={`${inputCls} h-16 py-2.5 resize-none`}
-                  placeholder="Add a note or target for yourself..."
-                />
-              </div>
-            )}
+            <div>
+              <label className={fieldLabelCls}>Description</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
+                className={`${inputCls} h-16 py-2.5 resize-none`}
+                placeholder="Add a note or target for yourself..."
+              />
+            </div>
           </div>
 
           <hr className="std-rule" />
