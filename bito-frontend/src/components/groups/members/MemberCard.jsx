@@ -35,6 +35,7 @@ const MemberCard = ({ member, groupId, isYou, onEncourage, onViewDashboard }) =>
     <div 
       className={`flex items-center gap-3 p-4 grp-card grp-card-hover group/card ${!isYou ? 'cursor-pointer' : ''}`}
       onClick={() => !isYou && onViewDashboard?.(memberId)}
+      title={!isYou ? "Click to view member dashboard" : ""}
     >
       {/* Avatar + presence dot */}
       <div className="relative flex-shrink-0">
@@ -71,7 +72,7 @@ const MemberCard = ({ member, groupId, isYou, onEncourage, onViewDashboard }) =>
       </div>
 
       {/* Badges / Actions */}
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="flex items-center gap-3 flex-shrink-0">
         {/* Role badge */}
         {roleLabel && (
           <span className="grp-tag" style={{ color: roleColor, borderColor: "var(--line-2)" }}>
@@ -82,29 +83,18 @@ const MemberCard = ({ member, groupId, isYou, onEncourage, onViewDashboard }) =>
         {/* Always visible encourage button */}
         {!isYou && (
           <button
-            onClick={onEncourage}
-            title={`Send encouragement`}
-            className="w-6 h-6 flex items-center justify-center rounded-[6px] border border-[var(--line-2)] text-[var(--ink-3)] hover:border-[var(--signal)] hover:text-[var(--signal)] transition-colors bg-[var(--surface)] hover:bg-[var(--surface-2)]"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onEncourage) onEncourage();
+            }}
+            title="Send encouragement"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[8px] bg-[var(--surface-2)] text-[var(--ink-2)] border border-[var(--line-2)] hover:bg-[var(--signal)] hover:text-white hover:border-[var(--signal)] transition-colors group/nudge"
           >
-            <Sparkle size={12} weight="bold" />
+            <Sparkle size={14} weight="duotone" className="group-hover/nudge:animate-pulse" />
+            <span className="std-mono text-[10px] font-bold uppercase tracking-wider">Nudge</span>
           </button>
         )}
       </div>
-
-      {/* Actions (shown on hover, hidden for self) */}
-      {!isYou && onViewDashboard && (
-        <div className="flex items-center opacity-0 group-hover/card:opacity-100 transition-opacity flex-shrink-0">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onViewDashboard(memberId);
-            }}
-            className="w-7 h-7 flex items-center justify-center rounded-[7px] border border-[var(--line-2)] text-[var(--ink-3)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)] transition-colors"
-          >
-            <ArrowRight size={12} weight="bold" />
-          </button>
-        </div>
-      )}
     </div>
   );
 };

@@ -129,10 +129,6 @@ const MemberDashboardDrawer = ({ groupId, memberId, isOpen, onClose }) => {
     }).length;
   }, [dailyHabits, entries, todayStr]);
 
-  const handleEncourage = () => {
-    alert(`Sent encouragement to ${memberName}!`);
-  };
-
   const overlayVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1 },
@@ -233,13 +229,6 @@ const MemberDashboardDrawer = ({ groupId, memberId, isOpen, onClose }) => {
                           )}
                         </div>
                       </div>
-                      <button
-                        onClick={handleEncourage}
-                        className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl text-[var(--ink-3)] hover:text-[var(--signal)] hover:bg-[var(--signal)]/10 transition-colors"
-                      >
-                        <Sparkle size={24} weight="duotone" />
-                        <span className="std-mono text-[9px] uppercase font-bold tracking-widest">Nudge</span>
-                      </button>
                     </div>
 
                     {/* Stats */}
