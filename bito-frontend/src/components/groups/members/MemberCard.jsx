@@ -33,10 +33,15 @@ const MemberCard = ({ member, groupId, isYou, onEncourage, onViewDashboard }) =>
 
   return (
     <div 
-      className={`flex items-center gap-3 p-4 grp-card grp-card-hover group/card ${!isYou ? 'cursor-pointer' : ''}`}
+      className={`relative flex items-center gap-3 p-4 grp-card grp-card-hover group/card ${!isYou ? 'cursor-pointer' : ''}`}
       onClick={() => !isYou && onViewDashboard?.(memberId)}
-      title={!isYou ? "Click to view member dashboard" : ""}
     >
+      {/* Custom Tooltip */}
+      {!isYou && onViewDashboard && (
+        <div className="absolute -top-6 left-1/2 -translate-x-1/2 px-2 py-1 bg-[var(--ink)] text-[var(--surface)] text-[9px] rounded opacity-0 group-hover/card:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 std-mono tracking-wider font-bold uppercase shadow-sm">
+          Click to view dashboard
+        </div>
+      )}
       {/* Avatar + presence dot */}
       <div className="relative flex-shrink-0">
         {info.avatar ? (
