@@ -157,7 +157,7 @@ const MemberDashboardModal = ({ groupId, memberId, isOpen, onClose, onEncourage 
                   </button>
                 </div>
 
-                <div className="flex-1 flex flex-col overflow-hidden relative">
+                <div className="flex-1 flex flex-col overflow-hidden min-h-0 relative">
                   <SkeletonTransition isLoading={loading} skeleton={skeletonContent}>
                     {error ? (
                       <div className="flex flex-col items-center justify-center p-6 py-12 text-center">
@@ -167,7 +167,7 @@ const MemberDashboardModal = ({ groupId, memberId, isOpen, onClose, onEncourage 
                         <button onClick={fetchData} className="std-btn std-btn--signal">Retry</button>
                       </div>
                     ) : member ? (
-                      <div className="flex flex-col h-full">
+                      <div className="flex flex-col h-full min-h-0">
                         <div className="flex-shrink-0 p-6 pb-4 space-y-6">
                           {/* Header: Avatar, Name, Nudge */}
                         <div className="flex items-start justify-between">
@@ -208,7 +208,7 @@ const MemberDashboardModal = ({ groupId, memberId, isOpen, onClose, onEncourage 
                         </div>
 
                         {/* Daystrip (WeekStripStd in readOnly mode) */}
-                        <div className="flex-1 overflow-y-auto p-6 pt-2 scrollbar-hide">
+                        <div className="flex-1 overflow-y-auto min-h-0 p-6 pt-2 pb-10 scrollbar-hide">
                           <WeekStripStd 
                             habits={habits}
                             entries={entries}
