@@ -73,6 +73,10 @@ const validateUserUpdate = [
     .optional()
     .isIn(['none', 'reactive', 'breathe', 'drift', 'aurora'])
     .withMessage('Grid animation must be none, reactive, breathe, drift, or aurora'),
+  body('preferences.gridBoldness')
+    .optional()
+    .isIn(['low', 'medium', 'high'])
+    .withMessage('Grid boldness must be low, medium, or high'),
   body('preferences.accentMode')
     .optional()
     .isIn(['complement', 'native'])

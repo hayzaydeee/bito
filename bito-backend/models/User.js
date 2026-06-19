@@ -165,6 +165,11 @@ const userSchema = new mongoose.Schema({  // Basic user information
       enum: ['none', 'reactive', 'breathe', 'drift', 'aurora'],
       default: 'none'
     },
+    gridBoldness: {
+      type: String,
+      enum: ['low', 'medium', 'high'],
+      default: 'low'
+    },
     accentMode: {
       type: String,
       enum: ['complement', 'native'],

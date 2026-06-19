@@ -35,6 +35,7 @@ import DesignSystemSwitcher from "../components/ui/DesignSystemSwitcher";
 import LivelyThemePicker from "../components/ui/LivelyThemePicker";
 import GridStylePicker from "../components/ui/GridStylePicker";
 import GridAnimationPicker from "../components/ui/GridAnimationPicker";
+import GridBoldnessSlider from "../components/ui/GridBoldnessSlider";
 import SkeletonTransition from "../components/ui/SkeletonTransition";
 import AnimatedList from "../components/ui/AnimatedList";
 import ProfileEditModal from "../components/ui/ProfileEditModal";
@@ -857,14 +858,20 @@ const SettingsPage = ({ section }) => {
                   <Toggle checked={standardGrid} onChange={(v) => changeStandardGrid(v)} />
                 </div>
                 {standardGrid && (
-                  <div className="mt-4 flex flex-col md:flex-row md:justify-center gap-5 md:gap-12">
-                    <div className="flex-1 md:flex-none">
-                      <p className="std-kicker text-[9px] text-[var(--ink-3)] mb-2 text-center">Grid style</p>
-                      <GridStylePicker />
+                  <div className="mt-4 flex flex-col items-center gap-6">
+                    <div className="flex flex-col md:flex-row md:justify-center gap-5 md:gap-12 w-full">
+                      <div className="flex-1 md:flex-none">
+                        <p className="std-kicker text-[9px] text-[var(--ink-3)] mb-2 text-center">Grid style</p>
+                        <GridStylePicker />
+                      </div>
+                      <div className="flex-1 md:flex-none">
+                        <p className="std-kicker text-[9px] text-[var(--ink-3)] mb-2 text-center">Hover & Animation</p>
+                        <GridAnimationPicker />
+                      </div>
                     </div>
-                    <div className="flex-1 md:flex-none">
-                      <p className="std-kicker text-[9px] text-[var(--ink-3)] mb-2 text-center">Hover & Animation</p>
-                      <GridAnimationPicker />
+                    <div className="w-full max-w-[200px]">
+                      <p className="std-kicker text-[9px] text-[var(--ink-3)] mb-3 text-center">Boldness</p>
+                      <GridBoldnessSlider />
                     </div>
                   </div>
                 )}

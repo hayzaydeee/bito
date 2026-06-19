@@ -28,6 +28,8 @@ export const ThemeProvider = ({ children }) => {
   const [gridStyle, setGridStyle] = useState('crosshatch');
   // Animated grid style
   const [gridAnimation, setGridAnimation] = useState('none');
+  // Grid boldness (opacity/line weight)
+  const [gridBoldness, setGridBoldness] = useState('low');
   // Accent mode: complement (default, shows craft) or native
   const [accentMode, setAccentMode] = useState('complement');
   const [systemTheme, setSystemTheme] = useState('dark');
@@ -73,6 +75,7 @@ export const ThemeProvider = ({ children }) => {
     setLivelyHue(typeof user?.preferences?.livelyHue === 'number' ? user.preferences.livelyHue : 220);
     setGridStyle(user?.preferences?.gridStyle || 'crosshatch');
     setGridAnimation(user?.preferences?.gridAnimation || 'none');
+    setGridBoldness(user?.preferences?.gridBoldness || 'low');
     setAccentMode(user?.preferences?.accentMode || 'complement');
     setIsLoading(false);
   }, [user, authLoading]);
@@ -139,6 +142,11 @@ export const ThemeProvider = ({ children }) => {
   useEffect(() => {
     document.documentElement.setAttribute('data-grid-anim', gridAnimation);
   }, [gridAnimation]);
+
+  // Apply grid boldness attribute
+  useEffect(() => {
+    document.documentElement.setAttribute('data-grid-boldness', gridBoldness);
+  }, [gridBoldness]);
 
   // Reactive grid mouse tracking
   useEffect(() => {
@@ -303,6 +311,24 @@ export const ThemeProvider = ({ children }) => {
     }
   };
 
+  const changeGridBoldness = async (boldness) => {
+    setGridBoldness(boldness);
+
+    if (user) {
+      try {
+        await userAPI.updateProfile({
+          preferences: { ...user.preferences, gridBoldness: boldness }
+        });
+        if (updateUser) {
+          updateUser({ preferences: { ...user.preferences, gridBoldness: boldness } });
+        }
+      } catch (error) {
+        console.error('Failed to save grid boldness:', error);
+        setGridBoldness(user.preferences?.gridBoldness || 'low');
+      }
+    }
+  };
+
   const changeAccentMode = async (mode) => {
     setAccentMode(mode);
 
@@ -387,6 +413,15 @@ export const ThemeProvider = ({ children }) => {
       { value: 'breathe',  label: 'Breathe' },
       { value: 'drift',    label: 'Drift' },
       { value: 'aurora',   label: 'Aurora' },
+    ],
+
+    // Grid boldness
+    gridBoldness,
+    changeGridBoldness,
+    gridBoldnessOptions: [
+      { value: 'low',    label: 'Low' },
+      { value: 'medium', label: 'Medium' },
+      { value: 'high',   label: 'High' },
     ],
 
     // Theme options for UI

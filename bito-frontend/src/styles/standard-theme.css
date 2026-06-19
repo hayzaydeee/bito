@@ -636,14 +636,28 @@ html:not([data-ds="standard"]) .std {
 [data-ds="standard"] .grp-surface {
   background: transparent;
 }
+
+/* ── Grid Boldness Mapping ──────── */
+[data-ds="standard"][data-grid-boldness="low"] {
+  --active-grid-color: var(--line);
+  --active-dot-color: var(--line-2);
+}
+[data-ds="standard"][data-grid-boldness="medium"] {
+  --active-grid-color: var(--line-2);
+  --active-dot-color: var(--line-3);
+}
+[data-ds="standard"][data-grid-boldness="high"] {
+  --active-grid-color: var(--line-3);
+  --active-dot-color: var(--ink-3);
+}
 [data-ds="standard"] .std-surface::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
   background-image:
-    linear-gradient(var(--line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    linear-gradient(var(--active-grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--active-grid-color) 1px, transparent 1px);
   background-size: 58px 58px;
   -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0.15) 80%, transparent 100%);
           mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0.15) 80%, transparent 100%);
@@ -672,7 +686,7 @@ html:not([data-ds="standard"]) .std {
 /* Dot matrix — soft editorial dots */
 [data-grid-style="dot"] .std-surface::before {
   background-image:
-    radial-gradient(circle, var(--line-2) 1px, transparent 1px);
+    radial-gradient(circle, var(--active-dot-color) 1px, transparent 1px);
   background-size: 28px 28px;
 }
 
@@ -683,8 +697,8 @@ html:not([data-ds="standard"]) .std {
       45deg,
       transparent,
       transparent 27px,
-      var(--line) 27px,
-      var(--line) 28px
+      var(--active-grid-color) 27px,
+      var(--active-grid-color) 28px
     );
   background-size: 40px 40px;
 }
@@ -696,15 +710,15 @@ html:not([data-ds="standard"]) .std {
       45deg,
       transparent,
       transparent 27px,
-      var(--line) 27px,
-      var(--line) 28px
+      var(--active-grid-color) 27px,
+      var(--active-grid-color) 28px
     ),
     repeating-linear-gradient(
       -45deg,
       transparent,
       transparent 27px,
-      var(--line) 27px,
-      var(--line) 28px
+      var(--active-grid-color) 27px,
+      var(--active-grid-color) 28px
     );
   background-size: 40px 40px;
 }
