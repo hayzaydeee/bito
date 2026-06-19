@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Fire, Sparkle } from "@phosphor-icons/react";
 
@@ -12,6 +13,7 @@ import { ArrowRight, Fire, Sparkle } from "@phosphor-icons/react";
  */
 const MemberCard = ({ member, groupId, isYou, onEncourage, onViewDashboard }) => {
   const navigate = useNavigate();
+  const [isHovered, setIsHovered] = useState(false);
   const info = member.userId || member.user || member;
   const name = info.name || info.email || "Unknown";
   const username = info.username ? `@${info.username}` : null;
@@ -33,15 +35,18 @@ const MemberCard = ({ member, groupId, isYou, onEncourage, onViewDashboard }) =>
 
   return (
     <div 
-      className={`relative flex items-center gap-3 p-4 grp-card grp-card-hover group hover:z-50 ${!isYou ? 'cursor-pointer' : ''}`}
+      className={`relative flex items-center gap-3 p-4 grp-card grp-card-hover transition-all duration-200 ${!isYou ? 'cursor-pointer hover:z-50' : ''}`}
       onClick={() => !isYou && onViewDashboard?.(memberId)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Custom Tooltip */}
-      {!isYou && onViewDashboard && (
-        <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1.5 bg-[var(--ink)] text-[var(--surface)] text-[10px] rounded-[6px] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-[100] std-mono tracking-wider font-bold uppercase shadow-md">
+      {/* Tooltip via React state (more reliable than group-hover) */}
+      {!isYou && onViewDashboard && isHovered && (
+        <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1.5 bg-[var(--ink)] text-[var(--surface)] text-[10px] rounded-[6px] pointer-events-none whitespace-nowrap z-[100] std-mono tracking-wider font-bold uppercase shadow-md animate-in fade-in zoom-in-95 duration-100">
           Click to view member's dashboard
         </div>
       )}
+      
       {/* Avatar + presence dot */}
       <div className="relative flex-shrink-0">
         {info.avatar ? (
