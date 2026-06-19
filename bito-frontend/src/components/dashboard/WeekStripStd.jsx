@@ -17,7 +17,7 @@ import HabitIcon from "../shared/HabitIcon";
    ════════════════════════════════════════════ */
 
 /* ─── Inline habit row for the expanded day panel ─── */
-const DayHabitRow = memo(({ habit, isCompleted, onToggle, onEdit, dateStr, readOnly }) => {
+const DayHabitRow = memo(({ habit, isCompleted, onToggle, onEdit, dateStr, readOnly, weekProgress }) => {
   const [animating, setAnimating] = useState(false);
 
   const handleToggle = useCallback(() => {
@@ -58,9 +58,11 @@ const DayHabitRow = memo(({ habit, isCompleted, onToggle, onEdit, dateStr, readO
         >
           {habit.name}
         </span>
-        <span className="std-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded border border-[var(--line-2)] text-[var(--ink-3)] flex-shrink-0 bg-[var(--surface-2)] mt-0.5">
-          {habitUtils.isWeeklyHabit(habit) ? 'Weekly' : 'Daily'}
-        </span>
+        {weekProgress && (
+          <span className="std-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded border border-[var(--line-2)] text-[var(--ink-3)] flex-shrink-0 bg-[var(--surface-2)] mt-0.5">
+            {weekProgress.completed}/{weekProgress.target} done
+          </span>
+        )}
       </div>
 
       {!readOnly && onEdit && (
@@ -442,8 +444,23 @@ const WeekStrip = memo(({ habits, entries, onToggle, onEdit, fetchHabitEntries, 
           {expandedDay.scheduled.map((habit) => {
             const entry = entries[habit._id]?.[expandedDay.date];
             const isCompleted = !!(entry && entry.completed);
+            
+            let weekProgress = null;
+            if (habitUtils.isWeeklyHabit(habit)) {
+               weekProgress = habitUtils.getWeeklyProgress(habit, entries, expandedDay.dateObj);
+            }
+
             return (
-              <DayHabitRow key={habit._id} habit={habit} isCompleted={isCompleted} onToggle={onToggle} onEdit={onEdit} dateStr={expandedDay.date} readOnly={readOnly} />
+              <DayHabitRow 
+                key={habit._id} 
+                habit={habit} 
+                isCompleted={isCompleted} 
+                onToggle={onToggle} 
+                onEdit={onEdit} 
+                dateStr={expandedDay.date} 
+                readOnly={readOnly} 
+                weekProgress={weekProgress}
+              />
             );
           })}
         </div>
