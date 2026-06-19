@@ -198,7 +198,7 @@ const validateEncouragement = [
     .isMongoId()
     .withMessage('Group ID must be a valid MongoDB ObjectId'),
   body('habitId')
-    .optional()
+    .optional({ nullable: true, checkFalsy: true })
     .isMongoId()
     .withMessage('Habit ID must be a valid MongoDB ObjectId'),
   body('type')

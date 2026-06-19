@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Fire } from "@phosphor-icons/react";
+import { ArrowRight, Fire, Sparkle } from "@phosphor-icons/react";
 
 /**
  * MemberCard
@@ -67,22 +67,30 @@ const MemberCard = ({ member, groupId, isYou, onEncourage }) => {
         </p>
       </div>
 
-      {/* Role badge */}
-      {roleLabel && (
-        <span className="grp-tag flex-shrink-0" style={{ color: roleColor, borderColor: "var(--line-2)" }}>
-          {roleLabel}
-        </span>
-      )}
+      {/* Badges / Actions */}
+      <div className="flex items-center gap-2 flex-shrink-0">
+        {/* Role badge */}
+        {roleLabel && (
+          <span className="grp-tag" style={{ color: roleColor, borderColor: "var(--line-2)" }}>
+            {roleLabel}
+          </span>
+        )}
+
+        {/* Always visible encourage button */}
+        {!isYou && (
+          <button
+            onClick={onEncourage}
+            title={`Send encouragement`}
+            className="w-6 h-6 flex items-center justify-center rounded-[6px] border border-[var(--line-2)] text-[var(--ink-3)] hover:border-[var(--signal)] hover:text-[var(--signal)] transition-colors bg-[var(--surface)] hover:bg-[var(--surface-2)]"
+          >
+            <Sparkle size={12} weight="bold" />
+          </button>
+        )}
+      </div>
 
       {/* Actions (shown on hover, hidden for self) */}
       {!isYou && (
-        <div className="flex items-center gap-2 opacity-0 group-hover/card:opacity-100 transition-opacity flex-shrink-0">
-          <button
-            onClick={onEncourage}
-            className="grp-mono text-[10px] font-bold uppercase tracking-wider text-[var(--ink-3)] hover:text-[var(--signal)] transition-colors"
-          >
-            Encourage
-          </button>
+        <div className="flex items-center opacity-0 group-hover/card:opacity-100 transition-opacity flex-shrink-0">
           <button
             onClick={() => navigate(`/app/groups/${groupId}/members/${memberId}/dashboard`)}
             className="w-7 h-7 flex items-center justify-center rounded-[7px] border border-[var(--line-2)] text-[var(--ink-3)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)] transition-colors"

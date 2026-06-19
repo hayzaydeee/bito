@@ -63,13 +63,17 @@ const EncouragementModal = ({
 
     try {
       const encouragementData = {
-        toUserId: targetUser._id,
+        toUserId: targetUser._id || targetUser.id, // Handle populated vs string IDs
         groupId,
-        habitId,
         type,
         message: message.trim(),
         reaction
       };
+      
+      // Only attach habitId if it exists to avoid validation errors
+      if (habitId) {
+        encouragementData.habitId = habitId;
+      }
 
       await encouragementAPI.sendEncouragement(encouragementData);
       
@@ -94,141 +98,150 @@ const EncouragementModal = ({
 
   return (
     <AnimatedModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-md">
-      <div className="grp bg-[var(--surface)] rounded-[16px] border border-[var(--line-2)] w-full max-h-[90vh] overflow-y-auto">
+      <div className="grp bg-[var(--surface)] rounded-[16px] border border-[var(--line-2)] w-full max-h-[85vh] flex flex-col shadow-xl overflow-hidden">
         {/* Header */}
-        <div className="p-6 border-b border-[var(--line-2)]">
+        <div className="p-5 sm:p-6 border-b border-[var(--line-2)] flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-[10px] bg-[var(--rose)]/15 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-[10px] bg-[var(--rose)]/10 border border-[var(--rose)]/20 flex items-center justify-center">
                 <HeartIcon className="w-5 h-5 text-[var(--rose)]" />
               </div>
               <div>
-                <h2 className="grp-display text-xl font-bold text-[var(--ink)]">
+                <h2 className="std-display text-xl font-bold text-[var(--ink)]">
                   Send Encouragement
                 </h2>
-                <p className="grp-mono text-[10px] text-[var(--ink-3)] uppercase tracking-wider mt-0.5">
-                  To {targetUser.name}
+                <p className="std-kicker mt-0.5 text-[var(--ink-3)]">
+                  To {targetUser.name || targetUser.email || 'Group Member'}
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-[9px] hover:bg-[var(--surface-2)] flex items-center justify-center transition-colors text-[var(--ink-3)] hover:text-[var(--ink)]"
+              className="w-8 h-8 rounded-[9px] hover:bg-[var(--surface-2)] flex items-center justify-center transition-colors text-[var(--ink-3)] hover:text-[var(--ink)] border border-transparent hover:border-[var(--line-2)]"
             >
               <CrossCircledIcon className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Encouragement Type */}
-          <div>
-            <label className="grp-kicker block mb-3">Encouragement Type</label>
-            <div className="grid grid-cols-2 gap-2">
-              {encouragementTypes.map((typeOption) => (
-                <button
-                  key={typeOption.value}
-                  type="button"
-                  onClick={() => setType(typeOption.value)}
-                  className={`p-3 rounded-[10px] border text-sm font-medium transition-all ${
-                    type === typeOption.value
-                      ? 'border-[var(--signal)]/45 bg-[var(--signal)]/10 text-[var(--signal)]'
-                      : 'border-[var(--line-2)] hover:border-[var(--line-3)] text-[var(--ink-2)]'
-                  }`}
-                >
-                  <div className="text-lg mb-1">{typeOption.icon}</div>
-                  <div>{typeOption.label}</div>
-                </button>
-              ))}
+        {/* Form Scrollable Area */}
+        <div className="p-5 sm:p-6 overflow-y-auto flex-1 journal-v2-content-scroll">
+          <form id="encouragement-form" onSubmit={handleSubmit} className="space-y-6">
+            
+            {/* Encouragement Type */}
+            <div>
+              <label className="std-kicker block mb-2 text-[var(--ink-2)]">Type</label>
+              <div className="grid grid-cols-2 gap-2">
+                {encouragementTypes.map((typeOption) => {
+                  const isActive = type === typeOption.value;
+                  return (
+                    <button
+                      key={typeOption.value}
+                      type="button"
+                      onClick={() => setType(typeOption.value)}
+                      className={`flex items-center gap-2 p-2.5 rounded-[10px] border text-[13px] font-medium transition-all ${
+                        isActive
+                          ? 'border-[var(--signal)] bg-[var(--signal)]/5 text-[var(--signal)]'
+                          : 'border-[var(--line-2)] hover:border-[var(--line-3)] text-[var(--ink-2)] hover:bg-[var(--surface-2)]'
+                      }`}
+                    >
+                      <span className="text-base">{typeOption.icon}</span>
+                      <span className="truncate">{typeOption.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
 
-          {/* Reaction */}
-          <div>
-            <label className="grp-kicker block mb-3">Reaction</label>
-            <div className="flex gap-2 flex-wrap">
-              {reactionOptions.map((reactionOption) => (
-                <button
-                  key={reactionOption}
-                  type="button"
-                  onClick={() => setReaction(reactionOption)}
-                  className={`w-10 h-10 rounded-[9px] border text-lg transition-all ${
-                    reaction === reactionOption
-                      ? 'border-[var(--signal)]/45 bg-[var(--signal)]/10'
-                      : 'border-[var(--line-2)] hover:border-[var(--line-3)]'
-                  }`}
-                >
-                  {reactionOption}
-                </button>
-              ))}
+            {/* Reaction */}
+            <div>
+              <label className="std-kicker block mb-2 text-[var(--ink-2)]">Reaction</label>
+              <div className="flex gap-2 flex-wrap">
+                {reactionOptions.map((reactionOption) => {
+                  const isActive = reaction === reactionOption;
+                  return (
+                    <button
+                      key={reactionOption}
+                      type="button"
+                      onClick={() => setReaction(reactionOption)}
+                      className={`w-10 h-10 rounded-[10px] border text-lg flex items-center justify-center transition-all ${
+                        isActive
+                          ? 'border-[var(--signal)] bg-[var(--signal)]/5'
+                          : 'border-[var(--line-2)] hover:border-[var(--line-3)] hover:bg-[var(--surface-2)]'
+                      }`}
+                    >
+                      {reactionOption}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
 
-          {/* Quick Messages */}
-          <div>
-            <label className="grp-kicker block mb-3">Quick Messages</label>
-            <div className="space-y-2">
-              {quickMessages.map((quickMsg, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => handleQuickMessage(quickMsg)}
-                  className="w-full text-left p-3 rounded-[10px] border border-[var(--line-2)] hover:border-[var(--line-3)] text-sm text-[var(--ink-2)] transition-all hover:bg-[var(--surface-2)]"
-                >
-                  {quickMsg}
-                </button>
-              ))}
+            {/* Message Area */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="std-kicker text-[var(--ink-2)]">Message</label>
+                <span className="std-kicker text-[var(--ink-3)]">
+                  {message.length}/500
+                </span>
+              </div>
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Write an encouraging note..."
+                rows={3}
+                maxLength={500}
+                className="grp-input w-full resize-none !rounded-[12px] !py-3"
+                required
+              />
+              
+              {/* Quick Messages - styled as pills */}
+              <div className="mt-3 flex flex-wrap gap-2">
+                {quickMessages.map((quickMsg, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => handleQuickMessage(quickMsg)}
+                    className="px-2.5 py-1 rounded-full border border-[var(--line-2)] text-[11px] font-medium text-[var(--ink-3)] hover:text-[var(--ink)] hover:border-[var(--line-3)] hover:bg-[var(--surface-2)] transition-all whitespace-nowrap"
+                  >
+                    {quickMsg}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Message */}
-          <div>
-            <label className="grp-kicker block mb-3">Your Message</label>
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Write your encouragement message..."
-              rows={4}
-              maxLength={500}
-              className="w-full p-4 rounded-[11px] border border-[var(--line-2)] bg-[var(--bg-2)] text-[var(--ink)] placeholder:text-[var(--ink-3)] focus:border-[var(--signal)] focus:outline-none resize-none transition-colors"
-              required
-            />
-            <div className="flex justify-between items-center mt-2">
-              <p className="grp-mono text-[10px] text-[var(--ink-3)] uppercase tracking-wider">
-                {message.length}/500 characters
-              </p>
-            </div>
-          </div>
+            {/* Error state */}
+            {error && (
+              <div className="p-3 rounded-[10px] bg-[var(--rose)]/10 border border-[var(--rose)]/25">
+                <p className="std-kicker !text-[11px] text-[var(--rose)]">{error}</p>
+              </div>
+            )}
+          </form>
+        </div>
 
-          {/* Error */}
-          {error && (
-            <div className="p-3 rounded-[10px] bg-[var(--rose)]/10 border border-[var(--rose)]/25">
-              <p className="grp-mono text-[11px] text-[var(--rose)]">{error}</p>
-            </div>
-          )}
-
-          {/* Submit */}
+        {/* Footer Actions */}
+        <div className="p-5 sm:p-6 border-t border-[var(--line-2)] flex-shrink-0 bg-[var(--surface)]">
           <div className="flex gap-3">
-            <button type="button" onClick={onClose} className="grp-btn flex-1">
+            <button type="button" onClick={onClose} className="std-btn flex-1">
               Cancel
             </button>
             <button
               type="submit"
+              form="encouragement-form"
               disabled={!message.trim() || isSubmitting}
-              className="grp-btn grp-btn--signal flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="std-btn std-btn--signal flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  <PaperPlaneIcon className="w-4 h-4" />
-                  Send Encouragement
+                  <PaperPlaneIcon className="w-3.5 h-3.5" />
+                  Send Note
                 </>
               )}
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </AnimatedModal>
   );
