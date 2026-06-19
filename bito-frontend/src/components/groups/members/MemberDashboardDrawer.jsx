@@ -100,6 +100,16 @@ const MemberDashboardDrawer = ({ groupId, memberId, isOpen, onClose }) => {
     return habitUtils.normalizeDate(new Date());
   }, []);
 
+  const last7 = useMemo(() => {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      days.push(d.toISOString().split("T")[0]);
+    }
+    return days;
+  }, []);
+
   const habits = memberData?.habits || [];
   const entries = memberData?.entries || {};
   const member = memberData?.member || null;
@@ -264,49 +274,42 @@ const MemberDashboardDrawer = ({ groupId, memberId, isOpen, onClose }) => {
                         {dailyHabits.length > 0 && (
                           <div className="mb-6">
                             <div className="flex items-center justify-between mb-3">
-                               <h2 className="std-display text-lg font-bold text-[var(--ink)]">Today</h2>
+                               <h2 className="std-mono text-xs text-[var(--ink-3)] uppercase tracking-wider">Habit Ledger (7D)</h2>
                             </div>
-                            <div className="std-card overflow-hidden p-0">
-                              {dailyHabits.map((h) => {
-                                const isCompleted = !!(entries[h._id]?.[todayStr]?.completed);
-                                return (
-                                  <div
-                                    key={h._id}
-                                    className="flex items-center gap-3 px-4 py-3 border-b border-[var(--line)] last:border-b-0 transition-colors duration-200 hover:bg-[var(--surface-2)]"
-                                  >
-                                    <div
-                                      className="w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200"
-                                      style={{
-                                        borderColor: isCompleted ? "var(--signal)" : "var(--line-2)",
-                                        backgroundColor: isCompleted ? "var(--signal)" : "transparent",
-                                      }}
-                                    >
-                                      {isCompleted && (
-                                        <CheckIcon className="w-3.5 h-3.5 text-[var(--signal-ink)]" />
-                                      )}
-                                    </div>
-
-                                    <span className="flex-shrink-0"><HabitIcon icon={h.icon || "Star"} size={20} /></span>
-
-                                    <div className="flex-1 min-w-0">
-                                      <span
-                                        className="std-display text-[15px] font-semibold block truncate transition-colors duration-200"
-                                        style={{
-                                          color: isCompleted ? "var(--ink-3)" : "var(--ink)",
-                                          textDecoration: isCompleted ? "line-through" : "none",
-                                        }}
-                                      >
-                                        {h.name}
-                                      </span>
-                                      {h.target && h.target.value > 1 && (
-                                        <span className="std-mono text-[10px] text-[var(--ink-3)]">
-                                          {h.target.value} {h.target.unit}
-                                        </span>
-                                      )}
-                                    </div>
+                            <div className="space-y-1">
+                              {dailyHabits.map((h) => (
+                                <div
+                                  key={h._id}
+                                  className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-[var(--surface-2)] transition-colors group/row"
+                                >
+                                  <div className="w-6 flex justify-center text-[var(--ink-3)]">
+                                     <HabitIcon icon={h.icon || "Star"} size={16} />
                                   </div>
-                                );
-                              })}
+
+                                  <div className="flex-1 min-w-0">
+                                     <p className="text-sm font-medium text-[var(--ink)] truncate">{h.name}</p>
+                                  </div>
+
+                                  {/* Punchcard visualization */}
+                                  <div className="flex items-center gap-1">
+                                    {last7.map((day) => {
+                                      const done = !!(entries[h._id] || {})[day]?.completed;
+                                      return (
+                                        <div
+                                          key={day}
+                                          className="w-4 h-6 rounded-[3px] transition-colors border"
+                                          style={{ 
+                                              backgroundColor: done ? 'var(--signal)' : 'var(--surface)',
+                                              borderColor: done ? 'var(--signal)' : 'var(--line)',
+                                              opacity: done ? 1 : 0.5
+                                          }}
+                                          title={`${day}: ${done ? "Complete" : "Missed"}`}
+                                        />
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           </div>
                         )}
