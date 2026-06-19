@@ -71,8 +71,8 @@ const HabitStreakChart = ({
   const { chartData, topHabits, peakStreak } = useMemo(() => {
     if (!habits.length) return { chartData: [], topHabits: [], peakStreak: 0 };
 
-    const dailyHabits = habits.filter(h => h.frequency !== 'weekly');
-    const weeklyHabits = habits.filter(h => h.frequency === 'weekly');
+    const dailyHabits = habits.filter(h => h.frequency !== 'weekly' && h.isActive !== false && !h.isArchived);
+    const weeklyHabits = habits.filter(h => h.frequency === 'weekly' && h.isActive !== false && !h.isArchived);
 
     // Determine date range
     let startDate, endDate;
@@ -90,7 +90,11 @@ const HabitStreakChart = ({
     const dailyRanked = dailyHabits.map(habit => {
       const he = entries[habit._id] || {};
       let total = 0;
-      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      const startBasis = habit.activatedAt ? new Date(habit.activatedAt) : (habit.createdAt ? new Date(habit.createdAt) : startDate);
+      const effectiveStart = new Date(Math.max(startDate.getTime(), startBasis.getTime()));
+      effectiveStart.setHours(0, 0, 0, 0);
+
+      for (let d = new Date(effectiveStart); d <= endDate; d.setDate(d.getDate() + 1)) {
         if (he[fmtDate(d)]?.completed) total++;
       }
       return { habit, total, color: habit.color || null, isWeekly: false };
@@ -101,8 +105,13 @@ const HabitStreakChart = ({
       const he = entries[habit._id] || {};
       const target = habit.weeklyTarget || 1;
       let weeksMet = 0;
-      const firstMon = getMonday(startDate);
+      const startBasis = habit.activatedAt ? new Date(habit.activatedAt) : (habit.createdAt ? new Date(habit.createdAt) : startDate);
+      const effectiveWeekStart = new Date(Math.max(startDate.getTime(), startBasis.getTime()));
+      effectiveWeekStart.setHours(0, 0, 0, 0);
+      const firstMon = getMonday(effectiveWeekStart);
+
       for (let w = new Date(firstMon); w <= endDate; w.setDate(w.getDate() + 7)) {
+        if (w < startDate) continue;
         if (countWeekCompletions(he, w) >= target) weeksMet++;
       }
       return { habit, total: weeksMet, color: habit.color || null, isWeekly: true };

@@ -1,4 +1,4 @@
-﻿import React, { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -38,9 +38,14 @@ const CompletionAreaChart = ({ habits, entries, timeRange, accountAgeDays = 365,
       let possible = 0;
 
       dailyHabits.forEach(habit => {
-        // Skip days before this habit was created
-        const habitCreatedAt = habit.createdAt ? new Date(habit.createdAt) : d;
-        if (d < habitCreatedAt) return;
+        if (habit.isActive === false || habit.isArchived) return;
+
+        // Skip days before this habit was created or activated
+        const startBasis = habit.activatedAt ? new Date(habit.activatedAt) : (habit.createdAt ? new Date(habit.createdAt) : d);
+        const effectiveStart = new Date(startBasis);
+        effectiveStart.setHours(0, 0, 0, 0);
+
+        if (d < effectiveStart) return;
         if (habit.schedule?.days?.length) {
           if (!habit.schedule.days.includes(new Date(d).getDay())) return;
         }

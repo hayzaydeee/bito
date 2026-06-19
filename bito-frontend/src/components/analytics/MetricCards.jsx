@@ -1,4 +1,4 @@
-﻿import React, { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { ClipboardText, CheckCircle, Fire, Target } from '@phosphor-icons/react';
 
 /* -----------------------------------------------------------------
@@ -29,13 +29,17 @@ const MetricCards = ({ habits, entries, timeRange, accountAgeDays = 365 }) => {
 
     // ── Daily habits: per-day counting ──
     dailyHabits.forEach(habit => {
+      if (habit.isActive === false || habit.isArchived) return;
+
       const hEntries = entries[habit._id] || {};
       let streak = 0;
 
       // Clamp start to habit creation date so new habits aren't penalized
-      const habitCreatedAt = habit.createdAt ? new Date(habit.createdAt) : startDate;
-      const effectiveStart = new Date(Math.max(startDate.getTime(), habitCreatedAt.getTime()));
-      const effectivePrevStart = new Date(Math.max(prevStart.getTime(), habitCreatedAt.getTime()));
+      const startBasis = habit.activatedAt ? new Date(habit.activatedAt) : (habit.createdAt ? new Date(habit.createdAt) : startDate);
+      const effectiveStart = new Date(Math.max(startDate.getTime(), startBasis.getTime()));
+      effectiveStart.setHours(0, 0, 0, 0);
+      const effectivePrevStart = new Date(Math.max(prevStart.getTime(), startBasis.getTime()));
+      effectivePrevStart.setHours(0, 0, 0, 0);
 
       for (let d = new Date(effectiveStart); d <= endDate; d.setDate(d.getDate() + 1)) {
         const dateStr = fmtDate(d);
@@ -60,13 +64,16 @@ const MetricCards = ({ habits, entries, timeRange, accountAgeDays = 365 }) => {
     let bestWeeklyStreak = 0;
 
     weeklyHabits.forEach(habit => {
+      if (habit.isActive === false || habit.isArchived) return;
+
       const hEntries = entries[habit._id] || {};
       const target = habit.weeklyTarget || 3;
       let weekStreak = 0;
 
       // Walk through weeks in the time range, clamped to habit creation date
-      const habitCreatedAt = habit.createdAt ? new Date(habit.createdAt) : startDate;
-      const effectiveWeekStart = new Date(Math.max(startDate.getTime(), habitCreatedAt.getTime()));
+      const startBasis = habit.activatedAt ? new Date(habit.activatedAt) : (habit.createdAt ? new Date(habit.createdAt) : startDate);
+      const effectiveWeekStart = new Date(Math.max(startDate.getTime(), startBasis.getTime()));
+      effectiveWeekStart.setHours(0, 0, 0, 0);
       const ws = getMonday(new Date(effectiveWeekStart));
       for (let w = new Date(ws); w <= endDate; w.setDate(w.getDate() + 7)) {
         const weekEnd = new Date(w);

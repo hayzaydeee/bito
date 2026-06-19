@@ -1,4 +1,4 @@
-﻿import React, { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Trophy } from '@phosphor-icons/react';
 import HabitIcon from '../shared/HabitIcon';
 
@@ -18,15 +18,17 @@ const TopHabitsList = ({ habits, entries, timeRange, accountAgeDays = 365, strip
     startDate.setDate(startDate.getDate() - days);
 
     return habits
+      .filter(habit => habit.isActive !== false && !habit.isArchived)
       .map(habit => {
         const hEntries = entries[habit._id] || {};
         let completions = 0;
         let possible = 0;
         const isWeekly = habit.frequency === 'weekly';
 
-        // Clamp start to habit creation date so new habits aren't penalized
-        const habitCreatedAt = habit.createdAt ? new Date(habit.createdAt) : startDate;
-        const effectiveStart = new Date(Math.max(startDate.getTime(), habitCreatedAt.getTime()));
+        // Clamp start to habit creation/activation date so new habits aren't penalized
+        const startBasis = habit.activatedAt ? new Date(habit.activatedAt) : (habit.createdAt ? new Date(habit.createdAt) : startDate);
+        const effectiveStart = new Date(Math.max(startDate.getTime(), startBasis.getTime()));
+        effectiveStart.setHours(0, 0, 0, 0);
 
         // Sparkline: last 14 days (binary dots)
         const sparkDays = Math.min(14, days);

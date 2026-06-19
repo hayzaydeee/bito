@@ -38,10 +38,13 @@ const MetricCardsStd = ({ habits, entries, timeRange, accountAgeDays = 365 }) =>
     let completions = 0, possible = 0, bestStreak = 0;
 
     dailyHabits.forEach(habit => {
+      if (habit.isActive === false || habit.isArchived) return;
+
       const hEntries = entries[habit._id] || {};
       let streak = 0;
-      const habitCreatedAt = habit.createdAt ? new Date(habit.createdAt) : startDate;
-      const effectiveStart = new Date(Math.max(startDate.getTime(), habitCreatedAt.getTime()));
+      const startBasis = habit.activatedAt ? new Date(habit.activatedAt) : (habit.createdAt ? new Date(habit.createdAt) : startDate);
+      const effectiveStart = new Date(Math.max(startDate.getTime(), startBasis.getTime()));
+      effectiveStart.setHours(0, 0, 0, 0);
 
       for (let d = new Date(effectiveStart); d <= endDate; d.setDate(d.getDate() + 1)) {
         const dateStr = fmtDate(d);
@@ -55,10 +58,13 @@ const MetricCardsStd = ({ habits, entries, timeRange, accountAgeDays = 365 }) =>
 
     let weeklyMet = 0, weeklyPossible = 0;
     weeklyHabits.forEach(habit => {
+      if (habit.isActive === false || habit.isArchived) return;
+
       const hEntries = entries[habit._id] || {};
       const target = habit.weeklyTarget || 3;
-      const habitCreatedAt = habit.createdAt ? new Date(habit.createdAt) : startDate;
-      const effectiveWeekStart = new Date(Math.max(startDate.getTime(), habitCreatedAt.getTime()));
+      const startBasis = habit.activatedAt ? new Date(habit.activatedAt) : (habit.createdAt ? new Date(habit.createdAt) : startDate);
+      const effectiveWeekStart = new Date(Math.max(startDate.getTime(), startBasis.getTime()));
+      effectiveWeekStart.setHours(0, 0, 0, 0);
       const ws = getMonday(new Date(effectiveWeekStart));
       for (let w = new Date(ws); w <= endDate; w.setDate(w.getDate() + 7)) {
         const weekEnd = new Date(w);
