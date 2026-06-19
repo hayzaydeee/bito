@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import MemberCard from "./MemberCard";
 import InvitePanel from "./InvitePanel";
+import MemberDashboardDrawer from "./MemberDashboardDrawer";
 import { groupsAPI } from "../../../services/api";
 
 /**
@@ -27,6 +28,7 @@ const MembersTab = ({
 }) => {
   const [members, setMembers] = useState(initialMembers);
   const [search, setSearch] = useState("");
+  const [selectedMemberId, setSelectedMemberId] = useState(null);
 
   /* ── presence polling ───────────────────────────── */
   const refreshMembers = useCallback(async () => {
@@ -101,6 +103,7 @@ const MembersTab = ({
                 groupId={groupId}
                 isYou={isYou}
                 onEncourage={() => onEncourage?.(info)}
+                onViewDashboard={(id) => setSelectedMemberId(id)}
               />
             );
           })}
@@ -129,6 +132,14 @@ const MembersTab = ({
           </div>
         )}
       </aside>
+
+      {/* Member Dashboard Drawer */}
+      <MemberDashboardDrawer
+        isOpen={!!selectedMemberId}
+        onClose={() => setSelectedMemberId(null)}
+        groupId={groupId}
+        memberId={selectedMemberId}
+      />
     </div>
   );
 };

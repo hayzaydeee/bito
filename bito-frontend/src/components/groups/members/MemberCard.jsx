@@ -8,9 +8,9 @@ import { ArrowRight, Fire, Sparkle } from "@phosphor-icons/react";
  *   member        — member object (with userId populated)
  *   groupId       — string
  *   isYou         — boolean
- *   onEncourage   — () => void
+ *   onViewDashboard — (memberId) => void
  */
-const MemberCard = ({ member, groupId, isYou, onEncourage }) => {
+const MemberCard = ({ member, groupId, isYou, onEncourage, onViewDashboard }) => {
   const navigate = useNavigate();
   const info = member.userId || member.user || member;
   const name = info.name || info.email || "Unknown";
@@ -32,7 +32,10 @@ const MemberCard = ({ member, groupId, isYou, onEncourage }) => {
   const roleLabel = role ? role.charAt(0).toUpperCase() + role.slice(1) : "";
 
   return (
-    <div className="flex items-center gap-3 p-4 grp-card grp-card-hover group/card">
+    <div 
+      className={`flex items-center gap-3 p-4 grp-card grp-card-hover group/card ${!isYou ? 'cursor-pointer' : ''}`}
+      onClick={() => !isYou && onViewDashboard?.(memberId)}
+    >
       {/* Avatar + presence dot */}
       <div className="relative flex-shrink-0">
         {info.avatar ? (
@@ -89,10 +92,13 @@ const MemberCard = ({ member, groupId, isYou, onEncourage }) => {
       </div>
 
       {/* Actions (shown on hover, hidden for self) */}
-      {!isYou && (
+      {!isYou && onViewDashboard && (
         <div className="flex items-center opacity-0 group-hover/card:opacity-100 transition-opacity flex-shrink-0">
           <button
-            onClick={() => navigate(`/app/groups/${groupId}/members/${memberId}/dashboard`)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewDashboard(memberId);
+            }}
             className="w-7 h-7 flex items-center justify-center rounded-[7px] border border-[var(--line-2)] text-[var(--ink-3)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)] transition-colors"
           >
             <ArrowRight size={12} weight="bold" />
