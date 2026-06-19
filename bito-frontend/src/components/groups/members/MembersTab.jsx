@@ -78,7 +78,7 @@ const MembersTab = ({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search members"
-            className="grp-input pl-10"
+            className="grp-input !pl-10"
           />
         </div>
 
