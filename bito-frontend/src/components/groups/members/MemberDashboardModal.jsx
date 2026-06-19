@@ -157,18 +157,19 @@ const MemberDashboardModal = ({ groupId, memberId, isOpen, onClose, onEncourage 
                   </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto scrollbar-hide relative p-6">
+                <div className="flex-1 flex flex-col overflow-hidden relative">
                   <SkeletonTransition isLoading={loading} skeleton={skeletonContent}>
                     {error ? (
-                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="flex flex-col items-center justify-center p-6 py-12 text-center">
                         <Warning size={40} weight="duotone" className="mb-4 text-[var(--ember)]" />
                         <p className="std-display text-lg text-[var(--ink)] mb-2">Could not load dashboard</p>
                         <p className="std-mono text-xs text-[var(--ink-3)] mb-6">{error}</p>
                         <button onClick={fetchData} className="std-btn std-btn--signal">Retry</button>
                       </div>
                     ) : member ? (
-                      <div className="space-y-6">
-                        {/* Header: Avatar, Name, Nudge */}
+                      <div className="flex flex-col h-full">
+                        <div className="flex-shrink-0 p-6 pb-4 space-y-6">
+                          {/* Header: Avatar, Name, Nudge */}
                         <div className="flex items-start justify-between">
                           <div className="flex items-center gap-4">
                             {member.avatar ? (
@@ -204,14 +205,18 @@ const MemberDashboardModal = ({ groupId, memberId, isOpen, onClose, onEncourage 
                           variant="daybook" 
                         />
 
+                        </div>
+
                         {/* Daystrip (WeekStripStd in readOnly mode) */}
-                        <WeekStripStd 
-                          habits={habits}
-                          entries={entries}
-                          readOnly={true}
-                          defaultExpandedDate={todayStr}
-                          variant="daybook"
-                        />
+                        <div className="flex-1 overflow-y-auto p-6 pt-2 scrollbar-hide">
+                          <WeekStripStd 
+                            habits={habits}
+                            entries={entries}
+                            readOnly={true}
+                            defaultExpandedDate={todayStr}
+                            variant="daybook"
+                          />
+                        </div>
                       </div>
                     ) : null}
                   </SkeletonTransition>
