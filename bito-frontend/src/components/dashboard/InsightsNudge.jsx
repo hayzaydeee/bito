@@ -205,7 +205,7 @@ const InsightsNudge = memo(({ habits, entries }) => {
     if (activeSlide < recentEncouragements.length) {
       const enc = recentEncouragements[activeSlide];
       return (
-        <div className="animate-in fade-in slide-in-from-right-4 duration-500 relative z-10">
+        <div key={`enc-${activeSlide}`} className="animate-float-in relative z-10">
           <div className="flex items-center gap-2 mb-2">
             <span className="w-5 h-5 rounded-full bg-pink-500/10 text-pink-500 flex items-center justify-center">
               <ReactionIcon reaction={enc.reaction} />
@@ -227,7 +227,7 @@ const InsightsNudge = memo(({ habits, entries }) => {
     }
 
     return (
-      <div className="animate-in fade-in slide-in-from-right-4 duration-500 relative z-10">
+      <div key={`insight-${activeSlide}`} className="animate-float-in relative z-10">
         <p
           className="text-sm font-spartan leading-relaxed"
           style={{ color: "var(--color-text-secondary)" }}

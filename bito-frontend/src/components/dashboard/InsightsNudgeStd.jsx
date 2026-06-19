@@ -190,7 +190,7 @@ const InsightsNudge = memo(({ habits, entries, variant = "daybook" }) => {
     if (activeSlide < recentEncouragements.length) {
       const enc = recentEncouragements[activeSlide];
       return (
-        <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+        <div key={`enc-${activeSlide}`} className="animate-float-in">
           <div className="flex items-center gap-2 mb-2">
             <span className="w-5 h-5 rounded-full bg-[var(--rose)]/10 text-[var(--rose)] flex items-center justify-center">
               <ReactionIcon reaction={enc.reaction} />
@@ -215,7 +215,7 @@ const InsightsNudge = memo(({ habits, entries, variant = "daybook" }) => {
 
     // Otherwise, it's the AI Insight
     return (
-      <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+      <div key={`insight-${activeSlide}`} className="animate-float-in">
         <p className="std-kicker mb-2">{isControl ? "Signal" : "The Margin"}</p>
         <p
           className={`${isControl ? "std-mono text-[12px] leading-relaxed" : "std-display text-[15px] leading-relaxed italic"} text-[var(--ink-2)]`}
@@ -254,7 +254,7 @@ const InsightsNudge = memo(({ habits, entries, variant = "daybook" }) => {
   };
 
   return (
-    <div className="std-card relative overflow-hidden p-4 border-l-2 border-l-[var(--signal)] min-h-[120px] flex flex-col justify-center">
+    <div className="glass-card relative overflow-hidden p-5 min-h-[130px] flex flex-col justify-center">
       {renderSlide()}
 
       {/* Navigation Dots */}

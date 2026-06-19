@@ -756,6 +756,22 @@ h1, h2, h3, h4, h5, h6 {
   animation: staggerFadeIn 400ms ease-out both;
 }
 
+/* ── Carousel Slide Float In ── */
+@keyframes floatUpFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-float-in {
+  animation: floatUpFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* ── Phase 13: Streak milestone mini-confetti ── */
 @keyframes confettiBurst {
   0%   { transform: scale(0) rotate(0deg); opacity: 1; }
