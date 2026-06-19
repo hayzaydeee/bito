@@ -254,7 +254,7 @@ const InsightsNudge = memo(({ habits, entries, variant = "daybook" }) => {
   };
 
   return (
-    <div className="glass-card relative overflow-hidden p-5 min-h-[130px] flex flex-col justify-center">
+    <div className="std-card relative overflow-hidden p-4 border-l-2 border-l-[var(--signal)] min-h-[120px] flex flex-col justify-center">
       {renderSlide()}
 
       {/* Navigation Dots */}
