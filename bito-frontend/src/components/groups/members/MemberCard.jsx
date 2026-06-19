@@ -98,10 +98,10 @@ const MemberCard = ({ member, groupId, isYou, onEncourage, onViewDashboard }) =>
               if (onEncourage) onEncourage();
             }}
             title="Send encouragement"
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[8px] bg-[var(--surface-2)] text-[var(--ink-2)] border border-[var(--line-2)] hover:bg-[var(--signal)] hover:text-white hover:border-[var(--signal)] transition-colors group/nudge"
+            className="grp-btn grp-btn--sm group/nudge"
           >
-            <Sparkle size={14} weight="duotone" className="group-hover/nudge:animate-pulse" />
-            <span className="std-mono text-[10px] font-bold uppercase tracking-wider">Nudge</span>
+            <Sparkle size={14} weight="duotone" className="text-[var(--signal)] group-hover/nudge:animate-pulse" />
+            <span>Nudge</span>
           </button>
         )}
       </div>
