@@ -48,15 +48,20 @@ const DayHabitRow = memo(({ habit, isCompleted, onToggle, onEdit, dateStr, readO
 
       <HabitIcon icon={habit.icon || "Star"} size={16} className="flex-shrink-0" />
 
-      <span
-        className="std-display text-sm font-semibold truncate transition-colors duration-200"
-        style={{
-          color: isCompleted ? "var(--ink-3)" : "var(--ink)",
-          textDecoration: isCompleted ? "line-through" : "none",
-        }}
-      >
-        {habit.name}
-      </span>
+      <div className="flex-1 min-w-0 flex items-center gap-2">
+        <span
+          className="std-display text-[15px] font-semibold truncate transition-colors duration-200"
+          style={{
+            color: isCompleted ? "var(--ink-3)" : "var(--ink)",
+            textDecoration: isCompleted ? "line-through" : "none",
+          }}
+        >
+          {habit.name}
+        </span>
+        <span className="std-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded border border-[var(--line-2)] text-[var(--ink-3)] flex-shrink-0 bg-[var(--surface-2)] mt-0.5">
+          {habitUtils.isWeeklyHabit(habit) ? 'Weekly' : 'Daily'}
+        </span>
+      </div>
 
       {!readOnly && onEdit && (
         <button
