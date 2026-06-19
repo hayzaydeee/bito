@@ -59,23 +59,25 @@ const JournalDayFeed = ({
     <div className="flex flex-col h-full">
       {/* ── Centralized content column ─────────────────────── */}
       <div className="flex-shrink-0 pt-2 pb-3 max-w-[740px] mx-auto w-full">
-        {/* Dateline masthead */}
-        <div className="mb-4">
-          <p className="std-kicker mb-1.5">{dateKicker}</p>
-          <h2 className="std-display text-[30px] sm:text-[36px] font-bold leading-[0.95] text-[var(--ink)]">
-            {dateTitle}
-          </h2>
-        </div>
-        <div data-tour="journal-mood-energy">
-          <JournalMeta
-            mood={mood}
-            energy={energy}
-            tags={tags}
-            onMoodChange={onMoodChange}
-            onEnergyChange={onEnergyChange}
-            onAddTag={onAddTag}
-            onRemoveTag={onRemoveTag}
-          />
+        {/* Dateline masthead & Telemetry */}
+        <div className="flex items-start justify-between mb-2">
+          <div>
+            <p className="std-kicker mb-1.5">{dateKicker}</p>
+            <h2 className="std-display text-[30px] sm:text-[36px] font-bold leading-[0.95] text-[var(--ink)]">
+              {dateTitle}
+            </h2>
+          </div>
+          <div data-tour="journal-mood-energy" className="mt-1">
+            <JournalMeta
+              mood={mood}
+              energy={energy}
+              tags={tags}
+              onMoodChange={onMoodChange}
+              onEnergyChange={onEnergyChange}
+              onAddTag={onAddTag}
+              onRemoveTag={onRemoveTag}
+            />
+          </div>
         </div>
       </div>
 

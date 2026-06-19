@@ -58,7 +58,7 @@ const Gauge = ({ label, icons, value, onChange }) => (
 );
 
 const JournalMeta = ({ mood, energy, onMoodChange, onEnergyChange }) => (
-  <div className="flex flex-wrap items-center gap-x-7 gap-y-3 justify-center sm:justify-start">
+  <div className="flex flex-col items-end gap-y-1.5">
     <Gauge label="Mood" icons={MOOD_ICONS} value={mood} onChange={onMoodChange} />
     <Gauge label="Energy" icons={ENERGY_ICONS} value={energy} onChange={onEnergyChange} />
   </div>
