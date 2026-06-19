@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useJournal } from '../../hooks/useJournal';
 import BlockNoteEditor from '../journal/BlockNoteEditor';
-import JournalWeekStrip from './JournalWeekStrip';
+import { CalendarPopover } from './JournalWeekStrip';
 import JournalDayFeed from './JournalDayFeed';
 import JournalStream from './JournalStream';
 import JournalArchiveView from './JournalArchiveView';
@@ -10,7 +10,7 @@ import JournalEntryList from './JournalEntryList';
 import JournalHome from './JournalHome';
 import JournalPrivacySettings, { AIOptInNudge } from './JournalPrivacy';
 import JournalTour from './JournalTour';
-import { ArrowLeft, MagnifyingGlass, X, Lock, LockOpen } from '@phosphor-icons/react';
+import { ArrowLeft, MagnifyingGlass, X, Lock, LockOpen, CalendarBlank } from '@phosphor-icons/react';
 import { journalV2Service } from '../../services/journalV2Service';
 import { userAPI } from '../../services/api';
 
@@ -44,6 +44,7 @@ const JournalPageV2 = () => {
   const [searchResults, setSearchResults] = useState(null);
   const [searchLoading, setSearchLoading] = useState(false);
   const [forceJournalTour, setForceJournalTour] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   // View state — 'home' is the default landing
   const [activeView, setActiveView] = useState('home');
@@ -248,6 +249,30 @@ const JournalPageV2 = () => {
               {showSearch ? <X size={16} weight="bold" /> : <MagnifyingGlass size={16} weight="bold" />}
             </button>
 
+            {/* Calendar toggle (Day view only) */}
+            {activeView === 'day' && (
+              <div className="relative">
+                <button
+                  onClick={() => setCalendarOpen(!calendarOpen)}
+                  className="w-9 h-9 flex items-center justify-center rounded-[10px] border border-[var(--line-2)] text-[var(--ink-3)] hover:text-[var(--ink)] hover:bg-[var(--surface-2)] transition-colors"
+                  aria-label="Open calendar"
+                >
+                  <CalendarBlank size={16} weight="bold" />
+                </button>
+                {calendarOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setCalendarOpen(false)} />
+                    <CalendarPopover
+                      selectedDate={journal.selectedDate}
+                      onSelect={(date) => { journal.selectDate(date); setCalendarOpen(false); }}
+                      onClose={() => setCalendarOpen(false)}
+                      indicators={journal.indicators}
+                    />
+                  </>
+                )}
+              </div>
+            )}
+
             {/* Intelligence button */}
             <button
               onClick={() => setShowPrivacySettings(true)}
@@ -323,14 +348,7 @@ const JournalPageV2 = () => {
           </div>
         )}
 
-        {/* Week strip navigation — only in day view */}
-        {activeView === 'day' && (
-          <JournalWeekStrip
-            selectedDate={journal.selectedDate}
-            onSelect={journal.selectDate}
-            indicators={journal.indicators}
-          />
-        )}
+        {/* Week strip navigation removed to increase vertical space */}
       </div>
 
       {/* ── AI opt-in nudge ─────────────────────────────────── */}

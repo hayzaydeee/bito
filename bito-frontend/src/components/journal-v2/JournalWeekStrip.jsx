@@ -77,7 +77,7 @@ const DayCell = memo(({ date, isSelected, isCurrentDay, indicator, onSelect }) =
 DayCell.displayName = 'DayCell';
 
 /* ── Calendar popover ────────────────────────────────────────── */
-const CalendarPopover = memo(({ selectedDate, onSelect, onClose, indicators }) => {
+export const CalendarPopover = memo(({ selectedDate, onSelect, onClose, indicators }) => {
   const selected = parseDate(selectedDate);
   const [viewMonth, setViewMonth] = useState(new Date(selected.getFullYear(), selected.getMonth(), 1));
 
