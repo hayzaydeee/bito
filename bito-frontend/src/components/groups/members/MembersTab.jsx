@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import MemberCard from "./MemberCard";
 import InvitePanel from "./InvitePanel";
-import MemberDashboardDrawer from "./MemberDashboardDrawer";
+import MemberDashboardModal from "./MemberDashboardModal";
 import { groupsAPI } from "../../../services/api";
 
 /**
@@ -133,12 +133,13 @@ const MembersTab = ({
         )}
       </aside>
 
-      {/* Member Dashboard Drawer */}
-      <MemberDashboardDrawer
+      {/* Member Dashboard Modal */}
+      <MemberDashboardModal
         isOpen={!!selectedMemberId}
         onClose={() => setSelectedMemberId(null)}
         groupId={groupId}
         memberId={selectedMemberId}
+        onEncourage={(info) => onEncourage?.(info)}
       />
     </div>
   );

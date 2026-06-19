@@ -17,7 +17,7 @@ import HabitIcon from "../shared/HabitIcon";
    ════════════════════════════════════════════ */
 
 /* ─── Inline habit row for the expanded day panel ─── */
-const DayHabitRow = memo(({ habit, isCompleted, onToggle, onEdit, dateStr }) => {
+const DayHabitRow = memo(({ habit, isCompleted, onToggle, onEdit, dateStr, readOnly }) => {
   const [animating, setAnimating] = useState(false);
 
   const handleToggle = useCallback(() => {
@@ -32,11 +32,14 @@ const DayHabitRow = memo(({ habit, isCompleted, onToggle, onEdit, dateStr }) => 
     >
       <button
         onClick={handleToggle}
+        disabled={readOnly}
         className="w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200"
         style={{
           borderColor: isCompleted ? "var(--signal)" : "var(--line-2)",
           backgroundColor: isCompleted ? "var(--signal)" : "transparent",
           transform: animating ? "scale(1.2)" : "scale(1)",
+          cursor: readOnly ? "default" : "pointer",
+          opacity: readOnly ? 0.8 : 1,
         }}
         aria-label={isCompleted ? `Uncheck ${habit.name}` : `Check ${habit.name}`}
       >
@@ -55,7 +58,7 @@ const DayHabitRow = memo(({ habit, isCompleted, onToggle, onEdit, dateStr }) => 
         {habit.name}
       </span>
 
-      {onEdit && (
+      {!readOnly && onEdit && (
         <button
           onClick={() => onEdit(habit)}
           className="p-1 rounded-md ml-auto flex-shrink-0 transition-opacity text-[var(--ink-2)]"
@@ -153,14 +156,14 @@ const buildDayStats = (dates, habits, entries) =>
    Main component
    ════════════════════════════════════════════ */
 
-const WeekStrip = memo(({ habits, entries, onToggle, onEdit, fetchHabitEntries, variant = "daybook" }) => {
+const WeekStrip = memo(({ habits, entries, onToggle, onEdit, fetchHabitEntries, variant = "daybook", readOnly = false, defaultExpandedDate = null }) => {
   const [weekStartDay] = useWeekStartDay();
   const [view, setView] = useState(() => {
     try { const v = localStorage.getItem('bito:weekstrip:view'); if (['week','month','year'].includes(v)) return v; } catch {}
     return 'week';
   }); // week | month | year
   const [anchor, setAnchor] = useState(() => new Date());
-  const [expandedDate, setExpandedDate] = useState(null);
+  const [expandedDate, setExpandedDate] = useState(defaultExpandedDate);
   const isControl = variant === "control";
 
   // View change resets expanded
@@ -435,7 +438,7 @@ const WeekStrip = memo(({ habits, entries, onToggle, onEdit, fetchHabitEntries, 
             const entry = entries[habit._id]?.[expandedDay.date];
             const isCompleted = !!(entry && entry.completed);
             return (
-              <DayHabitRow key={habit._id} habit={habit} isCompleted={isCompleted} onToggle={onToggle} onEdit={onEdit} dateStr={expandedDay.date} />
+              <DayHabitRow key={habit._id} habit={habit} isCompleted={isCompleted} onToggle={onToggle} onEdit={onEdit} dateStr={expandedDay.date} readOnly={readOnly} />
             );
           })}
         </div>

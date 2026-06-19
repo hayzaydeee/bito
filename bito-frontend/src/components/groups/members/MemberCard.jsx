@@ -89,21 +89,6 @@ const MemberCard = ({ member, groupId, isYou, onEncourage, onViewDashboard }) =>
             {roleLabel}
           </span>
         )}
-
-        {/* Always visible encourage button */}
-        {!isYou && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onEncourage) onEncourage();
-            }}
-            title="Send encouragement"
-            className="grp-btn grp-btn--sm group/nudge"
-          >
-            <Sparkle size={14} weight="duotone" className="text-[var(--signal)] group-hover/nudge:animate-pulse" />
-            <span>Nudge</span>
-          </button>
-        )}
       </div>
     </div>
   );
