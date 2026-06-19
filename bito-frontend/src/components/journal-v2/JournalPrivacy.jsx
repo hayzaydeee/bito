@@ -7,6 +7,7 @@ import {
   Cross2Icon,
 } from '@radix-ui/react-icons';
 import { MagnifyingGlass, Sparkle, Bell, NotePencil } from '@phosphor-icons/react';
+import AnimatedModal from '../ui/AnimatedModal';
 
 /* ═══════════════════════════════════════════════════════════════
    JournalPrivacy — AI opt-in console + settings + privacy indicator
@@ -147,127 +148,114 @@ const JournalPrivacySettings = ({ journalAI = {}, onUpdate, onClose }) => {
   const isAllOff = !settings.insightNudges && !settings.contentAnalysis && !settings.weeklySummaries;
 
   return (
-    <div className="std fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/55 backdrop-blur-sm" />
-      <div
-        className="std-card relative w-full max-w-lg shadow-2xl overflow-hidden p-0"
-        onClick={e => e.stopPropagation()}
-      >
+    <AnimatedModal isOpen={true} onClose={onClose} maxWidth="max-w-xl">
+      <div className="std relative w-full bg-[var(--surface)] rounded-[16px] border border-[var(--line-2)] max-h-[85vh] overflow-y-auto">
+        
         {/* Header */}
-        <div className="px-6 pt-6 pb-4">
+        <div className="sticky top-0 z-10 bg-[var(--surface)] px-6 pt-5 pb-3 border-b border-[var(--line-2)]">
           <div className="flex items-start justify-between">
             <div>
               <p className="std-kicker">Clearance Levels</p>
-              <h2 className="std-display text-2xl font-bold text-[var(--ink)] mt-1">
+              <h2 className="std-display text-xl font-bold text-[var(--ink)] mt-1">
                 Journal Intelligence
               </h2>
-              <p className="text-[13px] text-[var(--ink-2)] mt-1 leading-relaxed">
-                Choose what AI features you'd like. Every tier is optional. You can change these anytime.
-              </p>
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-[var(--r-btn)] hover:bg-[var(--surface-2)] transition-colors text-[var(--ink-3)]"
+              className="text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors mt-1 outline-none"
             >
               <Cross2Icon className="w-4 h-4" />
             </button>
           </div>
+          
+          {/* Privacy notice banner */}
+          <div className="mt-4 px-3 py-2 rounded-[var(--r-btn)] flex items-start gap-2 bg-[var(--surface-2)] border border-[var(--line-2)]">
+            <LockClosedIcon className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-[var(--ink-3)]" />
+            <p className="std-mono text-[10px] uppercase tracking-wide text-[var(--ink-2)] leading-relaxed">
+              Your journal is private. Disable any tier to immediately delete its cached AI data.
+            </p>
+          </div>
         </div>
 
-        {/* Privacy notice */}
-        <div className="mx-6 px-3 py-2.5 rounded-[var(--r-btn)] mb-4 flex items-start gap-2 border border-[var(--line)] bg-[var(--surface-2)]">
-          <LockClosedIcon className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-[var(--ink-3)]" />
-          <p className="std-mono text-[10.5px] leading-relaxed text-[var(--ink-2)]">
-            Your journal is always stored privately. AI features only process data you explicitly opt into.
-            Disabling any tier immediately stops processing and deletes any cached AI data for that tier.
-          </p>
-        </div>
-
-        {/* Tiers */}
-        <div className="px-6 space-y-3 pb-4">
+        {/* Tiers List */}
+        <div className="px-6 py-4 space-y-0 divide-y divide-[var(--line-2)]">
           {AI_TIERS.map((tier) => {
             const isEnabled = settings[tier.key];
-            const isDisabled = tier.key === 'contentAnalysis' && !settings.insightNudges
-              || tier.key === 'weeklySummaries' && !settings.contentAnalysis;
+            const isDisabled = (tier.key === 'contentAnalysis' && !settings.insightNudges)
+              || (tier.key === 'weeklySummaries' && !settings.contentAnalysis);
 
             return (
               <div
                 key={tier.key}
-                className="rounded-[var(--r-card)] border p-4 transition-all duration-200"
-                style={{
-                  borderColor: isEnabled ? 'var(--signal)' : 'var(--line)',
-                  backgroundColor: isEnabled ? 'var(--signal-2)' : 'var(--surface)',
-                  opacity: isDisabled ? 0.5 : 1,
-                }}
+                className={`py-4 transition-opacity duration-200 flex items-start gap-4 ${isDisabled ? 'opacity-40' : 'opacity-100'}`}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3">
-                    <tier.Icon
-                      size={18}
-                      weight="duotone"
-                      className="mt-0.5 flex-shrink-0"
-                      style={{ color: isEnabled ? 'var(--signal)' : 'var(--ink-3)' }}
-                    />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="std-display text-[15px] font-bold text-[var(--ink)]">
-                          {tier.title}
-                        </h3>
-                        <span
-                          className="std-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-[var(--r-tag)]"
-                          style={{
-                            backgroundColor: isEnabled ? 'var(--signal)' : 'transparent',
-                            color: isEnabled ? 'var(--signal-ink)' : 'var(--ink-3)',
-                            border: isEnabled ? 'none' : '1px solid var(--line-2)',
-                          }}
-                        >
-                          Tier {tier.tier}
-                        </span>
-                      </div>
-                      <p className="text-[13px] text-[var(--ink-2)] mt-1 leading-relaxed">
-                        {tier.description}
-                      </p>
-                      <div className="flex items-center gap-1.5 mt-2">
-                        {isEnabled
-                          ? <EyeOpenIcon className="w-3 h-3 text-[var(--signal)]" />
-                          : <EyeNoneIcon className="w-3 h-3 text-[var(--ink-3)]" />
-                        }
-                        <span className="std-mono text-[9.5px] uppercase tracking-wide text-[var(--ink-3)]">
-                          Data: {tier.dataAccess}
-                        </span>
-                      </div>
-                    </div>
+                <tier.Icon
+                  size={18}
+                  weight="duotone"
+                  className="mt-0.5 flex-shrink-0"
+                  style={{ color: isEnabled ? 'var(--signal)' : 'var(--ink-3)' }}
+                />
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-[14px] font-semibold text-[var(--ink)]">
+                      {tier.title}
+                    </h3>
+                    <span
+                      className="std-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-[var(--r-tag)]"
+                      style={{
+                        backgroundColor: isEnabled ? 'var(--signal)' : 'transparent',
+                        color: isEnabled ? 'var(--signal-ink)' : 'var(--ink-3)',
+                        border: isEnabled ? 'none' : '1px solid var(--line-2)',
+                      }}
+                    >
+                      T{tier.tier}
+                    </span>
                   </div>
-
-                  {/* Toggle */}
-                  <button
-                    onClick={() => !isDisabled && toggleTier(tier.key)}
-                    disabled={isDisabled}
-                    className="flex-shrink-0 w-10 h-5 rounded-full transition-colors duration-200 relative"
-                    style={{
-                      backgroundColor: isEnabled ? 'var(--signal)' : 'var(--line-2)',
-                    }}
-                  >
-                    <div
-                      className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200"
-                      style={{ transform: isEnabled ? 'translateX(22px)' : 'translateX(2px)' }}
-                    />
-                  </button>
+                  
+                  <p className="text-[13px] text-[var(--ink-2)] mt-1.5 leading-relaxed">
+                    {tier.description}
+                  </p>
+                  
+                  <div className="flex items-center gap-1.5 mt-2">
+                    {isEnabled
+                      ? <EyeOpenIcon className="w-3 h-3 text-[var(--signal)]" />
+                      : <EyeNoneIcon className="w-3 h-3 text-[var(--ink-3)]" />
+                    }
+                    <span className="std-mono text-[9.5px] uppercase tracking-wider text-[var(--ink-3)]">
+                      {tier.dataAccess}
+                    </span>
+                  </div>
                 </div>
+
+                {/* Toggle */}
+                <button
+                  onClick={() => !isDisabled && toggleTier(tier.key)}
+                  disabled={isDisabled}
+                  className="flex-shrink-0 w-9 h-5 rounded-full transition-colors duration-200 relative mt-0.5 outline-none"
+                  style={{
+                    backgroundColor: isEnabled ? 'var(--signal)' : 'var(--line-2)',
+                  }}
+                >
+                  <div
+                    className="absolute top-[2px] w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200"
+                    style={{ transform: isEnabled ? 'translateX(18px)' : 'translateX(2px)' }}
+                  />
+                </button>
               </div>
             );
           })}
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-[var(--line)] flex items-center justify-between gap-3">
+        <div className="sticky bottom-0 z-10 bg-[var(--surface)] px-6 py-4 border-t border-[var(--line-2)] flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5">
             {isAllOff
               ? <LockClosedIcon className="w-3.5 h-3.5 text-[var(--ink-3)]" />
               : <LockOpen1Icon className="w-3.5 h-3.5 text-[var(--signal)]" />
             }
-            <span className="std-mono text-[10px] uppercase tracking-wide text-[var(--ink-3)]">
-              {isAllOff ? 'Fully private — no AI processing' : 'Selected tiers will process your data'}
+            <span className="std-mono text-[9.5px] uppercase tracking-wider text-[var(--ink-3)]">
+              {isAllOff ? 'All AI Disabled' : 'AI Active'}
             </span>
           </div>
           <button
@@ -278,8 +266,9 @@ const JournalPrivacySettings = ({ journalAI = {}, onUpdate, onClose }) => {
             {saving ? 'Saving…' : 'Save Preferences'}
           </button>
         </div>
+
       </div>
-    </div>
+    </AnimatedModal>
   );
 };
 
