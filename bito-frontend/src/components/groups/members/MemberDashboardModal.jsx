@@ -142,7 +142,7 @@ const MemberDashboardModal = ({ groupId, memberId, isOpen, onClose }) => {
             </Dialog.Overlay>
             <Dialog.Content asChild>
               <motion.div
-                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-2xl bg-[var(--surface)] border border-[var(--line)] shadow-2xl rounded-2xl z-50 flex flex-col overflow-hidden max-h-[90vh]"
+                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-2xl bg-[var(--surface)] border border-[var(--line)] shadow-2xl rounded-2xl z-50 flex flex-col overflow-hidden h-[600px] max-h-[90vh]"
                 variants={modalVariants}
                 initial="initial"
                 animate="animate"
@@ -170,8 +170,12 @@ const MemberDashboardModal = ({ groupId, memberId, isOpen, onClose }) => {
                   </button>
                 </div>
 
-                <div className="flex-1 overflow-hidden relative flex flex-col min-h-[500px]">
-                  <SkeletonTransition isLoading={loading} skeleton={skeletonContent}>
+                <div className="flex-1 overflow-hidden relative flex flex-col min-h-0">
+                  <SkeletonTransition 
+                    isLoading={loading} 
+                    skeleton={skeletonContent}
+                    className="h-full w-full relative flex flex-col flex-1 min-h-0"
+                  >
                     {error ? (
                       <div className="flex flex-col items-center justify-center py-12 text-center">
                         <Warning size={40} weight="duotone" className="mb-4 text-[var(--ember)]" />
@@ -188,7 +192,7 @@ const MemberDashboardModal = ({ groupId, memberId, isOpen, onClose }) => {
                             animate={{ opacity: 1, filter: "blur(0px)" }}
                             exit={{ opacity: 0, filter: "blur(4px)" }}
                             transition={{ duration: 0.2 }}
-                            className="absolute inset-0 overflow-y-auto p-6 scrollbar-hide"
+                            className="absolute inset-0 overflow-y-auto p-6 scrollbar-hide flex flex-col"
                           >
                             <div className="space-y-6">
                               {/* Header: Avatar, Name, Nudge */}
@@ -247,7 +251,7 @@ const MemberDashboardModal = ({ groupId, memberId, isOpen, onClose }) => {
                             className="absolute inset-0 flex flex-col"
                           >
                             {/* Inner Header for Context */}
-                            <div className="px-6 pt-6 pb-4 flex items-center gap-4 border-b border-[var(--line-2)]">
+                            <div className="px-6 pt-6 pb-4 flex items-center gap-4 border-b border-[var(--line-2)] flex-shrink-0">
                               {member.avatar ? (
                                 <img src={member.avatar} alt={memberName} className="w-12 h-12 rounded-[12px] object-cover border-2 border-[var(--surface)] shadow-sm" />
                               ) : (

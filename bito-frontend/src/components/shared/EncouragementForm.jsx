@@ -65,7 +65,7 @@ const EncouragementForm = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-[var(--surface)]">
+    <div className="flex flex-col flex-1 min-h-0 bg-[var(--surface)]">
       <div className="flex-1 overflow-y-auto p-5 sm:p-6 journal-v2-content-scroll">
         <form id="encouragement-form" onSubmit={handleSubmit} className="space-y-6">
           

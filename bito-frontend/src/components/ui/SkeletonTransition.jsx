@@ -20,7 +20,7 @@ import {
 } from "../../utils/motion";
 import useMotionSafe from "../../hooks/useMotionSafe";
 
-const SkeletonTransition = ({ isLoading, skeleton, children }) => {
+const SkeletonTransition = ({ isLoading, skeleton, children, className = "h-full w-full relative" }) => {
   const { getVariants } = useMotionSafe();
 
   return (
@@ -32,7 +32,7 @@ const SkeletonTransition = ({ isLoading, skeleton, children }) => {
           initial="initial"
           animate="initial"
           exit="exit"
-          className="h-full w-full relative"
+          className={className}
         >
           {skeleton}
         </motion.div>
@@ -42,7 +42,7 @@ const SkeletonTransition = ({ isLoading, skeleton, children }) => {
           variants={getVariants(contentEnterVariants)}
           initial="initial"
           animate="animate"
-          className="h-full w-full relative"
+          className={className}
         >
           {children}
         </motion.div>
