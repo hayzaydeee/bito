@@ -1,22 +1,25 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Cross2Icon } from "@radix-ui/react-icons";
+import { Cross2Icon, ChevronLeftIcon, HeartIcon } from "@radix-ui/react-icons";
 import { Warning, Fire, Sparkle } from "@phosphor-icons/react";
 import { groupsAPI } from "../../../services/api";
 import { habitUtils } from "../../../utils/habitLogic";
 import SkeletonTransition from "../../ui/SkeletonTransition";
 import StatPillsStd from "../../dashboard/StatPillsStd";
 import WeekStripStd from "../../dashboard/WeekStripStd";
+import EncouragementForm from "../../shared/EncouragementForm";
 import { backdropVariants, modalVariants } from "../../../utils/motion";
 
-const MemberDashboardModal = ({ groupId, memberId, isOpen, onClose, onEncourage }) => {
+const MemberDashboardModal = ({ groupId, memberId, isOpen, onClose }) => {
   const [memberData, setMemberData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [view, setView] = useState('dashboard'); // 'dashboard' or 'encourage'
 
   useEffect(() => {
     if (isOpen && memberId) {
+      setView('dashboard');
       fetchData();
     }
   }, [isOpen, groupId, memberId]);
@@ -146,9 +149,19 @@ const MemberDashboardModal = ({ groupId, memberId, isOpen, onClose, onEncourage 
                 exit="exit"
               >
                 <div className="flex items-center justify-between p-4 border-b border-[var(--line)] bg-[var(--surface-2)] z-10">
-                  <span className="std-mono text-xs text-[var(--ink-3)] uppercase tracking-wider">
-                    Member Dashboard
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {view === 'encourage' && (
+                      <button 
+                        onClick={() => setView('dashboard')}
+                        className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-[var(--line-2)] transition-colors text-[var(--ink-2)]"
+                      >
+                        <ChevronLeftIcon className="w-5 h-5" />
+                      </button>
+                    )}
+                    <span className="std-mono text-xs text-[var(--ink-3)] uppercase tracking-wider">
+                      {view === 'encourage' ? 'Send Encouragement' : 'Member Dashboard'}
+                    </span>
+                  </div>
                   <button
                     onClick={onClose}
                     className="w-8 h-8 flex items-center justify-center rounded-full text-[var(--ink-3)] hover:bg-[var(--line-2)] transition-colors"
@@ -157,7 +170,7 @@ const MemberDashboardModal = ({ groupId, memberId, isOpen, onClose, onEncourage 
                   </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto scrollbar-hide relative p-6">
+                <div className="flex-1 overflow-hidden relative flex flex-col min-h-[500px]">
                   <SkeletonTransition isLoading={loading} skeleton={skeletonContent}>
                     {error ? (
                       <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -167,52 +180,100 @@ const MemberDashboardModal = ({ groupId, memberId, isOpen, onClose, onEncourage 
                         <button onClick={fetchData} className="std-btn std-btn--signal">Retry</button>
                       </div>
                     ) : member ? (
-                      <div className="space-y-6">
-                        {/* Header: Avatar, Name, Nudge */}
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-4">
-                            {member.avatar ? (
-                              <img src={member.avatar} alt={memberName} className="w-16 h-16 rounded-[14px] object-cover border-2 border-[var(--surface)] shadow-sm" />
-                            ) : (
-                              <div className="w-16 h-16 rounded-[14px] bg-[var(--surface-2)] flex items-center justify-center text-[var(--ink)] text-2xl std-display font-bold">
-                                {memberName.charAt(0).toUpperCase()}
+                      <AnimatePresence mode="wait">
+                        {view === 'dashboard' ? (
+                          <motion.div 
+                            key="dashboard"
+                            initial={{ opacity: 0, filter: "blur(4px)" }}
+                            animate={{ opacity: 1, filter: "blur(0px)" }}
+                            exit={{ opacity: 0, filter: "blur(4px)" }}
+                            transition={{ duration: 0.2 }}
+                            className="absolute inset-0 overflow-y-auto p-6 scrollbar-hide"
+                          >
+                            <div className="space-y-6">
+                              {/* Header: Avatar, Name, Nudge */}
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-4">
+                                  {member.avatar ? (
+                                    <img src={member.avatar} alt={memberName} className="w-16 h-16 rounded-[14px] object-cover border-2 border-[var(--surface)] shadow-sm" />
+                                  ) : (
+                                    <div className="w-16 h-16 rounded-[14px] bg-[var(--surface-2)] flex items-center justify-center text-[var(--ink)] text-2xl std-display font-bold">
+                                      {memberName.charAt(0).toUpperCase()}
+                                    </div>
+                                  )}
+                                  <div>
+                                    <h2 className="std-display text-3xl text-[var(--ink)] leading-none mb-2">{memberName}</h2>
+                                    <div className="std-mono text-xs text-[var(--ink-3)] uppercase">
+                                      Active Member
+                                    </div>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => setView('encourage')}
+                                  title="Send encouragement"
+                                  className="grp-btn grp-btn--signal grp-btn--sm group/nudge"
+                                >
+                                  <Sparkle size={14} weight="fill" className="group-hover/nudge:animate-pulse" />
+                                  <span>Nudge</span>
+                                </button>
                               </div>
-                            )}
-                            <div>
-                              <h2 className="std-display text-3xl text-[var(--ink)] leading-none mb-2">{memberName}</h2>
-                              <div className="std-mono text-xs text-[var(--ink-3)] uppercase">
-                                Active Member
+
+                              {/* Statstrip */}
+                              <StatPillsStd 
+                                completed={todayTotal} 
+                                total={dailyHabits.length} 
+                                streak={streakCount} 
+                                weeklyProgress={weeklyProgress} 
+                                variant="daybook" 
+                              />
+
+                              {/* Daystrip (WeekStripStd in readOnly mode) */}
+                              <WeekStripStd 
+                                habits={habits}
+                                entries={entries}
+                                readOnly={true}
+                                defaultExpandedDate={todayStr}
+                                variant="daybook"
+                              />
+                            </div>
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            key="encourage"
+                            initial={{ opacity: 0, filter: "blur(4px)" }}
+                            animate={{ opacity: 1, filter: "blur(0px)" }}
+                            exit={{ opacity: 0, filter: "blur(4px)" }}
+                            transition={{ duration: 0.2 }}
+                            className="absolute inset-0 flex flex-col"
+                          >
+                            {/* Inner Header for Context */}
+                            <div className="px-6 pt-6 pb-4 flex items-center gap-4 border-b border-[var(--line-2)]">
+                              {member.avatar ? (
+                                <img src={member.avatar} alt={memberName} className="w-12 h-12 rounded-[12px] object-cover border-2 border-[var(--surface)] shadow-sm" />
+                              ) : (
+                                <div className="w-12 h-12 rounded-[12px] bg-[var(--surface-2)] flex items-center justify-center text-[var(--ink)] text-xl std-display font-bold">
+                                  {memberName.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                              <div>
+                                <h2 className="std-display text-lg font-bold text-[var(--ink)]">
+                                  Send a Nudge to {memberName}
+                                </h2>
+                                <p className="std-kicker mt-0.5 text-[var(--ink-3)]">
+                                  They'll receive it in their feed
+                                </p>
                               </div>
                             </div>
-                          </div>
-                          <button
-                            onClick={() => onEncourage?.(member)}
-                            title="Send encouragement"
-                            className="grp-btn grp-btn--signal grp-btn--sm group/nudge"
-                          >
-                            <Sparkle size={14} weight="fill" className="group-hover/nudge:animate-pulse" />
-                            <span>Nudge</span>
-                          </button>
-                        </div>
 
-                        {/* Statstrip */}
-                        <StatPillsStd 
-                          completed={todayTotal} 
-                          total={dailyHabits.length} 
-                          streak={streakCount} 
-                          weeklyProgress={weeklyProgress} 
-                          variant="daybook" 
-                        />
-
-                        {/* Daystrip (WeekStripStd in readOnly mode) */}
-                        <WeekStripStd 
-                          habits={habits}
-                          entries={entries}
-                          readOnly={true}
-                          defaultExpandedDate={todayStr}
-                          variant="daybook"
-                        />
-                      </div>
+                            <EncouragementForm
+                              targetUser={member}
+                              groupId={groupId}
+                              onCancel={() => setView('dashboard')}
+                              onSuccess={() => setView('dashboard')}
+                            />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     ) : null}
                   </SkeletonTransition>
                 </div>
