@@ -106,18 +106,18 @@ const EncouragementForm = ({
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Write an encouraging note..."
               maxLength={500}
-              className="grp-input w-full resize-none !rounded-[12px] !py-3 flex-1 min-h-[120px]"
+              className="grp-input w-full resize-none !rounded-[12px] !py-3 flex-none h-[90px] min-h-[90px]"
               required
             />
             
             {/* Quick Messages */}
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-3.5 flex flex-wrap gap-2.5">
               {quickMessages.map((quickMsg, index) => (
                 <button
                   key={index}
                   type="button"
                   onClick={() => setMessage(quickMsg)}
-                  className="px-2.5 py-1 rounded-full border border-[var(--line-2)] text-[11px] font-medium text-[var(--ink-3)] hover:text-[var(--ink)] hover:border-[var(--line-3)] hover:bg-[var(--surface-2)] transition-all whitespace-nowrap"
+                  className="px-4 py-2.5 rounded-full border border-[var(--line-2)] text-xs font-medium text-[var(--ink-3)] hover:text-[var(--ink)] hover:border-[var(--line-3)] hover:bg-[var(--surface-2)] transition-all whitespace-nowrap"
                 >
                   {quickMsg}
                 </button>
