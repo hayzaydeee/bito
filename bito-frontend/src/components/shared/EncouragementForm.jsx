@@ -70,7 +70,7 @@ const EncouragementForm = ({
           
           {/* Distilled Icon Selection Row */}
           <div>
-            <label className="std-kicker block mb-2 text-[var(--ink-2)]">Nudge Type</label>
+            <label className="std-kicker block mb-2 text-[var(--ink-2)]">Reaction</label>
             <div className="flex gap-2 flex-wrap">
               {nudgeIcons.map((iconName) => {
                 const isActive = typeIcon === iconName;

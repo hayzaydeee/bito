@@ -261,7 +261,7 @@ const MemberDashboardModal = ({ groupId, memberId, isOpen, onClose }) => {
                               )}
                               <div>
                                 <h2 className="std-display text-lg font-bold text-[var(--ink)]">
-                                  Send a Nudge to {memberName}
+                                  Send a Nudge to {memberName.split(" ")[0]}
                                 </h2>
                                 <p className="std-kicker mt-0.5 text-[var(--ink-3)]">
                                   They'll receive it in their feed

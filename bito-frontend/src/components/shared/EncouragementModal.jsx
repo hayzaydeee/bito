@@ -28,7 +28,7 @@ const EncouragementModal = ({
                   Send Encouragement
                 </h2>
                 <p className="std-kicker mt-0.5 text-[var(--ink-3)]">
-                  To {targetUser?.name || targetUser?.email || 'Group Member'}
+                  To {targetUser?.name ? targetUser.name.split(" ")[0] : (targetUser?.email || 'Group Member')}
                 </p>
               </div>
             </div>
