@@ -186,6 +186,9 @@ const HabitEditModal = ({
             <Dialog.Title className="text-2xl font-dmSerif gradient-text">
               {habit ? "Edit Habit" : "Create New Habit"}
             </Dialog.Title>
+            <Dialog.Description className="sr-only">
+              Form to edit details, appearance, and schedule settings for this habit.
+            </Dialog.Description>
 
           <Tabs.Root defaultValue="details" value={activeTab} onValueChange={setActiveTab}>
             <Tabs.List>
