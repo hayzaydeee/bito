@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { encouragementAPI } from '../../services/api';
 import { PaperPlaneIcon } from '@radix-ui/react-icons';
-import IconPicker from './IconPicker';
+import HabitIcon from './HabitIcon';
 
 const EncouragementForm = ({ 
   targetUser, 
@@ -11,12 +11,12 @@ const EncouragementForm = ({
   onCancel
 }) => {
   const [message, setMessage] = useState('');
-  const [typeIcon, setTypeIcon] = useState('Fire'); // Replaces 'type' with an IconPicker
-  const [reaction, setReaction] = useState('👏');
+  const [typeIcon, setTypeIcon] = useState('Fire');
+  const [reaction] = useState('👏'); // Default reaction emoji sent to API
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  const reactionOptions = ['👏', '🔥', '💪', '⭐', '🎉', '👊', '💯', '🚀'];
+  const nudgeIcons = ['Fire', 'Lightning', 'Target', 'TrendUp', 'Sparkle', 'Heart', 'Trophy', 'Star'];
 
   const quickMessages = [
     "Keep up the great work! You're doing amazing! 💪",
@@ -27,7 +27,6 @@ const EncouragementForm = ({
   useEffect(() => {
     setMessage('');
     setTypeIcon(habitId ? 'Target' : 'Fire');
-    setReaction('👏');
     setError(null);
   }, [targetUser, habitId]);
 
@@ -42,7 +41,7 @@ const EncouragementForm = ({
       const encouragementData = {
         toUserId: targetUser._id || targetUser.id,
         groupId,
-        type: typeIcon, // using the icon name directly as the type/theme
+        type: typeIcon,
         message: message.trim(),
         reaction
       };
@@ -66,40 +65,36 @@ const EncouragementForm = ({
 
   return (
     <div className="flex flex-col flex-1 min-h-0 bg-[var(--surface)]">
-      <div className="flex-1 overflow-y-auto p-5 sm:p-6 journal-v2-content-scroll">
-        <form id="encouragement-form" onSubmit={handleSubmit} className="space-y-6">
+      <div className="flex-1 overflow-y-auto p-5 sm:p-6 journal-v2-content-scroll flex flex-col">
+        <form id="encouragement-form" onSubmit={handleSubmit} className="space-y-6 flex-1 flex flex-col min-h-0">
           
-          {/* Reaction */}
+          {/* Distilled Icon Selection Row */}
           <div>
-            <label className="std-kicker block mb-2 text-[var(--ink-2)]">Reaction</label>
+            <label className="std-kicker block mb-2 text-[var(--ink-2)]">Nudge Type</label>
             <div className="flex gap-2 flex-wrap">
-              {reactionOptions.map((reactionOption) => {
-                const isActive = reaction === reactionOption;
+              {nudgeIcons.map((iconName) => {
+                const isActive = typeIcon === iconName;
                 return (
                   <button
-                    key={reactionOption}
+                    key={iconName}
                     type="button"
-                    onClick={() => setReaction(reactionOption)}
-                    className={`w-10 h-10 rounded-[10px] border text-lg flex items-center justify-center transition-all ${
+                    onClick={() => setTypeIcon(iconName)}
+                    className={`w-10 h-10 rounded-[10px] border flex items-center justify-center transition-all ${
                       isActive
-                        ? 'border-[var(--signal)] bg-[var(--signal)]/5'
-                        : 'border-[var(--line-2)] hover:border-[var(--line-3)] hover:bg-[var(--surface-2)]'
+                        ? 'border-[var(--signal)] bg-[var(--signal)]/5 text-[var(--signal)]'
+                        : 'border-[var(--line-2)] hover:border-[var(--line-3)] hover:bg-[var(--surface-2)] text-[var(--ink-3)] hover:text-[var(--ink)]'
                     }`}
+                    title={iconName}
                   >
-                    {reactionOption}
+                    <HabitIcon icon={iconName} size={20} weight={isActive ? 'fill' : 'regular'} />
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Type (Phosphor Icon Picker) */}
-          <div>
-            <IconPicker value={typeIcon} onChange={setTypeIcon} />
-          </div>
-
           {/* Message Area */}
-          <div className="flex flex-col flex-1">
+          <div className="flex flex-col flex-grow">
             <div className="flex items-center justify-between mb-2">
               <label className="std-kicker text-[var(--ink-2)]">Message</label>
               <span className="std-kicker text-[var(--ink-3)]">
@@ -110,9 +105,8 @@ const EncouragementForm = ({
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Write an encouraging note..."
-              rows={4}
               maxLength={500}
-              className="grp-input w-full resize-none !rounded-[12px] !py-3 flex-1 min-h-[100px]"
+              className="grp-input w-full resize-none !rounded-[12px] !py-3 flex-1 min-h-[120px]"
               required
             />
             
