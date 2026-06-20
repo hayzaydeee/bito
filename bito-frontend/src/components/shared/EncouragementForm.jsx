@@ -3,6 +3,17 @@ import { encouragementAPI } from '../../services/api';
 import { PaperPlaneIcon } from '@radix-ui/react-icons';
 import HabitIcon from './HabitIcon';
 
+const reactionMapping = {
+  'Star': '⭐',
+  'Fire': '🔥',
+  'Lightning': '🚀',
+  'Target': '💪',
+  'TrendUp': '💯',
+  'Sparkle': '🎉',
+  'Trophy': '👊',
+  'Heart': '👏'
+};
+
 const EncouragementForm = ({ 
   targetUser, 
   groupId, 
@@ -12,7 +23,6 @@ const EncouragementForm = ({
 }) => {
   const [message, setMessage] = useState('');
   const [typeIcon, setTypeIcon] = useState('Fire');
-  const [reaction] = useState('👏'); // Default reaction emoji sent to API
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -41,9 +51,9 @@ const EncouragementForm = ({
       const encouragementData = {
         toUserId: targetUser._id || targetUser.id,
         groupId,
-        type: typeIcon,
+        type: habitId ? 'goal_achieved' : 'general_support',
         message: message.trim(),
-        reaction
+        reaction: reactionMapping[typeIcon] || '👏'
       };
       
       if (habitId) {

@@ -148,6 +148,10 @@ const MemberDashboardModal = ({ groupId, memberId, isOpen, onClose }) => {
                 animate="animate"
                 exit="exit"
               >
+                <Dialog.Description className="sr-only">
+                  Member stats dashboard and encouragement form view.
+                </Dialog.Description>
+
                 <div className="flex items-center justify-between p-4 border-b border-[var(--line)] bg-[var(--surface-2)] z-10">
                   <div className="flex items-center gap-2">
                     {view === 'encourage' && (
@@ -158,9 +162,11 @@ const MemberDashboardModal = ({ groupId, memberId, isOpen, onClose }) => {
                         <ChevronLeftIcon className="w-5 h-5" />
                       </button>
                     )}
-                    <span className="std-mono text-xs text-[var(--ink-3)] uppercase tracking-wider">
-                      {view === 'encourage' ? 'Send Encouragement' : 'Member Dashboard'}
-                    </span>
+                    <Dialog.Title asChild>
+                      <span className="std-mono text-xs text-[var(--ink-3)] uppercase tracking-wider">
+                        {view === 'encourage' ? 'Send Encouragement' : 'Member Dashboard'}
+                      </span>
+                    </Dialog.Title>
                   </div>
                   <button
                     onClick={onClose}
