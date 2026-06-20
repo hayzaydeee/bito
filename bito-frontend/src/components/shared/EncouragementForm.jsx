@@ -106,7 +106,7 @@ const EncouragementForm = ({
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Write an encouraging note..."
               maxLength={500}
-              className="grp-input w-full resize-none !rounded-[12px] !py-3 flex-none h-[90px] min-h-[90px]"
+              className="grp-input w-full resize-none !rounded-[12px] !py-3 flex-none h-[150px] min-h-[150px]"
               required
             />
             

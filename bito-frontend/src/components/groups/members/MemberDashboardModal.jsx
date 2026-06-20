@@ -142,7 +142,7 @@ const MemberDashboardModal = ({ groupId, memberId, isOpen, onClose }) => {
             </Dialog.Overlay>
             <Dialog.Content asChild>
               <motion.div
-                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-2xl bg-[var(--surface)] border border-[var(--line)] shadow-2xl rounded-2xl z-50 flex flex-col overflow-hidden h-[80vh] min-h-[500px] max-h-[700px]"
+                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-2xl bg-[var(--surface)] border border-[var(--line)] shadow-2xl rounded-2xl z-50 flex flex-col overflow-hidden h-[85vh] min-h-[580px] max-h-[780px]"
                 variants={modalVariants}
                 initial="initial"
                 animate="animate"
