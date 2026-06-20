@@ -215,7 +215,10 @@ const validateEncouragement = [
     .withMessage('Message must be between 1 and 500 characters'),
   body('reaction')
     .optional()
-    .isIn(['👏', '🔥', '💪', '⭐', '🎉', '👊', '💯', '🚀'])
+    .isIn([
+      '👏', '🔥', '💪', '⭐', '🎉', '👊', '💯', '🚀',
+      'Fire', 'Lightning', 'Target', 'TrendUp', 'Sparkle', 'Heart', 'Trophy', 'Star'
+    ])
     .withMessage('Invalid reaction emoji'),
   handleValidationErrors
 ];

@@ -54,7 +54,10 @@ const encouragementSchema = new mongoose.Schema({
   // Predefined reaction emojis/types
   reaction: {
     type: String,
-    enum: ['👏', '🔥', '💪', '⭐', '🎉', '👊', '💯', '🚀'],
+    enum: [
+      '👏', '🔥', '💪', '⭐', '🎉', '👊', '💯', '🚀',
+      'Fire', 'Lightning', 'Target', 'TrendUp', 'Sparkle', 'Heart', 'Trophy', 'Star'
+    ],
     default: '👏'
   },
   

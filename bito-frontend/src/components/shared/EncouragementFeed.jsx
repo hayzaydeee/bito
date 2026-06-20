@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { encouragementAPI } from '../../services/api';
+import HabitIcon from './HabitIcon';
+
 import { 
   HeartIcon,
   ChatBubbleIcon,
@@ -185,7 +187,9 @@ const EncouragementFeed = ({ groupId, limit = 20 }) => {
                         <span className="font-semibold text-[var(--color-text-primary)] font-outfit">
                           {encouragement.toUser.name}
                         </span>
-                        <span className="text-lg">{encouragement.reaction}</span>
+                        <span className="inline-flex items-center text-lg">
+                          <HabitIcon icon={encouragement.reaction} size={18} />
+                        </span>
                       </div>
                       <div className="flex items-center gap-2 mt-1">
                         <span className={`px-2 py-1 rounded-lg text-xs font-medium bg-${typeInfo.color}-100 dark:bg-${typeInfo.color}-900/30 text-${typeInfo.color}-600 dark:text-${typeInfo.color}-400`}>

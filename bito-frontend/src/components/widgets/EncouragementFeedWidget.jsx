@@ -1,4 +1,6 @@
 import React from 'react';
+import HabitIcon from '../shared/HabitIcon';
+
 import { 
   HeartIcon,
   EnterIcon,
@@ -94,7 +96,9 @@ const EncouragementFeedWidget = ({
                         <span className="font-semibold text-[var(--color-text-primary)] font-outfit">
                           {encouragement.toUser.name}
                         </span>
-                        <span className="text-sm">{encouragement.reaction}</span>
+                        <span className="inline-flex items-center text-sm">
+                          <HabitIcon icon={encouragement.reaction} size={16} />
+                        </span>
                       </div>
                       <div className="flex items-center gap-2 mt-1">
                         <span className={`px-1.5 py-0.5 rounded text-xs font-medium bg-${typeInfo.color}-100 dark:bg-${typeInfo.color}-900/30 text-${typeInfo.color}-600 dark:text-${typeInfo.color}-400`}>

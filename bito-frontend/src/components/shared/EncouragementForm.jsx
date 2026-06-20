@@ -3,16 +3,6 @@ import { encouragementAPI } from '../../services/api';
 import { PaperPlaneIcon } from '@radix-ui/react-icons';
 import HabitIcon from './HabitIcon';
 
-const reactionMapping = {
-  'Star': '⭐',
-  'Fire': '🔥',
-  'Lightning': '🚀',
-  'Target': '💪',
-  'TrendUp': '💯',
-  'Sparkle': '🎉',
-  'Trophy': '👊',
-  'Heart': '👏'
-};
 
 const EncouragementForm = ({ 
   targetUser, 
@@ -53,7 +43,7 @@ const EncouragementForm = ({
         groupId,
         type: habitId ? 'goal_achieved' : 'general_support',
         message: message.trim(),
-        reaction: reactionMapping[typeIcon] || '👏'
+        reaction: typeIcon
       };
       
       if (habitId) {
