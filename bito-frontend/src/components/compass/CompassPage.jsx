@@ -13,6 +13,8 @@ import GeneratingOverlay from "./GeneratingOverlay";
 import RefinementStudio from "./RefinementStudio";
 import SuitePreview from "./SuitePreview";
 import DiscardModal from "./DiscardModal";
+import DraftResumeBanner from "./DraftResumeBanner";
+import useDraft from "./hooks/useDraft";
 
 /**
  * CompassPage — orchestrator component.
@@ -48,6 +50,12 @@ const CompassPage = () => {
   const [discardTarget, setDiscardTarget] = useState(null); // compass to discard
   const [discardLoading, setDiscardLoading] = useState(false);
 
+  // Draft persistence (localStorage)
+  const { draft, saveDraft, clearDraft } = useDraft();
+
+  // Soft double-gen guard: shown when user clicks New but previews exist
+  const [showDoubleGenGuard, setShowDoubleGenGuard] = useState(false);
+
   // ── Fetch ──
   const fetchcompasses = useCallback(async () => {
     try {
@@ -64,6 +72,16 @@ const CompassPage = () => {
   useEffect(() => {
     fetchcompasses();
   }, [fetchcompasses]);
+
+  // ── Save draft on every relevant change ──
+  useEffect(() => {
+    if (view !== "create") return;
+    // Attach goalText to clarification so staleness check works
+    const clarificationWithGoal = clarification
+      ? { ...clarification, goalText }
+      : null;
+    saveDraft({ goalText, clarification: clarificationWithGoal });
+  }, [goalText, clarification, view, saveDraft]);
 
   // ── Generate (two-step: clarify → generate) ──
   const handleGenerate = async () => {
@@ -146,6 +164,7 @@ const CompassPage = () => {
         }
         setGoalText("");
         setClarification(null);
+        clearDraft(); // ← plan saved to DB — draft no longer needed
         fetchcompasses();
       } else {
         setError(res.error || "Generation failed");
@@ -188,6 +207,7 @@ const CompassPage = () => {
       if (res.success) {
         setActivecompass(res.compass);
         setView("list");
+        clearDraft(); // ← fully confirmed — clear any lingering draft
         fetchcompasses();
       } else {
         setError(res.error || "Failed to apply");
@@ -383,12 +403,15 @@ const CompassPage = () => {
     return { suiteGroups: suiteList, standalonecompasses: standalone };
   })();
 
-  // Sort: pinned first, then by date
+  // Sort: preview first, then pinned, then by existing order
   const sortedStandalone = [...standalonecompasses].sort((a, b) => {
-    const aPinned = a.personalization?.isPinned ? 1 : 0;
-    const bPinned = b.personalization?.isPinned ? 1 : 0;
-    if (bPinned !== aPinned) return bPinned - aPinned;
-    return 0; // preserve existing order
+    const aPreview = a.status === "preview" ? 0 : 1;
+    const bPreview = b.status === "preview" ? 0 : 1;
+    if (aPreview !== bPreview) return aPreview - bPreview;
+    const aPinned = a.personalization?.isPinned ? 0 : 1;
+    const bPinned = b.personalization?.isPinned ? 0 : 1;
+    if (aPinned !== bPinned) return aPinned - bPinned;
+    return 0; // preserve createdAt desc order from the API
   });
 
   /* ═══════════════════════════════════════════
@@ -512,28 +535,32 @@ const CompassPage = () => {
   // ── Create ──
   if (view === "create") {
     return (
-      <div className="std h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-10">
-        <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
-          <div className="max-w-5xl mx-auto w-full">
-            <GoalInput
-            goalText={goalText}
-            setGoalText={setGoalText}
-            onGenerate={handleGenerate}
-            onBack={() => {
-              setView("list");
-              setClarification(null);
-            }}
-            error={error}
-            clarification={clarification}
-            clarifyLoading={clarifyLoading}
-            onClarificationSubmit={handleClarificationSubmit}
-            onSkipClarification={handleSkipClarification}
-            onUpdateAnswer={updateClarificationAnswer}
-            goalAnalysis={clarification?.goalAnalysis}
-          />
+      <>
+        {discardModalEl}
+        <div className="std h-full flex flex-col min-h-0 px-4 sm:px-8 py-7 sm:py-10">
+          <div className="flex-1 overflow-y-auto min-h-0 pb-20 scrollbar-hide -mx-4 px-4 sm:-mx-8 sm:px-8">
+            <div className="max-w-5xl mx-auto w-full">
+              <GoalInput
+                goalText={goalText}
+                setGoalText={setGoalText}
+                onGenerate={handleGenerate}
+                onBack={() => {
+                  setView("list");
+                  clearDraft();
+                  setClarification(null);
+                }}
+                error={error}
+                clarification={clarification}
+                clarifyLoading={clarifyLoading}
+                onClarificationSubmit={handleClarificationSubmit}
+                onSkipClarification={handleSkipClarification}
+                onUpdateAnswer={updateClarificationAnswer}
+                goalAnalysis={clarification?.goalAnalysis}
+              />
+            </div>
+          </div>
         </div>
-        </div>
-      </div>
+      </>
     );
   }
 
@@ -564,7 +591,20 @@ const CompassPage = () => {
           actions={
             <motion.button
               whileTap={{ scale: 0.97 }}
-              onClick={() => { setView("create"); setError(null); }}
+              onClick={() => {
+                // Soft guard: if unreviewed previews exist, nudge before creating another
+                const hasUnreviewed = compasses.some((c) => c.status === "preview");
+                if (hasUnreviewed && !showDoubleGenGuard) {
+                  setShowDoubleGenGuard(true);
+                  return;
+                }
+                setShowDoubleGenGuard(false);
+                // Restore any saved draft into the create flow
+                if (draft?.goalText) setGoalText(draft.goalText);
+                if (draft?.clarification) setClarification(draft.clarification);
+                setView("create");
+                setError(null);
+              }}
               className="std-btn std-btn--signal w-full sm:w-auto"
             >
               <PlusIcon className="w-4 h-4" />
@@ -572,6 +612,69 @@ const CompassPage = () => {
             </motion.button>
           }
         />
+
+        {/* Double-gen guard */}
+        <AnimatePresence>
+          {showDoubleGenGuard && (
+            <motion.div
+              key="double-gen-guard"
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              className="std-card p-4 flex flex-col sm:flex-row sm:items-center gap-3"
+              style={{ borderColor: "color-mix(in srgb, var(--ember) 30%, var(--line-2))" }}
+            >
+              <p className="flex-1 text-[13px] text-[var(--ink-2)] leading-snug">
+                You have an unreviewed plan — apply or discard it first, or continue anyway.
+              </p>
+              <div className="flex gap-2 flex-shrink-0">
+                <button
+                  onClick={() => {
+                    const firstPreview = compasses.find((c) => c.status === "preview");
+                    if (firstPreview) openDetail(firstPreview);
+                    setShowDoubleGenGuard(false);
+                  }}
+                  className="std-btn std-btn--sm"
+                >
+                  Go to plan
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDoubleGenGuard(false);
+                    if (draft?.goalText) setGoalText(draft.goalText);
+                    if (draft?.clarification) setClarification(draft.clarification);
+                    setView("create");
+                    setError(null);
+                  }}
+                  className="std-btn std-btn--sm"
+                >
+                  Continue anyway
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Draft resume banner */}
+        {!showDoubleGenGuard && (
+          <DraftResumeBanner
+            previewCompasses={compasses.filter((c) => c.status === "preview")}
+            suiteGroups={suiteGroups}
+            onResume={(target) => {
+              if (target._suiteGroup) {
+                setActiveSuite({
+                  suiteId: target.suiteId,
+                  suiteName: target.suiteName,
+                  compasses: target.compasses,
+                });
+                setActivecompass(null);
+                setView("preview");
+              } else {
+                openDetail(target);
+              }
+            }}
+          />
+        )}
 
         {error && (
           <p className="text-sm text-red-400 font-spartan mb-4">{error}</p>

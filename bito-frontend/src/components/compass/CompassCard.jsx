@@ -17,9 +17,12 @@ const CompassCard = ({ compass, index = 0, onOpen, onArchive, archiveLoading }) 
   const catMeta = CATEGORY_META[sys.category] || CATEGORY_META.custom;
   const sTheme = STATUS_THEME[t.status] || STATUS_THEME.preview;
   const isActive = t.status === "active";
+  const isPreview = t.status === "preview";
   const pers = t.personalization || {};
   const displayIcon = pers.icon || catMeta.icon;
   const accentColor = pers.color || catMeta.accent;
+  // Preview cards get a desaturated accent — still recognisable but not "live"
+  const cardAccent = isPreview ? `${accentColor}66` : accentColor;
 
   const phases = sys.phases || [];
   const isPhased = phases.length > 0 && phases.some((p) => p.habits?.length > 0);
@@ -54,10 +57,11 @@ const CompassCard = ({ compass, index = 0, onOpen, onArchive, archiveLoading }) 
           ? { duration: 0 }
           : { type: "spring", stiffness: 300, damping: 30, delay: index * 0.05 }
       }
+      className={isPreview ? "compass-card--preview" : ""}
     >
       <LedgerCard
         index={index}
-        accent={accentColor}
+        accent={cardAccent}
         active={isActive}
         onClick={() => onOpen(t)}
         minHeight={160}
@@ -87,25 +91,33 @@ const CompassCard = ({ compass, index = 0, onOpen, onArchive, archiveLoading }) 
         }
         meta={
           <p className="std-mono text-[10px] text-[var(--ink-3)] uppercase tracking-wider">
-            <span style={{ color: "var(--ink-2)" }}>{sTheme.label}</span>
+            <span style={{ color: isPreview ? "var(--ink-2)" : "var(--ink-2)" }}>
+              {isPreview ? "Awaiting review" : sTheme.label}
+            </span>
             {" · "}{habitCount} habit{habitCount !== 1 ? "s" : ""}
             {isActive && isPhased && ` · Phase ${(progress.currentPhaseIndex ?? 0) + 1}/${phases.length}`}
           </p>
         }
         footer={
-          <span className="std-mono text-[10px] text-[var(--ink-3)] uppercase tracking-wider inline-flex items-center gap-1 truncate">
-            <HabitIcon icon={catMeta.icon} size={12} /> {catMeta.label}
-          </span>
+          isPreview ? (
+            <span className="std-mono text-[10px] text-[var(--signal)] uppercase tracking-wider inline-flex items-center gap-1">
+              Continue
+            </span>
+          ) : (
+            <span className="std-mono text-[10px] text-[var(--ink-3)] uppercase tracking-wider inline-flex items-center gap-1 truncate">
+              <HabitIcon icon={catMeta.icon} size={12} /> {catMeta.label}
+            </span>
+          )
         }
       >
         {/* Richer body — phase-aware progress meter + habit chips */}
         <div className="mt-4">
           <div className="flex items-center justify-between std-mono text-[10px] text-[var(--ink-3)] uppercase tracking-wider mb-1.5">
             <span>{isPhased ? "Phase progress" : "Progress"}</span>
-            <span style={{ color: accentColor }}>{progressPct}%</span>
+            <span style={{ color: cardAccent }}>{progressPct}%</span>
           </div>
           <div className="std-meter">
-            <i style={{ width: `${progressPct}%`, background: accentColor, transition: "width .5s ease" }} />
+            <i style={{ width: `${progressPct}%`, background: cardAccent, transition: "width .5s ease" }} />
           </div>
           {previewHabits.length > 0 && (
             <div className="flex items-center gap-1.5 mt-3 flex-wrap">
