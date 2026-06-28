@@ -154,6 +154,16 @@ const challengeSchema = new mongoose.Schema(
             message: { type: String },
           },
         ],
+        progressSnapshot: {
+          currentValue: { type: Number, default: null },
+          currentStreak: { type: Number, default: null },
+          bestStreak: { type: Number, default: null },
+          completionRate: { type: Number, default: null },
+          scheduledDaysCompleted: { type: Number, default: null },
+          scheduledDaysTotal: { type: Number, default: null },
+          snapshotDate: { type: Date, default: null },
+        },
+        lastComputedAt: { type: Date, default: null },
       },
     ],
 
