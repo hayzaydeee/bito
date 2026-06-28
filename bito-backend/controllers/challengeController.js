@@ -199,7 +199,7 @@ const processChallengeProgress = async (userId, habitId) => {
       await challenge.save();
 
       for (const milestone of newMilestones) {
-        await Activity.create({
+        const milestoneActivity = await Activity.create({
           groupId: challenge.groupId,
           userId,
           type: 'challenge_milestone',
@@ -212,6 +212,8 @@ const processChallengeProgress = async (userId, habitId) => {
           visibility: 'group',
         });
 
+        enrichChallengeEvent(milestoneActivity, challenge, userId, 'milestone').catch(() => {});
+
         await notifyParticipants(challenge, userId, {
           title: '🏅 Milestone Reached!',
           body: `Someone hit "${milestone.label}" in "${challenge.title}"!`,
@@ -220,7 +222,7 @@ const processChallengeProgress = async (userId, habitId) => {
       }
 
       if (updated.status === 'completed') {
-        await Activity.create({
+        const completionActivity = await Activity.create({
           groupId: challenge.groupId,
           userId,
           type: 'challenge_completed',
@@ -232,6 +234,8 @@ const processChallengeProgress = async (userId, habitId) => {
           },
           visibility: 'group',
         });
+
+        enrichChallengeEvent(completionActivity, challenge, userId, 'completion').catch(() => {});
 
         await notifyParticipants(challenge, userId, {
           title: '🎉 Challenge Completed!',
@@ -518,6 +522,68 @@ async function computeConsistencyProgress(challenge, userId, habitIds, matchMode
 
   const rate = Math.round((completedDays / scheduledDaysTotal) * 100);
   return { currentValue: completedDays, completionRate: rate, lastLoggedAt: new Date() };
+}
+
+// ── Async progress narrative ──────────────────────────────────────────────────
+
+/**
+ * Fire-and-forget: enrich a challenge feed event with a 1-sentence LLM comment.
+ * Never throws — all failures are silently swallowed to avoid blocking the check-in path.
+ */
+async function enrichChallengeEvent(activity, challenge, userId, eventType) {
+  try {
+    const { isLLMAvailable } = require('../services/llmEnrichment');
+    if (!isLLMAvailable()) return;
+
+    const { getLLMClient } = require('../services/llmClient');
+    const client = getLLMClient();
+    const { buildSystemPrompt, DEFAULT_PERSONALITY } = require('../prompts/buildSystemPrompt');
+
+    // Build rank context
+    const leaderboard = challenge.getLeaderboard();
+    const rank = leaderboard.findIndex(
+      (r) => r.userId && String(r.userId) === String(userId)
+    ) + 1;
+    const total = leaderboard.length;
+
+    const daysElapsed = Math.ceil(
+      (Date.now() - new Date(challenge.startDate).getTime()) / (1000 * 60 * 60 * 24)
+    );
+    const daysTotal = challenge.durationDays || 1;
+
+    const context = {
+      eventType,
+      challengeTitle: challenge.title,
+      challengeType: challenge.type,
+      rank,
+      totalParticipants: total,
+      daysElapsed,
+      daysTotal,
+    };
+
+    const systemPrompt = buildSystemPrompt(DEFAULT_PERSONALITY, 'insight-enrichment');
+    const userPrompt = `Write exactly one sentence (no emoji) celebrating or acknowledging this challenge event. Focus on rank and timing.\n\nContext: ${JSON.stringify(context)}`;
+
+    const response = await client.chat.completions.create({
+      model: process.env.INSIGHTS_LLM_MODEL || 'gpt-4.1-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: 0.6,
+      max_tokens: 80,
+    });
+
+    const text = response.choices?.[0]?.message?.content?.trim();
+    if (text) {
+      await Activity.updateOne(
+        { _id: activity._id },
+        { $set: { 'data.enrichment': text } }
+      );
+    }
+  } catch (err) {
+    console.warn('[Challenge] enrichChallengeEvent failed:', err.message);
+  }
 }
 
 module.exports = { processChallengeProgress, invalidateCache, warmCacheForUser };

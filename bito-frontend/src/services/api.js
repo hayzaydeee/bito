@@ -773,6 +773,11 @@ export const groupsAPI = {
     return apiRequest(`/api/challenges/${challengeId}/leaderboard`);
   },
 
+  // AI-assisted challenge creation suggestions
+  getChallengeAdvisor: async (groupId) => {
+    return apiRequest(`/api/groups/${groupId}/challenges/advisor`);
+  },
+
   // ── Feed reactions ──
 
   // Add reaction to a feed event

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { X, CaretDown, CaretUp, Check } from "@phosphor-icons/react";
+import { X, CaretDown, CaretUp, Check, Warning } from "@phosphor-icons/react";
 import { groupsAPI } from "../../services/api";
 import AnimatedModal from "./AnimatedModal";
 import HabitIcon from "../shared/HabitIcon";
@@ -12,6 +12,8 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
   const [allHabits, setAllHabits] = useState([]);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [showAllHabits, setShowAllHabits] = useState(false);
+  const [compatibilityWarnings, setCompatibilityWarnings] = useState([]);
+  const [pendingChallenge, setPendingChallenge] = useState(null);
 
   const isSingleMode = !challenge?.habitMatchMode || challenge.habitMatchMode === "single";
 
@@ -54,6 +56,8 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
       setAllHabits([]);
       setShowAllHabits(false);
       setError("");
+      setCompatibilityWarnings([]);
+      setPendingChallenge(null);
       fetchSuggestions();
     }
   }, [isOpen, challenge, fetchSuggestions]);
@@ -91,8 +95,13 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
       const ids = [...selectedIds];
       const res = await groupsAPI.joinChallenge(challenge._id, ids);
       if (res.success) {
-        onSuccess?.(res.challenge);
-        onClose();
+        if (res.compatibilityWarnings?.length) {
+          setCompatibilityWarnings(res.compatibilityWarnings);
+          setPendingChallenge(res.challenge);
+        } else {
+          onSuccess?.(res.challenge);
+          onClose();
+        }
       } else {
         setError(res.error || "Failed to join challenge");
       }
@@ -101,6 +110,11 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDismissWarnings = () => {
+    onSuccess?.(pendingChallenge);
+    onClose();
   };
 
   const suggestedIds = new Set(suggestions.map((s) => s.habitId));
@@ -282,7 +296,39 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
 
           {error && <p className="grp-mono text-xs text-[var(--rose,#e11d48)]">{error}</p>}
 
+          {/* Compatibility warning panel */}
+          {compatibilityWarnings.length > 0 && (
+            <div className="rounded-xl border border-[var(--ember)]/30 bg-[var(--ember)]/5 p-4 space-y-3">
+              <p className="grp-mono text-xs font-semibold text-[var(--ember)] flex items-center gap-1.5">
+                <Warning size={14} weight="fill" />
+                Habit compatibility notice
+              </p>
+              <ul className="space-y-1.5">
+                {compatibilityWarnings.map((w, i) => (
+                  <li key={i} className="grp-mono text-[11px] text-[var(--ink-2)] leading-snug">
+                    {w.message}
+                  </li>
+                ))}
+              </ul>
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={() => { setCompatibilityWarnings([]); setPendingChallenge(null); }}
+                  className="flex-1 h-9 border border-[var(--line)]/20 text-[var(--ink-2)] rounded-lg grp-mono text-xs font-medium hover:bg-[var(--surface-2)] transition-colors"
+                >
+                  Go back
+                </button>
+                <button
+                  onClick={handleDismissWarnings}
+                  className="flex-1 h-9 bg-[var(--ember)] hover:opacity-90 text-white rounded-lg grp-mono text-xs font-semibold transition-colors"
+                >
+                  Join anyway
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* actions */}
+          {!compatibilityWarnings.length && (
           <div className="flex gap-3">
             <button
               onClick={onClose}
@@ -298,6 +344,7 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
               {loading ? "Joining…" : "Join Challenge"}
             </button>
           </div>
+          )}
         </div>
       </div>
     </AnimatedModal>

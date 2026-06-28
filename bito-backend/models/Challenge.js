@@ -148,6 +148,12 @@ const challengeSchema = new mongoose.Schema(
           default: 'active',
         },
         completedAt: { type: Date, default: null },
+        habitCompatibilityWarnings: [
+          {
+            code: { type: String },
+            message: { type: String },
+          },
+        ],
       },
     ],
 
@@ -219,7 +225,7 @@ challengeSchema.methods.getParticipant = function (userId) {
   );
 };
 
-challengeSchema.methods.addParticipant = function (userId, linkedHabitIds = null) {
+challengeSchema.methods.addParticipant = function (userId, linkedHabitIds = null, compatibilityWarnings = []) {
   if (this.isParticipant(userId)) return null;
 
   const activeCount = this.participants.filter((p) => p.status === 'active').length;
@@ -240,6 +246,7 @@ challengeSchema.methods.addParticipant = function (userId, linkedHabitIds = null
     progress: { currentValue: 0, currentStreak: 0, bestStreak: 0, completionRate: 0, lastLoggedAt: null },
     status: 'active',
     completedAt: null,
+    habitCompatibilityWarnings: compatibilityWarnings || [],
   };
 
   this.participants.push(participant);

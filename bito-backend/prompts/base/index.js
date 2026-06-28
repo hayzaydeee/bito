@@ -10,6 +10,7 @@ const earlyInsight = require('./earlyInsight');
 const earlyAnalytics = require('./earlyAnalytics');
 const validator = require('./validator');
 const habitMatching = require('./habitMatching');
+const challengeAdvisor = require('./challengeAdvisor');
 
 const basePrompts = {
   'insight-enrichment': insightEnrichment,
@@ -20,6 +21,7 @@ const basePrompts = {
   'early-analytics': earlyAnalytics,
   'validator': validator,
   'habit-matching': habitMatching,
+  'challenge-advisor': challengeAdvisor,
 };
 
 module.exports = { basePrompts };

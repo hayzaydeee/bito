@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { wizardStepVariants } from "../../utils/motion";
-import { X, ArrowLeft, ArrowRight, Check, Fire, TrendUp, CalendarBlank, Handshake } from "@phosphor-icons/react";
+import { X, ArrowLeft, ArrowRight, Check, Fire, TrendUp, CalendarBlank, Handshake, Sparkle } from "@phosphor-icons/react";
 import { groupsAPI } from "../../services/api";
 import AnimatedModal from "./AnimatedModal";
 
@@ -66,6 +66,7 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [habits, setHabits] = useState([]);
+  const [advisorSuggestions, setAdvisorSuggestions] = useState([]);
 
   const [compactMode, setCompactMode] = useState(() => {
     try { return localStorage.getItem(LS_COMPACT_KEY) === "true"; }
@@ -95,8 +96,13 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
         .getGroupHabits(groupId)
         .then((r) => setHabits(r.habits || []))
         .catch(() => setHabits([]));
+      groupsAPI
+        .getChallengeAdvisor(groupId)
+        .then((r) => setAdvisorSuggestions(r.suggestions || []))
+        .catch(() => setAdvisorSuggestions([]));
       setStep(0);
       setError("");
+      setAdvisorSuggestions([]);
       setForm({
         name: "",
         description: "",
@@ -195,30 +201,53 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
     }
   };
 
+  const advisorTypeSet = new Set(advisorSuggestions.map((s) => s.type));
+
   const renderStep0 = () => (
     <div className="space-y-4">
+      {advisorSuggestions.length > 0 && (
+        <div className="flex items-center gap-1.5 grp-mono text-[10px] text-[var(--signal)] uppercase tracking-wider">
+          <Sparkle size={12} weight="fill" />
+          AI suggestions highlighted below
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3">
-        {CHALLENGE_TYPES.map((t) => (
-          <button
-            key={t.value}
-            onClick={() => {
-              setForm((p) => ({ ...p, type: t.value }));
-              if (!compactMode) {
-                setDirection(1);
-                setStep(1);
-              }
-            }}
-            className={`p-4 rounded-[12px] border text-left transition-colors ${
-              form.type === t.value
-                ? "border-[var(--signal)]/55 bg-[var(--signal)]/8"
-                : "border-[var(--line-2)] hover:border-[var(--line-3)]"
-            }`}
-          >
-            <t.Icon size={22} weight="duotone" className="text-[var(--signal)]" />
-            <p className="grp-display text-base font-bold text-[var(--ink)] mt-2">{t.label}</p>
-            <p className="grp-mono text-[10px] text-[var(--ink-3)] mt-1 uppercase tracking-wider">{t.desc}</p>
-          </button>
-        ))}
+        {CHALLENGE_TYPES.map((t) => {
+          const aiSuggested = advisorTypeSet.has(t.value);
+          const aiHint = advisorSuggestions.find((s) => s.type === t.value);
+          return (
+            <button
+              key={t.value}
+              onClick={() => {
+                setForm((p) => ({ ...p, type: t.value }));
+                if (!compactMode) {
+                  setDirection(1);
+                  setStep(1);
+                }
+              }}
+              className={`p-4 rounded-[12px] border text-left transition-colors relative ${
+                form.type === t.value
+                  ? "border-[var(--signal)]/55 bg-[var(--signal)]/8"
+                  : aiSuggested
+                  ? "border-[var(--signal)]/25 hover:border-[var(--signal)]/45"
+                  : "border-[var(--line-2)] hover:border-[var(--line-3)]"
+              }`}
+            >
+              {aiSuggested && (
+                <span className="absolute top-2 right-2 flex items-center gap-0.5 grp-mono text-[9px] font-semibold text-[var(--signal)] bg-[var(--signal)]/10 px-1.5 py-0.5 rounded-full">
+                  <Sparkle size={8} weight="fill" />
+                  AI
+                </span>
+              )}
+              <t.Icon size={22} weight="duotone" className="text-[var(--signal)]" />
+              <p className="grp-display text-base font-bold text-[var(--ink)] mt-2">{t.label}</p>
+              <p className="grp-mono text-[10px] text-[var(--ink-3)] mt-1 uppercase tracking-wider">{t.desc}</p>
+              {aiSuggested && aiHint?.rationale && (
+                <p className="grp-mono text-[9px] text-[var(--signal)] mt-1.5 leading-snug">{aiHint.rationale}</p>
+              )}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -252,8 +281,41 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
     </div>
   );
 
-  const renderStep2 = () => (
+  const renderStep2 = () => {
+    const advisorMatch = advisorSuggestions.find((s) => s.type === form.type);
+    const applyAdvisor = () => {
+      if (!advisorMatch) return;
+      setForm((p) => ({
+        ...p,
+        targetValue: advisorMatch.targetValue ?? p.targetValue,
+        targetUnit: advisorMatch.targetUnit ?? p.targetUnit,
+        habitSlot: advisorMatch.habitSlot || p.habitSlot,
+      }));
+    };
+
+    return (
     <div className="space-y-4">
+      {/* AI pre-fill banner */}
+      {advisorMatch && (
+        <div className="flex items-center justify-between p-3 rounded-xl bg-[var(--signal)]/5 border border-[var(--signal)]/15">
+          <div>
+            <p className="grp-mono text-[10px] font-semibold text-[var(--signal)] flex items-center gap-1">
+              <Sparkle size={10} weight="fill" />
+              AI suggestion for {form.type}
+            </p>
+            <p className="grp-mono text-[9px] text-[var(--ink-3)] mt-0.5">
+              Target: {advisorMatch.targetValue} {advisorMatch.targetUnit} · {advisorMatch.duration}d
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={applyAdvisor}
+            className="grp-mono text-[10px] font-semibold text-[var(--signal)] hover:underline"
+          >
+            Pre-fill
+          </button>
+        </div>
+      )}
       {/* target */}
       <div className="grid grid-cols-2 gap-3">
         <div>
@@ -316,7 +378,8 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
         </div>
       )}
     </div>
-  );
+    );
+  };
 
   const renderStep3 = () => (
     <div className="space-y-4">
