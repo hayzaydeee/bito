@@ -10,6 +10,7 @@ const Habit = require('../models/Habit');
 const { invalidateCache } = require('../controllers/challengeController');
 const { sanitizeObject } = require('../utils/llmSanitizer');
 const { securityLogger } = require('../utils/securityLogger');
+const { buildSystemPrompt, DEFAULT_PERSONALITY } = require('../prompts/buildSystemPrompt');
 const { buildIdentityActionRateLimitMiddleware } = require('../middleware/identityActionRateLimiter');
 
 // All routes require auth
@@ -376,6 +377,26 @@ router.post('/challenges/:id/join', [
       });
     }
 
+    // Team goal unit validation: linked habits should be compatible with the target unit
+    if (challenge.type === 'team_goal' && habitIds.length) {
+      const targetUnit = challenge.rules?.targetUnit;
+      const NUMERIC_UNITS = ['minutes', 'hours', 'pages', 'miles', 'calories', 'glasses'];
+      if (targetUnit && NUMERIC_UNITS.includes(targetUnit)) {
+        const linkedHabits = await Habit.find({ _id: { $in: habitIds }, userId: req.user._id })
+          .select('methodology target name').lean();
+
+        const incompatible = linkedHabits.filter(
+          (h) => h.methodology !== 'numeric' && h.methodology !== 'duration'
+        );
+        if (incompatible.length) {
+          return res.status(400).json({
+            success: false,
+            error: `This team goal tracks ${targetUnit}. Habit "${incompatible[0].name}" is a boolean habit and won't contribute numeric values. Please link a numeric or duration habit instead.`,
+          });
+        }
+      }
+    }
+
     const participant = challenge.addParticipant(req.user._id, habitIds.length ? habitIds : null);
     if (!participant) {
       return res.status(400).json({ success: false, error: 'Cannot join — already participating or challenge is full' });
@@ -457,23 +478,24 @@ router.post('/challenges/:id/suggest-habits', async (req, res) => {
       return res.status(403).json({ success: false, error: 'Access denied' });
     }
 
-    // Get user's personal habits in this group
+    // Fetch ALL active habits for this user — personal, group, and compass
     const userHabits = await Habit.find({
       userId: req.user._id,
-      groupId: challenge.groupId,
-      archived: { $ne: true },
-    }).select('name description category methodology target frequency icon').lean();
+      isActive: true,
+      isArchived: { $ne: true },
+    }).select('name description category methodology target frequency schedule icon stats currentStreak completionRate').lean();
 
     if (!userHabits.length) {
       return res.json({ success: true, suggestions: [], habits: [] });
     }
 
-    // Build challenge context for matching
+    // Build richer challenge context including match mode
     const challengeContext = {
       title: challenge.title,
       description: challenge.description || '',
       type: challenge.type,
       habitSlot: challenge.habitSlot || '',
+      habitMatchMode: challenge.habitMatchMode || 'single',
       targetUnit: challenge.rules?.targetUnit || '',
       targetValue: challenge.rules?.targetValue,
     };
@@ -491,75 +513,88 @@ router.post('/challenges/:id/suggest-habits', async (req, res) => {
           name: h.name,
           description: h.description || '',
           category: h.category || '',
-          unit: h.target?.unit || '',
+          methodology: h.methodology || 'boolean',
+          frequency: h.frequency || 'daily',
+          scheduleDays: h.schedule?.days || [],
+          targetValue: h.target?.value || 1,
+          targetUnit: h.target?.unit || 'times',
+          currentStreak: h.stats?.currentStreak || h.currentStreak || 0,
+          completionRate: h.stats?.completionRate || h.completionRate || 0,
         }));
 
-        const sanitization = sanitizeChallengePromptData({
-          challengeContext,
-          habitList,
-        });
+        const sanitization = sanitizeChallengePromptData({ challengeContext, habitList });
 
         if (sanitization.hadMatches) {
           securityLogger.append({
             type: 'injection_pattern_match',
-            details: {
-              action_taken: 'sanitised',
-              surface: 'challenge_suggest_habits',
-            },
+            details: { action_taken: 'sanitised', surface: 'challenge_suggest_habits' },
           });
         }
 
-        const prompt = `You are a habit-matching assistant. Given a challenge and a user's habits, rank each habit by relevance to the challenge.
+        const systemPrompt = buildSystemPrompt(DEFAULT_PERSONALITY, 'habit-matching');
 
-Challenge:
-- Title: ${sanitization.challengeContext.title}
-- Description: ${sanitization.challengeContext.description}
-- Type: ${sanitization.challengeContext.type}
-- Habit Slot: ${sanitization.challengeContext.habitSlot || '(open)'}
-- Target: ${sanitization.challengeContext.targetValue} ${sanitization.challengeContext.targetUnit}
+        const userPrompt = `Challenge context:
+${JSON.stringify(sanitization.challengeContext, null, 2)}
 
-User's habits:
-${JSON.stringify(sanitization.habitList, null, 2)}
-
-Return a JSON array of objects with { index, score, reason } where score is 0-100 (relevance to the challenge) and reason is a short 1-sentence explanation. Sort by score descending. Only include habits with score > 0.
-
-Return ONLY the JSON array, no markdown or extra text.`;
+User's habits (${habitList.length} total):
+${JSON.stringify(sanitization.habitList, null, 2)}`;
 
         const response = await client.chat.completions.create({
           model: process.env.INSIGHTS_LLM_MODEL || 'gpt-4.1-mini',
-          messages: [{ role: 'user', content: prompt }],
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
           temperature: 0.3,
-          max_tokens: 500,
+          max_tokens: 800,
         });
 
         const text = response.choices?.[0]?.message?.content?.trim();
         if (text) {
           const parsed = JSON.parse(text.replace(/```json?\n?/g, '').replace(/```/g, ''));
-          suggestions = parsed.map((s) => ({
-            habitId: userHabits[s.index]?._id,
-            name: userHabits[s.index]?.name,
-            score: s.score,
-            reason: s.reason,
-          })).filter((s) => s.habitId);
+          suggestions = parsed
+            .map((s) => ({
+              habitId: userHabits[s.index]?._id,
+              name: userHabits[s.index]?.name,
+              score: s.score,
+              reason: s.reason,
+            }))
+            .filter((s) => s.habitId);
         }
       }
     } catch (llmErr) {
       console.warn('[Challenge] LLM suggest-habits fallback:', llmErr.message);
     }
 
-    // Fallback: keyword overlap scoring
+    // Fallback: keyword + methodology heuristic scoring
     if (!suggestions.length) {
       const keywords = `${challengeContext.title} ${challengeContext.description} ${challengeContext.habitSlot}`
         .toLowerCase()
         .split(/\s+/)
         .filter((w) => w.length > 2);
 
-      suggestions = userHabits.map((h) => {
-        const text = `${h.name} ${h.description || ''} ${h.category || ''}`.toLowerCase();
-        const matches = keywords.filter((kw) => text.includes(kw)).length;
-        const score = keywords.length > 0 ? Math.round((matches / keywords.length) * 100) : 0;
-        return { habitId: h._id, name: h.name, score, reason: 'Keyword match' };
-      }).filter((s) => s.score > 0).sort((a, b) => b.score - a.score);
+      suggestions = userHabits
+        .map((h) => {
+          const text = `${h.name} ${h.description || ''} ${h.category || ''}`.toLowerCase();
+          const kwMatches = keywords.length > 0
+            ? keywords.filter((kw) => text.includes(kw)).length / keywords.length
+            : 0;
+
+          // Methodology bonus: prefer daily+boolean for streak/consistency, numeric for cumulative
+          let methodologyBonus = 0;
+          if ((challenge.type === 'streak' || challenge.type === 'consistency') && h.frequency === 'daily') {
+            methodologyBonus = 0.2;
+          }
+          if ((challenge.type === 'cumulative' || challenge.type === 'team_goal') &&
+              (h.methodology === 'numeric' || h.methodology === 'duration')) {
+            methodologyBonus = 0.2;
+          }
+
+          const score = Math.round(Math.min(1, kwMatches + methodologyBonus) * 100);
+          return { habitId: h._id, name: h.name, score, reason: 'Keyword + type match' };
+        })
+        .filter((s) => s.score > 0)
+        .sort((a, b) => b.score - a.score);
     }
 
     res.json({
@@ -572,6 +607,7 @@ Return ONLY the JSON array, no markdown or extra text.`;
         category: h.category,
         icon: h.icon,
         frequency: h.frequency,
+        methodology: h.methodology,
         target: h.target,
       })),
     });

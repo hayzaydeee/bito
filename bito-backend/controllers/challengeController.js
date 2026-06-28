@@ -49,14 +49,10 @@ async function notifyParticipants(challenge, senderId, { title, body, tag }) {
 }
 
 // ── Check-in cache ──
-// Maps userId (string) → Set of habitId strings that are linked to active challenges.
-// Used as a fast-path check in processChallengeProgress to skip DB queries
-// when a checked-in habit isn't part of any challenge.
 const _challengeHabitCache = new Map();
 
 /**
  * Warm the cache for a user by loading their active challenge participant data.
- * Called on join/leave and lazily on first check-in.
  */
 async function warmCacheForUser(userId) {
   try {
@@ -81,7 +77,6 @@ async function warmCacheForUser(userId) {
     _challengeHabitCache.set(String(userId), habitIds);
   } catch (err) {
     console.warn('[Challenge] Cache warm failed:', err.message);
-    // On failure, delete cache entry so we fall through to DB
     _challengeHabitCache.delete(String(userId));
   }
 }
@@ -91,12 +86,51 @@ function invalidateCache(userId) {
   _challengeHabitCache.delete(String(userId));
 }
 
+// ── Frequency / schedule helpers ──────────────────────────────────────────────
+
+/**
+ * Returns true if a habit was "on" (expected to be completed) on a given day-of-week.
+ * Weekly and monthly habits are flexible — any day qualifies.
+ */
+function isHabitScheduledOnDay(habitMeta, utcDayOfWeek) {
+  if (!habitMeta || habitMeta.frequency !== 'daily') return true;
+  const days = habitMeta.schedule?.days;
+  if (!days || days.length === 0) return true; // no specific days = every day
+  return days.includes(utcDayOfWeek);
+}
+
+/**
+ * Returns true if a calendar timestamp is an exempt off-day — i.e., none of the
+ * linked habits were scheduled on that day-of-week. Off-days don't break streaks
+ * and don't count toward the consistency denominator.
+ */
+function isDayExempt(dateMs, habitMetas) {
+  const dow = new Date(dateMs).getUTCDay();
+  return habitMetas.every((h) => !isHabitScheduledOnDay(h, dow));
+}
+
+/**
+ * Count how many calendar days in [startDate, endDate] have at least one linked habit scheduled.
+ * Used as the consistency denominator.
+ */
+function countScheduledDays(startDate, endDate, habitMetas) {
+  let count = 0;
+  const cursor = new Date(startDate);
+  cursor.setUTCHours(0, 0, 0, 0);
+  const end = new Date(endDate);
+  end.setUTCHours(0, 0, 0, 0);
+  while (cursor <= end) {
+    if (!isDayExempt(cursor.getTime(), habitMetas)) count++;
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return count;
+}
+
+// ── Main entry point ──────────────────────────────────────────────────────────
+
 /**
  * Process challenge progress after a habit check-in.
  * Called from the habits route after a completed entry is saved.
- *
- * For group habits: looks up active challenges in the group.
- * For personal habits linked to a challenge: updates that challenge.
  */
 const processChallengeProgress = async (userId, habitId) => {
   try {
@@ -117,12 +151,9 @@ const processChallengeProgress = async (userId, habitId) => {
     const challengeQuery = {
       status: 'active',
       $or: [
-        // Challenges tied to a specific group habit that this habit adopted
         ...(habit.groupHabitId ? [{ habitId: habit.groupHabitId }] : []),
-        // Challenges where this user linked this habit directly (singular or array)
         { 'participants.userId': userId, 'participants.linkedHabitId': habitId },
         { 'participants.userId': userId, 'participants.linkedHabitIds': habitId },
-        // General group challenges (no specific habit, mode=single so any habit counts)
         ...(habit.groupId ? [{ groupId: habit.groupId, habitId: null, habitMatchMode: 'single' }] : []),
       ],
     };
@@ -132,28 +163,41 @@ const processChallengeProgress = async (userId, habitId) => {
       return { processed: false, message: 'No active challenges' };
     }
 
+    // Collect all habit IDs across all challenges, then batch-load metadata
+    const allHabitIdSet = new Set([String(habitId)]);
+    for (const challenge of activeChallenges) {
+      const participant = challenge.getParticipant(userId);
+      if (!participant || participant.status !== 'active') continue;
+      getEffectiveHabitIds(participant, habitId).forEach((id) => allHabitIdSet.add(id));
+    }
+
+    const habitDocs = await Habit.find({
+      _id: { $in: [...allHabitIdSet] },
+    }).select('frequency weeklyTarget schedule.days methodology target').lean();
+
+    const habitMetaMap = new Map(habitDocs.map((h) => [String(h._id), h]));
+    // Include the triggering habit we already have loaded
+    if (!habitMetaMap.has(String(habitId))) {
+      habitMetaMap.set(String(habitId), habit);
+    }
+
     const updates = [];
 
     for (const challenge of activeChallenges) {
       const participant = challenge.getParticipant(userId);
       if (!participant || participant.status !== 'active') continue;
 
-      // Determine effective habit IDs for this participant
       const effectiveHabitIds = getEffectiveHabitIds(participant, habitId);
 
-      // Compute progress based on challenge type and match mode
-      const progressData = await computeProgress(challenge, userId, effectiveHabitIds, habit);
+      const progressData = await computeProgress(challenge, userId, effectiveHabitIds, habitMetaMap);
       if (!progressData) continue;
 
       const updated = challenge.updateParticipantProgress(userId, progressData);
       if (!updated) continue;
 
-      // Check milestones
       const newMilestones = challenge.checkMilestones(userId);
-
       await challenge.save();
 
-      // Generate milestone feed events + push
       for (const milestone of newMilestones) {
         await Activity.create({
           groupId: challenge.groupId,
@@ -175,7 +219,6 @@ const processChallengeProgress = async (userId, habitId) => {
         });
       }
 
-      // If participant just completed, generate feed event + push notification
       if (updated.status === 'completed') {
         await Activity.create({
           groupId: challenge.groupId,
@@ -190,7 +233,6 @@ const processChallengeProgress = async (userId, habitId) => {
           visibility: 'group',
         });
 
-        // Push to other participants
         await notifyParticipants(challenge, userId, {
           title: '🎉 Challenge Completed!',
           body: `Someone just completed "${challenge.title}"!`,
@@ -213,10 +255,8 @@ const processChallengeProgress = async (userId, habitId) => {
   }
 };
 
-/**
- * Get the effective habit IDs for progress computation.
- * Uses linkedHabitIds (v2 array) if available, falls back to linkedHabitId (v1 singular).
- */
+// ── Habit ID resolution ───────────────────────────────────────────────────────
+
 function getEffectiveHabitIds(participant, triggeredHabitId) {
   if (participant.linkedHabitIds?.length) {
     return participant.linkedHabitIds.map(String);
@@ -224,47 +264,39 @@ function getEffectiveHabitIds(participant, triggeredHabitId) {
   if (participant.linkedHabitId) {
     return [String(participant.linkedHabitId)];
   }
-  // No linked habits — use the triggered habit as fallback
   return [String(triggeredHabitId)];
 }
 
-/**
- * Compute progress data for a participant based on challenge type and match mode.
- * Supports multi-habit aggregation via habitMatchMode.
- */
-async function computeProgress(challenge, userId, effectiveHabitIds, habit) {
+// ── Progress dispatcher ───────────────────────────────────────────────────────
+
+async function computeProgress(challenge, userId, effectiveHabitIds, habitMetaMap) {
   const matchMode = challenge.habitMatchMode || 'single';
 
   switch (challenge.type) {
-    case 'streak': {
-      return await computeStreakProgress(challenge, userId, effectiveHabitIds, matchMode);
-    }
-
-    case 'cumulative': {
-      return await computeCumulativeProgress(challenge, userId, effectiveHabitIds, matchMode);
-    }
-
-    case 'consistency': {
-      return await computeConsistencyProgress(challenge, userId, effectiveHabitIds, matchMode);
-    }
-
-    case 'team_goal': {
-      return await computeCumulativeProgress(challenge, userId, effectiveHabitIds, matchMode);
-    }
-
+    case 'streak':
+      return computeStreakProgress(challenge, userId, effectiveHabitIds, matchMode, habitMetaMap);
+    case 'cumulative':
+      return computeCumulativeProgress(challenge, userId, effectiveHabitIds, matchMode, habitMetaMap);
+    case 'consistency':
+      return computeConsistencyProgress(challenge, userId, effectiveHabitIds, matchMode, habitMetaMap);
+    case 'team_goal':
+      return computeCumulativeProgress(challenge, userId, effectiveHabitIds, matchMode, habitMetaMap);
     default:
       return null;
   }
 }
 
+// ── Streak ────────────────────────────────────────────────────────────────────
+
 /**
- * Streak: count consecutive days ending today where the match mode condition is met.
+ * Streak: count consecutive scheduled days ending today where the match mode condition is met.
+ * Off-days (days where no linked habit is scheduled) are skipped without breaking the streak.
  *
- * - single/any: a day counts if ANY linked habit was completed
- * - all: a day counts only if ALL linked habits were completed
- * - minimum: a day counts if >= N linked habits were completed
+ * - single/any: a scheduled day counts if ANY linked habit was completed
+ * - all: a scheduled day counts only if ALL linked habits were completed
+ * - minimum: a scheduled day counts if >= N linked habits were completed
  */
-async function computeStreakProgress(challenge, userId, habitIds, matchMode) {
+async function computeStreakProgress(challenge, userId, habitIds, matchMode, habitMetaMap) {
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
 
@@ -272,6 +304,7 @@ async function computeStreakProgress(challenge, userId, habitIds, matchMode) {
     habitId: { $in: habitIds },
     userId,
     completed: true,
+    date: { $gte: challenge.startDate },
   })
     .sort({ date: -1 })
     .select('date habitId')
@@ -279,7 +312,7 @@ async function computeStreakProgress(challenge, userId, habitIds, matchMode) {
 
   if (!entries.length) return { currentValue: 0, currentStreak: 0, lastLoggedAt: new Date() };
 
-  // Build date→set-of-habitIds map
+  // Build date → set-of-habitIds map
   const dateHabitMap = new Map();
   for (const e of entries) {
     const d = new Date(e.date);
@@ -290,6 +323,7 @@ async function computeStreakProgress(challenge, userId, habitIds, matchMode) {
   }
 
   const minRequired = matchMode === 'minimum' ? (challenge.habitMatchMinimum || 1) : habitIds.length;
+  const habitMetas = habitIds.map((id) => habitMetaMap.get(id)).filter(Boolean);
 
   function dayQualifies(dateKey) {
     const habitsOnDay = dateHabitMap.get(dateKey);
@@ -297,15 +331,27 @@ async function computeStreakProgress(challenge, userId, habitIds, matchMode) {
     switch (matchMode) {
       case 'all': return habitsOnDay.size >= habitIds.length;
       case 'minimum': return habitsOnDay.size >= minRequired;
-      case 'single':
-      case 'any':
       default: return habitsOnDay.size > 0;
     }
   }
 
   let streak = 0;
   const cursor = new Date(today);
-  while (dayQualifies(cursor.getTime())) {
+  const startMs = new Date(challenge.startDate).getTime();
+  const MAX_DAYS = 1000; // safety guard
+
+  for (let i = 0; i < MAX_DAYS; i++) {
+    const ts = cursor.getTime();
+    if (ts < startMs) break;
+
+    if (isDayExempt(ts, habitMetas)) {
+      // Off-day — skip without breaking streak
+      cursor.setUTCDate(cursor.getUTCDate() - 1);
+      continue;
+    }
+
+    if (!dayQualifies(ts)) break;
+
     streak++;
     cursor.setUTCDate(cursor.getUTCDate() - 1);
   }
@@ -321,49 +367,74 @@ async function computeStreakProgress(challenge, userId, habitIds, matchMode) {
   };
 }
 
+// ── Cumulative ────────────────────────────────────────────────────────────────
+
 /**
  * Cumulative / Team Goal: total completed value/count within challenge date range.
  *
- * - single/any: sum across all linked habits
- * - all: count only days where ALL habits completed, sum 1 per qualifying day
- * - minimum: count only days where >= N habits completed
+ * Methodology-aware:
+ * - numeric/duration habits: $sum of value (the actual numeric amount)
+ * - boolean/rating habits: count of completions (value is always 1, counting is safer)
+ *
+ * Match mode for all/minimum: count qualifying days regardless of methodology.
  */
-async function computeCumulativeProgress(challenge, userId, habitIds, matchMode) {
+async function computeCumulativeProgress(challenge, userId, habitIds, matchMode, habitMetaMap) {
   const dateFilter = {};
   if (challenge.startDate) dateFilter.$gte = challenge.startDate;
   if (challenge.endDate) dateFilter.$lte = challenge.endDate;
+  const hasDateFilter = Object.keys(dateFilter).length > 0;
 
   if (matchMode === 'single' || matchMode === 'any') {
-    // Simple sum across all linked habits
-    const match = {
-      habitId: { $in: habitIds },
-      userId,
-      completed: true,
-      ...(Object.keys(dateFilter).length ? { date: dateFilter } : {}),
-    };
+    // Split by methodology for correct aggregation
+    const numericIds = habitIds.filter((id) => {
+      const m = habitMetaMap.get(id);
+      return m?.methodology === 'numeric' || m?.methodology === 'duration';
+    });
+    const countIds = habitIds.filter((id) => !numericIds.includes(id));
 
-    const [result] = await HabitEntry.aggregate([
-      { $match: match },
-      { $group: { _id: null, total: { $sum: '$value' }, count: { $sum: 1 } } },
-    ]);
+    let total = 0;
 
-    return {
-      currentValue: result?.total || result?.count || 0,
-      lastLoggedAt: new Date(),
-    };
+    if (numericIds.length) {
+      const baseMatch = {
+        habitId: { $in: numericIds },
+        userId,
+        completed: true,
+        ...(hasDateFilter ? { date: dateFilter } : {}),
+      };
+      const [result] = await HabitEntry.aggregate([
+        { $match: baseMatch },
+        { $group: { _id: null, total: { $sum: '$value' } } },
+      ]);
+      total += result?.total || 0;
+    }
+
+    if (countIds.length) {
+      const baseMatch = {
+        habitId: { $in: countIds },
+        userId,
+        completed: true,
+        ...(hasDateFilter ? { date: dateFilter } : {}),
+      };
+      const [result] = await HabitEntry.aggregate([
+        { $match: baseMatch },
+        { $group: { _id: null, count: { $sum: 1 } } },
+      ]);
+      total += result?.count || 0;
+    }
+
+    return { currentValue: total, lastLoggedAt: new Date() };
   }
 
-  // all / minimum: count qualifying days
+  // all / minimum: count qualifying days (methodology doesn't change day-level counting)
   const match = {
     habitId: { $in: habitIds },
     userId,
     completed: true,
-    ...(Object.keys(dateFilter).length ? { date: dateFilter } : {}),
+    ...(hasDateFilter ? { date: dateFilter } : {}),
   };
 
   const entries = await HabitEntry.find(match).select('date habitId').lean();
 
-  // Group by date
   const dateHabitMap = new Map();
   for (const e of entries) {
     const d = new Date(e.date);
@@ -379,58 +450,54 @@ async function computeCumulativeProgress(challenge, userId, habitIds, matchMode)
     if (habitsOnDay.size >= minRequired) qualifyingDays++;
   }
 
-  return {
-    currentValue: qualifyingDays,
-    lastLoggedAt: new Date(),
-  };
+  return { currentValue: qualifyingDays, lastLoggedAt: new Date() };
 }
 
+// ── Consistency ───────────────────────────────────────────────────────────────
+
 /**
- * Consistency: completion rate over challenge duration.
+ * Consistency: completion rate over scheduled days in the challenge duration.
  *
- * - single/any: a day counts if any linked habit was completed
- * - all: a day counts only if all linked habits were completed
- * - minimum: a day counts if >= N linked habits were completed
+ * Frequency-aware: the denominator is "scheduled days" not raw calendar days.
+ * A day is scheduled if at least one linked habit was expected on that day-of-week.
+ * Off-days don't count toward the denominator or numerator.
  */
-async function computeConsistencyProgress(challenge, userId, habitIds, matchMode) {
-  const durationDays = Math.ceil(
-    (Math.min(Date.now(), challenge.endDate) - challenge.startDate) / (1000 * 60 * 60 * 24)
-  );
-  if (durationDays <= 0) return null;
+async function computeConsistencyProgress(challenge, userId, habitIds, matchMode, habitMetaMap) {
+  const now = new Date();
+  const end = new Date(Math.min(now.getTime(), new Date(challenge.endDate).getTime()));
+  const habitMetas = habitIds.map((id) => habitMetaMap.get(id)).filter(Boolean);
 
-  if (matchMode === 'single' || matchMode === 'any') {
-    // Count unique days with any habit completed
-    const entries = await HabitEntry.find({
-      habitId: { $in: habitIds },
-      userId,
-      completed: true,
-      date: { $gte: challenge.startDate, $lte: new Date() },
-    }).select('date').lean();
+  const scheduledDaysTotal = countScheduledDays(challenge.startDate, end, habitMetas);
+  if (scheduledDaysTotal <= 0) return null;
 
-    const uniqueDays = new Set(
-      entries.map((e) => {
-        const d = new Date(e.date);
-        d.setUTCHours(0, 0, 0, 0);
-        return d.getTime();
-      })
-    );
-
-    const completedDays = uniqueDays.size;
-    const rate = Math.round((completedDays / durationDays) * 100);
-    return {
-      currentValue: completedDays,
-      completionRate: rate,
-      lastLoggedAt: new Date(),
-    };
-  }
-
-  // all / minimum: count qualifying days
-  const entries = await HabitEntry.find({
+  const entryFilter = {
     habitId: { $in: habitIds },
     userId,
     completed: true,
-    date: { $gte: challenge.startDate, $lte: new Date() },
-  }).select('date habitId').lean();
+    date: { $gte: challenge.startDate, $lte: now },
+  };
+
+  if (matchMode === 'single' || matchMode === 'any') {
+    const entries = await HabitEntry.find(entryFilter).select('date').lean();
+
+    // Only count completions on scheduled days
+    const completedScheduledDays = new Set();
+    for (const e of entries) {
+      const d = new Date(e.date);
+      d.setUTCHours(0, 0, 0, 0);
+      const ts = d.getTime();
+      if (!isDayExempt(ts, habitMetas)) {
+        completedScheduledDays.add(ts);
+      }
+    }
+
+    const completedDays = completedScheduledDays.size;
+    const rate = Math.round((completedDays / scheduledDaysTotal) * 100);
+    return { currentValue: completedDays, completionRate: rate, lastLoggedAt: new Date() };
+  }
+
+  // all / minimum
+  const entries = await HabitEntry.find({ ...entryFilter, $or: undefined }).select('date habitId').lean();
 
   const dateHabitMap = new Map();
   for (const e of entries) {
@@ -443,16 +510,14 @@ async function computeConsistencyProgress(challenge, userId, habitIds, matchMode
 
   const minRequired = matchMode === 'minimum' ? (challenge.habitMatchMinimum || 1) : habitIds.length;
   let completedDays = 0;
-  for (const [, habitsOnDay] of dateHabitMap) {
-    if (habitsOnDay.size >= minRequired) completedDays++;
+  for (const [dateMs, habitsOnDay] of dateHabitMap) {
+    if (!isDayExempt(dateMs, habitMetas) && habitsOnDay.size >= minRequired) {
+      completedDays++;
+    }
   }
 
-  const rate = Math.round((completedDays / durationDays) * 100);
-  return {
-    currentValue: completedDays,
-    completionRate: rate,
-    lastLoggedAt: new Date(),
-  };
+  const rate = Math.round((completedDays / scheduledDaysTotal) * 100);
+  return { currentValue: completedDays, completionRate: rate, lastLoggedAt: new Date() };
 }
 
 module.exports = { processChallengeProgress, invalidateCache, warmCacheForUser };
