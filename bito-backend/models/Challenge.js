@@ -350,9 +350,12 @@ challengeSchema.methods.getLeaderboard = function () {
     }
   });
 
+  const anonymize = this.settings?.anonymizeLeaderboard;
+
   return sorted.map((p, i) => ({
     rank: i + 1,
-    userId: p.userId,
+    userId: anonymize ? null : p.userId,
+    displayName: anonymize ? `Participant ${i + 1}` : undefined,
     progress: p.progress,
     status: p.status,
     completedAt: p.completedAt,

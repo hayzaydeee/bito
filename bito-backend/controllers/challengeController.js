@@ -64,11 +64,13 @@ async function warmCacheForUser(userId) {
       status: 'active',
       'participants.userId': userId,
       'participants.status': 'active',
-    }).select('participants.$').lean();
+    }).select('participants').lean();
 
     const habitIds = new Set();
     for (const c of challenges) {
-      const p = c.participants?.[0];
+      const p = c.participants?.find(
+        (participant) => String(participant.userId) === String(userId) && participant.status === 'active'
+      );
       if (p?.linkedHabitIds?.length) {
         p.linkedHabitIds.forEach((id) => habitIds.add(String(id)));
       } else if (p?.linkedHabitId) {

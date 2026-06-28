@@ -52,14 +52,23 @@ function progressPercent(challenge, myProgress) {
   return Math.min(100, Math.round(((myProgress?.currentValue || 0) / target) * 100));
 }
 
+/* ── Sort key by challenge type ─────────────────────────── */
+
+function sortKey(participant, type) {
+  if (type === "streak") return participant.progress?.currentStreak || 0;
+  if (type === "consistency") return participant.progress?.completionRate || 0;
+  return participant.progress?.currentValue || 0;
+}
+
 /* ── Leaderboard row (Consistency / Streak) ────────────── */
 
-function LeaderboardRow({ rank, participant, targetValue }) {
+function LeaderboardRow({ rank, participant, targetValue, type }) {
   const info = participant.userId || participant;
   const name = info.name || info.email || "Member";
-  const pct = Math.min(100, Math.round(
-    ((participant.progress?.currentValue || 0) / (targetValue || 1)) * 100
-  ));
+  const metricValue = sortKey(participant, type);
+  const pct = type === "consistency"
+    ? Math.min(100, Math.round(metricValue))
+    : Math.min(100, Math.round((metricValue / (targetValue || 1)) * 100));
 
   return (
     <div className="flex items-center gap-3 py-2">
@@ -135,7 +144,7 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
   const isLoading = actionLoading === c._id;
 
   const sortedParticipants = [...(c.participants || [])].sort(
-    (a, b) => (b.progress?.currentValue || 0) - (a.progress?.currentValue || 0)
+    (a, b) => sortKey(b, c.type) - sortKey(a, c.type)
   );
 
   const metaLine = "grp-mono text-[10px] text-[var(--ink-3)] mt-1 uppercase tracking-wider";
@@ -155,6 +164,11 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
               Starts in {startsIn ?? "?"} day{startsIn !== 1 ? "s" : ""} · {participantCount} joined
             </p>
           </div>
+          {!isParticipant && c.type !== "head_to_head" && (
+            <button onClick={() => onJoin(c._id)} disabled={isLoading} className="grp-btn grp-btn--sm flex-shrink-0">
+              {isLoading ? "…" : "Join"}
+            </button>
+          )}
         </div>
       </div>
     );
@@ -192,6 +206,7 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
                 rank={i + 1}
                 participant={p}
                 targetValue={c.rules?.targetValue || 1}
+                type={c.type}
               />
             ))}
           </div>
@@ -282,7 +297,11 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          {!isParticipant ? (
+          {c.type === "head_to_head" ? (
+            <span className="grp-mono text-[10px] font-bold uppercase tracking-wider text-[var(--ink-3)]">
+              Coming soon
+            </span>
+          ) : !isParticipant ? (
             <button onClick={() => onJoin(c._id)} disabled={isLoading} className="grp-btn grp-btn--sm">
               {isLoading ? "…" : "Join"}
             </button>

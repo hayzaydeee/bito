@@ -355,7 +355,6 @@ router.post('/challenges/:id/join', [
 
     // Validate match mode requirements
     if (challenge.habitMatchMode === 'all' || challenge.habitMatchMode === 'any') {
-      // These modes typically expect at least 1 habit
       if (!habitIds.length) {
         return res.status(400).json({ success: false, error: 'This challenge requires you to link at least one habit' });
       }
@@ -367,6 +366,14 @@ router.post('/challenges/:id/join', [
           error: `This challenge requires at least ${challenge.habitMatchMinimum} linked habit(s)`,
         });
       }
+    }
+    // Single mode: non-team_goal challenges track habit-level progress, so a habit is required
+    const mode = challenge.habitMatchMode || 'single';
+    if (mode === 'single' && challenge.type !== 'team_goal' && !habitIds.length) {
+      return res.status(400).json({
+        success: false,
+        error: 'This challenge tracks habit progress — please link a habit when joining.',
+      });
     }
 
     const participant = challenge.addParticipant(req.user._id, habitIds.length ? habitIds : null);

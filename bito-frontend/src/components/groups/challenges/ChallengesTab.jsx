@@ -22,8 +22,10 @@ const ChallengesTab = ({
   currentUserId,
   myHabits = [],
   onRefresh,
+  canManage = false,
 }) => {
   const [actionLoading, setActionLoading] = useState(null);
+  const [actionError, setActionError] = useState(null);
   const [completedOpen, setCompletedOpen] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createPreset, setCreatePreset] = useState(null);
@@ -34,11 +36,12 @@ const ChallengesTab = ({
 
   const handleJoin = async (challengeId, linkedHabitIds = []) => {
     setActionLoading(challengeId);
+    setActionError(null);
     try {
       await groupsAPI.joinChallenge(challengeId, linkedHabitIds.length ? linkedHabitIds : null);
       onRefresh?.();
-    } catch {
-      /* silent */
+    } catch (err) {
+      setActionError(err.message || "Failed to join challenge");
     } finally {
       setActionLoading(null);
     }
@@ -46,11 +49,12 @@ const ChallengesTab = ({
 
   const handleLeave = async (challengeId) => {
     setActionLoading(challengeId);
+    setActionError(null);
     try {
       await groupsAPI.leaveChallenge(challengeId);
       onRefresh?.();
-    } catch {
-      /* silent */
+    } catch (err) {
+      setActionError(err.message || "Failed to leave challenge");
     } finally {
       setActionLoading(null);
     }
@@ -71,6 +75,14 @@ const ChallengesTab = ({
     <div className="flex gap-8">
       {/* ── Main list ── */}
       <div className="flex-1 min-w-0 space-y-7">
+        {actionError && (
+          <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-[var(--ember)]/10 border border-[var(--ember)]/20">
+            <p className="grp-mono text-xs text-[var(--ember)]">{actionError}</p>
+            <button onClick={() => setActionError(null)} className="grp-mono text-[10px] font-bold uppercase tracking-wider text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors flex-shrink-0">
+              Dismiss
+            </button>
+          </div>
+        )}
         {/* Active */}
         {active.length > 0 && (
           <section>
@@ -159,10 +171,12 @@ const ChallengesTab = ({
             <p className="text-sm text-[var(--ink-2)] max-w-sm mx-auto mb-7 relative">
               Create a streak, team goal, or consistency challenge to motivate your group.
             </p>
-            <button onClick={() => openCreateWithPreset(null)} className="grp-btn grp-btn--ember mx-auto relative">
-              <Trophy size={14} weight="fill" />
-              Create challenge
-            </button>
+            {canManage && (
+              <button onClick={() => openCreateWithPreset(null)} className="grp-btn grp-btn--ember mx-auto relative">
+                <Trophy size={14} weight="fill" />
+                Create challenge
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -173,7 +187,7 @@ const ChallengesTab = ({
           activeChallenges={active}
           allChallenges={challenges}
           currentUserId={currentUserId}
-          onCreateChallenge={() => openCreateWithPreset(null)}
+          onCreateChallenge={canManage ? () => openCreateWithPreset(null) : null}
         />
       </aside>
 

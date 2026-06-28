@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { wizardStepVariants } from "../../utils/motion";
-import { Cross2Icon, ArrowLeftIcon, ArrowRightIcon, CheckIcon } from "@radix-ui/react-icons";
-import { Fire, TrendUp, CalendarBlank, Handshake } from "@phosphor-icons/react";
+import { X, ArrowLeft, ArrowRight, Check, Fire, TrendUp, CalendarBlank, Handshake } from "@phosphor-icons/react";
 import { groupsAPI } from "../../services/api";
 import AnimatedModal from "./AnimatedModal";
 
@@ -51,7 +50,7 @@ const ProgressDots = ({ step, total, labels }) => (
           }}
         />
         <span
-          className="std-mono text-[9px] uppercase tracking-wide transition-colors duration-200"
+          className="grp-mono text-[9px] uppercase tracking-wide transition-colors duration-200"
           style={{ color: i <= step ? "var(--signal)" : "var(--ink-3)" }}
         >
           {labels[i]}
@@ -382,7 +381,7 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
                 className="text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors"
                 onClick={onClose}
               >
-                <Cross2Icon />
+                <X size={16} />
               </button>
             </div>
           </div>
@@ -422,14 +421,14 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
                 onClick={handleSubmit}
                 disabled={loading}
               >
-                <CheckIcon className="w-4 h-4" />
+                <Check size={16} />
                 {loading ? "Creating..." : "Create"}
               </button>
             </div>
           ) : (
             <div className="flex gap-3">
               <button type="button" className="grp-btn gap-1.5" onClick={goBack}>
-                <ArrowLeftIcon className="w-3.5 h-3.5" />
+                <ArrowLeft size={14} weight="bold" />
                 {step === 0 ? "Cancel" : "Back"}
               </button>
               <button
@@ -440,13 +439,13 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
               >
                 {isLastStep ? (
                   <>
-                    <CheckIcon className="w-4 h-4" />
+                    <Check size={16} />
                     {loading ? "Creating..." : "Create Challenge"}
                   </>
                 ) : (
                   <>
                     Continue
-                    <ArrowRightIcon className="w-3.5 h-3.5" />
+                    <ArrowRight size={14} weight="bold" />
                   </>
                 )}
               </button>

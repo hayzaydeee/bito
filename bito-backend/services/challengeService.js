@@ -53,6 +53,7 @@ class ChallengeService {
 
       for (const challenge of toActivate) {
         challenge.status = 'active';
+        challenge._refreshStats();
         await challenge.save();
 
         // Feed event: challenge started
@@ -85,6 +86,7 @@ class ChallengeService {
 
       for (const challenge of toComplete) {
         challenge.status = 'completed';
+        challenge._refreshStats();
         await challenge.save();
 
         // Feed event: challenge ended

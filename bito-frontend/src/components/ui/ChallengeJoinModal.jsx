@@ -1,11 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { Cross2Icon, ChevronDownIcon, ChevronUpIcon, CheckIcon } from "@radix-ui/react-icons";
+import { X, CaretDown, CaretUp, Check } from "@phosphor-icons/react";
 import { groupsAPI } from "../../services/api";
 import AnimatedModal from "./AnimatedModal";
 import HabitIcon from "../shared/HabitIcon";
-
-const inputClass =
-  "w-full h-10 px-3 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 rounded-xl text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:border-[var(--color-brand-600)]/40";
 
 const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
@@ -29,13 +26,11 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
         setSuggestions(res.suggestions || []);
         setAllHabits(res.habits || []);
 
-        // Pre-select habits with score >= 70
         const preSelected = new Set();
         (res.suggestions || []).forEach((s) => {
           if (s.score >= 70) preSelected.add(s.habitId);
         });
 
-        // For single mode, only pre-select the top one
         if (isSingleMode && preSelected.size > 1) {
           const top = [...preSelected][0];
           preSelected.clear();
@@ -45,7 +40,6 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
         setSelectedIds(preSelected);
       }
     } catch {
-      // Fallback: show all habits without suggestions
       setSuggestions([]);
       setShowAllHabits(true);
     } finally {
@@ -72,10 +66,7 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
       if (next.has(habitId)) {
         next.delete(habitId);
       } else {
-        if (isSingleMode) {
-          // Single mode: only one at a time
-          next.clear();
-        }
+        if (isSingleMode) next.clear();
         next.add(habitId);
       }
       return next;
@@ -83,12 +74,9 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
   };
 
   const handleJoin = async () => {
-    // Validate selection based on match mode
     const mode = challenge.habitMatchMode || "single";
     if (mode === "all" || mode === "any") {
-      if (selectedIds.size === 0) {
-        return setError("Please select at least one habit");
-      }
+      if (selectedIds.size === 0) return setError("Please select at least one habit");
     }
     if (mode === "minimum" && challenge.habitMatchMinimum) {
       if (selectedIds.size < challenge.habitMatchMinimum) {
@@ -115,7 +103,6 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
     }
   };
 
-  // Habits that are suggested vs. all others
   const suggestedIds = new Set(suggestions.map((s) => s.habitId));
   const nonSuggestedHabits = allHabits.filter((h) => !suggestedIds.has(h._id));
 
@@ -128,49 +115,48 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
 
   return (
     <AnimatedModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-lg">
-      <div className="relative w-full bg-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)]/20 max-h-[85vh] overflow-y-auto">
+      <div className="grp relative w-full bg-[var(--surface)] rounded-2xl border border-[var(--line)]/20 max-h-[85vh] overflow-y-auto">
         {/* header */}
-        <div className="flex items-center justify-between p-5 border-b border-[var(--color-border-primary)]/10">
+        <div className="flex items-center justify-between p-5 border-b border-[var(--line)]/10">
           <div>
-            <h2 className="text-lg font-garamond font-bold text-[var(--color-text-primary)]">
-              Join Challenge
-            </h2>
-            <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mt-0.5">
-              {challenge.title}
-            </p>
+            <h2 className="grp-display text-lg font-bold text-[var(--ink)]">Join Challenge</h2>
+            <p className="grp-mono text-xs text-[var(--ink-3)] mt-0.5">{challenge.title}</p>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--color-surface-hover)] transition-colors">
-            <Cross2Icon className="w-4 h-4 text-[var(--color-text-secondary)]" />
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--surface-2)] transition-colors"
+          >
+            <X size={16} className="text-[var(--ink-2)]" />
           </button>
         </div>
 
         <div className="p-5 space-y-4">
           {/* challenge info */}
           {challenge.habitSlot && (
-            <div className="p-3 rounded-xl bg-[var(--color-brand-600)]/5 border border-[var(--color-brand-600)]/10">
-              <p className="text-xs font-spartan font-medium text-[var(--color-brand-600)]">
+            <div className="p-3 rounded-xl bg-[var(--signal)]/5 border border-[var(--signal)]/10">
+              <p className="grp-mono text-xs font-medium text-[var(--signal)]">
                 Looking for: {challenge.habitSlot}
               </p>
             </div>
           )}
 
           {/* match mode hint */}
-          <p className="text-xs font-spartan text-[var(--color-text-secondary)]">
+          <p className="grp-mono text-xs text-[var(--ink-2)]">
             {matchModeLabel[challenge.habitMatchMode || "single"]}
           </p>
 
           {/* loading state */}
           {suggesting && (
             <div className="space-y-2">
-              <div className="h-12 bg-[var(--color-surface-hover)] rounded-xl animate-pulse" />
-              <div className="h-12 bg-[var(--color-surface-hover)] rounded-xl animate-pulse" />
+              <div className="h-12 bg-[var(--surface-2)] rounded-xl animate-pulse" />
+              <div className="h-12 bg-[var(--surface-2)] rounded-xl animate-pulse" />
             </div>
           )}
 
           {/* Suggested habits */}
           {!suggesting && suggestions.length > 0 && (
             <div>
-              <p className="text-xs font-spartan font-semibold text-[var(--color-text-secondary)] mb-2">
+              <p className="grp-mono text-xs font-semibold text-[var(--ink-2)] mb-2">
                 ✨ Suggested Habits
               </p>
               <ul className="space-y-2">
@@ -185,30 +171,30 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
                         onClick={() => toggleHabit(s.habitId)}
                         className={`w-full text-left p-3 rounded-xl border transition-colors ${
                           isSelected
-                            ? "border-[var(--color-brand-600)] bg-[var(--color-brand-600)]/5"
-                            : "border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40"
+                            ? "border-[var(--signal)] bg-[var(--signal)]/5"
+                            : "border-[var(--line)]/20 hover:border-[var(--line)]/40"
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
                             isSelected
-                              ? "bg-[var(--color-brand-600)] border-[var(--color-brand-600)]"
-                              : "border-[var(--color-border-primary)]/30"
+                              ? "bg-[var(--signal)] border-[var(--signal)]"
+                              : "border-[var(--line)]/30"
                           }`}>
-                            {isSelected && <CheckIcon className="w-3.5 h-3.5 text-white" />}
+                            {isSelected && <Check size={14} weight="bold" className="text-white" />}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <HabitIcon icon={habit.icon || "ClipboardText"} size={16} />
-                              <p className="text-sm font-spartan font-medium text-[var(--color-text-primary)] truncate">
+                              <p className="grp-mono text-sm font-medium text-[var(--ink)] truncate">
                                 {habit.name}
                               </p>
-                              <span className="text-[10px] font-spartan font-medium px-1.5 py-0.5 rounded bg-[var(--color-brand-600)]/10 text-[var(--color-brand-600)]">
+                              <span className="grp-mono text-[10px] font-medium px-1.5 py-0.5 rounded bg-[var(--signal)]/10 text-[var(--signal)]">
                                 {s.score}%
                               </span>
                             </div>
                             {s.reason && (
-                              <p className="text-[10px] text-[var(--color-text-tertiary)] font-spartan mt-0.5 truncate">
+                              <p className="grp-mono text-[10px] text-[var(--ink-3)] mt-0.5 truncate">
                                 {s.reason}
                               </p>
                             )}
@@ -227,9 +213,9 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
             <div>
               <button
                 onClick={() => setShowAllHabits((v) => !v)}
-                className="flex items-center gap-1.5 text-xs font-spartan font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+                className="flex items-center gap-1.5 grp-mono text-xs font-medium text-[var(--ink-2)] hover:text-[var(--ink)] transition-colors"
               >
-                {showAllHabits ? <ChevronUpIcon className="w-3.5 h-3.5" /> : <ChevronDownIcon className="w-3.5 h-3.5" />}
+                {showAllHabits ? <CaretUp size={14} weight="bold" /> : <CaretDown size={14} weight="bold" />}
                 {showAllHabits ? "Hide" : "Show"} all my habits ({nonSuggestedHabits.length})
               </button>
 
@@ -243,27 +229,27 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
                           onClick={() => toggleHabit(h._id)}
                           className={`w-full text-left p-3 rounded-xl border transition-colors ${
                             isSelected
-                              ? "border-[var(--color-brand-600)] bg-[var(--color-brand-600)]/5"
-                              : "border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40"
+                              ? "border-[var(--signal)] bg-[var(--signal)]/5"
+                              : "border-[var(--line)]/20 hover:border-[var(--line)]/40"
                           }`}
                         >
                           <div className="flex items-center gap-3">
                             <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
                               isSelected
-                                ? "bg-[var(--color-brand-600)] border-[var(--color-brand-600)]"
-                                : "border-[var(--color-border-primary)]/30"
+                                ? "bg-[var(--signal)] border-[var(--signal)]"
+                                : "border-[var(--line)]/30"
                             }`}>
-                              {isSelected && <CheckIcon className="w-3.5 h-3.5 text-white" />}
+                              {isSelected && <Check size={14} weight="bold" className="text-white" />}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <HabitIcon icon={h.icon || "ClipboardText"} size={16} />
-                                <p className="text-sm font-spartan font-medium text-[var(--color-text-primary)] truncate">
+                                <p className="grp-mono text-sm font-medium text-[var(--ink)] truncate">
                                   {h.name}
                                 </p>
                               </div>
                               {h.description && (
-                                <p className="text-[10px] text-[var(--color-text-tertiary)] font-spartan mt-0.5 truncate">
+                                <p className="grp-mono text-[10px] text-[var(--ink-3)] mt-0.5 truncate">
                                   {h.description}
                                 </p>
                               )}
@@ -281,7 +267,7 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
           {/* No habits fallback */}
           {!suggesting && allHabits.length === 0 && (
             <div className="text-center py-6">
-              <p className="text-sm text-[var(--color-text-tertiary)] font-spartan">
+              <p className="grp-mono text-sm text-[var(--ink-3)]">
                 You don't have any habits in this group yet. Create a habit first, then join the challenge.
               </p>
             </div>
@@ -289,25 +275,25 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
 
           {/* selection summary */}
           {selectedIds.size > 0 && (
-            <p className="text-xs font-spartan text-[var(--color-text-secondary)]">
+            <p className="grp-mono text-xs text-[var(--ink-2)]">
               {selectedIds.size} habit{selectedIds.size !== 1 ? "s" : ""} selected
             </p>
           )}
 
-          {error && <p className="text-xs text-red-500 font-spartan">{error}</p>}
+          {error && <p className="grp-mono text-xs text-[var(--rose,#e11d48)]">{error}</p>}
 
           {/* actions */}
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="flex-1 h-10 border border-[var(--color-border-primary)]/20 text-[var(--color-text-secondary)] rounded-xl text-sm font-spartan font-medium hover:bg-[var(--color-surface-hover)] transition-colors"
+              className="flex-1 h-10 border border-[var(--line)]/20 text-[var(--ink-2)] rounded-xl grp-mono text-sm font-medium hover:bg-[var(--surface-2)] transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleJoin}
               disabled={loading || suggesting}
-              className="flex-1 h-10 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] disabled:opacity-50 text-white rounded-xl text-sm font-spartan font-medium transition-colors"
+              className="flex-1 h-10 bg-[var(--signal)] hover:bg-[var(--signal-2)] disabled:opacity-50 text-white rounded-xl grp-mono text-sm font-medium transition-colors"
             >
               {loading ? "Joining…" : "Join Challenge"}
             </button>
