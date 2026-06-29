@@ -6,7 +6,7 @@ import HabitIcon from "../shared/HabitIcon";
 
 const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
-  const [suggesting, setSuggesting] = useState(true);
+  const [suggesting, setSuggesting] = useState(false);
   const [error, setError] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [allHabits, setAllHabits] = useState([]);
@@ -159,12 +159,11 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
             {matchModeLabel[challenge.habitMatchMode || "single"]}
           </p>
 
-          {/* loading state */}
+          {/* AI loading hint — non-blocking, picker still usable when habits load */}
           {suggesting && (
-            <div className="space-y-2">
-              <div className="h-12 bg-[var(--surface-2)] rounded-xl animate-pulse" />
-              <div className="h-12 bg-[var(--surface-2)] rounded-xl animate-pulse" />
-            </div>
+            <p className="grp-mono text-[10px] text-[var(--ink-3)] animate-pulse">
+              Finding best habit matches…
+            </p>
           )}
 
           {/* Suggested habits */}
@@ -278,11 +277,11 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
             </div>
           )}
 
-          {/* No habits fallback */}
+          {/* No habits fallback — only shown after fetch completes with zero results */}
           {!suggesting && allHabits.length === 0 && (
             <div className="text-center py-6">
               <p className="grp-mono text-sm text-[var(--ink-3)]">
-                You don't have any habits in this group yet. Create a habit first, then join the challenge.
+                You don't have any habits yet. Create a habit first, then join the challenge.
               </p>
             </div>
           )}
@@ -338,7 +337,7 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
             </button>
             <button
               onClick={handleJoin}
-              disabled={loading || suggesting}
+              disabled={loading}
               className="flex-1 h-10 bg-[var(--signal)] hover:bg-[var(--signal-2)] disabled:opacity-50 text-white rounded-xl grp-mono text-sm font-medium transition-colors"
             >
               {loading ? "Joining…" : "Join Challenge"}
