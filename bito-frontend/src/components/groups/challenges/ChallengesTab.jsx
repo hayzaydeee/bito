@@ -1,22 +1,12 @@
 import { useState } from "react";
 import { Trophy, CaretDown, CaretRight } from "@phosphor-icons/react";
 import ChallengeCard from "./ChallengeCard";
+import ChallengeDetailModal from "./ChallengeDetailModal";
 import StandingSidebar from "./StandingSidebar";
 import { groupsAPI } from "../../../services/api";
 import ChallengeCreateModal from "../../ui/ChallengeCreateModal";
 import ChallengeJoinModal from "../../ui/ChallengeJoinModal";
 
-/**
- * ChallengesTab
- *
- * Props:
- *   groupId       — string
- *   challenges    — Challenge[] (all challenges for this group)
- *   currentUserId — string
- *   myHabits      — user's personal Habit[] (for joining team_goal)
- *   onRefresh     — () => void
- *   canManage     — boolean
- */
 const ChallengesTab = ({
   groupId,
   challenges = [],
@@ -31,29 +21,18 @@ const ChallengesTab = ({
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createPreset, setCreatePreset] = useState(null);
   const [joinTarget, setJoinTarget] = useState(null);
+  const [detailTarget, setDetailTarget] = useState(null);
 
   const active = challenges.filter((c) => c.status === "active");
   const upcoming = challenges.filter((c) => c.status === "upcoming");
   const completed = challenges.filter((c) => c.status === "completed" || c.status === "cancelled");
-
-  const handleJoin = async (challengeId, linkedHabitIds = []) => {
-    setActionLoading(challengeId);
-    setActionError(null);
-    try {
-      await groupsAPI.joinChallenge(challengeId, linkedHabitIds.length ? linkedHabitIds : null);
-      onRefresh?.();
-    } catch (err) {
-      setActionError(err.message || "Failed to join challenge");
-    } finally {
-      setActionLoading(null);
-    }
-  };
 
   const handleLeave = async (challengeId) => {
     setActionLoading(challengeId);
     setActionError(null);
     try {
       await groupsAPI.leaveChallenge(challengeId);
+      setDetailTarget(null);
       onRefresh?.();
     } catch (err) {
       setActionError(err.message || "Failed to leave challenge");
@@ -78,6 +57,21 @@ const ChallengesTab = ({
     onRefresh?.();
   };
 
+  const handleViewDetail = (challenge) => {
+    setDetailTarget(challenge);
+  };
+
+  const cardProps = (c, extra = {}) => ({
+    challenge: c,
+    currentUserId,
+    myHabits,
+    onJoin: setJoinTarget,
+    onLeave: handleLeave,
+    onViewDetail: handleViewDetail,
+    actionLoading,
+    ...extra,
+  });
+
   return (
     <div className="flex gap-8">
       {/* ── Main list ── */}
@@ -85,29 +79,21 @@ const ChallengesTab = ({
         {actionError && (
           <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-[var(--ember)]/10 border border-[var(--ember)]/20">
             <p className="grp-mono text-xs text-[var(--ember)]">{actionError}</p>
-            <button onClick={() => setActionError(null)} className="grp-mono text-[10px] font-bold uppercase tracking-wider text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors flex-shrink-0">
+            <button
+              onClick={() => setActionError(null)}
+              className="grp-mono text-[10px] font-bold uppercase tracking-wider text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors flex-shrink-0"
+            >
               Dismiss
             </button>
           </div>
         )}
+
         {/* Active */}
         {active.length > 0 && (
           <section>
-            <p className="grp-kicker mb-3">
-              Active — {String(active.length).padStart(2, "0")}
-            </p>
+            <p className="grp-kicker mb-3">Active — {String(active.length).padStart(2, "0")}</p>
             <div className="space-y-3">
-              {active.map((c) => (
-                <ChallengeCard
-                  key={c._id}
-                  challenge={c}
-                  currentUserId={currentUserId}
-                  myHabits={myHabits}
-                  onJoin={setJoinTarget}
-                  onLeave={handleLeave}
-                  actionLoading={actionLoading}
-                />
-              ))}
+              {active.map((c) => <ChallengeCard key={c._id} {...cardProps(c)} />)}
             </div>
           </section>
         )}
@@ -115,21 +101,15 @@ const ChallengesTab = ({
         {/* Upcoming */}
         {upcoming.length > 0 && (
           <section>
-            <p className="grp-kicker mb-3">
-              Upcoming — {String(upcoming.length).padStart(2, "0")}
-            </p>
+            <p className="grp-kicker mb-3">Upcoming — {String(upcoming.length).padStart(2, "0")}</p>
             <div className="space-y-3">
               {upcoming.map((c) => (
                 <ChallengeCard
                   key={c._id}
-                  challenge={c}
-                  currentUserId={currentUserId}
-                  myHabits={myHabits}
-                  onJoin={setJoinTarget}
-                  onLeave={handleLeave}
-                  onCancel={handleCancel}
-                  canCancel={canManage || (c.createdBy?._id || c.createdBy)?.toString() === currentUserId?.toString()}
-                  actionLoading={actionLoading}
+                  {...cardProps(c, {
+                    onCancel: handleCancel,
+                    canCancel: canManage || (c.createdBy?._id || c.createdBy)?.toString() === currentUserId?.toString(),
+                  })}
                 />
               ))}
             </div>
@@ -143,27 +123,12 @@ const ChallengesTab = ({
               onClick={() => setCompletedOpen((v) => !v)}
               className="grp-kicker flex items-center gap-2 hover:text-[var(--ink-2)] transition-colors mb-3"
             >
-              {completedOpen ? (
-                <CaretDown size={11} weight="bold" />
-              ) : (
-                <CaretRight size={11} weight="bold" />
-              )}
+              {completedOpen ? <CaretDown size={11} weight="bold" /> : <CaretRight size={11} weight="bold" />}
               Completed — {String(completed.length).padStart(2, "0")}
             </button>
-
             {completedOpen && (
               <div className="space-y-3">
-                {completed.map((c) => (
-                  <ChallengeCard
-                    key={c._id}
-                    challenge={c}
-                    currentUserId={currentUserId}
-                    myHabits={myHabits}
-                    onJoin={setJoinTarget}
-                    onLeave={handleLeave}
-                    actionLoading={actionLoading}
-                  />
-                ))}
+                {completed.map((c) => <ChallengeCard key={c._id} {...cardProps(c)} />)}
               </div>
             )}
           </section>
@@ -174,9 +139,7 @@ const ChallengesTab = ({
           <div className="grp-card text-center py-14 px-6 relative overflow-hidden">
             <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-[var(--ember)]/8 blur-3xl pointer-events-none" />
             <Trophy size={40} weight="duotone" className="mx-auto mb-4 text-[var(--ember)] relative" />
-            <h3 className="grp-display text-2xl font-bold text-[var(--ink)] mb-2 relative">
-              No challenges yet
-            </h3>
+            <h3 className="grp-display text-2xl font-bold text-[var(--ink)] mb-2 relative">No challenges yet</h3>
             <p className="text-sm text-[var(--ink-2)] max-w-sm mx-auto mb-7 relative">
               Create a streak, team goal, or consistency challenge to motivate your group.
             </p>
@@ -198,14 +161,16 @@ const ChallengesTab = ({
         />
       </aside>
 
-      {/* Create modal */}
-      {showCreateModal && (
-        <ChallengeCreateModal
-          isOpen={showCreateModal}
-          onClose={() => { setShowCreateModal(false); setCreatePreset(null); }}
-          groupId={groupId}
-          onCreated={handleCreated}
-          defaultType={createPreset}
+      {/* Detail modal */}
+      {detailTarget && (
+        <ChallengeDetailModal
+          isOpen={!!detailTarget}
+          challenge={detailTarget}
+          currentUserId={currentUserId}
+          onClose={() => setDetailTarget(null)}
+          onJoin={setJoinTarget}
+          onLeave={handleLeave}
+          actionLoading={actionLoading}
         />
       )}
 
@@ -216,6 +181,17 @@ const ChallengesTab = ({
           challenge={joinTarget}
           onClose={() => setJoinTarget(null)}
           onSuccess={() => { setJoinTarget(null); onRefresh?.(); }}
+        />
+      )}
+
+      {/* Create modal */}
+      {showCreateModal && (
+        <ChallengeCreateModal
+          isOpen={showCreateModal}
+          onClose={() => { setShowCreateModal(false); setCreatePreset(null); }}
+          groupId={groupId}
+          onCreated={handleCreated}
+          defaultType={createPreset}
         />
       )}
     </div>
