@@ -454,6 +454,11 @@ router.post('/challenges/:id/join', [
       return res.status(400).json({ success: false, error: 'Cannot join — already participating or challenge is full' });
     }
 
+    // Set organizer role for team_goal participants who join with no habits
+    if (challenge.type === 'team_goal' && !habitIds.length) {
+      participant.role = 'organizer';
+    }
+
     await challenge.save();
 
     // Invalidate check-in cache for this user
