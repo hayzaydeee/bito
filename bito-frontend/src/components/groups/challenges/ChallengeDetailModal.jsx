@@ -1,5 +1,7 @@
-import { X, Fire, TrendUp, CalendarBlank, Handshake, Trophy } from "@phosphor-icons/react";
+import { useState } from "react";
+import { X, Fire, TrendUp, CalendarBlank, Handshake, Trophy, Pencil } from "@phosphor-icons/react";
 import AnimatedModal from "../../ui/AnimatedModal";
+import ChallengeJoinModal from "../../ui/ChallengeJoinModal";
 
 const TYPE_META = {
   streak:      { Icon: Fire,          label: "Streak",      color: "#ff7a3c" },
@@ -47,6 +49,8 @@ const ChallengeDetailModal = ({
   isOpen, challenge: c, currentUserId,
   onClose, onJoin, onLeave, actionLoading,
 }) => {
+  const [showRelink, setShowRelink] = useState(false);
+
   if (!isOpen || !c) return null;
 
   const { Icon, color } = TYPE_META[c.type] || { Icon: Trophy, label: c.type, color: "var(--signal)" };
@@ -130,7 +134,18 @@ const ChallengeDetailModal = ({
           {/* Your stats */}
           {isParticipant && myP.role !== "organizer" && (
             <div className="rounded-[12px] border border-[var(--line-2)] bg-[var(--bg-2)] p-4">
-              <p className="grp-kicker mb-3">Your stats</p>
+              <div className="flex items-center justify-between mb-3">
+                <p className="grp-kicker">Your stats</p>
+                {c.status === "active" && (
+                  <button
+                    onClick={() => setShowRelink(true)}
+                    className="flex items-center gap-1.5 grp-mono text-[10px] font-bold text-[var(--ink-3)] hover:text-[var(--signal)] transition-colors"
+                  >
+                    <Pencil size={11} weight="bold" />
+                    {myP.linkedHabitIds?.length ? "Change habit" : "Link habit"}
+                  </button>
+                )}
+              </div>
               <div className="flex flex-wrap gap-5">
                 {c.type === "streak" && (
                   <>
@@ -282,6 +297,17 @@ const ChallengeDetailModal = ({
                           {metricVal}
                         </span>
                       )}
+
+                      {/* Edit habit — own row, active only */}
+                      {isOwn && !usesFrozen && c.status === "active" && !isOrg && (
+                        <button
+                          onClick={() => setShowRelink(true)}
+                          className="text-[var(--ink-3)] hover:text-[var(--signal)] transition-colors flex-shrink-0"
+                          title="Change habit"
+                        >
+                          <Pencil size={12} weight="bold" />
+                        </button>
+                      )}
                     </div>
                   );
                 })}
@@ -315,6 +341,17 @@ const ChallengeDetailModal = ({
           </div>
         </div>
       </div>
+
+      {showRelink && (
+        <ChallengeJoinModal
+          isOpen
+          challenge={c}
+          mode="relink"
+          initialHabitIds={myP?.linkedHabitIds?.map((h) => (typeof h === "object" ? h._id : h)) || []}
+          onClose={() => setShowRelink(false)}
+          onSuccess={() => setShowRelink(false)}
+        />
+      )}
     </AnimatedModal>
   );
 };
