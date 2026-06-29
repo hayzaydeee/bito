@@ -148,6 +148,11 @@ const challengeSchema = new mongoose.Schema(
           default: 'active',
         },
         completedAt: { type: Date, default: null },
+        role: {
+          type: String,
+          enum: ['participant', 'organizer'],
+          default: 'participant',
+        },
         habitCompatibilityWarnings: [
           {
             code: { type: String },
@@ -182,6 +187,13 @@ const challengeSchema = new mongoose.Schema(
       completedCount: { type: Number, default: 0 },
       averageProgress: { type: Number, default: 0 },
       topStreak: { type: Number, default: 0 },
+      finalLeaderboard: [{
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        displayName: String,
+        rank: Number,
+        finalValue: Number,
+        individualCompletedAt: { type: Date, default: null },
+      }],
     },
 
     // ── Settings ──
