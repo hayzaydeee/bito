@@ -4,6 +4,7 @@ import ChallengeCard from "./ChallengeCard";
 import StandingSidebar from "./StandingSidebar";
 import { groupsAPI } from "../../../services/api";
 import ChallengeCreateModal from "../../ui/ChallengeCreateModal";
+import ChallengeJoinModal from "../../ui/ChallengeJoinModal";
 
 /**
  * ChallengesTab
@@ -29,6 +30,7 @@ const ChallengesTab = ({
   const [completedOpen, setCompletedOpen] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createPreset, setCreatePreset] = useState(null);
+  const [joinTarget, setJoinTarget] = useState(null);
 
   const active = challenges.filter((c) => c.status === "active");
   const upcoming = challenges.filter((c) => c.status === "upcoming");
@@ -96,7 +98,7 @@ const ChallengesTab = ({
                   challenge={c}
                   currentUserId={currentUserId}
                   myHabits={myHabits}
-                  onJoin={handleJoin}
+                  onJoin={setJoinTarget}
                   onLeave={handleLeave}
                   actionLoading={actionLoading}
                 />
@@ -118,7 +120,7 @@ const ChallengesTab = ({
                   challenge={c}
                   currentUserId={currentUserId}
                   myHabits={myHabits}
-                  onJoin={handleJoin}
+                  onJoin={setJoinTarget}
                   onLeave={handleLeave}
                   actionLoading={actionLoading}
                 />
@@ -150,7 +152,7 @@ const ChallengesTab = ({
                     challenge={c}
                     currentUserId={currentUserId}
                     myHabits={myHabits}
-                    onJoin={handleJoin}
+                    onJoin={setJoinTarget}
                     onLeave={handleLeave}
                     actionLoading={actionLoading}
                   />
@@ -171,12 +173,10 @@ const ChallengesTab = ({
             <p className="text-sm text-[var(--ink-2)] max-w-sm mx-auto mb-7 relative">
               Create a streak, team goal, or consistency challenge to motivate your group.
             </p>
-            {canManage && (
-              <button onClick={() => openCreateWithPreset(null)} className="grp-btn grp-btn--ember mx-auto relative">
-                <Trophy size={14} weight="fill" />
-                Create challenge
-              </button>
-            )}
+            <button onClick={() => openCreateWithPreset(null)} className="grp-btn grp-btn--ember mx-auto relative">
+              <Trophy size={14} weight="fill" />
+              Create challenge
+            </button>
           </div>
         )}
       </div>
@@ -187,7 +187,7 @@ const ChallengesTab = ({
           activeChallenges={active}
           allChallenges={challenges}
           currentUserId={currentUserId}
-          onCreateChallenge={canManage ? () => openCreateWithPreset(null) : null}
+          onCreateChallenge={() => openCreateWithPreset(null)}
         />
       </aside>
 
@@ -199,6 +199,16 @@ const ChallengesTab = ({
           groupId={groupId}
           onCreated={handleCreated}
           defaultType={createPreset}
+        />
+      )}
+
+      {/* Join modal */}
+      {joinTarget && (
+        <ChallengeJoinModal
+          isOpen={!!joinTarget}
+          challenge={joinTarget}
+          onClose={() => setJoinTarget(null)}
+          onSuccess={() => { setJoinTarget(null); onRefresh?.(); }}
         />
       )}
     </div>

@@ -165,7 +165,7 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
             </p>
           </div>
           {!isParticipant && c.type !== "head_to_head" && (
-            <button onClick={() => onJoin(c._id)} disabled={isLoading} className="grp-btn grp-btn--sm flex-shrink-0">
+            <button onClick={() => onJoin(c)} disabled={isLoading} className="grp-btn grp-btn--sm flex-shrink-0">
               {isLoading ? "…" : "Join"}
             </button>
           )}
@@ -189,7 +189,7 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             {!isParticipant && (
-              <button onClick={() => onJoin(c._id)} disabled={isLoading} className="grp-btn grp-btn--sm">
+              <button onClick={() => onJoin(c)} disabled={isLoading} className="grp-btn grp-btn--sm">
                 {isLoading ? "…" : "Join"}
               </button>
             )}
@@ -245,27 +245,14 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
         </div>
 
         {/* Join section */}
-        {!isParticipant && myHabits.length > 0 && (
-          <div>
-            <button
-              onClick={() => onJoin(c._id, selectedHabitId ? [selectedHabitId] : [])}
-              disabled={isLoading}
-              className="grp-btn grp-btn--signal grp-btn--sm mb-4"
-            >
-              {isLoading ? "Joining…" : "Join challenge"}
-            </button>
-            <p className="grp-kicker mb-2">Pick your habit</p>
-            <div className="space-y-1">
-              {myHabits.slice(0, 3).map((h) => (
-                <HabitMatchRow
-                  key={h._id || h.habitId}
-                  habit={h}
-                  selected={selectedHabitId === (h._id || h.habitId)}
-                  onSelect={() => setSelectedHabitId(h._id || h.habitId)}
-                />
-              ))}
-            </div>
-          </div>
+        {!isParticipant && (
+          <button
+            onClick={() => onJoin(c)}
+            disabled={isLoading}
+            className="grp-btn grp-btn--signal grp-btn--sm"
+          >
+            {isLoading ? "Joining…" : "Join challenge"}
+          </button>
         )}
 
         {isParticipant && (
@@ -302,7 +289,7 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
               Coming soon
             </span>
           ) : !isParticipant ? (
-            <button onClick={() => onJoin(c._id)} disabled={isLoading} className="grp-btn grp-btn--sm">
+            <button onClick={() => onJoin(c)} disabled={isLoading} className="grp-btn grp-btn--sm">
               {isLoading ? "…" : "Join"}
             </button>
           ) : (
