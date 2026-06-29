@@ -7,7 +7,11 @@ import {
   Sword,
   Trophy,
   Clock,
+  DotsThree,
+  X,
+  Pencil,
 } from "@phosphor-icons/react";
+import ChallengeJoinModal from "../../ui/ChallengeJoinModal";
 
 /* ── type metadata ──────────────────────────────────── */
 
@@ -62,7 +66,7 @@ function sortKey(participant, type) {
 
 /* ── Leaderboard row (Consistency / Streak) ────────────── */
 
-function LeaderboardRow({ rank, participant, targetValue, type }) {
+function LeaderboardRow({ rank, participant, targetValue, type, isOwnRow, onEditHabit }) {
   const info = participant.userId || participant;
   const name = info.name || info.email || "Member";
   const metricValue = sortKey(participant, type);
@@ -87,6 +91,15 @@ function LeaderboardRow({ rank, participant, targetValue, type }) {
       <span className="grp-mono text-[11px] font-bold text-[var(--ink)] w-10 text-right flex-shrink-0">
         {pct}%
       </span>
+      {isOwnRow && onEditHabit && (
+        <button
+          onClick={onEditHabit}
+          className="text-[var(--ink-3)] hover:text-[var(--signal)] transition-colors flex-shrink-0"
+          title="Change linked habit"
+        >
+          <Pencil size={12} weight="bold" />
+        </button>
+      )}
     </div>
   );
 }
@@ -127,8 +140,11 @@ function HabitMatchRow({ habit, selected, onSelect }) {
 
 /* ── ChallengeCard ───────────────────────────────────────── */
 
-const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onLeave, actionLoading }) => {
+const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onLeave, onCancel, canCancel = false, actionLoading }) => {
   const [selectedHabitId, setSelectedHabitId] = useState(null);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [cancelError, setCancelError] = useState("");
+  const [showRelinkModal, setShowRelinkModal] = useState(false);
 
   const isParticipant = c.participants?.some(
     (p) => (p.userId?._id || p.userId)?.toString() === currentUserId?.toString()
@@ -149,6 +165,18 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
 
   const metaLine = "grp-mono text-[10px] text-[var(--ink-3)] mt-1 uppercase tracking-wider";
 
+  const handleCancelConfirm = async () => {
+    if (!onCancel) return;
+    setCancelError("");
+    try {
+      await onCancel(c._id);
+    } catch (e) {
+      setCancelError(e.message || "Failed to cancel challenge");
+      setConfirmCancel(false);
+      setTimeout(() => setCancelError(""), 4000);
+    }
+  };
+
   /* Upcoming card */
   if (c.status === "upcoming") {
     return (
@@ -163,11 +191,40 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
             <p className={metaLine}>
               Starts in {startsIn ?? "?"} day{startsIn !== 1 ? "s" : ""} · {participantCount} joined
             </p>
+            {cancelError && (
+              <p className="grp-mono text-[10px] text-[var(--rose)] mt-1">{cancelError}</p>
+            )}
           </div>
           {!isParticipant && c.type !== "head_to_head" && (
             <button onClick={() => onJoin(c)} disabled={isLoading} className="grp-btn grp-btn--sm flex-shrink-0">
               {isLoading ? "…" : "Join"}
             </button>
+          )}
+          {canCancel && !confirmCancel && (
+            <button
+              onClick={() => setConfirmCancel(true)}
+              className="text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors flex-shrink-0 p-1"
+              title="Cancel challenge"
+            >
+              <DotsThree size={18} weight="bold" />
+            </button>
+          )}
+          {canCancel && confirmCancel && (
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <span className="grp-mono text-[10px] text-[var(--ink-2)]">Cancel challenge?</span>
+              <button
+                onClick={handleCancelConfirm}
+                className="grp-mono text-[10px] font-bold text-[var(--rose)] hover:underline"
+              >
+                Yes
+              </button>
+              <button
+                onClick={() => setConfirmCancel(false)}
+                className="text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors"
+              >
+                <X size={12} weight="bold" />
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -200,27 +257,53 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
         {/* Leaderboard */}
         {sortedParticipants.length > 0 && (
           <div className="mt-3 space-y-0.5">
-            {sortedParticipants.slice(0, 5).map((p, i) => (
-              <LeaderboardRow
-                key={(p.userId?._id || p.userId)?.toString() || i}
-                rank={i + 1}
-                participant={p}
-                targetValue={c.rules?.targetValue || 1}
-                type={c.type}
-              />
-            ))}
+            {sortedParticipants.slice(0, 5).map((p, i) => {
+              const pId = (p.userId?._id || p.userId)?.toString();
+              const isOwn = pId === currentUserId?.toString();
+              return (
+                <LeaderboardRow
+                  key={pId || i}
+                  rank={i + 1}
+                  participant={p}
+                  targetValue={c.rules?.targetValue || 1}
+                  type={c.type}
+                  isOwnRow={isOwn}
+                  onEditHabit={c.status === "active" && isOwn ? () => setShowRelinkModal(true) : undefined}
+                />
+              );
+            })}
           </div>
+        )}
+
+        {showRelinkModal && (
+          <ChallengeJoinModal
+            isOpen={showRelinkModal}
+            challenge={c}
+            mode="relink"
+            initialHabitIds={myParticipant?.linkedHabitIds || []}
+            onClose={() => setShowRelinkModal(false)}
+            onSuccess={() => setShowRelinkModal(false)}
+          />
         )}
       </div>
     );
   }
 
-  /* Team Goal: progress + join with habit selection */
+  /* Team Goal: progress + contribution list */
   if (c.type === "team_goal") {
     const totalValue = c.participants?.reduce(
       (s, p) => s + (p.progress?.currentValue || 0),
       0
     ) || 0;
+
+    const contributors = [...(c.participants || [])].sort(
+      (a, b) => (b.progress?.currentValue || 0) - (a.progress?.currentValue || 0)
+    );
+
+    const ownHasNoHabit = isParticipant &&
+      myParticipant?.role !== "organizer" &&
+      !(myParticipant?.linkedHabitIds?.length) &&
+      c.status === "active";
 
     return (
       <div className="grp-card grp-card-hover p-5">
@@ -233,33 +316,85 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
               {participantCount > 0 && ` · ${participantCount} joined`}
             </p>
           </div>
-          <TypeTag type={c.type} />
+          <div className="flex items-center gap-2">
+            {!isParticipant && (
+              <button onClick={() => onJoin(c)} disabled={isLoading} className="grp-btn grp-btn--sm flex-shrink-0">
+                {isLoading ? "…" : "Join"}
+              </button>
+            )}
+            <TypeTag type={c.type} />
+          </div>
         </div>
 
         {/* Progress meter */}
-        <div className="mt-3 mb-4">
+        <div className="mt-3 mb-3">
           <div className="grp-meter" style={{ height: "8px" }}>
             <i style={{ width: `${pct}%`, transition: "width .5s ease" }} />
           </div>
           <p className="grp-mono text-right text-[11px] font-bold text-[var(--signal)] mt-1.5">{pct}%</p>
         </div>
 
-        {/* Join section */}
-        {!isParticipant && (
+        {/* Contribution list */}
+        {contributors.length > 0 && (
+          <div className="space-y-1.5">
+            {contributors.map((p) => {
+              const info = p.userId || p;
+              const name = info.name || info.email || "Member";
+              const val = p.progress?.currentValue || 0;
+              const isOrganizer = p.role === "organizer";
+              const pId = (info._id || info)?.toString();
+              const isOwn = pId === currentUserId?.toString();
+
+              return (
+                <div key={pId || name} className="flex items-center gap-2.5 py-1">
+                  <div className="w-6 h-6 rounded-[6px] bg-[var(--surface-2)] flex items-center justify-center text-[var(--ink)] text-[10px] grp-display font-bold flex-shrink-0">
+                    {name.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-xs text-[var(--ink)] truncate flex-1">
+                    {name.split(" ")[0]}
+                    {isOwn && " (you)"}
+                  </span>
+                  {isOrganizer ? (
+                    <span className="grp-mono text-[9px] font-bold uppercase tracking-wider text-[var(--ink-3)] bg-[var(--surface-2)] px-1.5 py-0.5 rounded">
+                      organizer
+                    </span>
+                  ) : (
+                    <span className="grp-mono text-[11px] font-bold text-[var(--ink)]">
+                      {val.toLocaleString()}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Legacy no-habit prompt */}
+        {ownHasNoHabit && (
           <button
-            onClick={() => onJoin(c)}
-            disabled={isLoading}
-            className="grp-btn grp-btn--signal grp-btn--sm"
+            onClick={() => setShowRelinkModal(true)}
+            className="mt-3 w-full text-left grp-mono text-[11px] text-[var(--signal)] hover:underline"
           >
-            {isLoading ? "Joining…" : "Join challenge"}
+            Link a habit to contribute →
           </button>
         )}
 
-        {isParticipant && (
+        {showRelinkModal && (
+          <ChallengeJoinModal
+            isOpen={showRelinkModal}
+            challenge={c}
+            mode="relink"
+            initialHabitIds={myParticipant?.linkedHabitIds || []}
+            onClose={() => setShowRelinkModal(false)}
+            onSuccess={() => setShowRelinkModal(false)}
+          />
+        )}
+
+        {isParticipant && !ownHasNoHabit && (
           <button
             onClick={() => onLeave(c._id)}
             disabled={isLoading}
-            className="grp-mono text-[10px] font-bold uppercase tracking-wider text-[var(--ink-3)] hover:text-[var(--rose)] transition-colors"
+            className="grp-mono text-[10px] font-bold uppercase tracking-wider text-[var(--ink-3)] hover:text-[var(--rose)] transition-colors mt-3"
           >
             {isLoading ? "…" : "Leave"}
           </button>

@@ -62,6 +62,11 @@ const ChallengesTab = ({
     }
   };
 
+  const handleCancel = async (challengeId) => {
+    await groupsAPI.cancelChallenge(challengeId);
+    onRefresh?.();
+  };
+
   const openCreateWithPreset = (preset = null) => {
     setCreatePreset(preset);
     setShowCreateModal(true);
@@ -122,6 +127,8 @@ const ChallengesTab = ({
                   myHabits={myHabits}
                   onJoin={setJoinTarget}
                   onLeave={handleLeave}
+                  onCancel={handleCancel}
+                  canCancel={canManage || (c.createdBy?._id || c.createdBy)?.toString() === currentUserId?.toString()}
                   actionLoading={actionLoading}
                 />
               ))}

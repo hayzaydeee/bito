@@ -4,7 +4,7 @@ import { groupsAPI } from "../../services/api";
 import AnimatedModal from "./AnimatedModal";
 import HabitIcon from "../shared/HabitIcon";
 
-const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
+const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess, mode = "join", initialHabitIds = [] }) => {
   const [loading, setLoading] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
   const [error, setError] = useState("");
@@ -51,7 +51,7 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
 
   useEffect(() => {
     if (isOpen && challenge) {
-      setSelectedIds(new Set());
+      setSelectedIds(mode === "relink" && initialHabitIds.length ? new Set(initialHabitIds) : new Set());
       setSuggestions([]);
       setAllHabits([]);
       setShowAllHabits(false);
@@ -78,11 +78,11 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
   };
 
   const handleJoin = async () => {
-    const mode = challenge.habitMatchMode || "single";
-    if (mode === "all" || mode === "any") {
+    const matchMode = challenge.habitMatchMode || "single";
+    if (matchMode === "all" || matchMode === "any") {
       if (selectedIds.size === 0) return setError("Please select at least one habit");
     }
-    if (mode === "minimum" && challenge.habitMatchMinimum) {
+    if (matchMode === "minimum" && challenge.habitMatchMinimum) {
       if (selectedIds.size < challenge.habitMatchMinimum) {
         return setError(`Please select at least ${challenge.habitMatchMinimum} habit(s)`);
       }
@@ -93,6 +93,12 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
 
     try {
       const ids = [...selectedIds];
+      if (mode === "relink") {
+        await groupsAPI.updateParticipantHabits(challenge._id, ids);
+        onSuccess?.();
+        onClose();
+        return;
+      }
       const res = await groupsAPI.joinChallenge(challenge._id, ids);
       if (res.success) {
         if (res.compatibilityWarnings?.length) {
@@ -133,7 +139,9 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
         {/* header */}
         <div className="flex items-center justify-between p-5 border-b border-[var(--line)]/10">
           <div>
-            <h2 className="grp-display text-lg font-bold text-[var(--ink)]">Join Challenge</h2>
+            <h2 className="grp-display text-lg font-bold text-[var(--ink)]">
+              {mode === "relink" ? "Update Habit" : "Join Challenge"}
+            </h2>
             <p className="grp-mono text-xs text-[var(--ink-3)] mt-0.5">{challenge.title}</p>
           </div>
           <button
@@ -340,7 +348,7 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
               disabled={loading}
               className="flex-1 h-10 bg-[var(--signal)] hover:bg-[var(--signal-2)] disabled:opacity-50 text-white rounded-xl grp-mono text-sm font-medium transition-colors"
             >
-              {loading ? "Joining…" : "Join Challenge"}
+              {loading ? (mode === "relink" ? "Saving…" : "Joining…") : (mode === "relink" ? "Save" : "Join Challenge")}
             </button>
           </div>
           )}
