@@ -14,6 +14,7 @@ const TYPE_META = {
 };
 
 const MEDALS = ["🥇", "🥈", "🥉"];
+const MEDAL_COLORS = ["#f59e0b", "#94a3b8", "#cd7c2f"];
 
 function daysLeft(d) { return d ? Math.max(0, Math.ceil((new Date(d) - Date.now()) / 86400000)) : null; }
 function daysUntil(d) { return d ? Math.max(0, Math.ceil((new Date(d) - Date.now()) / 86400000)) : null; }
@@ -37,6 +38,21 @@ function metricLabel(p, type, unit) {
   return `${(p.progress?.currentValue || 0).toLocaleString()} ${unit || ""}`.trim();
 }
 
+function UserAvatar({ user, size = "w-7 h-7", radius = "rounded-[7px]", rankColor = null, isOwn = false }) {
+  const name = user?.name || user?.email || "?";
+  const src = user?.avatar;
+  const bg = rankColor ? `${rankColor}20` : "var(--surface-2)";
+  const fg = isOwn ? "var(--signal)" : (rankColor || "var(--ink)");
+  return src ? (
+    <img src={src} alt={name} className={`${size} ${radius} object-cover flex-shrink-0`} />
+  ) : (
+    <div className={`${size} ${radius} flex items-center justify-center text-[10px] grp-display font-bold flex-shrink-0`}
+         style={{ background: bg, color: fg }}>
+      {name.charAt(0).toUpperCase()}
+    </div>
+  );
+}
+
 const ChallengeCard = ({
   challenge: c, currentUserId, myHabits = [],
   onJoin, onLeave, onCancel, canCancel = false,
@@ -57,67 +73,53 @@ const ChallengeCard = ({
   const handleCancelConfirm = async () => {
     if (!onCancel) return;
     setCancelError("");
-    try {
-      await onCancel(c._id);
-    } catch (e) {
+    try { await onCancel(c._id); }
+    catch (e) {
       setCancelError(e.message || "Failed to cancel");
       setConfirmCancel(false);
       setTimeout(() => setCancelError(""), 4000);
     }
   };
 
-  const stopProp = (fn) => (e) => { e.stopPropagation(); fn(e); };
+  const sp = (fn) => (e) => { e.stopPropagation(); fn(e); };
 
-  const cardBase = `relative rounded-[14px] border border-[var(--line-2)] bg-[var(--surface)] overflow-hidden cursor-pointer transition-all duration-200 hover:border-[var(--line-3)] hover:-translate-y-px hover:shadow-lg`;
+  const cardBase = `rounded-[14px] border border-[var(--line-2)] bg-[var(--surface)] overflow-hidden cursor-pointer transition-all duration-200 hover:border-[var(--line-3)] hover:-translate-y-px hover:shadow-lg`;
 
   // ── UPCOMING ────────────────────────────────────────────────────────
   if (c.status === "upcoming") {
     return (
       <div className={cardBase} onClick={() => onViewDetail?.(c)}>
-        {/* Left accent */}
-        <div className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: color }} />
-        <div className="pl-5 pr-4 py-4">
+        <div className="px-5 py-5">
           <div className="flex items-center gap-3">
-            <Clock size={15} className="text-[var(--ink-3)] flex-shrink-0" />
+            <div className="w-8 h-8 rounded-[9px] flex items-center justify-center flex-shrink-0" style={{ background: `${color}18` }}>
+              <Clock size={16} style={{ color }} />
+            </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <p className="grp-mono text-[10px] font-bold uppercase tracking-widest" style={{ color }}>
-                  {TYPE_META[c.type]?.label || c.type}
-                </p>
-                <span className="grp-mono text-[10px] text-[var(--ink-3)]">· upcoming</span>
-              </div>
-              <p className="grp-display text-[16px] font-bold text-[var(--ink)] truncate">{c.title}</p>
+              <p className="grp-display text-[17px] font-bold text-[var(--ink)] truncate">{c.title}</p>
               <p className="grp-mono text-[10px] text-[var(--ink-3)] mt-0.5">
                 Starts in {startsIn ?? "?"} day{startsIn !== 1 ? "s" : ""} · {participantCount} joined
               </p>
               {cancelError && <p className="grp-mono text-[10px] text-[var(--rose)] mt-1">{cancelError}</p>}
             </div>
-            {/* Actions */}
             <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
               {!isParticipant && c.type !== "head_to_head" && (
-                <button
-                  onClick={stopProp(() => onJoin?.(c))}
-                  disabled={isLoading}
-                  className="grp-btn grp-btn--sm"
-                >
+                <button onClick={sp(() => onJoin?.(c))} disabled={isLoading} className="grp-btn grp-btn--sm">
                   {isLoading ? "…" : "Join"}
                 </button>
               )}
               {canCancel && !confirmCancel && (
-                <button
-                  onClick={stopProp(() => setConfirmCancel(true))}
-                  className="text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors p-1"
-                >
+                <button onClick={sp(() => setConfirmCancel(true))} className="text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors p-1">
                   <DotsThree size={16} weight="bold" />
                 </button>
               )}
               {canCancel && confirmCancel && (
                 <div className="flex items-center gap-1.5">
                   <span className="grp-mono text-[10px] text-[var(--ink-2)]">Cancel?</span>
-                  <button onClick={stopProp(handleCancelConfirm)} className="grp-mono text-[10px] font-bold text-[var(--rose)] hover:underline">Yes</button>
-                  <button onClick={stopProp(() => setConfirmCancel(false))} className="text-[var(--ink-3)]"><X size={11} weight="bold" /></button>
+                  <button onClick={sp(handleCancelConfirm)} className="grp-mono text-[10px] font-bold text-[var(--rose)] hover:underline">Yes</button>
+                  <button onClick={sp(() => setConfirmCancel(false))} className="text-[var(--ink-3)]"><X size={11} weight="bold" /></button>
                 </div>
               )}
+              <ArrowRight size={13} className="text-[var(--ink-3)]" />
             </div>
           </div>
         </div>
@@ -132,35 +134,33 @@ const ChallengeCard = ({
 
     return (
       <div className={`${cardBase} opacity-70 hover:opacity-100`} onClick={() => onViewDetail?.(c)}>
-        <div className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: `${color}55` }} />
-        <div className="pl-5 pr-4 py-4">
+        <div className="px-5 py-5">
           <div className="flex items-start justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <p className="grp-mono text-[10px] font-bold uppercase tracking-widest text-[var(--ink-3)]">
-                  {TYPE_META[c.type]?.label || c.type}
-                </p>
-                <span className="grp-mono text-[10px] text-[var(--ink-3)]">· {c.status}</span>
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="w-8 h-8 rounded-[9px] flex items-center justify-center flex-shrink-0" style={{ background: `${color}14` }}>
+                <Icon size={15} weight="duotone" style={{ color: `${color}99` }} />
               </div>
-              <p className="grp-display text-[16px] font-bold text-[var(--ink)] truncate">{c.title}</p>
+              <div className="flex-1 min-w-0">
+                <p className="grp-display text-[17px] font-bold text-[var(--ink)] truncate">{c.title}</p>
+                {top3.length > 0 && (
+                  <div className="flex items-center gap-3 mt-1">
+                    {top3.map((p, i) => {
+                      const name = p.displayName || p.userId?.name || p.userId?.email || "?";
+                      return (
+                        <span key={i} className="grp-mono text-[11px] text-[var(--ink-2)]">
+                          {MEDALS[i]} {name.split(" ")[0]}
+                        </span>
+                      );
+                    })}
+                    {(c.participants?.length || 0) > 3 && (
+                      <span className="grp-mono text-[10px] text-[var(--ink-3)]">+{c.participants.length - 3}</span>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             <ArrowRight size={14} className="text-[var(--ink-3)] flex-shrink-0 mt-1" />
           </div>
-          {top3.length > 0 && (
-            <div className="flex items-center gap-3 mt-2.5">
-              {top3.map((p, i) => {
-                const name = p.displayName || p.userId?.name || p.userId?.email || "?";
-                return (
-                  <span key={i} className="grp-mono text-[11px] text-[var(--ink-2)]">
-                    {MEDALS[i]} {name.split(" ")[0]}
-                  </span>
-                );
-              })}
-              {(c.participants?.length || 0) > 3 && (
-                <span className="grp-mono text-[10px] text-[var(--ink-3)]">+{c.participants.length - 3} more</span>
-              )}
-            </div>
-          )}
         </div>
       </div>
     );
@@ -174,30 +174,26 @@ const ChallengeCard = ({
 
     return (
       <div className={cardBase} onClick={() => onViewDetail?.(c)}>
-        <div className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: color }} />
-        <div className="pl-5 pr-4 py-4">
-          {/* Header */}
-          <div className="flex items-start justify-between gap-3 mb-3">
-            <div className="flex items-center gap-2.5 flex-1 min-w-0">
-              <div className="w-7 h-7 rounded-[8px] flex items-center justify-center flex-shrink-0" style={{ background: `${color}18` }}>
-                <Icon size={14} weight="duotone" style={{ color }} />
+        <div className="px-5 py-5">
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="w-8 h-8 rounded-[9px] flex items-center justify-center flex-shrink-0" style={{ background: `${color}18` }}>
+                <Icon size={16} weight="duotone" style={{ color }} />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="grp-mono text-[10px] font-bold uppercase tracking-widest" style={{ color }}>
-                    {TYPE_META[c.type]?.label}
-                  </p>
-                  <span className="flex items-center gap-1 grp-mono text-[10px] text-[var(--ink-3)]">
+                <p className="grp-display text-[17px] font-bold text-[var(--ink)] truncate">{c.title}</p>
+                <p className="grp-mono text-[10px] text-[var(--ink-3)] mt-0.5">
+                  <span className="inline-flex items-center gap-1">
                     <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                    Live · {remaining}d left
+                    {remaining}d left
                   </span>
-                </div>
-                <p className="grp-display text-[16px] font-bold text-[var(--ink)] truncate">{c.title}</p>
+                  {" · "}{participantCount} members
+                </p>
               </div>
             </div>
-            <div className="flex items-center gap-1.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
               {!isParticipant && (
-                <button onClick={stopProp(() => onJoin?.(c))} disabled={isLoading} className="grp-btn grp-btn--sm">
+                <button onClick={sp(() => onJoin?.(c))} disabled={isLoading} className="grp-btn grp-btn--sm">
                   {isLoading ? "…" : "Join"}
                 </button>
               )}
@@ -205,9 +201,8 @@ const ChallengeCard = ({
             </div>
           </div>
 
-          {/* Progress bar */}
-          <div className="mb-2">
-            <div className="flex items-center justify-between mb-1">
+          <div className="mb-3">
+            <div className="flex items-center justify-between mb-1.5">
               <p className="grp-mono text-[10px] text-[var(--ink-3)]">
                 {totalValue.toLocaleString()} / {Number(c.rules?.targetValue || 0).toLocaleString()} {c.rules?.targetUnit || ""}
               </p>
@@ -218,35 +213,19 @@ const ChallengeCard = ({
             </div>
           </div>
 
-          {/* Contributor avatars */}
-          <div className="flex items-center gap-2 mt-2">
-            <div className="flex -space-x-1.5">
-              {c.participants?.slice(0, 5).map((p, i) => {
-                const info = p.userId || {};
-                const name = info.name || info.email || "?";
-                return (
-                  <div
-                    key={i}
-                    className="w-6 h-6 rounded-full border-2 border-[var(--surface)] flex items-center justify-center text-[9px] grp-display font-bold flex-shrink-0"
-                    style={{ background: `${color}25`, color }}
-                    title={name}
-                  >
-                    {name.charAt(0).toUpperCase()}
-                  </div>
-                );
-              })}
+          <div className="flex items-center gap-2">
+            <div className="flex -space-x-2">
+              {c.participants?.slice(0, 5).map((p, i) => (
+                <UserAvatar key={i} user={p.userId || {}} size="w-7 h-7" radius="rounded-full" style={{ border: "2px solid var(--surface)" }} />
+              ))}
             </div>
             <span className="grp-mono text-[10px] text-[var(--ink-3)]">
               {participantCount} contributor{participantCount !== 1 ? "s" : ""}
             </span>
           </div>
 
-          {/* Legacy no-habit prompt */}
           {ownHasNoHabit && (
-            <button
-              onClick={stopProp(() => setShowRelinkModal(true))}
-              className="mt-2 w-full text-left grp-mono text-[11px] text-[var(--signal)] hover:underline"
-            >
+            <button onClick={sp(() => setShowRelinkModal(true))} className="mt-3 w-full text-left grp-mono text-[11px] text-[var(--signal)] hover:underline">
               Link a habit to contribute →
             </button>
           )}
@@ -254,9 +233,7 @@ const ChallengeCard = ({
 
         {showRelinkModal && (
           <ChallengeJoinModal
-            isOpen={showRelinkModal}
-            challenge={c}
-            mode="relink"
+            isOpen={showRelinkModal} challenge={c} mode="relink"
             initialHabitIds={myP?.linkedHabitIds || []}
             onClose={() => setShowRelinkModal(false)}
             onSuccess={() => setShowRelinkModal(false)}
@@ -274,35 +251,31 @@ const ChallengeCard = ({
 
   return (
     <div className={cardBase} onClick={() => onViewDetail?.(c)}>
-      <div className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: color }} />
-      <div className="pl-5 pr-4 py-4">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="flex items-center gap-2.5 flex-1 min-w-0">
-            <div className="w-7 h-7 rounded-[8px] flex items-center justify-center flex-shrink-0" style={{ background: `${color}18` }}>
-              <Icon size={14} weight="duotone" style={{ color }} />
+      <div className="px-5 py-5">
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="w-8 h-8 rounded-[9px] flex items-center justify-center flex-shrink-0" style={{ background: `${color}18` }}>
+              <Icon size={16} weight="duotone" style={{ color }} />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="grp-mono text-[10px] font-bold uppercase tracking-widest" style={{ color }}>
-                  {TYPE_META[c.type]?.label}
-                </p>
-                <span className="flex items-center gap-1 grp-mono text-[10px] text-[var(--ink-3)]">
+              <p className="grp-display text-[17px] font-bold text-[var(--ink)] truncate">{c.title}</p>
+              <p className="grp-mono text-[10px] text-[var(--ink-3)] mt-0.5">
+                <span className="inline-flex items-center gap-1">
                   <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                  Live · {remaining}d left
+                  {remaining}d left
                 </span>
-              </div>
-              <p className="grp-display text-[16px] font-bold text-[var(--ink)] truncate">{c.title}</p>
+                {" · "}{participantCount} participants
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
             {!isParticipant && c.type !== "head_to_head" && (
-              <button onClick={stopProp(() => onJoin?.(c))} disabled={isLoading} className="grp-btn grp-btn--sm">
+              <button onClick={sp(() => onJoin?.(c))} disabled={isLoading} className="grp-btn grp-btn--sm">
                 {isLoading ? "…" : "Join"}
               </button>
             )}
             {isParticipant && myRank >= 0 && (
-              <span className="grp-mono text-[10px] text-[var(--ink-3)] mr-1">
+              <span className="grp-mono text-[11px] font-bold text-[var(--ink-3)]">
                 {myRank < 3 ? MEDALS[myRank] : `#${myRank + 1}`}
               </span>
             )}
@@ -310,9 +283,8 @@ const ChallengeCard = ({
           </div>
         </div>
 
-        {/* Leaderboard preview — top 3 */}
         {preview.length > 0 && (
-          <div className="space-y-1">
+          <div className="space-y-2">
             {preview.map((p, i) => {
               const info = p.userId || {};
               const name = info.name || info.email || "Member";
@@ -324,14 +296,9 @@ const ChallengeCard = ({
               return (
                 <div key={(info._id || info)?.toString() || i} className="flex items-center gap-2.5">
                   <span className="w-5 text-center text-[13px] leading-none flex-shrink-0">
-                    {i < 3 ? MEDALS[i] : <span className="grp-mono text-[10px] text-[var(--ink-3)]">{String(i + 1).padStart(2, "0")}</span>}
+                    {MEDALS[i]}
                   </span>
-                  <div
-                    className="w-6 h-6 rounded-[6px] flex items-center justify-center text-[10px] grp-display font-bold flex-shrink-0"
-                    style={{ background: i < 3 ? `${["#f59e0b","#94a3b8","#cd7c2f"][i]}20` : "var(--surface-2)", color: isOwn ? "var(--signal)" : "var(--ink)" }}
-                  >
-                    {name.charAt(0).toUpperCase()}
-                  </div>
+                  <UserAvatar user={info} size="w-7 h-7" radius="rounded-[7px]" rankColor={MEDAL_COLORS[i]} isOwn={isOwn} />
                   <div className="w-16 flex-shrink-0 min-w-0">
                     <p className={`text-xs truncate font-medium ${isOwn ? "text-[var(--signal)]" : "text-[var(--ink)]"}`}>
                       {name.split(" ")[0]}
@@ -348,11 +315,7 @@ const ChallengeCard = ({
                   </span>
                   <div className="w-5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                     {isOwn && (
-                      <button
-                        onClick={stopProp(() => setShowRelinkModal(true))}
-                        className="text-[var(--ink-3)] hover:text-[var(--signal)] transition-colors"
-                        title="Change habit"
-                      >
+                      <button onClick={sp(() => setShowRelinkModal(true))} className="text-[var(--ink-3)] hover:text-[var(--signal)] transition-colors" title="Change habit">
                         <Pencil size={11} weight="bold" />
                       </button>
                     )}
@@ -361,9 +324,7 @@ const ChallengeCard = ({
               );
             })}
             {hiddenCount > 0 && (
-              <p className="grp-mono text-[10px] text-[var(--ink-3)] pl-8 pt-0.5">
-                +{hiddenCount} more participants
-              </p>
+              <p className="grp-mono text-[10px] text-[var(--ink-3)] pl-8">+{hiddenCount} more</p>
             )}
           </div>
         )}
@@ -371,9 +332,7 @@ const ChallengeCard = ({
 
       {showRelinkModal && (
         <ChallengeJoinModal
-          isOpen={showRelinkModal}
-          challenge={c}
-          mode="relink"
+          isOpen={showRelinkModal} challenge={c} mode="relink"
           initialHabitIds={myP?.linkedHabitIds || []}
           onClose={() => setShowRelinkModal(false)}
           onSuccess={() => setShowRelinkModal(false)}

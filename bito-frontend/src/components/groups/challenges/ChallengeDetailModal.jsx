@@ -75,11 +75,8 @@ const ChallengeDetailModal = ({
   };
 
   return (
-    <AnimatedModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-xl">
+    <AnimatedModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-2xl">
       <div className="grp relative w-full bg-[var(--surface)] rounded-[16px] border border-[var(--line-2)] max-h-[88vh] flex flex-col overflow-hidden">
-
-        {/* Colored top accent */}
-        <div className="h-[3px] rounded-t-[16px] flex-shrink-0" style={{ background: color }} />
 
         {/* Header */}
         <div className="px-6 pt-5 pb-4 border-b border-[var(--line-2)] flex-shrink-0">
@@ -241,15 +238,23 @@ const ChallengeDetailModal = ({
                       </div>
 
                       {/* Avatar */}
-                      <div
-                        className="w-8 h-8 rounded-[8px] flex items-center justify-center text-sm grp-display font-bold flex-shrink-0"
-                        style={{
-                          background: rankColor ? `${rankColor}20` : "var(--surface-2)",
-                          color: rankColor || (isOwn ? "var(--signal)" : "var(--ink)"),
-                        }}
-                      >
-                        {name.charAt(0).toUpperCase()}
-                      </div>
+                      {(!usesFrozen && p.userId?.avatar) ? (
+                        <img
+                          src={p.userId.avatar}
+                          alt={name}
+                          className="w-8 h-8 rounded-[8px] object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <div
+                          className="w-8 h-8 rounded-[8px] flex items-center justify-center text-sm grp-display font-bold flex-shrink-0"
+                          style={{
+                            background: rankColor ? `${rankColor}20` : "var(--surface-2)",
+                            color: rankColor || (isOwn ? "var(--signal)" : "var(--ink)"),
+                          }}
+                        >
+                          {name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
 
                       {/* Name + habit */}
                       <div className="flex-1 min-w-0">
