@@ -240,6 +240,7 @@ router.get('/challenges/:id', async (req, res) => {
     const challenge = await Challenge.findById(req.params.id)
       .populate('createdBy', 'name avatar')
       .populate('participants.userId', 'name avatar')
+      .populate('participants.linkedHabitIds', 'name icon')
       .populate('habitId', 'name icon');
 
     if (!challenge) {

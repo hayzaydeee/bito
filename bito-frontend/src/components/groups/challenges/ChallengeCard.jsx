@@ -74,32 +74,41 @@ function LeaderboardRow({ rank, participant, targetValue, type, isOwnRow, onEdit
     ? Math.min(100, Math.round(metricValue))
     : Math.min(100, Math.round((metricValue / (targetValue || 1)) * 100));
 
+  // linkedHabitIds is populated [{_id, name, icon}] from backend
+  const trackedHabit = participant.linkedHabitIds?.[0];
+  const habitName = typeof trackedHabit === "object" ? trackedHabit?.name : null;
+
   return (
-    <div className="flex items-center gap-3 py-2">
-      <span className="grp-mono w-5 text-[11px] font-bold text-[var(--ink-3)] text-right flex-shrink-0">
-        {String(rank).padStart(2, "0")}
-      </span>
-      <div className="w-7 h-7 rounded-[7px] bg-[var(--surface-2)] flex items-center justify-center text-[var(--ink)] text-[11px] grp-display font-bold flex-shrink-0">
-        {name.charAt(0).toUpperCase()}
+    <div className="py-2">
+      <div className="flex items-center gap-3">
+        <span className="grp-mono w-5 text-[11px] font-bold text-[var(--ink-3)] text-right flex-shrink-0">
+          {String(rank).padStart(2, "0")}
+        </span>
+        <div className="w-7 h-7 rounded-[7px] bg-[var(--surface-2)] flex items-center justify-center text-[var(--ink)] text-[11px] grp-display font-bold flex-shrink-0">
+          {name.charAt(0).toUpperCase()}
+        </div>
+        <div className="w-20 flex-shrink-0 min-w-0">
+          <p className="text-sm text-[var(--ink)] truncate">{name.split(" ")[0]}</p>
+          {habitName && (
+            <p className="grp-mono text-[9px] text-[var(--ink-3)] truncate">&ldquo;{habitName}&rdquo;</p>
+          )}
+        </div>
+        <div className="grp-meter flex-1">
+          <i style={{ width: `${pct}%` }} />
+        </div>
+        <span className="grp-mono text-[11px] font-bold text-[var(--ink)] w-10 text-right flex-shrink-0">
+          {pct}%
+        </span>
+        {isOwnRow && onEditHabit && (
+          <button
+            onClick={onEditHabit}
+            className="text-[var(--ink-3)] hover:text-[var(--signal)] transition-colors flex-shrink-0"
+            title="Change linked habit"
+          >
+            <Pencil size={12} weight="bold" />
+          </button>
+        )}
       </div>
-      <span className="w-20 text-sm text-[var(--ink)] truncate flex-shrink-0">
-        {name.split(" ")[0]}
-      </span>
-      <div className="grp-meter flex-1">
-        <i style={{ width: `${pct}%` }} />
-      </div>
-      <span className="grp-mono text-[11px] font-bold text-[var(--ink)] w-10 text-right flex-shrink-0">
-        {pct}%
-      </span>
-      {isOwnRow && onEditHabit && (
-        <button
-          onClick={onEditHabit}
-          className="text-[var(--ink-3)] hover:text-[var(--signal)] transition-colors flex-shrink-0"
-          title="Change linked habit"
-        >
-          <Pencil size={12} weight="bold" />
-        </button>
-      )}
     </div>
   );
 }
@@ -345,15 +354,22 @@ const ChallengeCard = ({ challenge: c, currentUserId, myHabits = [], onJoin, onL
               const pId = (info._id || info)?.toString();
               const isOwn = pId === currentUserId?.toString();
 
+              const trackedHabit = p.linkedHabitIds?.[0];
+              const habitName = typeof trackedHabit === "object" ? trackedHabit?.name : null;
+
               return (
                 <div key={pId || name} className="flex items-center gap-2.5 py-1">
                   <div className="w-6 h-6 rounded-[6px] bg-[var(--surface-2)] flex items-center justify-center text-[var(--ink)] text-[10px] grp-display font-bold flex-shrink-0">
                     {name.charAt(0).toUpperCase()}
                   </div>
-                  <span className="text-xs text-[var(--ink)] truncate flex-1">
-                    {name.split(" ")[0]}
-                    {isOwn && " (you)"}
-                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-[var(--ink)] truncate">
+                      {name.split(" ")[0]}{isOwn && " (you)"}
+                    </p>
+                    {habitName && !isOrganizer && (
+                      <p className="grp-mono text-[9px] text-[var(--ink-3)] truncate">&ldquo;{habitName}&rdquo;</p>
+                    )}
+                  </div>
                   {isOrganizer ? (
                     <span className="grp-mono text-[9px] font-bold uppercase tracking-wider text-[var(--ink-3)] bg-[var(--surface-2)] px-1.5 py-0.5 rounded">
                       organizer

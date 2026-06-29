@@ -401,6 +401,7 @@ challengeSchema.statics.findActiveForGroup = function (groupId) {
   })
     .populate('createdBy', 'name avatar')
     .populate('participants.userId', 'name avatar')
+    .populate('participants.linkedHabitIds', 'name icon')
     .sort({ startDate: 1 });
 };
 
@@ -412,6 +413,7 @@ challengeSchema.statics.findByGroup = function (groupId, options = {}) {
   return this.find(query)
     .populate('createdBy', 'name avatar')
     .populate('participants.userId', 'name avatar')
+    .populate('participants.linkedHabitIds', 'name icon')
     .sort({ createdAt: -1 });
 };
 
