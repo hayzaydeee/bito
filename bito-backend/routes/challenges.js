@@ -192,16 +192,9 @@ router.post('/groups/:groupId/challenges', [
       startDate: start,
       endDate: end,
       status,
-      participants: [
-        {
-          userId,
-          joinedAt: new Date(),
-          progress: { currentValue: 0, currentStreak: 0, bestStreak: 0, completionRate: 0, lastLoggedAt: null },
-          status: 'active',
-        },
-      ],
+      participants: [],
       milestones: milestones || [],
-      stats: { participantCount: 1, completedCount: 0, averageProgress: 0, topStreak: 0 },
+      stats: { participantCount: 0, completedCount: 0, averageProgress: 0, topStreak: 0 },
       settings: {
         maxParticipants: settings?.maxParticipants || null,
         allowLateJoin: settings?.allowLateJoin !== false,
