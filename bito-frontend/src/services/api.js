@@ -768,6 +768,14 @@ export const groupsAPI = {
     });
   },
 
+  // Update linked habits for an active challenge (participant re-link)
+  updateParticipantHabits: async (challengeId, linkedHabitIds) => {
+    return apiRequest(`/api/challenges/${challengeId}/participant/habits`, {
+      method: 'PATCH',
+      body: JSON.stringify({ linkedHabitIds }),
+    });
+  },
+
   // Get challenge leaderboard
   getChallengeLeaderboard: async (challengeId) => {
     return apiRequest(`/api/challenges/${challengeId}/leaderboard`);
