@@ -487,6 +487,66 @@ router.post('/challenges/:id/join', [
 });
 
 // ─────────────────────────────────────────────────────────
+// PATCH /api/challenges/:id/participant/habits
+// Update the calling user's linked habits on an active challenge
+// ─────────────────────────────────────────────────────────
+router.patch('/challenges/:id/participant/habits', [
+  body('linkedHabitIds').isArray({ min: 0 }),
+  body('linkedHabitIds.*').isMongoId(),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const challenge = await Challenge.findById(req.params.id);
+    if (!challenge) {
+      return res.status(404).json({ success: false, error: 'Challenge not found' });
+    }
+    if (challenge.status !== 'active') {
+      return res.status(400).json({ success: false, error: 'Can only update habits on an active challenge' });
+    }
+
+    const participant = challenge.getParticipant(req.user._id);
+    if (!participant || participant.status !== 'active') {
+      return res.status(403).json({ success: false, error: 'You are not an active participant' });
+    }
+
+    const { linkedHabitIds } = req.body;
+
+    if (linkedHabitIds.length) {
+      const validCount = await Habit.countDocuments({
+        _id: { $in: linkedHabitIds },
+        userId: req.user._id,
+      });
+      if (validCount !== linkedHabitIds.length) {
+        return res.status(400).json({ success: false, error: 'One or more habit IDs are invalid or do not belong to you' });
+      }
+    }
+
+    // Run compatibility check
+    let warnings = [];
+    if (linkedHabitIds.length) {
+      const linkedHabits = await Habit.find({ _id: { $in: linkedHabitIds }, userId: req.user._id })
+        .select('name methodology frequency schedule').lean();
+      warnings = checkHabitCompatibility(challenge, linkedHabits);
+    }
+
+    participant.linkedHabitIds = linkedHabitIds;
+    participant.habitCompatibilityWarnings = warnings.map(({ code, message }) => ({ code, message }));
+
+    await challenge.save();
+    invalidateCache(req.user._id);
+
+    res.json({ success: true, participant });
+  } catch (error) {
+    console.error('Error updating participant habits:', error);
+    res.status(500).json({ success: false, error: 'Failed to update habits' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────
 // POST /api/challenges/:id/leave
 // Leave a challenge
 // ─────────────────────────────────────────────────────────
