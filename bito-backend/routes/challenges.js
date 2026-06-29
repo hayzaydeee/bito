@@ -888,6 +888,11 @@ router.get('/challenges/:id/leaderboard', async (req, res) => {
       return res.status(403).json({ success: false, error: 'Leaderboard is disabled for this challenge' });
     }
 
+    // Return frozen snapshot for completed challenges (no recomputation)
+    if (challenge.status === 'completed' && challenge.stats?.finalLeaderboard?.length > 0) {
+      return res.json({ success: true, leaderboard: challenge.stats.finalLeaderboard, frozen: true });
+    }
+
     const leaderboard = challenge.getLeaderboard();
 
     res.json({ success: true, leaderboard });
