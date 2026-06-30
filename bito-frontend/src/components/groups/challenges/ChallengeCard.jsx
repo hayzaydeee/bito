@@ -63,8 +63,8 @@ const ChallengeCard = ({
   const [showRelinkModal, setShowRelinkModal] = useState(false);
 
   const { Icon, color } = TYPE_META[c.type] || { Icon: Fire, label: c.type, color: "var(--signal)" };
-  const isParticipant = c.participants?.some((p) => (p.userId?._id || p.userId)?.toString() === currentUserId?.toString());
   const myP = c.participants?.find((p) => (p.userId?._id || p.userId)?.toString() === currentUserId?.toString());
+  const isParticipant = !!myP && myP.status !== "dropped";
   const isLoading = actionLoading === c._id;
   const remaining = daysLeft(c.endDate);
   const startsIn = daysUntil(c.startDate);

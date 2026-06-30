@@ -15,7 +15,7 @@ const CHALLENGE_TYPES = [
 
 const TARGET_UNITS = [
   { value: "days", label: "Days" },
-  { value: "times", label: "Times" },
+  { value: "completions", label: "Times" },
   { value: "minutes", label: "Minutes" },
   { value: "hours", label: "Hours" },
   { value: "percent", label: "%" },
@@ -24,6 +24,7 @@ const TARGET_UNITS = [
 const STEP_COUNT = 5;
 const STEP_LABELS = ["Type", "Basics", "Targets", "Settings", "Your Habit"];
 const LS_COMPACT_KEY = "bito_wizard_compact_challenge";
+const LS_DRAFT_KEY = (gId) => `bito_challenge_draft_${gId}`;
 
 function tomorrow() {
   const d = new Date();
@@ -100,35 +101,44 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onCreated }) => {
   });
 
   useEffect(() => {
-    if (isOpen && groupId) {
-      groupsAPI
-        .getGroupHabits(groupId)
-        .then((r) => setHabits(r.habits || []))
-        .catch(() => setHabits([]));
-      groupsAPI
-        .getChallengeAdvisor(groupId)
-        .then((r) => setAdvisorSuggestions(r.suggestions || []))
-        .catch(() => setAdvisorSuggestions([]));
-      setStep(0);
-      setError("");
-      setAdvisorSuggestions([]);
-      setForm({
-        name: "",
-        description: "",
-        type: "streak",
-        startDate: tomorrow(),
-        endDate: nextWeek(),
-        targetValue: 7,
-        targetUnit: "days",
-        linkedHabitId: "",
-        habitSlot: "",
-        habitMatchMode: "single",
-        habitMatchMinimum: 2,
-        maxParticipants: "",
-        allowLateJoin: true,
-        showLeaderboard: true,
-      });
-    }
+    if (!isOpen || !groupId) return;
+
+    groupsAPI.getGroupHabits(groupId)
+      .then((r) => setHabits(r.habits || []))
+      .catch(() => setHabits([]));
+    groupsAPI.getChallengeAdvisor(groupId)
+      .then((r) => setAdvisorSuggestions(r.suggestions || []))
+      .catch(() => setAdvisorSuggestions([]));
+    setError("");
+    setAdvisorSuggestions([]);
+
+    try {
+      const raw = localStorage.getItem(LS_DRAFT_KEY(groupId));
+      if (raw) {
+        const draft = JSON.parse(raw);
+        setForm(draft.form);
+        setStep(draft.step ?? 0);
+        return;
+      }
+    } catch {}
+
+    setStep(0);
+    setForm({
+      name: "",
+      description: "",
+      type: "streak",
+      startDate: tomorrow(),
+      endDate: nextWeek(),
+      targetValue: 7,
+      targetUnit: "days",
+      linkedHabitId: "",
+      habitSlot: "",
+      habitMatchMode: "single",
+      habitMatchMinimum: 2,
+      maxParticipants: "",
+      allowLateJoin: true,
+      showLeaderboard: true,
+    });
   }, [isOpen, groupId]);
 
   const set = (key) => (e) =>
@@ -214,6 +224,10 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onCreated }) => {
     setStep((s) => s + 1);
   }, [step, form, groupId, fetchStep5Habits]);
 
+  const clearDraft = useCallback(() => {
+    try { localStorage.removeItem(LS_DRAFT_KEY(groupId)); } catch {}
+  }, [groupId]);
+
   const rollbackStep5 = useCallback(() => {
     if (createdChallengeId) {
       groupsAPI.cancelChallenge(createdChallengeId).catch(() => {});
@@ -234,16 +248,30 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onCreated }) => {
   }, [step, onClose, rollbackStep5]);
 
   const handleClose = useCallback(() => {
-    if (step === 4) rollbackStep5();
-    onClose();
-  }, [step, onClose, rollbackStep5]);
+    if (step === 4 && createdChallengeId) {
+      clearDraft();
+      onCreated?.();
+    } else if (step >= 1) {
+      try {
+        localStorage.setItem(LS_DRAFT_KEY(groupId), JSON.stringify({ step, form, savedAt: Date.now() }));
+      } catch {}
+      onClose();
+    } else {
+      onClose();
+    }
+  }, [step, createdChallengeId, groupId, form, clearDraft, onCreated, onClose]);
 
   const handleStep4Confirm = useCallback(async (overrideIds) => {
     const ids = overrideIds !== undefined ? overrideIds : [...step5Selected];
+    if (ids.length === 0 && form.type !== "team_goal") {
+      setStep5Error("Select at least one habit to track your progress.");
+      return;
+    }
     setStep5Error("");
     setLoading(true);
     try {
       await groupsAPI.joinChallenge(createdChallengeId, ids);
+      clearDraft();
       onCreated?.();
       onClose();
     } catch (e) {
@@ -251,7 +279,7 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onCreated }) => {
     } finally {
       setLoading(false);
     }
-  }, [step5Selected, createdChallengeId, onCreated, onClose]);
+  }, [step5Selected, form.type, createdChallengeId, clearDraft, onCreated, onClose]);
 
   const handleCompactCreate = async () => {
     let err = "";
@@ -684,7 +712,7 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onCreated }) => {
                 type="button"
                 className="grp-btn grp-btn--signal flex-1 justify-center gap-2 disabled:opacity-40"
                 onClick={isLastStep ? () => handleStep4Confirm() : goNext}
-                disabled={loading || (isLastStep && step5Habits.length === 0 && !step5Suggesting)}
+                disabled={loading || step5Suggesting || (isLastStep && step5Habits.length === 0) || (isLastStep && step5Habits.length > 0 && step5Selected.size === 0 && form.type !== "team_goal")}
               >
                 {isLastStep ? (
                   <>

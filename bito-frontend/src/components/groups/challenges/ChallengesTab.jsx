@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Trophy, CaretDown, CaretRight } from "@phosphor-icons/react";
 import ChallengeCard from "./ChallengeCard";
 import ChallengeDetailModal from "./ChallengeDetailModal";
@@ -6,6 +6,9 @@ import StandingSidebar from "./StandingSidebar";
 import { groupsAPI } from "../../../services/api";
 import ChallengeCreateModal from "../../ui/ChallengeCreateModal";
 import ChallengeJoinModal from "../../ui/ChallengeJoinModal";
+
+const DRAFT_STEP_LABEL = ["Type", "Basics", "Targets", "Settings"];
+const LS_DRAFT_KEY = (gId) => `bito_challenge_draft_${gId}`;
 
 const ChallengesTab = ({
   groupId,
@@ -22,11 +25,46 @@ const ChallengesTab = ({
   const [createPreset, setCreatePreset] = useState(null);
   const [joinTarget, setJoinTarget] = useState(null);
   const [detailTarget, setDetailTarget] = useState(null);
+  const [localDraft, setLocalDraft] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
-  const active = challenges.filter((c) => c.status === "active");
-  const upcoming = challenges.filter((c) => c.status === "upcoming");
-  const completed = challenges.filter((c) => c.status === "completed" || c.status === "cancelled");
+  // Re-read local draft whenever modal closes or groupId changes
+  useEffect(() => {
+    if (showCreateModal) return;
+    try {
+      const raw = localStorage.getItem(LS_DRAFT_KEY(groupId));
+      setLocalDraft(raw ? JSON.parse(raw) : null);
+    } catch { setLocalDraft(null); }
+  }, [showCreateModal, groupId]);
 
+  // ── Derived lists ────────────────────────────────────────────────
+  // DB drafts: upcoming challenges created by this user who hasn't joined yet
+  const dbDrafts = challenges.filter((c) => {
+    if (c.status !== "upcoming") return false;
+    const isCreator = (c.createdBy?._id || c.createdBy)?.toString() === currentUserId?.toString();
+    if (!isCreator) return false;
+    const meP = c.participants?.find(
+      (p) => (p.userId?._id || p.userId)?.toString() === currentUserId?.toString()
+    );
+    return !meP || meP.status === "dropped";
+  });
+  const dbDraftIds = new Set(dbDrafts.map((c) => c._id));
+
+  const active = challenges.filter((c) => {
+    if (c.status !== "active") return false;
+    const myP = c.participants?.find(
+      (p) => (p.userId?._id || p.userId)?.toString() === currentUserId?.toString()
+    );
+    return !myP || myP.status !== "dropped";
+  });
+  const upcoming = challenges.filter(
+    (c) => c.status === "upcoming" && !dbDraftIds.has(c._id)
+  );
+  const completed = challenges.filter(
+    (c) => c.status === "completed" || c.status === "cancelled"
+  );
+
+  // ── Handlers ─────────────────────────────────────────────────────
   const handleLeave = async (challengeId) => {
     setActionLoading(challengeId);
     setActionError(null);
@@ -61,6 +99,22 @@ const ChallengesTab = ({
     setDetailTarget(challenge);
   };
 
+  const handleDelete = async (challengeId) => {
+    try {
+      await groupsAPI.deleteChallenge(challengeId);
+      setDeleteConfirm(null);
+      onRefresh?.();
+    } catch (err) {
+      setActionError(err.message || "Failed to delete challenge");
+      setDeleteConfirm(null);
+    }
+  };
+
+  const discardDraft = () => {
+    try { localStorage.removeItem(LS_DRAFT_KEY(groupId)); } catch {}
+    setLocalDraft(null);
+  };
+
   const cardProps = (c, extra = {}) => ({
     challenge: c,
     currentUserId,
@@ -71,6 +125,9 @@ const ChallengesTab = ({
     actionLoading,
     ...extra,
   });
+
+  const hasDrafts = localDraft || dbDrafts.length > 0;
+  const isEmpty = !hasDrafts && active.length === 0 && upcoming.length === 0 && completed.length === 0;
 
   return (
     <div className="flex gap-8">
@@ -86,6 +143,61 @@ const ChallengesTab = ({
               Dismiss
             </button>
           </div>
+        )}
+
+        {/* Drafts */}
+        {hasDrafts && (
+          <section>
+            <p className="grp-kicker mb-3">
+              Drafts — {String((localDraft ? 1 : 0) + dbDrafts.length).padStart(2, "0")}
+            </p>
+            <div className="space-y-3">
+              {localDraft && (
+                <div className="grp-card p-4 border border-dashed border-[var(--signal)]/30 bg-[var(--signal)]/3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="grp-mono text-[10px] text-[var(--signal)] uppercase tracking-wider mb-0.5">
+                        Paused at {DRAFT_STEP_LABEL[localDraft.step] ?? "setup"} — resume below
+                      </p>
+                      <p className="grp-display text-base font-bold text-[var(--ink)] truncate">
+                        {localDraft.form?.name?.trim() || "Untitled challenge"}
+                      </p>
+                      <p className="grp-mono text-[10px] text-[var(--ink-3)] uppercase mt-0.5">
+                        {localDraft.form?.type || "streak"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <button
+                        onClick={discardDraft}
+                        className="grp-mono text-[10px] text-[var(--ink-3)] hover:text-[var(--rose)] transition-colors"
+                      >
+                        Discard
+                      </button>
+                      <button
+                        onClick={() => openCreateWithPreset(null)}
+                        className="grp-btn grp-btn--sm grp-btn--signal"
+                      >
+                        Continue
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {dbDrafts.map((c) => (
+                <div key={c._id}>
+                  <p className="grp-mono text-[10px] text-[var(--signal)] uppercase tracking-wider mb-1.5 px-1">
+                    Created — join to activate
+                  </p>
+                  <ChallengeCard
+                    {...cardProps(c, {
+                      onCancel: handleCancel,
+                      canCancel: canManage || (c.createdBy?._id || c.createdBy)?.toString() === currentUserId?.toString(),
+                    })}
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
         )}
 
         {/* Active */}
@@ -128,14 +240,46 @@ const ChallengesTab = ({
             </button>
             {completedOpen && (
               <div className="space-y-3">
-                {completed.map((c) => <ChallengeCard key={c._id} {...cardProps(c)} />)}
+                {completed.map((c) => (
+                  <div key={c._id} className="space-y-1">
+                    <ChallengeCard {...cardProps(c)} />
+                    {canManage && (
+                      <div className="flex justify-end px-1">
+                        {deleteConfirm === c._id ? (
+                          <div className="flex items-center gap-2">
+                            <span className="grp-mono text-[10px] text-[var(--ink-3)]">Delete permanently?</span>
+                            <button
+                              onClick={() => handleDelete(c._id)}
+                              className="grp-mono text-[10px] font-bold text-[var(--rose)] hover:underline"
+                            >
+                              Yes
+                            </button>
+                            <button
+                              onClick={() => setDeleteConfirm(null)}
+                              className="grp-mono text-[10px] text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors"
+                            >
+                              No
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setDeleteConfirm(c._id)}
+                            className="grp-mono text-[10px] text-[var(--ink-3)] hover:text-[var(--rose)] transition-colors"
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </section>
         )}
 
         {/* Empty state */}
-        {challenges.length === 0 && (
+        {isEmpty && (
           <div className="grp-card text-center py-14 px-6 relative overflow-hidden">
             <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-[var(--ember)]/8 blur-3xl pointer-events-none" />
             <Trophy size={40} weight="duotone" className="mx-auto mb-4 text-[var(--ember)] relative" />

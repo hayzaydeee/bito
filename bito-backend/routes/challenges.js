@@ -119,7 +119,7 @@ router.get('/groups/:groupId/challenges', async (req, res) => {
 router.post('/groups/:groupId/challenges', [
   body('title').trim().isLength({ min: 3, max: 60 }).withMessage('Title must be 3-60 characters'),
   body('type').isIn(['streak', 'cumulative', 'consistency', 'team_goal']).withMessage('Invalid challenge type'),
-  body('rules.targetValue').isNumeric({ min: 1 }).withMessage('Target value must be a positive number'),
+  body('rules.targetValue').customSanitizer(v => String(v)).isNumeric().withMessage('Target value must be a positive number'),
   body('startDate').isISO8601().withMessage('Invalid start date'),
   body('endDate').isISO8601().withMessage('Invalid end date'),
   body('description').optional().trim().isLength({ max: 500 }),
@@ -127,14 +127,14 @@ router.post('/groups/:groupId/challenges', [
   body('habitId').optional().isMongoId(),
   body('habitSlot').optional().trim().isLength({ max: 200 }),
   body('habitMatchMode').optional().isIn(['single', 'all', 'any', 'minimum']),
-  body('habitMatchMinimum').optional().isInt({ min: 1 }),
+  body('habitMatchMinimum').optional().customSanitizer(v => String(v)).isInt({ min: 1 }),
   body('rules.targetUnit').optional().isIn(['days', 'completions', 'minutes', 'hours', 'percent', 'custom']),
-  body('rules.gracePeriodHours').optional().isInt({ min: 0, max: 12 }),
-  body('rules.allowMakeupDays').optional().isBoolean(),
-  body('rules.minimumDailyValue').optional().isNumeric(),
-  body('settings.maxParticipants').optional().isInt({ min: 2 }),
-  body('settings.allowLateJoin').optional().isBoolean(),
-  body('settings.showLeaderboard').optional().isBoolean(),
+  body('rules.gracePeriodHours').optional().customSanitizer(v => String(v)).isInt({ min: 0, max: 12 }),
+  body('rules.allowMakeupDays').optional().customSanitizer(v => String(v)).isBoolean(),
+  body('rules.minimumDailyValue').optional().customSanitizer(v => String(v)).isNumeric(),
+  body('settings.maxParticipants').optional().customSanitizer(v => String(v)).isInt({ min: 2 }),
+  body('settings.allowLateJoin').optional().customSanitizer(v => String(v)).isBoolean(),
+  body('settings.showLeaderboard').optional().customSanitizer(v => String(v)).isBoolean(),
   body('reward').optional().trim().isLength({ max: 100 }),
 ], async (req, res) => {
   try {
@@ -328,7 +328,8 @@ router.put('/challenges/:id', [
 
 // ─────────────────────────────────────────────────────────
 // DELETE /api/challenges/:id
-// Cancel challenge (creator/admin only)
+// Permanently delete completed/cancelled challenges (owner/admin only)
+// or cancel active/upcoming challenges (creator/admin)
 // ─────────────────────────────────────────────────────────
 router.delete('/challenges/:id', async (req, res) => {
   try {
@@ -339,6 +340,16 @@ router.delete('/challenges/:id', async (req, res) => {
 
     const group = await Group.findById(challenge.groupId);
     const role = group?.getMemberRole(req.user._id);
+
+    if (['completed', 'cancelled'].includes(challenge.status)) {
+      if (!['owner', 'admin'].includes(role)) {
+        return res.status(403).json({ success: false, error: 'Only group owners or admins can delete completed challenges' });
+      }
+      await challenge.deleteOne();
+      invalidateCache(req.user._id);
+      return res.json({ success: true, message: 'Challenge deleted' });
+    }
+
     const isCreator = challenge.createdBy.equals(req.user._id);
     if (!isCreator && !['owner', 'admin'].includes(role)) {
       return res.status(403).json({ success: false, error: 'Only the creator or admins can cancel challenges' });
@@ -349,8 +360,8 @@ router.delete('/challenges/:id', async (req, res) => {
 
     res.json({ success: true, message: 'Challenge cancelled' });
   } catch (error) {
-    console.error('Error cancelling challenge:', error);
-    res.status(500).json({ success: false, error: 'Failed to cancel challenge' });
+    console.error('Error deleting challenge:', error);
+    res.status(500).json({ success: false, error: 'Failed to delete challenge' });
   }
 });
 

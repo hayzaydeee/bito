@@ -32,7 +32,7 @@ const apiRequest = async (endpoint, options = {}) => {
         method: config.method,
         body: config.body
       });
-      throw new Error(data.error || data.message || `HTTP error! status: ${response.status}`);
+      throw new Error(data.error || data.message || (Array.isArray(data.errors) && data.errors[0]?.msg) || `HTTP error! status: ${response.status}`);
     }
 
     return data;
@@ -734,6 +734,12 @@ export const groupsAPI = {
 
   // Cancel challenge
   cancelChallenge: async (challengeId) => {
+    return apiRequest(`/api/challenges/${challengeId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  deleteChallenge: async (challengeId) => {
     return apiRequest(`/api/challenges/${challengeId}`, {
       method: 'DELETE',
     });
