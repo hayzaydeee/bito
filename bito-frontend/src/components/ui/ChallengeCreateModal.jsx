@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { wizardStepVariants } from "../../utils/motion";
-import { Cross2Icon, ArrowLeftIcon, ArrowRightIcon, CheckIcon } from "@radix-ui/react-icons";
-import { Fire, TrendUp, CalendarBlank, Handshake } from "@phosphor-icons/react";
+import { X, ArrowLeft, ArrowRight, Check, Fire, TrendUp, CalendarBlank, Handshake, Sparkle } from "@phosphor-icons/react";
 import { groupsAPI } from "../../services/api";
 import AnimatedModal from "./AnimatedModal";
+import HabitIcon from "../shared/HabitIcon";
 
 const CHALLENGE_TYPES = [
   { value: "streak", label: "Streak", Icon: Fire, desc: "Maintain consecutive days" },
@@ -15,15 +15,16 @@ const CHALLENGE_TYPES = [
 
 const TARGET_UNITS = [
   { value: "days", label: "Days" },
-  { value: "times", label: "Times" },
+  { value: "completions", label: "Times" },
   { value: "minutes", label: "Minutes" },
   { value: "hours", label: "Hours" },
   { value: "percent", label: "%" },
 ];
 
-const STEP_COUNT = 4;
-const STEP_LABELS = ["Type", "Basics", "Targets", "Settings"];
+const STEP_COUNT = 5;
+const STEP_LABELS = ["Type", "Basics", "Targets", "Settings", "Your Habit"];
 const LS_COMPACT_KEY = "bito_wizard_compact_challenge";
+const LS_DRAFT_KEY = (gId) => `bito_challenge_draft_${gId}`;
 
 function tomorrow() {
   const d = new Date();
@@ -51,7 +52,7 @@ const ProgressDots = ({ step, total, labels }) => (
           }}
         />
         <span
-          className="std-mono text-[9px] uppercase tracking-wide transition-colors duration-200"
+          className="grp-mono text-[9px] uppercase tracking-wide transition-colors duration-200"
           style={{ color: i <= step ? "var(--signal)" : "var(--ink-3)" }}
         >
           {labels[i]}
@@ -61,12 +62,21 @@ const ProgressDots = ({ step, total, labels }) => (
   </div>
 );
 
-const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
+const ChallengeCreateModal = ({ isOpen, groupId, onClose, onCreated }) => {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [habits, setHabits] = useState([]);
+  const [advisorSuggestions, setAdvisorSuggestions] = useState([]);
+
+  // Step 5 state
+  const [createdChallengeId, setCreatedChallengeId] = useState(null);
+  const [step5Habits, setStep5Habits] = useState([]);
+  const [step5Suggestions, setStep5Suggestions] = useState([]);
+  const [step5Selected, setStep5Selected] = useState(new Set());
+  const [step5Suggesting, setStep5Suggesting] = useState(false);
+  const [step5Error, setStep5Error] = useState("");
 
   const [compactMode, setCompactMode] = useState(() => {
     try { return localStorage.getItem(LS_COMPACT_KEY) === "true"; }
@@ -91,30 +101,44 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
   });
 
   useEffect(() => {
-    if (isOpen && groupId) {
-      groupsAPI
-        .getGroupHabits(groupId)
-        .then((r) => setHabits(r.habits || []))
-        .catch(() => setHabits([]));
-      setStep(0);
-      setError("");
-      setForm({
-        name: "",
-        description: "",
-        type: "streak",
-        startDate: tomorrow(),
-        endDate: nextWeek(),
-        targetValue: 7,
-        targetUnit: "days",
-        linkedHabitId: "",
-        habitSlot: "",
-        habitMatchMode: "single",
-        habitMatchMinimum: 2,
-        maxParticipants: "",
-        allowLateJoin: true,
-        showLeaderboard: true,
-      });
-    }
+    if (!isOpen || !groupId) return;
+
+    groupsAPI.getGroupHabits(groupId)
+      .then((r) => setHabits(r.habits || []))
+      .catch(() => setHabits([]));
+    groupsAPI.getChallengeAdvisor(groupId)
+      .then((r) => setAdvisorSuggestions(r.suggestions || []))
+      .catch(() => setAdvisorSuggestions([]));
+    setError("");
+    setAdvisorSuggestions([]);
+
+    try {
+      const raw = localStorage.getItem(LS_DRAFT_KEY(groupId));
+      if (raw) {
+        const draft = JSON.parse(raw);
+        setForm(draft.form);
+        setStep(draft.step ?? 0);
+        return;
+      }
+    } catch {}
+
+    setStep(0);
+    setForm({
+      name: "",
+      description: "",
+      type: "streak",
+      startDate: tomorrow(),
+      endDate: nextWeek(),
+      targetValue: 7,
+      targetUnit: "days",
+      linkedHabitId: "",
+      habitSlot: "",
+      habitMatchMode: "single",
+      habitMatchMinimum: 2,
+      maxParticipants: "",
+      allowLateJoin: true,
+      showLeaderboard: true,
+    });
   }, [isOpen, groupId]);
 
   const set = (key) => (e) =>
@@ -123,7 +147,46 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
       [key]: e.target?.type === "checkbox" ? e.target.checked : e.target.value,
     }));
 
-  const goNext = useCallback(() => {
+  const buildPayload = (f) => ({
+    title: f.name.trim(),
+    description: f.description.trim(),
+    type: f.type,
+    startDate: f.startDate,
+    endDate: f.endDate,
+    rules: {
+      targetValue: Number(f.targetValue) || 7,
+      targetUnit: f.targetUnit,
+    },
+    settings: {
+      allowLateJoin: f.allowLateJoin,
+      showLeaderboard: f.showLeaderboard,
+      ...(f.maxParticipants ? { maxParticipants: Number(f.maxParticipants) } : {}),
+    },
+    ...(f.linkedHabitId ? { linkedHabitId: f.linkedHabitId } : {}),
+    ...(f.habitSlot.trim() ? { habitSlot: f.habitSlot.trim() } : {}),
+    habitMatchMode: f.habitMatchMode,
+    ...(f.habitMatchMode === 'minimum' ? { habitMatchMinimum: Number(f.habitMatchMinimum) || 2 } : {}),
+  });
+
+  const fetchStep5Habits = useCallback(async (challengeId) => {
+    setStep5Suggesting(true);
+    try {
+      const res = await groupsAPI.suggestHabitsForChallenge(challengeId);
+      if (res.success) {
+        setStep5Habits(res.habits || []);
+        setStep5Suggestions(res.suggestions || []);
+        const preSelected = new Set();
+        (res.suggestions || []).forEach((s) => { if (s.score >= 70) preSelected.add(s.habitId); });
+        setStep5Selected((prev) => prev.size === 0 ? preSelected : prev);
+      }
+    } catch {
+      // AI fails silently — picker still works
+    } finally {
+      setStep5Suggesting(false);
+    }
+  }, []);
+
+  const goNext = useCallback(async () => {
     let err = "";
     if (step === 1) {
       if (!form.name.trim()) err = "Name is required";
@@ -132,16 +195,118 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
     }
     if (err) { setError(err); return; }
     setError("");
+
+    // Step 3 → Step 4: fire create API before advancing
+    if (step === 3) {
+      setLoading(true);
+      try {
+        const res = await groupsAPI.createChallenge(groupId, buildPayload(form));
+        if (res.success) {
+          setCreatedChallengeId(res.challenge._id);
+          setStep5Selected(new Set());
+          setStep5Error("");
+          setDirection(1);
+          setStep(4);
+          fetchStep5Habits(res.challenge._id);
+        } else {
+          setError(res.error || "Failed to create challenge — try again");
+        }
+      } catch (e) {
+        setError(e.message || "Failed to create challenge — try again");
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     if (step >= STEP_COUNT - 1) return;
     setDirection(1);
     setStep((s) => s + 1);
-  }, [step, form]);
+  }, [step, form, groupId, fetchStep5Habits]);
+
+  const clearDraft = useCallback(() => {
+    try { localStorage.removeItem(LS_DRAFT_KEY(groupId)); } catch {}
+  }, [groupId]);
+
+  const rollbackStep5 = useCallback(() => {
+    if (createdChallengeId) {
+      groupsAPI.cancelChallenge(createdChallengeId).catch(() => {});
+      setCreatedChallengeId(null);
+    }
+  }, [createdChallengeId]);
 
   const goBack = useCallback(() => {
+    if (step === 4) {
+      rollbackStep5();
+      setDirection(-1);
+      setStep(3);
+      return;
+    }
     if (step <= 0) { onClose(); return; }
     setDirection(-1);
     setStep((s) => s - 1);
-  }, [step, onClose]);
+  }, [step, onClose, rollbackStep5]);
+
+  const handleClose = useCallback(() => {
+    if (step === 4 && createdChallengeId) {
+      clearDraft();
+      onCreated?.();
+    } else if (step >= 1) {
+      try {
+        localStorage.setItem(LS_DRAFT_KEY(groupId), JSON.stringify({ step, form, savedAt: Date.now() }));
+      } catch {}
+      onClose();
+    } else {
+      onClose();
+    }
+  }, [step, createdChallengeId, groupId, form, clearDraft, onCreated, onClose]);
+
+  const handleStep4Confirm = useCallback(async (overrideIds) => {
+    const ids = overrideIds !== undefined ? overrideIds : [...step5Selected];
+    if (ids.length === 0 && form.type !== "team_goal") {
+      setStep5Error("Select at least one habit to track your progress.");
+      return;
+    }
+    setStep5Error("");
+    setLoading(true);
+    try {
+      await groupsAPI.joinChallenge(createdChallengeId, ids);
+      clearDraft();
+      onCreated?.();
+      onClose();
+    } catch (e) {
+      setStep5Error(e.message || "Failed to join — try again");
+    } finally {
+      setLoading(false);
+    }
+  }, [step5Selected, form.type, createdChallengeId, clearDraft, onCreated, onClose]);
+
+  const handleCompactCreate = async () => {
+    let err = "";
+    if (!form.name.trim()) err = "Name is required";
+    else if (!form.startDate || !form.endDate) err = "Dates are required";
+    else if (new Date(form.endDate) <= new Date(form.startDate)) err = "End date must be after start date";
+    if (err) { setError(err); return; }
+    setLoading(true);
+    setError("");
+    try {
+      const res = await groupsAPI.createChallenge(groupId, buildPayload(form));
+      if (res.success) {
+        setCreatedChallengeId(res.challenge._id);
+        setStep5Selected(new Set());
+        setStep5Error("");
+        setCompactMode(false);
+        setStep(4);
+        fetchStep5Habits(res.challenge._id);
+      } else {
+        setError(res.error || "Failed to create challenge");
+      }
+    } catch (e) {
+      setError(e.message || "Failed to create challenge");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggleCompact = () => {
     const next = !compactMode;
@@ -150,76 +315,150 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
     if (!next) setStep(0);
   };
 
-  const handleSubmit = async () => {
-    let err = "";
-    if (!form.name.trim()) err = "Name is required";
-    else if (!form.startDate || !form.endDate) err = "Dates are required";
-    else if (new Date(form.endDate) <= new Date(form.startDate)) err = "End date must be after start date";
-    if (err) { setError(err); return; }
+  const renderStep4 = () => {
+    const suggestedIds = new Set(step5Suggestions.map((s) => s.habitId));
+    const nonSuggested = step5Habits.filter((h) => !suggestedIds.has(h._id));
+    const isSingle = !form.habitMatchMode || form.habitMatchMode === "single";
 
-    setLoading(true);
-    setError("");
+    const toggleHabit = (id) => {
+      setStep5Selected((prev) => {
+        const next = new Set(prev);
+        if (next.has(id)) { next.delete(id); }
+        else { if (isSingle) next.clear(); next.add(id); }
+        return next;
+      });
+    };
 
-    try {
-      const payload = {
-        title: form.name.trim(),
-        description: form.description.trim(),
-        type: form.type,
-        startDate: form.startDate,
-        endDate: form.endDate,
-        rules: {
-          targetValue: Number(form.targetValue) || 7,
-          targetUnit: form.targetUnit,
-        },
-        settings: {
-          allowLateJoin: form.allowLateJoin,
-          showLeaderboard: form.showLeaderboard,
-          ...(form.maxParticipants ? { maxParticipants: Number(form.maxParticipants) } : {}),
-        },
-        ...(form.linkedHabitId ? { linkedHabitId: form.linkedHabitId } : {}),
-        ...(form.habitSlot.trim() ? { habitSlot: form.habitSlot.trim() } : {}),
-        habitMatchMode: form.habitMatchMode,
-        ...(form.habitMatchMode === 'minimum' ? { habitMatchMinimum: Number(form.habitMatchMinimum) || 2 } : {}),
-      };
+    const HabitRow = ({ habit, score, reason }) => {
+      const isSelected = step5Selected.has(habit._id);
+      return (
+        <button
+          onClick={() => toggleHabit(habit._id)}
+          className={`w-full text-left p-3 rounded-xl border transition-colors ${
+            isSelected ? "border-[var(--signal)] bg-[var(--signal)]/5" : "border-[var(--line-2)] hover:border-[var(--line-3)]"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+              isSelected ? "bg-[var(--signal)] border-[var(--signal)]" : "border-[var(--line-2)]"
+            }`}>
+              {isSelected && <Check size={12} weight="bold" className="text-white" />}
+            </div>
+            <HabitIcon icon={habit.icon || "ClipboardText"} size={16} />
+            <div className="flex-1 min-w-0">
+              <p className="grp-mono text-sm font-medium text-[var(--ink)] truncate">{habit.name}</p>
+              {reason && <p className="grp-mono text-[10px] text-[var(--ink-3)] mt-0.5 truncate">{reason}</p>}
+            </div>
+            {score && (
+              <span className="grp-mono text-[10px] font-medium px-1.5 py-0.5 rounded bg-[var(--signal)]/10 text-[var(--signal)]">
+                {score}%
+              </span>
+            )}
+          </div>
+        </button>
+      );
+    };
 
-      const res = await groupsAPI.createChallenge(groupId, payload);
-      if (res.success) {
-        onSuccess?.(res.challenge);
-        onClose();
-      } else {
-        setError(res.error || "Failed to create challenge");
-      }
-    } catch (err) {
-      setError(err.message || "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
+    return (
+      <div className="space-y-4">
+        <p className="grp-mono text-xs text-[var(--ink-2)]">
+          Link a habit to track your progress in this challenge.
+        </p>
+
+        {step5Suggesting && (
+          <p className="grp-mono text-[10px] text-[var(--ink-3)] animate-pulse">Finding best habit matches…</p>
+        )}
+
+        {!step5Suggesting && step5Habits.length === 0 && (
+          <p className="grp-mono text-sm text-[var(--ink-3)] text-center py-4">
+            You don't have any habits yet. Create a habit first.
+          </p>
+        )}
+
+        {step5Suggestions.length > 0 && !step5Suggesting && (
+          <div>
+            <p className="grp-kicker mb-2">✨ Suggested</p>
+            <div className="space-y-2">
+              {step5Suggestions.map((s) => {
+                const h = step5Habits.find((h) => h._id === s.habitId);
+                if (!h) return null;
+                return <HabitRow key={h._id} habit={h} score={s.score} reason={s.reason} />;
+              })}
+            </div>
+          </div>
+        )}
+
+        {nonSuggested.length > 0 && (
+          <div>
+            {step5Suggestions.length > 0 && <p className="grp-kicker mb-2">All habits</p>}
+            <div className="space-y-2">
+              {nonSuggested.map((h) => <HabitRow key={h._id} habit={h} />)}
+            </div>
+          </div>
+        )}
+
+        {form.type === "team_goal" && (
+          <button
+            onClick={() => handleStep4Confirm([])}
+            disabled={loading}
+            className="w-full text-xs text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors py-2"
+          >
+            Skip — I'm organizing, not competing
+          </button>
+        )}
+
+        {step5Error && <p className="grp-mono text-[11px] text-[var(--rose)]">{step5Error}</p>}
+      </div>
+    );
   };
+
+  const advisorTypeSet = new Set(advisorSuggestions.map((s) => s.type));
 
   const renderStep0 = () => (
     <div className="space-y-4">
+      {advisorSuggestions.length > 0 && (
+        <div className="flex items-center gap-1.5 grp-mono text-[10px] text-[var(--signal)] uppercase tracking-wider">
+          <Sparkle size={12} weight="fill" />
+          AI suggestions highlighted below
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3">
-        {CHALLENGE_TYPES.map((t) => (
-          <button
-            key={t.value}
-            onClick={() => {
-              setForm((p) => ({ ...p, type: t.value }));
-              if (!compactMode) {
-                setDirection(1);
-                setStep(1);
-              }
-            }}
-            className={`p-4 rounded-[12px] border text-left transition-colors ${
-              form.type === t.value
-                ? "border-[var(--signal)]/55 bg-[var(--signal)]/8"
-                : "border-[var(--line-2)] hover:border-[var(--line-3)]"
-            }`}
-          >
-            <t.Icon size={22} weight="duotone" className="text-[var(--signal)]" />
-            <p className="grp-display text-base font-bold text-[var(--ink)] mt-2">{t.label}</p>
-            <p className="grp-mono text-[10px] text-[var(--ink-3)] mt-1 uppercase tracking-wider">{t.desc}</p>
-          </button>
-        ))}
+        {CHALLENGE_TYPES.map((t) => {
+          const aiSuggested = advisorTypeSet.has(t.value);
+          const aiHint = advisorSuggestions.find((s) => s.type === t.value);
+          return (
+            <button
+              key={t.value}
+              onClick={() => {
+                setForm((p) => ({ ...p, type: t.value }));
+                if (!compactMode) {
+                  setDirection(1);
+                  setStep(1);
+                }
+              }}
+              className={`p-4 rounded-[12px] border text-left transition-colors relative ${
+                form.type === t.value
+                  ? "border-[var(--signal)]/55 bg-[var(--signal)]/8"
+                  : aiSuggested
+                  ? "border-[var(--signal)]/25 hover:border-[var(--signal)]/45"
+                  : "border-[var(--line-2)] hover:border-[var(--line-3)]"
+              }`}
+            >
+              {aiSuggested && (
+                <span className="absolute top-2 right-2 flex items-center gap-0.5 grp-mono text-[9px] font-semibold text-[var(--signal)] bg-[var(--signal)]/10 px-1.5 py-0.5 rounded-full">
+                  <Sparkle size={8} weight="fill" />
+                  AI
+                </span>
+              )}
+              <t.Icon size={22} weight="duotone" className="text-[var(--signal)]" />
+              <p className="grp-display text-base font-bold text-[var(--ink)] mt-2">{t.label}</p>
+              <p className="grp-mono text-[10px] text-[var(--ink-3)] mt-1 uppercase tracking-wider">{t.desc}</p>
+              {aiSuggested && aiHint?.rationale && (
+                <p className="grp-mono text-[9px] text-[var(--signal)] mt-1.5 leading-snug">{aiHint.rationale}</p>
+              )}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -253,8 +492,41 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
     </div>
   );
 
-  const renderStep2 = () => (
+  const renderStep2 = () => {
+    const advisorMatch = advisorSuggestions.find((s) => s.type === form.type);
+    const applyAdvisor = () => {
+      if (!advisorMatch) return;
+      setForm((p) => ({
+        ...p,
+        targetValue: advisorMatch.targetValue ?? p.targetValue,
+        targetUnit: advisorMatch.targetUnit ?? p.targetUnit,
+        habitSlot: advisorMatch.habitSlot || p.habitSlot,
+      }));
+    };
+
+    return (
     <div className="space-y-4">
+      {/* AI pre-fill banner */}
+      {advisorMatch && (
+        <div className="flex items-center justify-between p-3 rounded-xl bg-[var(--signal)]/5 border border-[var(--signal)]/15">
+          <div>
+            <p className="grp-mono text-[10px] font-semibold text-[var(--signal)] flex items-center gap-1">
+              <Sparkle size={10} weight="fill" />
+              AI suggestion for {form.type}
+            </p>
+            <p className="grp-mono text-[9px] text-[var(--ink-3)] mt-0.5">
+              Target: {advisorMatch.targetValue} {advisorMatch.targetUnit} · {advisorMatch.duration}d
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={applyAdvisor}
+            className="grp-mono text-[10px] font-semibold text-[var(--signal)] hover:underline"
+          >
+            Pre-fill
+          </button>
+        </div>
+      )}
       {/* target */}
       <div className="grid grid-cols-2 gap-3">
         <div>
@@ -317,7 +589,8 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
         </div>
       )}
     </div>
-  );
+    );
+  };
 
   const renderStep3 = () => (
     <div className="space-y-4">
@@ -355,13 +628,13 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
     </div>
   );
 
-  const stepContent = [renderStep0, renderStep1, renderStep2, renderStep3];
+  const stepContent = [renderStep0, renderStep1, renderStep2, renderStep3, renderStep4];
   const isLastStep = step === STEP_COUNT - 1;
 
   if (!isOpen) return null;
 
   return (
-    <AnimatedModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-xl">
+    <AnimatedModal isOpen={isOpen} onClose={handleClose} maxWidth="max-w-xl">
       <div className="grp relative w-full bg-[var(--surface)] rounded-[16px] border border-[var(--line-2)] max-h-[85vh] overflow-y-auto">
         
         {/* Header */}
@@ -380,9 +653,9 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
               </button>
               <button
                 className="text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors"
-                onClick={onClose}
+                onClick={handleClose}
               >
-                <Cross2Icon />
+                <X size={16} />
               </button>
             </div>
           </div>
@@ -412,41 +685,49 @@ const ChallengeCreateModal = ({ isOpen, groupId, onClose, onSuccess }) => {
         {/* Footer */}
         <div className="sticky bottom-0 bg-[var(--surface)] px-6 py-4 border-t border-[var(--line-2)]">
           {compactMode ? (
-            <div className="flex gap-3">
-              <button type="button" className="grp-btn flex-1 justify-center" onClick={onClose}>
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="grp-btn grp-btn--signal flex-1 justify-center gap-2 disabled:opacity-40"
-                onClick={handleSubmit}
-                disabled={loading}
-              >
-                <CheckIcon className="w-4 h-4" />
-                {loading ? "Creating..." : "Create"}
-              </button>
+            <div className="flex flex-col gap-2">
+              {error && <p className="grp-mono text-[11px] text-[var(--rose)]">{error}</p>}
+              <div className="flex gap-3">
+                <button type="button" className="grp-btn flex-1 justify-center" onClick={handleClose}>
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="grp-btn grp-btn--signal flex-1 justify-center gap-2 disabled:opacity-40"
+                  onClick={handleCompactCreate}
+                  disabled={loading}
+                >
+                  <Check size={16} />
+                  {loading ? "Creating…" : "Create"}
+                </button>
+              </div>
             </div>
           ) : (
             <div className="flex gap-3">
-              <button type="button" className="grp-btn gap-1.5" onClick={goBack}>
-                <ArrowLeftIcon className="w-3.5 h-3.5" />
+              <button type="button" className="grp-btn gap-1.5" onClick={step === 4 ? goBack : goBack}>
+                <ArrowLeft size={14} weight="bold" />
                 {step === 0 ? "Cancel" : "Back"}
               </button>
               <button
                 type="button"
                 className="grp-btn grp-btn--signal flex-1 justify-center gap-2 disabled:opacity-40"
-                onClick={isLastStep ? handleSubmit : goNext}
-                disabled={loading}
+                onClick={isLastStep ? () => handleStep4Confirm() : goNext}
+                disabled={loading || step5Suggesting || (isLastStep && step5Habits.length === 0) || (isLastStep && step5Habits.length > 0 && step5Selected.size === 0 && form.type !== "team_goal")}
               >
                 {isLastStep ? (
                   <>
-                    <CheckIcon className="w-4 h-4" />
-                    {loading ? "Creating..." : "Create Challenge"}
+                    <Check size={16} />
+                    {loading ? "Joining…" : "Join & Finish"}
+                  </>
+                ) : step === 3 ? (
+                  <>
+                    {loading ? "Creating…" : "Continue"}
+                    {!loading && <ArrowRight size={14} weight="bold" />}
                   </>
                 ) : (
                   <>
                     Continue
-                    <ArrowRightIcon className="w-3.5 h-3.5" />
+                    <ArrowRight size={14} weight="bold" />
                   </>
                 )}
               </button>

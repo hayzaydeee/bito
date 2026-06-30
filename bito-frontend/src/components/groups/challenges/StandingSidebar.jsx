@@ -22,22 +22,30 @@ const StandingSidebar = ({ activeChallenges = [], allChallenges = [], currentUse
 
   const selectedChallenge = myActiveChallenges[selectedIdx] ?? null;
 
+  const sortMetric = (p, type) => {
+    if (type === "streak") return p.progress?.currentStreak || 0;
+    if (type === "consistency") return p.progress?.completionRate || 0;
+    return p.progress?.currentValue || 0;
+  };
+
   // My standing in selected challenge
   const getMyStanding = (challenge) => {
     if (!challenge) return null;
     const sorted = [...(challenge.participants || [])].sort(
-      (a, b) => (b.progress?.currentValue || 0) - (a.progress?.currentValue || 0)
+      (a, b) => sortMetric(b, challenge.type) - sortMetric(a, challenge.type)
     );
     const myIdx = sorted.findIndex(
       (p) => (p.userId?._id || p.userId)?.toString() === currentUserId?.toString()
     );
     if (myIdx === -1) return null;
     const above = sorted[myIdx - 1];
-    const aboveVal = above?.progress?.currentValue || 0;
-    const myVal = sorted[myIdx].progress?.currentValue || 0;
+    const myVal = sortMetric(sorted[myIdx], challenge.type);
+    const aboveVal = above ? sortMetric(above, challenge.type) : 0;
     const pointsBehind = aboveVal - myVal;
     const targetValue = challenge.rules?.targetValue || 1;
-    const myPct = Math.min(100, Math.round((myVal / targetValue) * 100));
+    const myPct = challenge.type === "consistency"
+      ? Math.min(100, Math.round(myVal))
+      : Math.min(100, Math.round((myVal / targetValue) * 100));
     return {
       rank: myIdx + 1,
       total: sorted.length,
@@ -59,7 +67,7 @@ const StandingSidebar = ({ activeChallenges = [], allChallenges = [], currentUse
   const totalWon = myAll.filter((c) => {
     if (c.status !== "completed") return false;
     const sorted = [...(c.participants || [])].sort(
-      (a, b) => (b.progress?.currentValue || 0) - (a.progress?.currentValue || 0)
+      (a, b) => sortMetric(b, c.type) - sortMetric(a, c.type)
     );
     return (sorted[0]?.userId?._id || sorted[0]?.userId)?.toString() === currentUserId?.toString();
   }).length;
@@ -142,14 +150,16 @@ const StandingSidebar = ({ activeChallenges = [], allChallenges = [], currentUse
         </div>
       </div>
 
-      {/* Create challenge */}
-      <button
-        onClick={onCreateChallenge}
-        className="w-full h-10 rounded-[10px] border border-dashed border-[var(--line-2)] flex items-center justify-center gap-2 grp-mono text-[11px] font-bold uppercase tracking-wider text-[var(--ink-3)] hover:text-[var(--ember)] hover:border-[var(--ember)]/50 transition-colors"
-      >
-        <Plus size={13} weight="bold" />
-        Create challenge
-      </button>
+      {/* Create challenge — only visible to managers */}
+      {onCreateChallenge && (
+        <button
+          onClick={onCreateChallenge}
+          className="w-full h-10 rounded-[10px] border border-dashed border-[var(--line-2)] flex items-center justify-center gap-2 grp-mono text-[11px] font-bold uppercase tracking-wider text-[var(--ink-3)] hover:text-[var(--ember)] hover:border-[var(--ember)]/50 transition-colors"
+        >
+          <Plus size={13} weight="bold" />
+          Create challenge
+        </button>
+      )}
     </div>
   );
 };

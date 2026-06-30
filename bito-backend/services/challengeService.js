@@ -53,6 +53,7 @@ class ChallengeService {
 
       for (const challenge of toActivate) {
         challenge.status = 'active';
+        challenge._refreshStats();
         await challenge.save();
 
         // Feed event: challenge started
@@ -81,10 +82,41 @@ class ChallengeService {
       const toComplete = await Challenge.find({
         status: 'active',
         endDate: { $lte: now },
-      });
+      }).populate('participants.userId', 'name');
 
       for (const challenge of toComplete) {
         challenge.status = 'completed';
+        challenge._refreshStats();
+
+        // Freeze leaderboard snapshot so completed challenges never recompute
+        const activeParticipants = challenge.participants.filter((p) => p.status !== 'dropped');
+        const sorted = [...activeParticipants].sort((a, b) => {
+          switch (challenge.type) {
+            case 'streak':
+              return (b.progress.currentStreak || 0) - (a.progress.currentStreak || 0);
+            case 'consistency':
+              return (b.progress.completionRate || 0) - (a.progress.completionRate || 0);
+            default:
+              return (b.progress.currentValue || 0) - (a.progress.currentValue || 0);
+          }
+        });
+        challenge.stats.finalLeaderboard = sorted.map((p, i) => {
+          const user = p.userId;
+          const displayName = (user && typeof user === 'object') ? (user.name || 'Unknown') : 'Unknown';
+          const finalValue = challenge.type === 'streak'
+            ? (p.progress.currentStreak || 0)
+            : challenge.type === 'consistency'
+            ? (p.progress.completionRate || 0)
+            : (p.progress.currentValue || 0);
+          return {
+            userId: user?._id || user,
+            displayName,
+            rank: i + 1,
+            finalValue,
+            individualCompletedAt: p.completedAt || null,
+          };
+        });
+
         await challenge.save();
 
         // Feed event: challenge ended

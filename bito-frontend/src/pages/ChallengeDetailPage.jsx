@@ -1,13 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  ArrowLeftIcon,
-  PersonIcon,
-  CalendarIcon,
-  CheckCircledIcon,
-  CrossCircledIcon,
-} from "@radix-ui/react-icons";
-import { Fire, TrendUp, CalendarCheck, Handshake, Sword, Trophy, Medal, ChartBar } from "@phosphor-icons/react";
+import { Fire, TrendUp, CalendarCheck, Handshake, Sword, Trophy, Medal, ChartBar, ArrowLeft, User, CalendarBlank, CheckCircle, XCircle } from "@phosphor-icons/react";
 import { groupsAPI } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import ChallengeJoinModal from "../components/ui/ChallengeJoinModal";
@@ -155,7 +148,7 @@ const ChallengeDetailPage = () => {
       <div className="std min-h-screen px-4 sm:px-8 py-7 sm:py-12">
         <div className="max-w-3xl mx-auto">
           <button onClick={() => navigate(`/app/groups/${groupId}`)} className="std-btn std-btn--sm mb-8 flex items-center gap-1.5">
-            <ArrowLeftIcon className="w-3.5 h-3.5" /> Group
+            <ArrowLeft size={14} weight="bold" /> Group
           </button>
           <div className="std-card p-10 text-center">
             <p className="std-display text-3xl text-[var(--ink-3)] mb-3">—</p>
@@ -176,7 +169,7 @@ const ChallengeDetailPage = () => {
     <div className="max-w-3xl mx-auto space-y-5">
       {/* ── Back nav ── */}
       <button onClick={() => navigate(`/app/groups/${groupId}`)} className="std-btn std-btn--sm flex items-center gap-1.5">
-        <ArrowLeftIcon className="w-3.5 h-3.5" /> Group
+        <ArrowLeft size={14} weight="bold" /> Group
       </button>
 
       {/* ── Header card ── */}
@@ -201,14 +194,14 @@ const ChallengeDetailPage = () => {
             )}
             <div className="flex flex-wrap items-center gap-3 std-mono text-[10px] text-[var(--ink-3)] mt-3">
               <span className="flex items-center gap-1">
-                <CalendarIcon className="w-3 h-3" />
+                <CalendarBlank size={12} />
                 {fmtDate(challenge.startDate)} — {fmtDate(challenge.endDate)}
               </span>
               {challenge.daysRemaining != null && challenge.status === "active" && (
                 <span style={{ color: 'var(--signal)' }}>{challenge.daysRemaining}d left</span>
               )}
               <span className="flex items-center gap-1">
-                <PersonIcon className="w-3 h-3" />
+                <User size={12} />
                 {challenge.stats?.participantCount || challenge.participants?.length || 0} participants
               </span>
               <span>{meta.label} — {challenge.rules?.targetValue} {challenge.rules?.targetUnit}</span>
@@ -327,7 +320,7 @@ const ChallengeDetailPage = () => {
                     className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center std-mono text-[10px]"
                     style={{ background: reached ? 'color-mix(in srgb, var(--signal) 15%, transparent)' : 'var(--surface-2)', color: reached ? 'var(--signal)' : 'var(--ink-3)' }}
                   >
-                    {reached ? <CheckCircledIcon className="w-3 h-3" /> : i + 1}
+                    {reached ? <CheckCircle size={12} weight="duotone" /> : i + 1}
                   </span>
                   <p className={`flex-1 text-sm truncate ${reached ? 'text-[var(--ink)]' : 'text-[var(--ink-2)]'}`}>{m.label}</p>
                   <span className="std-mono text-[10px] text-[var(--ink-3)]">{m.value} {challenge.rules?.targetUnit}</span>
@@ -378,7 +371,7 @@ const ChallengeDetailPage = () => {
                     <img src={avatar} alt={name} className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
                   ) : (
                     <div className="w-7 h-7 rounded-full bg-[var(--surface-2)] flex items-center justify-center flex-shrink-0">
-                      <PersonIcon className="w-3.5 h-3.5 text-[var(--ink-3)]" />
+                      <User size={14} className="text-[var(--ink-3)]" />
                     </div>
                   )}
 
@@ -387,7 +380,7 @@ const ChallengeDetailPage = () => {
                       <p className={`text-sm truncate ${isMe ? 'text-[var(--ink)] font-semibold' : 'text-[var(--ink)]'}`}>
                         {name}{isMe && " (you)"}
                       </p>
-                      {isCompleted && <CheckCircledIcon className="w-3 h-3 flex-shrink-0" style={{ color: 'var(--signal)' }} />}
+                      {isCompleted && <CheckCircle size={12} weight="duotone" className="flex-shrink-0" style={{ color: 'var(--signal)' }} />}
                     </div>
                     <div className="flex items-center gap-2 mt-1">
                       <div className="flex-1 h-px bg-[var(--line)] overflow-hidden">

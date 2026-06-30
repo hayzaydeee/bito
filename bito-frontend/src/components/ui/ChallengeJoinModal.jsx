@@ -1,20 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
-import { Cross2Icon, ChevronDownIcon, ChevronUpIcon, CheckIcon } from "@radix-ui/react-icons";
+import { X, Check, Warning, Sparkle } from "@phosphor-icons/react";
 import { groupsAPI } from "../../services/api";
 import AnimatedModal from "./AnimatedModal";
 import HabitIcon from "../shared/HabitIcon";
 
-const inputClass =
-  "w-full h-10 px-3 bg-[var(--color-surface-elevated)] border border-[var(--color-border-primary)]/20 rounded-xl text-sm font-spartan text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:border-[var(--color-brand-600)]/40";
-
-const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
+const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess, mode = "join", initialHabitIds = [] }) => {
   const [loading, setLoading] = useState(false);
-  const [suggesting, setSuggesting] = useState(true);
+  const [suggesting, setSuggesting] = useState(false);
   const [error, setError] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [allHabits, setAllHabits] = useState([]);
   const [selectedIds, setSelectedIds] = useState(new Set());
-  const [showAllHabits, setShowAllHabits] = useState(false);
+  const [compatibilityWarnings, setCompatibilityWarnings] = useState([]);
+  const [pendingChallenge, setPendingChallenge] = useState(null);
 
   const isSingleMode = !challenge?.habitMatchMode || challenge.habitMatchMode === "single";
 
@@ -22,44 +20,33 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
     if (!challenge?._id) return;
     setSuggesting(true);
     setError("");
-
     try {
       const res = await groupsAPI.suggestHabitsForChallenge(challenge._id);
       if (res.success) {
         setSuggestions(res.suggestions || []);
         setAllHabits(res.habits || []);
-
-        // Pre-select habits with score >= 70
-        const preSelected = new Set();
-        (res.suggestions || []).forEach((s) => {
-          if (s.score >= 70) preSelected.add(s.habitId);
-        });
-
-        // For single mode, only pre-select the top one
-        if (isSingleMode && preSelected.size > 1) {
-          const top = [...preSelected][0];
-          preSelected.clear();
-          preSelected.add(top);
+        if (mode !== "relink") {
+          const preSelected = new Set();
+          (res.suggestions || []).forEach((s) => { if (s.score >= 70) preSelected.add(s.habitId); });
+          if (isSingleMode && preSelected.size > 1) { const top = [...preSelected][0]; preSelected.clear(); preSelected.add(top); }
+          setSelectedIds(preSelected);
         }
-
-        setSelectedIds(preSelected);
       }
     } catch {
-      // Fallback: show all habits without suggestions
       setSuggestions([]);
-      setShowAllHabits(true);
     } finally {
       setSuggesting(false);
     }
-  }, [challenge?._id, isSingleMode]);
+  }, [challenge?._id, isSingleMode, mode]);
 
   useEffect(() => {
     if (isOpen && challenge) {
-      setSelectedIds(new Set());
+      setSelectedIds(mode === "relink" && initialHabitIds.length ? new Set(initialHabitIds) : new Set());
       setSuggestions([]);
       setAllHabits([]);
-      setShowAllHabits(false);
       setError("");
+      setCompatibilityWarnings([]);
+      setPendingChallenge(null);
       fetchSuggestions();
     }
   }, [isOpen, challenge, fetchSuggestions]);
@@ -69,42 +56,40 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
   const toggleHabit = (habitId) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(habitId)) {
-        next.delete(habitId);
-      } else {
-        if (isSingleMode) {
-          // Single mode: only one at a time
-          next.clear();
-        }
-        next.add(habitId);
-      }
+      if (next.has(habitId)) { next.delete(habitId); }
+      else { if (isSingleMode) next.clear(); next.add(habitId); }
       return next;
     });
   };
 
   const handleJoin = async () => {
-    // Validate selection based on match mode
-    const mode = challenge.habitMatchMode || "single";
-    if (mode === "all" || mode === "any") {
-      if (selectedIds.size === 0) {
-        return setError("Please select at least one habit");
-      }
+    const matchMode = challenge.habitMatchMode || "single";
+    if (matchMode === "all" || matchMode === "any") {
+      if (selectedIds.size === 0) return setError("Please select at least one habit");
     }
-    if (mode === "minimum" && challenge.habitMatchMinimum) {
-      if (selectedIds.size < challenge.habitMatchMinimum) {
+    if (matchMode === "minimum" && challenge.habitMatchMinimum) {
+      if (selectedIds.size < challenge.habitMatchMinimum)
         return setError(`Please select at least ${challenge.habitMatchMinimum} habit(s)`);
-      }
     }
-
     setLoading(true);
     setError("");
-
     try {
       const ids = [...selectedIds];
+      if (mode === "relink") {
+        await groupsAPI.updateParticipantHabits(challenge._id, ids);
+        onSuccess?.();
+        onClose();
+        return;
+      }
       const res = await groupsAPI.joinChallenge(challenge._id, ids);
       if (res.success) {
-        onSuccess?.(res.challenge);
-        onClose();
+        if (res.compatibilityWarnings?.length) {
+          setCompatibilityWarnings(res.compatibilityWarnings);
+          setPendingChallenge(res.challenge);
+        } else {
+          onSuccess?.(res.challenge);
+          onClose();
+        }
       } else {
         setError(res.error || "Failed to join challenge");
       }
@@ -115,204 +100,235 @@ const ChallengeJoinModal = ({ isOpen, challenge, onClose, onSuccess }) => {
     }
   };
 
-  // Habits that are suggested vs. all others
+  const handleDismissWarnings = () => { onSuccess?.(pendingChallenge); onClose(); };
+
   const suggestedIds = new Set(suggestions.map((s) => s.habitId));
+  const suggestedHabits = suggestions.map((s) => allHabits.find((h) => h._id === s.habitId)).filter(Boolean);
   const nonSuggestedHabits = allHabits.filter((h) => !suggestedIds.has(h._id));
 
+  const initialSet = new Set(initialHabitIds);
+  const currentlyTrackingNames = mode === "relink" && allHabits.length > 0
+    ? initialHabitIds.map((id) => allHabits.find((h) => h._id === id)?.name).filter(Boolean)
+    : [];
+
+  const selectionChanged = mode === "relink" && (
+    selectedIds.size !== initialSet.size ||
+    [...selectedIds].some((id) => !initialSet.has(id))
+  );
+
   const matchModeLabel = {
-    single: "Select one habit to track",
-    any: "Select habits — completing any counts",
-    all: "Select habits — must complete all daily",
-    minimum: `Select habits — must complete ${challenge.habitMatchMinimum || "N"} daily`,
+    single: isSingleMode ? "Choose one habit to track your progress" : "",
+    any: "Completing any linked habit counts each day",
+    all: "All linked habits must be completed each day",
+    minimum: `Complete at least ${challenge.habitMatchMinimum || "N"} linked habits each day`,
+  }[challenge.habitMatchMode || "single"];
+
+  const HabitRow = ({ habit, score, reason, isInitial }) => {
+    const isSelected = selectedIds.has(habit._id);
+    const isCurrentTracker = isInitial && mode === "relink";
+    return (
+      <button
+        onClick={() => toggleHabit(habit._id)}
+        className={`w-full text-left p-3 rounded-[12px] border transition-colors ${
+          isSelected
+            ? "border-[var(--signal)] bg-[var(--signal)]/5"
+            : "border-[var(--line-2)] hover:border-[var(--line-3)]"
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+            isSelected ? "bg-[var(--signal)] border-[var(--signal)]" : "border-[var(--line-2)]"
+          }`}>
+            {isSelected && <Check size={12} weight="bold" className="text-white" />}
+          </div>
+          <HabitIcon icon={habit.icon || "ClipboardText"} size={16} />
+          <div className="flex-1 min-w-0">
+            <p className="grp-mono text-sm font-medium text-[var(--ink)] truncate">{habit.name}</p>
+            {reason && <p className="grp-mono text-[10px] text-[var(--ink-3)] mt-0.5 truncate">{reason}</p>}
+          </div>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            {score && (
+              <span className="grp-mono text-[10px] font-medium px-1.5 py-0.5 rounded bg-[var(--signal)]/10 text-[var(--signal)]">
+                {score}%
+              </span>
+            )}
+            {isCurrentTracker && !selectionChanged && (
+              <span className="grp-mono text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[var(--surface-2)] text-[var(--ink-3)]">
+                tracking
+              </span>
+            )}
+            {isCurrentTracker && selectionChanged && !isSelected && (
+              <span className="grp-mono text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[var(--ember)]/10 text-[var(--ember)]">
+                was tracking
+              </span>
+            )}
+          </div>
+        </div>
+      </button>
+    );
   };
 
   return (
     <AnimatedModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-lg">
-      <div className="relative w-full bg-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)]/20 max-h-[85vh] overflow-y-auto">
-        {/* header */}
-        <div className="flex items-center justify-between p-5 border-b border-[var(--color-border-primary)]/10">
-          <div>
-            <h2 className="text-lg font-garamond font-bold text-[var(--color-text-primary)]">
-              Join Challenge
-            </h2>
-            <p className="text-xs text-[var(--color-text-tertiary)] font-spartan mt-0.5">
-              {challenge.title}
-            </p>
+      <div className="grp relative w-full bg-[var(--surface)] rounded-[16px] border border-[var(--line-2)] max-h-[85vh] overflow-y-auto">
+
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-[var(--surface)] px-6 pt-5 pb-3 border-b border-[var(--line-2)]">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="grp-kicker">{mode === "relink" ? "Change Habit" : "Join Challenge"}</p>
+              <h2 className="grp-display text-xl font-bold text-[var(--ink)]">
+                {mode === "relink" ? "Update Your Habit" : challenge.title}
+              </h2>
+              {mode === "join" && (
+                <p className="grp-mono text-xs text-[var(--ink-3)] mt-0.5">{matchModeLabel}</p>
+              )}
+            </div>
+            <button onClick={onClose} className="text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors mt-0.5">
+              <X size={16} />
+            </button>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--color-surface-hover)] transition-colors">
-            <Cross2Icon className="w-4 h-4 text-[var(--color-text-secondary)]" />
-          </button>
         </div>
 
-        <div className="p-5 space-y-4">
-          {/* challenge info */}
-          {challenge.habitSlot && (
-            <div className="p-3 rounded-xl bg-[var(--color-brand-600)]/5 border border-[var(--color-brand-600)]/10">
-              <p className="text-xs font-spartan font-medium text-[var(--color-brand-600)]">
-                Looking for: {challenge.habitSlot}
+        {/* Body */}
+        <div className="px-6 py-5 space-y-4">
+
+          {/* Currently tracking callout (relink mode) */}
+          {mode === "relink" && currentlyTrackingNames.length > 0 && (
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-[10px] bg-[var(--signal)]/5 border border-[var(--signal)]/20">
+              <p className="grp-mono text-[10px] text-[var(--signal)] font-medium flex-1">
+                Currently tracking:{" "}
+                <span className="text-[var(--ink-2)]">
+                  {currentlyTrackingNames.map((n) => `"${n}"`).join(", ")}
+                </span>
               </p>
-            </div>
-          )}
-
-          {/* match mode hint */}
-          <p className="text-xs font-spartan text-[var(--color-text-secondary)]">
-            {matchModeLabel[challenge.habitMatchMode || "single"]}
-          </p>
-
-          {/* loading state */}
-          {suggesting && (
-            <div className="space-y-2">
-              <div className="h-12 bg-[var(--color-surface-hover)] rounded-xl animate-pulse" />
-              <div className="h-12 bg-[var(--color-surface-hover)] rounded-xl animate-pulse" />
-            </div>
-          )}
-
-          {/* Suggested habits */}
-          {!suggesting && suggestions.length > 0 && (
-            <div>
-              <p className="text-xs font-spartan font-semibold text-[var(--color-text-secondary)] mb-2">
-                ✨ Suggested Habits
-              </p>
-              <ul className="space-y-2">
-                {suggestions.map((s) => {
-                  const habit = allHabits.find((h) => h._id === s.habitId);
-                  if (!habit) return null;
-                  const isSelected = selectedIds.has(s.habitId);
-
-                  return (
-                    <li key={s.habitId}>
-                      <button
-                        onClick={() => toggleHabit(s.habitId)}
-                        className={`w-full text-left p-3 rounded-xl border transition-colors ${
-                          isSelected
-                            ? "border-[var(--color-brand-600)] bg-[var(--color-brand-600)]/5"
-                            : "border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                            isSelected
-                              ? "bg-[var(--color-brand-600)] border-[var(--color-brand-600)]"
-                              : "border-[var(--color-border-primary)]/30"
-                          }`}>
-                            {isSelected && <CheckIcon className="w-3.5 h-3.5 text-white" />}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <HabitIcon icon={habit.icon || "ClipboardText"} size={16} />
-                              <p className="text-sm font-spartan font-medium text-[var(--color-text-primary)] truncate">
-                                {habit.name}
-                              </p>
-                              <span className="text-[10px] font-spartan font-medium px-1.5 py-0.5 rounded bg-[var(--color-brand-600)]/10 text-[var(--color-brand-600)]">
-                                {s.score}%
-                              </span>
-                            </div>
-                            {s.reason && (
-                              <p className="text-[10px] text-[var(--color-text-tertiary)] font-spartan mt-0.5 truncate">
-                                {s.reason}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          )}
-
-          {/* All habits toggle */}
-          {!suggesting && nonSuggestedHabits.length > 0 && (
-            <div>
-              <button
-                onClick={() => setShowAllHabits((v) => !v)}
-                className="flex items-center gap-1.5 text-xs font-spartan font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
-              >
-                {showAllHabits ? <ChevronUpIcon className="w-3.5 h-3.5" /> : <ChevronDownIcon className="w-3.5 h-3.5" />}
-                {showAllHabits ? "Hide" : "Show"} all my habits ({nonSuggestedHabits.length})
-              </button>
-
-              {showAllHabits && (
-                <ul className="space-y-2 mt-2">
-                  {nonSuggestedHabits.map((h) => {
-                    const isSelected = selectedIds.has(h._id);
-                    return (
-                      <li key={h._id}>
-                        <button
-                          onClick={() => toggleHabit(h._id)}
-                          className={`w-full text-left p-3 rounded-xl border transition-colors ${
-                            isSelected
-                              ? "border-[var(--color-brand-600)] bg-[var(--color-brand-600)]/5"
-                              : "border-[var(--color-border-primary)]/20 hover:border-[var(--color-border-primary)]/40"
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                              isSelected
-                                ? "bg-[var(--color-brand-600)] border-[var(--color-brand-600)]"
-                                : "border-[var(--color-border-primary)]/30"
-                            }`}>
-                              {isSelected && <CheckIcon className="w-3.5 h-3.5 text-white" />}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <HabitIcon icon={h.icon || "ClipboardText"} size={16} />
-                                <p className="text-sm font-spartan font-medium text-[var(--color-text-primary)] truncate">
-                                  {h.name}
-                                </p>
-                              </div>
-                              {h.description && (
-                                <p className="text-[10px] text-[var(--color-text-tertiary)] font-spartan mt-0.5 truncate">
-                                  {h.description}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
+              {selectionChanged && (
+                <span className="grp-mono text-[9px] font-bold uppercase tracking-wider text-[var(--ember)]">
+                  Changing
+                </span>
               )}
             </div>
           )}
 
-          {/* No habits fallback */}
-          {!suggesting && allHabits.length === 0 && (
-            <div className="text-center py-6">
-              <p className="text-sm text-[var(--color-text-tertiary)] font-spartan">
-                You don't have any habits in this group yet. Create a habit first, then join the challenge.
+          {/* Habit slot hint */}
+          {challenge.habitSlot && (
+            <div className="px-3 py-2 rounded-[10px] bg-[var(--bg-2)] border border-[var(--line-2)]">
+              <p className="grp-mono text-[10px] text-[var(--ink-2)]">
+                Looking for: <span className="text-[var(--ink)]">{challenge.habitSlot}</span>
               </p>
             </div>
           )}
 
-          {/* selection summary */}
-          {selectedIds.size > 0 && (
-            <p className="text-xs font-spartan text-[var(--color-text-secondary)]">
-              {selectedIds.size} habit{selectedIds.size !== 1 ? "s" : ""} selected
+          {/* AI loading hint */}
+          {suggesting && (
+            <p className="grp-mono text-[10px] text-[var(--ink-3)] animate-pulse flex items-center gap-1.5">
+              <Sparkle size={10} weight="fill" className="text-[var(--signal)]" />
+              Finding best matches…
             </p>
           )}
 
-          {error && <p className="text-xs text-red-500 font-spartan">{error}</p>}
+          {/* No habits fallback */}
+          {!suggesting && allHabits.length === 0 && (
+            <p className="grp-mono text-sm text-[var(--ink-3)] text-center py-6">
+              No habits yet — create one first, then come back.
+            </p>
+          )}
 
-          {/* actions */}
-          <div className="flex gap-3">
-            <button
-              onClick={onClose}
-              className="flex-1 h-10 border border-[var(--color-border-primary)]/20 text-[var(--color-text-secondary)] rounded-xl text-sm font-spartan font-medium hover:bg-[var(--color-surface-hover)] transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleJoin}
-              disabled={loading || suggesting}
-              className="flex-1 h-10 bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] disabled:opacity-50 text-white rounded-xl text-sm font-spartan font-medium transition-colors"
-            >
-              {loading ? "Joining…" : "Join Challenge"}
-            </button>
-          </div>
+          {/* Suggested habits */}
+          {!suggesting && suggestedHabits.length > 0 && (
+            <div>
+              <p className="grp-kicker mb-2 flex items-center gap-1">
+                <Sparkle size={10} weight="fill" className="text-[var(--signal)]" />
+                Suggested
+              </p>
+              <div className="space-y-2">
+                {suggestions.map((s) => {
+                  const habit = allHabits.find((h) => h._id === s.habitId);
+                  if (!habit) return null;
+                  return (
+                    <HabitRow
+                      key={s.habitId}
+                      habit={habit}
+                      score={s.score}
+                      reason={s.reason}
+                      isInitial={initialSet.has(s.habitId)}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* All other habits */}
+          {!suggesting && nonSuggestedHabits.length > 0 && (
+            <div>
+              {suggestedHabits.length > 0 && <p className="grp-kicker mb-2">All habits</p>}
+              <div className="space-y-2">
+                {nonSuggestedHabits.map((h) => (
+                  <HabitRow
+                    key={h._id}
+                    habit={h}
+                    isInitial={initialSet.has(h._id)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Compatibility warning panel */}
+          {compatibilityWarnings.length > 0 && (
+            <div className="rounded-[12px] border border-[var(--ember)]/30 bg-[var(--ember)]/5 p-4 space-y-3">
+              <p className="grp-mono text-xs font-semibold text-[var(--ember)] flex items-center gap-1.5">
+                <Warning size={14} weight="fill" />
+                Habit compatibility notice
+              </p>
+              <ul className="space-y-1.5">
+                {compatibilityWarnings.map((w, i) => (
+                  <li key={i} className="grp-mono text-[11px] text-[var(--ink-2)] leading-snug">{w.message}</li>
+                ))}
+              </ul>
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={() => { setCompatibilityWarnings([]); setPendingChallenge(null); }}
+                  className="grp-btn flex-1 justify-center"
+                >
+                  Go back
+                </button>
+                <button onClick={handleDismissWarnings} className="grp-btn flex-1 justify-center" style={{ background: "var(--ember)", color: "#fff", borderColor: "transparent" }}>
+                  Join anyway
+                </button>
+              </div>
+            </div>
+          )}
+
+          {error && <p className="grp-mono text-[11px] text-[var(--rose)]">{error}</p>}
         </div>
+
+        {/* Footer */}
+        {!compatibilityWarnings.length && (
+          <div className="sticky bottom-0 bg-[var(--surface)] px-6 py-4 border-t border-[var(--line-2)]">
+            <div className="flex gap-3">
+              <button type="button" className="grp-btn" onClick={onClose}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleJoin}
+                disabled={loading || (!suggesting && allHabits.length === 0)}
+                className="grp-btn grp-btn--signal flex-1 justify-center gap-2 disabled:opacity-40"
+              >
+                <Check size={16} />
+                {loading
+                  ? (mode === "relink" ? "Saving…" : "Joining…")
+                  : (mode === "relink"
+                    ? (selectionChanged ? "Update Habit" : "Keep Habit")
+                    : "Join Challenge"
+                  )
+                }
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </AnimatedModal>
   );

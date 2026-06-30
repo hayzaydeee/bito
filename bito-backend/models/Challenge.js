@@ -148,6 +148,27 @@ const challengeSchema = new mongoose.Schema(
           default: 'active',
         },
         completedAt: { type: Date, default: null },
+        role: {
+          type: String,
+          enum: ['participant', 'organizer'],
+          default: 'participant',
+        },
+        habitCompatibilityWarnings: [
+          {
+            code: { type: String },
+            message: { type: String },
+          },
+        ],
+        progressSnapshot: {
+          currentValue: { type: Number, default: null },
+          currentStreak: { type: Number, default: null },
+          bestStreak: { type: Number, default: null },
+          completionRate: { type: Number, default: null },
+          scheduledDaysCompleted: { type: Number, default: null },
+          scheduledDaysTotal: { type: Number, default: null },
+          snapshotDate: { type: Date, default: null },
+        },
+        lastComputedAt: { type: Date, default: null },
       },
     ],
 
@@ -166,6 +187,13 @@ const challengeSchema = new mongoose.Schema(
       completedCount: { type: Number, default: 0 },
       averageProgress: { type: Number, default: 0 },
       topStreak: { type: Number, default: 0 },
+      finalLeaderboard: [{
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        displayName: String,
+        rank: Number,
+        finalValue: Number,
+        individualCompletedAt: { type: Date, default: null },
+      }],
     },
 
     // ── Settings ──
@@ -219,7 +247,7 @@ challengeSchema.methods.getParticipant = function (userId) {
   );
 };
 
-challengeSchema.methods.addParticipant = function (userId, linkedHabitIds = null) {
+challengeSchema.methods.addParticipant = function (userId, linkedHabitIds = null, compatibilityWarnings = []) {
   if (this.isParticipant(userId)) return null;
 
   const activeCount = this.participants.filter((p) => p.status === 'active').length;
@@ -240,6 +268,7 @@ challengeSchema.methods.addParticipant = function (userId, linkedHabitIds = null
     progress: { currentValue: 0, currentStreak: 0, bestStreak: 0, completionRate: 0, lastLoggedAt: null },
     status: 'active',
     completedAt: null,
+    habitCompatibilityWarnings: compatibilityWarnings || [],
   };
 
   this.participants.push(participant);
@@ -350,9 +379,12 @@ challengeSchema.methods.getLeaderboard = function () {
     }
   });
 
+  const anonymize = this.settings?.anonymizeLeaderboard;
+
   return sorted.map((p, i) => ({
     rank: i + 1,
-    userId: p.userId,
+    userId: anonymize ? null : p.userId,
+    displayName: anonymize ? `Participant ${i + 1}` : undefined,
     progress: p.progress,
     status: p.status,
     completedAt: p.completedAt,
@@ -369,6 +401,7 @@ challengeSchema.statics.findActiveForGroup = function (groupId) {
   })
     .populate('createdBy', 'name avatar')
     .populate('participants.userId', 'name avatar')
+    .populate('participants.linkedHabitIds', 'name icon')
     .sort({ startDate: 1 });
 };
 
@@ -380,6 +413,7 @@ challengeSchema.statics.findByGroup = function (groupId, options = {}) {
   return this.find(query)
     .populate('createdBy', 'name avatar')
     .populate('participants.userId', 'name avatar')
+    .populate('participants.linkedHabitIds', 'name icon')
     .sort({ createdAt: -1 });
 };
 

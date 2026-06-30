@@ -32,7 +32,7 @@ const apiRequest = async (endpoint, options = {}) => {
         method: config.method,
         body: config.body
       });
-      throw new Error(data.error || data.message || `HTTP error! status: ${response.status}`);
+      throw new Error(data.error || data.message || (Array.isArray(data.errors) && data.errors[0]?.msg) || `HTTP error! status: ${response.status}`);
     }
 
     return data;
@@ -739,6 +739,12 @@ export const groupsAPI = {
     });
   },
 
+  deleteChallenge: async (challengeId) => {
+    return apiRequest(`/api/challenges/${challengeId}`, {
+      method: 'DELETE',
+    });
+  },
+
   // Join challenge
   joinChallenge: async (challengeId, linkedHabitIds = null) => {
     // Accept array (v2) or singular ID (v1 backward compat)
@@ -768,9 +774,22 @@ export const groupsAPI = {
     });
   },
 
+  // Update linked habits for an active challenge (participant re-link)
+  updateParticipantHabits: async (challengeId, linkedHabitIds) => {
+    return apiRequest(`/api/challenges/${challengeId}/participant/habits`, {
+      method: 'PATCH',
+      body: JSON.stringify({ linkedHabitIds }),
+    });
+  },
+
   // Get challenge leaderboard
   getChallengeLeaderboard: async (challengeId) => {
     return apiRequest(`/api/challenges/${challengeId}/leaderboard`);
+  },
+
+  // AI-assisted challenge creation suggestions
+  getChallengeAdvisor: async (groupId) => {
+    return apiRequest(`/api/groups/${groupId}/challenges/advisor`);
   },
 
   // ── Feed reactions ──
