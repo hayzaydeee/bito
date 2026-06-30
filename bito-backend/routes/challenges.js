@@ -551,7 +551,7 @@ router.patch('/challenges/:id/participant/habits', [
 // POST /api/challenges/:id/leave
 // Leave a challenge
 // ─────────────────────────────────────────────────────────
-router.post('/challenges/:id/leave', async (req, res) => {
+router.post('/challenges/:id/leave', authenticateJWT, async (req, res) => {
   try {
     const challenge = await Challenge.findById(req.params.id);
     if (!challenge) {
