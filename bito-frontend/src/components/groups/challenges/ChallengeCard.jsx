@@ -220,10 +220,11 @@ const ChallengeCard = ({
     const renderFooter = () => {
       if (isCompleted) return null;
       const timeText = isActive
-        ? `${daysLeft(c.endDate)}D LEFT`
+        ? `${daysLeft(c.endDate) ?? "?"}D LEFT`
         : isUpcoming
-        ? `STARTS IN ${daysUntil(c.startDate)}D`
+        ? `STARTS IN ${daysUntil(c.startDate) ?? "?"}D`
         : null;
+      if (!timeText && !cancelError) return null;
       return (
         <div className="cz-foot">
           {isActive && <span className="cz-live-dot" />}
@@ -242,7 +243,7 @@ const ChallengeCard = ({
             const uid = (p.userId?._id || p.userId)?.toString();
             const isYou = uid === currentUserId?.toString();
             const name = p.userId?.name || p.userId?.username || "—";
-            const avatar = p.userId?.profilePicture;
+            const avatar = p.userId?.avatar;
             const val = metricLabel(p, c.type, c.rules?.targetUnit);
             const unit = c.type === "streak" ? "STREAK" : c.type === "consistency" ? "RATE" : (c.rules?.targetUnit || "").toUpperCase();
             return (
@@ -301,7 +302,7 @@ const ChallengeCard = ({
       if (sorted.length < 2) return null;
       const a = sorted[0], b = sorted[1];
       const nameOf = (p) => p.userId?.name || p.userId?.username || "—";
-      const avatarOf = (p) => p.userId?.profilePicture;
+      const avatarOf = (p) => p.userId?.avatar;
       const valOf = (p) => metricLabel(p, c.type, c.rules?.targetUnit);
       const isLeadA = sortKey(a, c.type) >= sortKey(b, c.type);
       return (
@@ -336,7 +337,7 @@ const ChallengeCard = ({
             <Icon size={16} weight="duotone" style={{ color }} />
           </div>
           <div className="cz-meta">
-            <div className="cz-title">{c.name}</div>
+            <div className="cz-title">{c.title}</div>
             <div className="cz-sub">{subLine}</div>
           </div>
           <span className="cz-badge" style={{ color: badgeColor, background: badgeBg }}>{badgeLabel}</span>
