@@ -210,6 +210,17 @@ const challengeSchema = new mongoose.Schema(
       default: '🏆 Challenge Completion Badge',
       maxlength: 100,
     },
+
+    // ── Restart lineage ──
+    parentChallengeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Challenge',
+      default: null,
+    },
+    instanceNumber: {
+      type: Number,
+      default: 1,
+    },
   },
   { timestamps: true }
 );

@@ -745,6 +745,17 @@ export const groupsAPI = {
     });
   },
 
+  // Restart a completed/cancelled challenge as a new instance
+  restartChallenge: async (challengeId, { startDate, endDate } = {}) => {
+    const body = {};
+    if (startDate) body.startDate = startDate;
+    if (endDate) body.endDate = endDate;
+    return apiRequest(`/api/challenges/${challengeId}/restart`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
+
   // Join challenge
   joinChallenge: async (challengeId, linkedHabitIds = null) => {
     // Accept array (v2) or singular ID (v1 backward compat)
