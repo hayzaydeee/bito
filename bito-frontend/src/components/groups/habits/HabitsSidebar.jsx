@@ -160,11 +160,10 @@ const HabitsSidebar = ({
         </p>
       </div>
 
-      {/* Create group habit */}
-      {canManage && (
+      {canManage && !noGroupHabits && (
         <button
           onClick={onAddHabit}
-          className="w-full h-10 rounded-[10px] border border-dashed border-[var(--line-2)] flex items-center justify-center gap-2 grp-mono text-[11px] font-bold uppercase tracking-wider text-[var(--ink-3)] hover:text-[var(--signal)] hover:border-[var(--signal)]/50 transition-colors"
+          className="grp-btn grp-btn--sm grp-btn--signal w-full"
         >
           <Plus size={13} weight="bold" />
           Create group habit

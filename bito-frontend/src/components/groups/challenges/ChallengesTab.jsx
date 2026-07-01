@@ -392,6 +392,7 @@ const ChallengesTab = ({
           allChallenges={challenges}
           currentUserId={currentUserId}
           onCreateChallenge={() => openCreateWithPreset(null)}
+          isEmpty={isEmpty}
         />
       </aside>
 
