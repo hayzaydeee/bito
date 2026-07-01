@@ -412,7 +412,10 @@
 .cdm-row.you .cdm-row-track i { opacity: 1; }
 
 .cdm-row-score {
-  text-align: right;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 2px;
   flex-shrink: 0;
   min-width: 48px;
 }
@@ -423,17 +426,15 @@
   font-weight: 400;
   color: var(--ink);
   line-height: 1;
-  display: block;
 }
 .cdm-row-val.you { color: var(--signal); }
 .cdm-row-unit {
-  display: block;
   font-family: var(--f-mono);
   font-size: 8px;
   color: var(--ink-3);
   text-transform: uppercase;
   letter-spacing: .05em;
-  margin-top: 2px;
+  padding-bottom: 3px;
 }
 
 /* ── Footer ──────────────────────────────────────────── */
