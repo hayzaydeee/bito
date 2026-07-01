@@ -6,9 +6,11 @@ import StandingSidebar from "./StandingSidebar";
 import { groupsAPI } from "../../../services/api";
 import ChallengeCreateModal from "../../ui/ChallengeCreateModal";
 import ChallengeJoinModal from "../../ui/ChallengeJoinModal";
+import "./challenges-cards.css";
 
 const DRAFT_STEP_LABEL = ["Type", "Basics", "Targets", "Settings"];
 const LS_DRAFT_KEY = (gId) => `bito_challenge_draft_${gId}`;
+const LS_STYLE_KEY = "bito_challenge_card_style";
 
 const ChallengesTab = ({
   groupId,
@@ -27,6 +29,14 @@ const ChallengesTab = ({
   const [detailTarget, setDetailTarget] = useState(null);
   const [localDraft, setLocalDraft] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [cardStyle, setCardStyle] = useState(() => {
+    try { return localStorage.getItem(LS_STYLE_KEY) || "cozy"; } catch { return "cozy"; }
+  });
+
+  const changeStyle = (style) => {
+    setCardStyle(style);
+    try { localStorage.setItem(LS_STYLE_KEY, style); } catch {}
+  };
 
   // Re-read local draft whenever modal closes or groupId changes
   useEffect(() => {
@@ -123,6 +133,7 @@ const ChallengesTab = ({
     onLeave: handleLeave,
     onViewDetail: handleViewDetail,
     actionLoading,
+    cardStyle,
     ...extra,
   });
 
@@ -133,6 +144,33 @@ const ChallengesTab = ({
     <div className="flex gap-8">
       {/* ── Main list ── */}
       <div className="flex-1 min-w-0 space-y-7">
+        {/* Card style toggle */}
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+          {["cozy", "compact", "standing"].map((s) => (
+            <button
+              key={s}
+              onClick={() => changeStyle(s)}
+              style={{
+                fontFamily: "var(--f-mono)",
+                fontSize: "10px",
+                fontWeight: 700,
+                letterSpacing: ".06em",
+                textTransform: "uppercase",
+                padding: "4px 10px",
+                borderRadius: "var(--r-tag)",
+                border: "1px solid",
+                borderColor: cardStyle === s ? "var(--signal)" : "var(--line-2)",
+                background: cardStyle === s ? "color-mix(in srgb, var(--signal) 14%, transparent)" : "transparent",
+                color: cardStyle === s ? "var(--signal)" : "var(--ink-3)",
+                cursor: "pointer",
+                transition: "all .15s",
+              }}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+
         {actionError && (
           <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-[var(--ember)]/10 border border-[var(--ember)]/20">
             <p className="grp-mono text-xs text-[var(--ember)]">{actionError}</p>
@@ -204,9 +242,15 @@ const ChallengesTab = ({
         {active.length > 0 && (
           <section>
             <p className="grp-kicker mb-3">Active — {String(active.length).padStart(2, "0")}</p>
-            <div className="space-y-3">
-              {active.map((c) => <ChallengeCard key={c._id} {...cardProps(c)} />)}
-            </div>
+            {cardStyle === "compact" ? (
+              <div className="cc-ledger">
+                {active.map((c) => <ChallengeCard key={c._id} {...cardProps(c)} />)}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {active.map((c) => <ChallengeCard key={c._id} {...cardProps(c)} />)}
+              </div>
+            )}
           </section>
         )}
 
@@ -214,17 +258,31 @@ const ChallengesTab = ({
         {upcoming.length > 0 && (
           <section>
             <p className="grp-kicker mb-3">Upcoming — {String(upcoming.length).padStart(2, "0")}</p>
-            <div className="space-y-3">
-              {upcoming.map((c) => (
-                <ChallengeCard
-                  key={c._id}
-                  {...cardProps(c, {
-                    onCancel: handleCancel,
-                    canCancel: canManage || (c.createdBy?._id || c.createdBy)?.toString() === currentUserId?.toString(),
-                  })}
-                />
-              ))}
-            </div>
+            {cardStyle === "compact" ? (
+              <div className="cc-ledger">
+                {upcoming.map((c) => (
+                  <ChallengeCard
+                    key={c._id}
+                    {...cardProps(c, {
+                      onCancel: handleCancel,
+                      canCancel: canManage || (c.createdBy?._id || c.createdBy)?.toString() === currentUserId?.toString(),
+                    })}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {upcoming.map((c) => (
+                  <ChallengeCard
+                    key={c._id}
+                    {...cardProps(c, {
+                      onCancel: handleCancel,
+                      canCancel: canManage || (c.createdBy?._id || c.createdBy)?.toString() === currentUserId?.toString(),
+                    })}
+                  />
+                ))}
+              </div>
+            )}
           </section>
         )}
 
@@ -239,41 +297,64 @@ const ChallengesTab = ({
               Completed — {String(completed.length).padStart(2, "0")}
             </button>
             {completedOpen && (
-              <div className="space-y-3">
-                {completed.map((c) => (
-                  <div key={c._id} className="space-y-1">
-                    <ChallengeCard {...cardProps(c)} />
-                    {canManage && (
-                      <div className="flex justify-end px-1">
-                        {deleteConfirm === c._id ? (
-                          <div className="flex items-center gap-2">
-                            <span className="grp-mono text-[10px] text-[var(--ink-3)]">Delete permanently?</span>
-                            <button
-                              onClick={() => handleDelete(c._id)}
-                              className="grp-mono text-[10px] font-bold text-[var(--rose)] hover:underline"
-                            >
-                              Yes
-                            </button>
-                            <button
-                              onClick={() => setDeleteConfirm(null)}
-                              className="grp-mono text-[10px] text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors"
-                            >
-                              No
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => setDeleteConfirm(c._id)}
-                            className="grp-mono text-[10px] text-[var(--ink-3)] hover:text-[var(--rose)] transition-colors"
-                          >
-                            Delete
-                          </button>
-                        )}
-                      </div>
-                    )}
+              cardStyle === "compact" ? (
+                <div className="space-y-3">
+                  <div className="cc-ledger">
+                    {completed.map((c) => (
+                      <ChallengeCard key={c._id} {...cardProps(c)} />
+                    ))}
                   </div>
-                ))}
-              </div>
+                  {canManage && completed.map((c) => (
+                    <div key={c._id} className="flex justify-end px-1">
+                      {deleteConfirm === c._id ? (
+                        <div className="flex items-center gap-2">
+                          <span className="grp-mono text-[10px] text-[var(--ink-3)]">Delete permanently?</span>
+                          <button onClick={() => handleDelete(c._id)} className="grp-mono text-[10px] font-bold text-[var(--rose)] hover:underline">Yes</button>
+                          <button onClick={() => setDeleteConfirm(null)} className="grp-mono text-[10px] text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors">No</button>
+                        </div>
+                      ) : (
+                        <button onClick={() => setDeleteConfirm(c._id)} className="grp-mono text-[10px] text-[var(--ink-3)] hover:text-[var(--rose)] transition-colors">Delete</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {completed.map((c) => (
+                    <div key={c._id} className="space-y-1">
+                      <ChallengeCard {...cardProps(c)} />
+                      {canManage && (
+                        <div className="flex justify-end px-1">
+                          {deleteConfirm === c._id ? (
+                            <div className="flex items-center gap-2">
+                              <span className="grp-mono text-[10px] text-[var(--ink-3)]">Delete permanently?</span>
+                              <button
+                                onClick={() => handleDelete(c._id)}
+                                className="grp-mono text-[10px] font-bold text-[var(--rose)] hover:underline"
+                              >
+                                Yes
+                              </button>
+                              <button
+                                onClick={() => setDeleteConfirm(null)}
+                                className="grp-mono text-[10px] text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors"
+                              >
+                                No
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setDeleteConfirm(c._id)}
+                              className="grp-mono text-[10px] text-[var(--ink-3)] hover:text-[var(--rose)] transition-colors"
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )
             )}
           </section>
         )}
