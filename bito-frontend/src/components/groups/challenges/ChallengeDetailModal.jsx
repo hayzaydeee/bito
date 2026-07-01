@@ -230,9 +230,10 @@ const ChallengeDetailModal = ({
                   )}
 
                   {trackedHabitName(myP) && (
-                    <p className="cdm-habit-tracking">
-                      tracking &ldquo;{trackedHabitName(myP)}&rdquo;
-                    </p>
+                    <div className="cdm-stat">
+                      <p className="cdm-habit-name">&ldquo;{trackedHabitName(myP)}&rdquo;</p>
+                      <p className="cdm-stat-label">Tracking</p>
+                    </div>
                   )}
                 </div>
 
