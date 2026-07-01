@@ -366,6 +366,79 @@ router.delete('/challenges/:id', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────
+// POST /api/challenges/:id/restart
+// Restart a completed/cancelled challenge as a new instance
+// ─────────────────────────────────────────────────────────
+router.post('/challenges/:id/restart', [
+  body('startDate').optional().isISO8601(),
+  body('endDate').optional().isISO8601(),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, errors: errors.array() });
+  }
+
+  try {
+    const original = await Challenge.findById(req.params.id);
+    if (!original) {
+      return res.status(404).json({ success: false, error: 'Challenge not found' });
+    }
+
+    if (!['completed', 'cancelled'].includes(original.status)) {
+      return res.status(400).json({ success: false, error: 'Only completed or cancelled challenges can be restarted' });
+    }
+
+    const group = await Group.findById(original.groupId);
+    const role = group?.getMemberRole(req.user._id);
+    const isCreator = original.createdBy.equals(req.user._id);
+    if (!isCreator && !['owner', 'admin'].includes(role)) {
+      return res.status(403).json({ success: false, error: 'Only the creator or admins can restart a challenge' });
+    }
+
+    // Find the root ancestor to determine lineage count
+    const rootId = original.parentChallengeId || original._id;
+    const siblingCount = await Challenge.countDocuments({
+      $or: [{ _id: rootId }, { parentChallengeId: rootId }],
+    });
+    const nextInstance = siblingCount + 1;
+
+    const startDate = req.body.startDate ? new Date(req.body.startDate) : new Date();
+    const durationMs = new Date(original.endDate) - new Date(original.startDate);
+    const endDate = req.body.endDate ? new Date(req.body.endDate) : new Date(startDate.getTime() + durationMs);
+    const status = startDate <= new Date() ? 'active' : 'upcoming';
+
+    const newChallenge = new Challenge({
+      groupId: original.groupId,
+      createdBy: req.user._id,
+      title: original.title,
+      description: original.description,
+      icon: original.icon,
+      type: original.type,
+      habitId: original.habitId,
+      habitSlot: original.habitSlot,
+      habitMatchMode: original.habitMatchMode,
+      habitMatchMinimum: original.habitMatchMinimum,
+      rules: original.rules,
+      startDate,
+      endDate,
+      status,
+      settings: original.settings,
+      reward: original.reward,
+      parentChallengeId: rootId,
+      instanceNumber: nextInstance,
+    });
+
+    await newChallenge.save();
+    invalidateCache(req.user._id);
+
+    res.status(201).json({ success: true, challenge: newChallenge });
+  } catch (error) {
+    console.error('Error restarting challenge:', error);
+    res.status(500).json({ success: false, error: 'Failed to restart challenge' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────
 // POST /api/challenges/:id/join
 // Join a challenge
 // ─────────────────────────────────────────────────────────

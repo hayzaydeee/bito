@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
   Fire, TrendUp, CalendarBlank, Handshake, Sword,
-  DotsThree, X,
+  DotsThree, X, ArrowCounterClockwise,
 } from "@phosphor-icons/react";
 import ChallengeJoinModal from "../../ui/ChallengeJoinModal";
 import "./challenges-cards.css";
@@ -16,6 +16,14 @@ const TYPE_META = {
 
 function daysLeft(d) { return d ? Math.max(0, Math.ceil((new Date(d) - Date.now()) / 86400000)) : null; }
 function daysUntil(d) { return d ? Math.max(0, Math.ceil((new Date(d) - Date.now()) / 86400000)) : null; }
+function fmtDate(d) {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+function toDateInput(d) {
+  if (!d) return "";
+  return new Date(d).toISOString().split("T")[0];
+}
 
 function sortKey(p, type) {
   if (type === "streak") return p.progress?.currentStreak || 0;
@@ -59,10 +67,15 @@ const ChallengeCard = ({
   onJoin, onLeave, onCancel, canCancel = false,
   onViewDetail, actionLoading,
   cardStyle = "cozy",
+  canRestart = false, onRestart, instanceNumber = null,
 }) => {
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [cancelError, setCancelError] = useState("");
   const [showRelinkModal, setShowRelinkModal] = useState(false);
+  const [restartStage, setRestartStage] = useState(null); // null | 'confirm' | 'dates'
+  const [restartStart, setRestartStart] = useState("");
+  const [restartEnd, setRestartEnd] = useState("");
+  const [restartLoading, setRestartLoading] = useState(false);
 
   const myParticipant = c.participants?.find((p) => (p.userId?._id || p.userId)?.toString() === currentUserId?.toString());
   const isParticipant = !!myParticipant && myParticipant.status !== "dropped";
@@ -82,6 +95,22 @@ const ChallengeCard = ({
   };
 
   const sp = (fn) => (e) => { e.stopPropagation(); fn(e); };
+
+  const handleRestartNow = async () => {
+    if (!onRestart) return;
+    setRestartLoading(true);
+    try { await onRestart(c._id, {}); setRestartStage(null); }
+    catch { /* leave stage open */ }
+    finally { setRestartLoading(false); }
+  };
+
+  const handleRestartSubmit = async () => {
+    if (!onRestart || !restartStart || !restartEnd) return;
+    setRestartLoading(true);
+    try { await onRestart(c._id, { startDate: restartStart, endDate: restartEnd }); setRestartStage(null); }
+    catch { /* leave stage open */ }
+    finally { setRestartLoading(false); }
+  };
 
   const renderCompact = () => {
     const { Icon, color } = TYPE_META[c.type] || { Icon: Fire, color: "var(--signal)" };
@@ -153,7 +182,13 @@ const ChallengeCard = ({
 
     // Footer content by state
     const renderFooter = () => {
-      if (isCompleted) return null;
+      if (isCompleted) {
+        return (
+          <div className="st-foot completed">
+            <span>{fmtDate(c.startDate)} – {fmtDate(c.endDate)}</span>
+          </div>
+        );
+      }
       const overflow = sorted.length > 5 ? sorted.length - 5 : 0;
       let leftText = "";
       if (isActive) leftText = `${participantCount} MEMBER${participantCount !== 1 ? "S" : ""}`;
@@ -237,7 +272,53 @@ const ChallengeCard = ({
 
     // Footer
     const renderFooter = () => {
-      if (isCompleted) return null;
+      if (isCompleted) {
+        // Stage 3: date picker
+        if (restartStage === 'dates') {
+          return (
+            <div className="cz-restart-form" onClick={sp(() => {})}>
+              <div className="cz-restart-date-row">
+                <input type="date" className="cz-date-input" value={restartStart} onChange={(e) => setRestartStart(e.target.value)} />
+                <span className="cz-date-sep">→</span>
+                <input type="date" className="cz-date-input" value={restartEnd} onChange={(e) => setRestartEnd(e.target.value)} />
+              </div>
+              <div className="cz-restart-actions">
+                <button type="button" className="grp-btn grp-btn--sm" onClick={sp(() => setRestartStage('confirm'))}>Back</button>
+                <button type="button" className="grp-btn grp-btn--sm grp-btn--signal" disabled={!restartStart || !restartEnd || restartLoading} onClick={sp(handleRestartSubmit)}>
+                  {restartLoading ? "Starting…" : "Confirm"}
+                </button>
+              </div>
+            </div>
+          );
+        }
+        // Stage 2: confirm
+        if (restartStage === 'confirm') {
+          return (
+            <div className="cz-restart-confirm" onClick={sp(() => {})}>
+              <span className="cz-restart-q">Restart this challenge?</span>
+              <div className="cz-restart-actions">
+                <button type="button" className="grp-btn grp-btn--sm" onClick={sp(() => setRestartStage(null))}>Cancel</button>
+                <button type="button" className="grp-btn grp-btn--sm" onClick={sp(() => { setRestartStart(toDateInput(c.startDate)); setRestartEnd(toDateInput(c.endDate)); setRestartStage('dates'); })}>Change dates</button>
+                <button type="button" className="grp-btn grp-btn--sm grp-btn--signal" disabled={restartLoading} onClick={sp(handleRestartNow)}>
+                  {restartLoading ? "Starting…" : "Restart now"}
+                </button>
+              </div>
+            </div>
+          );
+        }
+        // Stage 1: date range footer + restart trigger
+        return (
+          <div className="cz-foot completed">
+            <span className="cz-date-range">{fmtDate(c.startDate)} – {fmtDate(c.endDate)}</span>
+            {canRestart && (
+              <button type="button" className="cz-restart-trigger" onClick={sp(() => setRestartStage('confirm'))}>
+                <ArrowCounterClockwise size={11} weight="bold" />
+                Restart
+              </button>
+            )}
+          </div>
+        );
+      }
       const timeText = isActive
         ? `${daysLeft(c.endDate) ?? "?"}D LEFT`
         : isUpcoming
@@ -359,6 +440,7 @@ const ChallengeCard = ({
             <div className="cz-title">{c.title}</div>
             <div className="cz-sub">{subLine}</div>
           </div>
+          {instanceNumber > 1 && <span className="cz-instance">#{instanceNumber}</span>}
           <span className="cz-badge" style={{ color: badgeColor, background: badgeBg }}>{badgeLabel}</span>
         </div>
 

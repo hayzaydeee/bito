@@ -74,6 +74,29 @@ const ChallengesTab = ({
     (c) => c.status === "completed" || c.status === "cancelled"
   );
 
+  // ── Instance badge map ────────────────────────────────────────────
+  // Group challenges by root ancestor; show #N badge only when siblings exist
+  const instanceNumbers = (() => {
+    const byRoot = {};
+    challenges.forEach((c) => {
+      const root = (c.parentChallengeId?._id || c.parentChallengeId)?.toString() || c._id?.toString();
+      if (!byRoot[root]) byRoot[root] = [];
+      byRoot[root].push(c);
+    });
+    const map = {};
+    Object.values(byRoot).forEach((group) => {
+      if (group.length > 1) {
+        group.forEach((c) => { map[c._id?.toString()] = c.instanceNumber || 1; });
+      }
+    });
+    return map;
+  })();
+
+  const canRestartChallenge = (c) => {
+    const isCreator = (c.createdBy?._id || c.createdBy)?.toString() === currentUserId?.toString();
+    return isCreator || canManage;
+  };
+
   // ── Handlers ─────────────────────────────────────────────────────
   const handleLeave = async (challengeId) => {
     setActionLoading(challengeId);
@@ -117,6 +140,15 @@ const ChallengesTab = ({
     } catch (err) {
       setActionError(err.message || "Failed to delete challenge");
       setDeleteConfirm(null);
+    }
+  };
+
+  const handleRestart = async (challengeId, { startDate, endDate } = {}) => {
+    try {
+      await groupsAPI.restartChallenge(challengeId, { startDate, endDate });
+      onRefresh?.();
+    } catch (err) {
+      setActionError(err.message || "Failed to restart challenge");
     }
   };
 
@@ -303,7 +335,14 @@ const ChallengesTab = ({
                 <div className="space-y-3">
                   <div className="cc-ledger">
                     {completed.map((c) => (
-                      <ChallengeCard key={c._id} {...cardProps(c)} />
+                      <ChallengeCard
+                        key={c._id}
+                        {...cardProps(c, {
+                          canRestart: canRestartChallenge(c),
+                          onRestart: handleRestart,
+                          instanceNumber: instanceNumbers[c._id?.toString()] || null,
+                        })}
+                      />
                     ))}
                   </div>
                   {canManage && completed.map((c) => (
@@ -324,7 +363,13 @@ const ChallengesTab = ({
                 <div className="space-y-3">
                   {completed.map((c) => (
                     <div key={c._id} className="space-y-1">
-                      <ChallengeCard {...cardProps(c)} />
+                      <ChallengeCard
+                        {...cardProps(c, {
+                          canRestart: canRestartChallenge(c),
+                          onRestart: handleRestart,
+                          instanceNumber: instanceNumbers[c._id?.toString()] || null,
+                        })}
+                      />
                       {canManage && (
                         <div className="flex justify-end px-1">
                           {deleteConfirm === c._id ? (

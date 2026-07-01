@@ -202,11 +202,115 @@
   letter-spacing: .06em;
   border-top: 1px solid var(--line-2);
 }
+.cz-foot.completed {
+  justify-content: space-between;
+  color: var(--ink-3);
+}
+.cz-date-range {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
 .cz-live-dot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
   background: #22c55e;
+  flex-shrink: 0;
+}
+
+/* Instance badge */
+.cz-instance {
+  flex-shrink: 0;
+  font-family: var(--f-mono);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ember);
+  background: color-mix(in srgb, var(--ember) 12%, transparent);
+  padding: 3px 7px;
+  border-radius: var(--r-tag);
+}
+
+/* Restart trigger button */
+.cz-restart-trigger {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--f-mono);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--signal);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity .15s;
+}
+.cz-restart-trigger:hover { opacity: .75; }
+
+/* Restart confirm (stage 2) */
+.cz-restart-confirm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--line-2);
+  flex-wrap: wrap;
+}
+.cz-restart-q {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  flex: 1;
+  min-width: max-content;
+}
+.cz-restart-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Restart date form (stage 3) */
+.cz-restart-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--line-2);
+}
+.cz-restart-date-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cz-date-input {
+  flex: 1;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--ink);
+  background: var(--surface-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-btn);
+  padding: 4px 8px;
+  outline: none;
+  min-width: 0;
+  transition: border-color .15s;
+}
+.cz-date-input:focus { border-color: var(--signal); }
+.cz-date-sep {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-3);
   flex-shrink: 0;
 }
 
@@ -391,4 +495,8 @@
   color: var(--ink-3);
   text-transform: uppercase;
   letter-spacing: .06em;
+}
+.st-foot.completed {
+  color: color-mix(in srgb, var(--ember) 80%, var(--ink-3));
+  background: color-mix(in srgb, var(--ember) 5%, transparent);
 }
