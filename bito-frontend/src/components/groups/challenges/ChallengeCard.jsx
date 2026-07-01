@@ -200,158 +200,153 @@ const ChallengeCard = ({
 
   const renderCozy = () => {
     const { Icon, color } = TYPE_META[c.type] || { Icon: Fire, color: "var(--signal)" };
-    const myP = c.participants?.find((p) => (p.userId?._id || p.userId)?.toString() === currentUserId?.toString());
-    const isParticipantLocal = !!myP && myP.status !== "dropped";
-    const isLoading = actionLoading === c._id;
+    const isActive = c.status === "active";
+    const isUpcoming = c.status === "upcoming";
+    const isCompleted = c.status === "completed" || c.status === "cancelled";
+    const isJoined = !!myParticipant && myParticipant.status !== "dropped";
 
-    const badgeStyle = {
-      background: c.status === "active" ? `${color}18` : "var(--surface-2)",
-      color: c.status === "active" ? color : "var(--ink-3)",
+    const sorted = [...(c.participants || [])].sort((a, b) => sortKey(b, c.type) - sortKey(a, c.type));
+    const typeLabel = TYPE_META[c.type]?.label?.toUpperCase() || c.type?.toUpperCase() || "CHALLENGE";
+    const subLine = `${typeLabel} · ${participantCount} MEMBER${participantCount !== 1 ? "S" : ""}`;
+
+    // Badge
+    const badgeColor = isActive ? "var(--signal)" : "var(--ink-3)";
+    const badgeBg = isActive
+      ? "color-mix(in srgb, var(--signal) 12%, transparent)"
+      : "color-mix(in srgb, var(--ink-3) 10%, transparent)";
+    const badgeLabel = isActive ? "Active" : isUpcoming ? "Upcoming" : "Done";
+
+    // Footer
+    const renderFooter = () => {
+      if (isCompleted) return null;
+      const timeText = isActive
+        ? `${daysLeft(c.endDate)}D LEFT`
+        : isUpcoming
+        ? `STARTS IN ${daysUntil(c.startDate)}D`
+        : null;
+      return (
+        <div className="cz-foot">
+          {isActive && <span className="cz-live-dot" />}
+          {timeText && <span>{timeText}</span>}
+          {cancelError && <span style={{ color: "var(--rose)", marginLeft: "auto" }}>{cancelError}</span>}
+        </div>
+      );
     };
-    const badgeLabel = c.status === "active" ? "Active" : c.status === "upcoming" ? "Upcoming" : "Done";
 
-    const footerMeta = c.status === "upcoming"
-      ? `Starts in ${startsIn ?? "?"}d · ${participantCount} joined`
-      : `${remaining ?? "?"}d left · ${participantCount} ${c.type === "team_goal" ? "contributors" : "participants"}`;
-
-    let body = null;
-    if (c.status === "active" || c.status === "completed") {
-      const sorted = [...(c.participants || [])].sort((a, b) => sortKey(b, c.type) - sortKey(a, c.type));
-      const preview = sorted.slice(0, 3);
-
-      if (c.type === "team_goal") {
-        const totalValue = c.participants?.reduce((s, p) => s + (p.progress?.currentValue || 0), 0) || 0;
-        const teamPct = Math.min(100, Math.round((totalValue / (c.rules?.targetValue || 1)) * 100));
-        const myContrib = myP?.progress?.currentValue || 0;
-        const r = 28, circ = 2 * Math.PI * r;
-        const dash = circ * (teamPct / 100);
-        body = (
-          <div className="cz-body cz-coop">
-            <svg width="72" height="72" viewBox="0 0 72 72">
-              <circle cx="36" cy="36" r={r} fill="none" stroke="var(--surface-2)" strokeWidth="6" />
-              <circle cx="36" cy="36" r={r} fill="none" stroke={color} strokeWidth="6"
-                strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
-                transform="rotate(-90 36 36)" style={{ transition: "stroke-dasharray .5s ease" }} />
-              <text x="36" y="33" textAnchor="middle" dominantBaseline="middle"
-                style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: "14px", fontWeight: 500, fill: "var(--ink)" }}>
-                {teamPct}%
-              </text>
-              <text x="36" y="46" textAnchor="middle" dominantBaseline="middle"
-                style={{ fontFamily: "var(--f-mono)", fontSize: "8px", fill: "var(--ink-3)" }}>
-                TEAM
-              </text>
-            </svg>
-            <div className="cz-coop-r">
-              <p className="cz-coop-total">{totalValue.toLocaleString()} / {Number(c.rules?.targetValue || 0).toLocaleString()} {c.rules?.targetUnit}</p>
-              {myP && <p className="cz-coop-you">Your share: {myContrib.toLocaleString()}</p>}
-            </div>
-          </div>
-        );
-      } else if (c.type === "head_to_head" && sorted.length >= 2) {
-        const [p1, p2] = sorted;
-        const s1 = p1.progress?.currentValue || 0;
-        const s2 = p2.progress?.currentValue || 0;
-        const n1 = (p1.userId?.name || p1.userId?.email || "?").split(" ")[0];
-        const n2 = (p2.userId?.name || p2.userId?.email || "?").split(" ")[0];
-        const p1Lead = s1 >= s2;
-        body = (
-          <div className="cz-body cz-duel">
-            <div className={`cz-duel-side${p1Lead ? " lead" : ""}`}>
-              <div className="cz-duel-av" style={{ background: `${color}28`, color }}>
-                {p1.userId?.avatar ? <img src={p1.userId.avatar} alt={n1} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} /> : n1.charAt(0)}
-              </div>
-              <div className="cz-duel-score">{s1}</div>
-              <div className="cz-duel-name">{n1}</div>
-            </div>
-            <span className="cz-duel-vs">vs</span>
-            <div className={`cz-duel-side${!p1Lead ? " lead" : ""}`}>
-              <div className="cz-duel-av" style={{ background: "var(--surface-2)", color: "var(--ink-2)" }}>
-                {p2.userId?.avatar ? <img src={p2.userId.avatar} alt={n2} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} /> : n2.charAt(0)}
-              </div>
-              <div className="cz-duel-score">{s2}</div>
-              <div className="cz-duel-name">{n2}</div>
-            </div>
-          </div>
-        );
-      } else {
-        body = (
-          <div className="cz-body">
-            {preview.map((p, i) => {
-              const info = p.userId || {};
-              const name = info.name || info.email || "Member";
-              const isOwn = (info._id || info)?.toString() === currentUserId?.toString();
-              const rowPct = pct(p, c);
-              const metricVal = metricLabel(p, c.type, c.rules?.targetUnit);
-              return (
-                <div key={i} className={`cz-row${isOwn ? " you" : ""}`}>
-                  <span className={`cz-rank${isOwn ? " you" : ""}`}>{i + 1}</span>
-                  {info.avatar ? (
-                    <img src={info.avatar} alt={name} className="cz-av" style={{ objectFit: "cover" }} />
-                  ) : (
-                    <div className="cz-av" style={{ background: isOwn ? `${color}28` : "var(--surface-2)", color: isOwn ? color : "var(--ink-2)" }}>
-                      {name.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <span className="cz-name">{name.split(" ")[0]}</span>
-                  <div className="cz-bar-wrap">
-                    <div className="cz-bar-fill" style={{ width: `${rowPct}%` }} />
+    // Body: ranked scoreboard (streak / consistency / cumulative)
+    const renderRankedBody = () => {
+      const rows = isCompleted ? sorted.slice(0, 3) : sorted.slice(0, 5);
+      return (
+        <div className="cz-board">
+          {rows.map((p, idx) => {
+            const uid = (p.userId?._id || p.userId)?.toString();
+            const isYou = uid === currentUserId?.toString();
+            const name = p.userId?.name || p.userId?.username || "—";
+            const avatar = p.userId?.profilePicture;
+            const val = metricLabel(p, c.type, c.rules?.targetUnit);
+            const unit = c.type === "streak" ? "STREAK" : c.type === "consistency" ? "RATE" : (c.rules?.targetUnit || "").toUpperCase();
+            return (
+              <div key={uid || idx} className={`cz-tr${isYou ? " you" : ""}${isCompleted ? " opacity-40" : ""}`}>
+                <span className={`cz-rank${isYou ? " you" : ""}`}>{String(idx + 1).padStart(2, "0")}</span>
+                <div className="cz-player">
+                  <div className={`cz-av${isYou ? " you" : ""}`}>
+                    {avatar ? <img src={avatar} alt={name} /> : name[0]?.toUpperCase()}
                   </div>
-                  <span className="cz-val">{metricVal}</span>
+                  <span className={`cz-pname${isYou ? " you" : ""}`}>{isYou ? "You" : name}</span>
                 </div>
-              );
-            })}
-            {(c.participants?.length || 0) > 3 && (
-              <p style={{ fontFamily: "var(--f-mono)", fontSize: "10px", color: "var(--ink-3)", paddingTop: "4px" }}>
-                +{c.participants.length - 3} more
-              </p>
-            )}
+                <div className="cz-score">
+                  <div className={`cz-score-val${isYou ? " you" : ""}`}>{val}</div>
+                  {unit && <div className="cz-score-unit">{unit}</div>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    };
+
+    // Body: team goal (donut)
+    const renderCoopBody = () => {
+      const total = c.participants?.reduce((s, p) => s + (p.progress?.currentValue || 0), 0) || 0;
+      const target = c.rules?.targetValue || 1;
+      const pctVal = Math.min(100, Math.round((total / target) * 100));
+      const myVal = myParticipant?.progress?.currentValue || 0;
+      const radius = 22, circ = 2 * Math.PI * radius;
+      return (
+        <div className="cz-coop">
+          <svg width={56} height={56} viewBox="0 0 56 56">
+            <circle cx={28} cy={28} r={radius} fill="none" stroke="var(--line-2)" strokeWidth={5} />
+            <circle
+              cx={28} cy={28} r={radius} fill="none"
+              stroke="var(--signal)" strokeWidth={5}
+              strokeDasharray={circ}
+              strokeDashoffset={circ - (circ * pctVal) / 100}
+              strokeLinecap="round"
+              transform="rotate(-90 28 28)"
+            />
+            <text x={28} y={32} textAnchor="middle" style={{ fontFamily: "var(--f-mono)", fontSize: 11, fill: "var(--ink)", fontWeight: 700 }}>
+              {pctVal}%
+            </text>
+          </svg>
+          <div className="cz-coop-r">
+            <div className="cz-coop-total">{total.toLocaleString()} / {target.toLocaleString()} {c.rules?.targetUnit || ""}</div>
+            {isJoined && <div className="cz-coop-you">You: {myVal.toLocaleString()}</div>}
           </div>
-        );
-      }
-    }
+        </div>
+      );
+    };
+
+    // Body: head_to_head duel
+    const renderDuelBody = () => {
+      if (sorted.length < 2) return null;
+      const a = sorted[0], b = sorted[1];
+      const nameOf = (p) => p.userId?.name || p.userId?.username || "—";
+      const avatarOf = (p) => p.userId?.profilePicture;
+      const valOf = (p) => metricLabel(p, c.type, c.rules?.targetUnit);
+      const isLeadA = sortKey(a, c.type) >= sortKey(b, c.type);
+      return (
+        <div className="cz-duel">
+          <div className={`cz-duel-side${isLeadA ? " lead" : ""}`}>
+            <div className="cz-duel-av">{avatarOf(a) ? <img src={avatarOf(a)} alt={nameOf(a)} /> : nameOf(a)[0]?.toUpperCase()}</div>
+            <div className="cz-duel-score">{valOf(a)}</div>
+            <div className="cz-duel-name">{nameOf(a)}</div>
+          </div>
+          <div className="cz-duel-vs">vs</div>
+          <div className={`cz-duel-side${!isLeadA ? " lead" : ""}`}>
+            <div className="cz-duel-av">{avatarOf(b) ? <img src={avatarOf(b)} alt={nameOf(b)} /> : nameOf(b)[0]?.toUpperCase()}</div>
+            <div className="cz-duel-score">{valOf(b)}</div>
+            <div className="cz-duel-name">{nameOf(b)}</div>
+          </div>
+        </div>
+      );
+    };
+
+    const renderBody = () => {
+      if (isUpcoming) return null;
+      if (c.type === "team_goal") return renderCoopBody();
+      if (c.type === "head_to_head") return renderDuelBody();
+      return renderRankedBody();
+    };
 
     return (
       <div className="cz-card" onClick={() => onViewDetail?.(c)}>
+        {/* Head */}
         <div className="cz-head">
-          <div className="cz-icon" style={{ background: `${color}18` }}>
-            <Icon size={15} weight="duotone" style={{ color }} />
+          <div className="cz-icon" style={{ background: `color-mix(in srgb, ${color} 14%, transparent)` }}>
+            <Icon size={16} weight="duotone" style={{ color }} />
           </div>
-          <span className="cz-title">{c.title}</span>
-          <span className="cz-badge" style={badgeStyle}>{badgeLabel}</span>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
-            {!isParticipantLocal && c.status === "upcoming" && c.type !== "head_to_head" && (
-              <button onClick={sp(() => onJoin?.(c))} disabled={isLoading} className="grp-btn grp-btn--sm">
-                {isLoading ? "…" : "Join"}
-              </button>
-            )}
-            {canCancel && !confirmCancel && (
-              <button onClick={sp(() => setConfirmCancel(true))} className="text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors p-1">
-                <DotsThree size={15} weight="bold" />
-              </button>
-            )}
-            {canCancel && confirmCancel && (
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <span style={{ fontFamily: "var(--f-mono)", fontSize: "10px", color: "var(--ink-2)" }}>Cancel?</span>
-                <button onClick={sp(handleCancelConfirm)} style={{ fontFamily: "var(--f-mono)", fontSize: "10px", fontWeight: 700, color: "var(--rose)" }}>Yes</button>
-                <button onClick={sp(() => setConfirmCancel(false))} style={{ color: "var(--ink-3)" }}><X size={11} weight="bold" /></button>
-              </div>
-            )}
+          <div className="cz-meta">
+            <div className="cz-title">{c.name}</div>
+            <div className="cz-sub">{subLine}</div>
           </div>
+          <span className="cz-badge" style={{ color: badgeColor, background: badgeBg }}>{badgeLabel}</span>
         </div>
-        {body}
-        <div className="cz-foot">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400" style={{ display: c.status === "active" ? undefined : "none" }} />
-          {footerMeta}
-          {cancelError && <span style={{ color: "var(--rose)", marginLeft: "auto" }}>{cancelError}</span>}
-        </div>
-        {showRelinkModal && (
-          <ChallengeJoinModal
-            isOpen={showRelinkModal} challenge={c} mode="relink"
-            initialHabitIds={myP?.linkedHabitIds || []}
-            onClose={() => setShowRelinkModal(false)}
-            onSuccess={() => setShowRelinkModal(false)}
-          />
-        )}
+
+        {/* Body */}
+        {renderBody()}
+
+        {/* Footer */}
+        {renderFooter()}
       </div>
     );
   };
