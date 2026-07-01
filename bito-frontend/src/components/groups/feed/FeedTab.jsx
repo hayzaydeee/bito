@@ -51,12 +51,11 @@ const FeedTab = ({
   const [myReactions, setMyReactions] = useState({}); // { activityId: type }
   const [loading, setLoading] = useState(false);
 
-  /* Seed reactions from activity data */
+  /* Fetch fresh on mount so SPA navigation picks up persisted reactions */
   useEffect(() => {
-    const { counts, mine } = deriveReactionState(initialActivities, currentUserId);
-    setReactions(counts);
-    setMyReactions(mine);
-  }, [initialActivities, currentUserId]);
+    fetchFiltered(filter);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupId]);
 
   /* Re-fetch when filter changes */
   const fetchFiltered = useCallback(async (filterId) => {
