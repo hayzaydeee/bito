@@ -127,73 +127,92 @@ const ChallengeCard = ({
 
   const renderStanding = () => {
     const { Icon, color } = TYPE_META[c.type] || { Icon: Fire, color: "var(--signal)" };
-    const myP = c.participants?.find((p) => (p.userId?._id || p.userId)?.toString() === currentUserId?.toString());
+    const isActive = c.status === "active";
+    const isUpcoming = c.status === "upcoming";
+    const isCompleted = c.status === "completed" || c.status === "cancelled";
+    const isJoined = !!myParticipant && myParticipant.status !== "dropped";
+
     const sorted = [...(c.participants || [])].sort((a, b) => sortKey(b, c.type) - sortKey(a, c.type));
-    const isMe = (p) => (p.userId?._id || p.userId)?.toString() === currentUserId?.toString();
+    const typeLabel = TYPE_META[c.type]?.label?.toUpperCase() || c.type?.toUpperCase() || "CHALLENGE";
 
-    let num, caption, isSignal;
-    if (c.status === "upcoming") {
-      num = `${startsIn ?? "?"}`;
-      caption = "days to start";
-      isSignal = false;
-    } else if (c.status === "completed" || c.status === "cancelled") {
-      const winner = sorted[0];
-      const winnerName = (winner?.userId?.name || winner?.userId?.email || "?").split(" ")[0];
-      num = "✓";
-      caption = `won by ${winnerName}`;
-      isSignal = false;
-    } else if (myP) {
-      const { num: h, caption: cap } = heroStat(c, myP);
-      num = h; caption = cap; isSignal = true;
-    } else {
-      const rankInfo = myRankDisplay(sorted, currentUserId);
-      num = rankInfo.num; caption = rankInfo.caption; isSignal = false;
-    }
+    // Hero value (head-right)
+    const getHero = () => {
+      if (isCompleted) return { val: "✓", label: "COMPLETED", signal: false };
+      if (isJoined && isActive) {
+        const h = heroStat(c, myParticipant);
+        return { val: h.num, label: h.caption.toUpperCase(), signal: true };
+      }
+      if (isActive) return { val: `${daysLeft(c.endDate) ?? "?"}`, label: "DAYS LEFT", signal: false };
+      if (isUpcoming) return { val: `${daysUntil(c.startDate) ?? "?"}`, label: "TO START", signal: false };
+      return { val: "—", label: "", signal: false };
+    };
+    const hero = getHero();
 
-    const subLine = c.status === "active"
-      ? `${remaining ?? "?"}d left`
-      : c.status === "upcoming"
-      ? `${participantCount} joined`
-      : `${participantCount} members`;
+    // Rows: up to 5 participants
+    const rows = sorted.slice(0, 5);
 
-    const preview = sorted.slice(0, 5);
+    // Footer content by state
+    const renderFooter = () => {
+      if (isCompleted) return null;
+      const overflow = sorted.length > 5 ? sorted.length - 5 : 0;
+      let leftText = "";
+      if (isActive) leftText = `${participantCount} MEMBER${participantCount !== 1 ? "S" : ""}`;
+      if (isUpcoming) leftText = `STARTS IN ${daysUntil(c.startDate) ?? "?"}D`;
+      if (!leftText && overflow === 0) return null;
+      return (
+        <div className="st-foot">
+          <span className="flex items-center gap-1.5">
+            {isActive && <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />}
+            {leftText}
+          </span>
+          {overflow > 0 && <span>+{overflow} MORE</span>}
+        </div>
+      );
+    };
 
     return (
       <div className="st-card" onClick={() => onViewDetail?.(c)}>
-        <div className="st-lead">
-          <span className={`st-num${isSignal ? " signal" : ""}`}>{num}</span>
-          <span className="st-caption">{caption}</span>
-        </div>
-        <div className="st-body">
-          <div className="st-top">
-            <div className="st-icon" style={{ background: `${color}18` }}>
-              <Icon size={13} weight="duotone" style={{ color }} />
+        {/* Head */}
+        <div className="st-head">
+          <div className="st-head-left">
+            <div className="st-type">
+              <Icon size={11} weight="duotone" />
+              {typeLabel}
             </div>
-            <span className="st-title">{c.title}</span>
-            <span className="st-badge" style={{ background: `${color}18`, color }}>
-              {TYPE_META[c.type]?.label || c.type}
-            </span>
+            <div className="st-title">{c.title}</div>
           </div>
-          <span className="st-sub">{subLine}</span>
-          {preview.length > 0 && (
-            <div className="st-avatars">
-              {preview.map((p, i) => {
-                const info = p.userId || {};
-                const name = info.name || info.email || "?";
-                const isOwn = isMe(p);
-                return info.avatar ? (
-                  <img key={i} src={info.avatar} alt={name}
-                    className="st-av" style={{ objectFit: "cover" }} />
-                ) : (
-                  <div key={i} className="st-av"
-                    style={{ background: isOwn ? `${color}28` : "var(--surface-2)", color: isOwn ? color : "var(--ink-2)" }}>
-                    {name.charAt(0).toUpperCase()}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          <div className="st-head-right">
+            <div className={`st-hero-val${hero.signal ? " signal" : ""}`}>{hero.val}</div>
+            <div className="st-hero-label">{hero.label}</div>
+          </div>
         </div>
+
+        {/* Rows */}
+        {rows.map((p, idx) => {
+          const uid = (p.userId?._id || p.userId)?.toString();
+          const isYou = uid === currentUserId?.toString();
+          const name = p.userId?.name || p.userId?.username || "—";
+          const avatar = p.userId?.avatar;
+          const pctVal = pct(p, c);
+          const val = metricLabel(p, c.type, c.rules?.targetUnit);
+          return (
+            <div key={uid || idx} className={`st-row${isYou ? " you" : ""}`}>
+              <span className={`st-pos${isYou ? " you" : ""}`}>{idx + 1}</span>
+              <span className={`st-dot${isYou ? " you" : ""}`} />
+              <div className={`st-name${isYou ? " you" : ""}`}>
+                {avatar && <img src={avatar} alt={name} style={{ width: 16, height: 16, borderRadius: "50%", objectFit: "cover", marginRight: 5, verticalAlign: "middle" }} />}
+                {isYou ? "You" : name}
+              </div>
+              <div className="st-track">
+                <i className={isYou ? "you" : ""} style={{ width: `${pctVal}%` }} />
+              </div>
+              <span className={`st-metric${isYou ? " you" : ""}`}>{val}</span>
+            </div>
+          );
+        })}
+
+        {/* Footer */}
+        {renderFooter()}
       </div>
     );
   };
