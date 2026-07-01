@@ -1,4 +1,20 @@
 import { useState, useEffect, useCallback } from "react";
+
+function deriveReactionState(activities, currentUserId) {
+  const counts = {};
+  const mine = {};
+  activities.forEach((a) => {
+    if (!Array.isArray(a.reactions)) return;
+    const map = {};
+    a.reactions.forEach((r) => {
+      map[r.type] = (map[r.type] || 0) + 1;
+      const uid = r.userId?._id?.toString() || r.userId?.toString();
+      if (uid === currentUserId?.toString()) mine[a._id] = r.type;
+    });
+    if (Object.keys(map).length) counts[a._id] = map;
+  });
+  return { counts, mine };
+}
 import { Envelope, Trophy } from "@phosphor-icons/react";
 import FeedCard from "./FeedCard";
 import FeedFilters, { filterToTypes } from "./FeedFilters";
@@ -35,16 +51,12 @@ const FeedTab = ({
   const [myReactions, setMyReactions] = useState({}); // { activityId: type }
   const [loading, setLoading] = useState(false);
 
-  /* Seed reactions from activity data (backend may include reaction counts) */
+  /* Seed reactions from activity data */
   useEffect(() => {
-    const seed = {};
-    initialActivities.forEach((a) => {
-      if (a.reactions && Object.keys(a.reactions).length) {
-        seed[a._id] = a.reactions;
-      }
-    });
-    setReactions(seed);
-  }, [initialActivities]);
+    const { counts, mine } = deriveReactionState(initialActivities, currentUserId);
+    setReactions(counts);
+    setMyReactions(mine);
+  }, [initialActivities, currentUserId]);
 
   /* Re-fetch when filter changes */
   const fetchFiltered = useCallback(async (filterId) => {
@@ -53,13 +65,17 @@ const FeedTab = ({
       const types = filterToTypes(filterId);
       const params = { limit: 30, ...(types ? { types } : {}) };
       const res = await groupsAPI.getGroupActivity(groupId, params);
-      setActivities(res.activities || []);
+      const fetched = res.activities || [];
+      setActivities(fetched);
+      const { counts, mine } = deriveReactionState(fetched, currentUserId);
+      setReactions(counts);
+      setMyReactions(mine);
     } catch {
       /* keep previous */
     } finally {
       setLoading(false);
     }
-  }, [groupId]);
+  }, [groupId, currentUserId]);
 
   const handleFilterChange = (id) => {
     setFilter(id);
