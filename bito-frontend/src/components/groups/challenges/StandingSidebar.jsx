@@ -10,7 +10,7 @@ import { Trophy, Plus, CaretDown } from "@phosphor-icons/react";
  *   currentUserId      — string
  *   onCreateChallenge  — () => void
  */
-const StandingSidebar = ({ activeChallenges = [], allChallenges = [], currentUserId, onCreateChallenge }) => {
+const StandingSidebar = ({ activeChallenges = [], allChallenges = [], currentUserId, onCreateChallenge, isEmpty = false }) => {
   const [selectedIdx, setSelectedIdx] = useState(0);
 
   // Only show challenges the user has joined
@@ -150,11 +150,10 @@ const StandingSidebar = ({ activeChallenges = [], allChallenges = [], currentUse
         </div>
       </div>
 
-      {/* Create challenge — only visible to managers */}
-      {onCreateChallenge && (
+      {onCreateChallenge && !isEmpty && (
         <button
           onClick={onCreateChallenge}
-          className="w-full h-10 rounded-[10px] border border-dashed border-[var(--line-2)] flex items-center justify-center gap-2 grp-mono text-[11px] font-bold uppercase tracking-wider text-[var(--ink-3)] hover:text-[var(--ember)] hover:border-[var(--ember)]/50 transition-colors"
+          className="grp-btn grp-btn--sm grp-btn--ember w-full"
         >
           <Plus size={13} weight="bold" />
           Create challenge

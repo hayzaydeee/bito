@@ -1,9 +1,10 @@
 import { useState } from "react";
 import {
-  Fire, TrendUp, CalendarBlank, Handshake, Sword, Clock,
-  DotsThree, X, Pencil, ArrowRight,
+  Fire, TrendUp, CalendarBlank, Handshake, Sword,
+  DotsThree, X,
 } from "@phosphor-icons/react";
 import ChallengeJoinModal from "../../ui/ChallengeJoinModal";
+import "./challenges-cards.css";
 
 const TYPE_META = {
   streak:       { Icon: Fire,          label: "Streak",       color: "#ff7a3c" },
@@ -12,9 +13,6 @@ const TYPE_META = {
   team_goal:    { Icon: Handshake,     label: "Team Goal",    color: "#36d6c3" },
   head_to_head: { Icon: Sword,         label: "Head to Head", color: "#ff5d73" },
 };
-
-const MEDALS = ["🥇", "🥈", "🥉"];
-const MEDAL_COLORS = ["#f59e0b", "#94a3b8", "#cd7c2f"];
 
 function daysLeft(d) { return d ? Math.max(0, Math.ceil((new Date(d) - Date.now()) / 86400000)) : null; }
 function daysUntil(d) { return d ? Math.max(0, Math.ceil((new Date(d) - Date.now()) / 86400000)) : null; }
@@ -38,34 +36,36 @@ function metricLabel(p, type, unit) {
   return `${(p.progress?.currentValue || 0).toLocaleString()} ${unit || ""}`.trim();
 }
 
-function UserAvatar({ user, size = "w-7 h-7", radius = "rounded-[7px]", rankColor = null, isOwn = false }) {
-  const name = user?.name || user?.email || "?";
-  const src = user?.avatar;
-  const bg = rankColor ? `${rankColor}20` : "var(--surface-2)";
-  const fg = isOwn ? "var(--signal)" : (rankColor || "var(--ink)");
-  return src ? (
-    <img src={src} alt={name} className={`${size} ${radius} object-cover flex-shrink-0`} />
-  ) : (
-    <div className={`${size} ${radius} flex items-center justify-center text-[10px] grp-display font-bold flex-shrink-0`}
-         style={{ background: bg, color: fg }}>
-      {name.charAt(0).toUpperCase()}
-    </div>
-  );
+function heroStat(c, myP) {
+  if (!myP) return { num: "—", caption: "you" };
+  if (c.type === "streak") return { num: `${myP.progress?.currentStreak || 0}`, caption: "day streak" };
+  if (c.type === "consistency") return { num: `${Math.round(myP.progress?.completionRate || 0)}%`, caption: "consistency" };
+  if (c.type === "team_goal") {
+    const total = c.participants?.reduce((s, p) => s + (p.progress?.currentValue || 0), 0) || 0;
+    const pctVal = Math.min(100, Math.round((total / (c.rules?.targetValue || 1)) * 100));
+    return { num: `${pctVal}%`, caption: "team progress" };
+  }
+  return { num: `${(myP.progress?.currentValue || 0).toLocaleString()}`, caption: c.rules?.targetUnit || "total" };
+}
+
+function myRankDisplay(sorted, currentUserId) {
+  const idx = sorted.findIndex((p) => (p.userId?._id || p.userId)?.toString() === currentUserId?.toString());
+  if (idx < 0) return { num: "—", caption: "not joined" };
+  return { num: `#${idx + 1}`, caption: idx === 0 ? "leading" : `of ${sorted.length}` };
 }
 
 const ChallengeCard = ({
   challenge: c, currentUserId, myHabits = [],
   onJoin, onLeave, onCancel, canCancel = false,
   onViewDetail, actionLoading,
+  cardStyle = "cozy",
 }) => {
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [cancelError, setCancelError] = useState("");
   const [showRelinkModal, setShowRelinkModal] = useState(false);
 
-  const { Icon, color } = TYPE_META[c.type] || { Icon: Fire, label: c.type, color: "var(--signal)" };
-  const myP = c.participants?.find((p) => (p.userId?._id || p.userId)?.toString() === currentUserId?.toString());
-  const isParticipant = !!myP && myP.status !== "dropped";
-  const isLoading = actionLoading === c._id;
+  const myParticipant = c.participants?.find((p) => (p.userId?._id || p.userId)?.toString() === currentUserId?.toString());
+  const isParticipant = !!myParticipant && myParticipant.status !== "dropped";
   const remaining = daysLeft(c.endDate);
   const startsIn = daysUntil(c.startDate);
   const participantCount = c.participants?.length || 0;
@@ -83,263 +83,297 @@ const ChallengeCard = ({
 
   const sp = (fn) => (e) => { e.stopPropagation(); fn(e); };
 
-  const cardBase = `rounded-[14px] border border-[var(--line-2)] bg-[var(--surface)] overflow-hidden cursor-pointer transition-all duration-200 hover:border-[var(--line-3)] hover:-translate-y-px hover:shadow-lg`;
+  const renderCompact = () => {
+    const { Icon, color } = TYPE_META[c.type] || { Icon: Fire, color: "var(--signal)" };
+    const myP = c.participants?.find((p) => (p.userId?._id || p.userId)?.toString() === currentUserId?.toString());
+    const pctVal = pct(myP || {}, c);
+    const subLine = c.status === "upcoming"
+      ? `starts in ${startsIn ?? "?"}d · ${participantCount} joined`
+      : c.status === "completed"
+      ? `completed · ${participantCount} members`
+      : `${remaining ?? "?"}d left · ${participantCount} members`;
+    const chipLabel = c.status === "active"
+      ? (myP ? metricLabel(myP, c.type, c.rules?.targetUnit) : "not joined")
+      : c.status === "upcoming" ? "upcoming" : "done";
+    const isSignalChip = c.status === "active" && !!myP;
 
-  // ── UPCOMING ────────────────────────────────────────────────────────
-  if (c.status === "upcoming") {
     return (
-      <div className={cardBase} onClick={() => onViewDetail?.(c)}>
-        <div className="px-5 py-5">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-[9px] flex items-center justify-center flex-shrink-0" style={{ background: `${color}18` }}>
-              <Clock size={16} style={{ color }} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="grp-display text-[17px] font-bold text-[var(--ink)] truncate">{c.title}</p>
-              <p className="grp-mono text-[10px] text-[var(--ink-3)] mt-0.5">
-                Starts in {startsIn ?? "?"} day{startsIn !== 1 ? "s" : ""} · {participantCount} joined
-              </p>
-              {cancelError && <p className="grp-mono text-[10px] text-[var(--rose)] mt-1">{cancelError}</p>}
-            </div>
-            <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-              {!isParticipant && c.type !== "head_to_head" && (
-                <button onClick={sp(() => onJoin?.(c))} disabled={isLoading} className="grp-btn grp-btn--sm">
-                  {isLoading ? "…" : "Join"}
-                </button>
-              )}
-              {canCancel && !confirmCancel && (
-                <button onClick={sp(() => setConfirmCancel(true))} className="text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors p-1">
-                  <DotsThree size={16} weight="bold" />
-                </button>
-              )}
-              {canCancel && confirmCancel && (
-                <div className="flex items-center gap-1.5">
-                  <span className="grp-mono text-[10px] text-[var(--ink-2)]">Cancel?</span>
-                  <button onClick={sp(handleCancelConfirm)} className="grp-mono text-[10px] font-bold text-[var(--rose)] hover:underline">Yes</button>
-                  <button onClick={sp(() => setConfirmCancel(false))} className="text-[var(--ink-3)]"><X size={11} weight="bold" /></button>
-                </div>
-              )}
-              <ArrowRight size={13} className="text-[var(--ink-3)]" />
-            </div>
-          </div>
+      <div className="cc-row" onClick={() => onViewDetail?.(c)}>
+        <div className="cc-icon" style={{ background: `${color}18` }}>
+          <Icon size={15} weight="duotone" style={{ color }} />
         </div>
-      </div>
-    );
-  }
-
-  // ── COMPLETED ───────────────────────────────────────────────────────
-  if (c.status === "completed" || c.status === "cancelled") {
-    const top3 = c.stats?.finalLeaderboard?.slice(0, 3) ||
-      [...(c.participants || [])].sort((a, b) => sortKey(b, c.type) - sortKey(a, c.type)).slice(0, 3);
-
-    return (
-      <div className={`${cardBase} opacity-70 hover:opacity-100`} onClick={() => onViewDetail?.(c)}>
-        <div className="px-5 py-5">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="w-8 h-8 rounded-[9px] flex items-center justify-center flex-shrink-0" style={{ background: `${color}14` }}>
-                <Icon size={15} weight="duotone" style={{ color: `${color}99` }} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="grp-display text-[17px] font-bold text-[var(--ink)] truncate">{c.title}</p>
-                {top3.length > 0 && (
-                  <div className="flex items-center gap-3 mt-1">
-                    {top3.map((p, i) => {
-                      const name = p.displayName || p.userId?.name || p.userId?.email || "?";
-                      return (
-                        <span key={i} className="grp-mono text-[11px] text-[var(--ink-2)]">
-                          {MEDALS[i]} {name.split(" ")[0]}
-                        </span>
-                      );
-                    })}
-                    {(c.participants?.length || 0) > 3 && (
-                      <span className="grp-mono text-[10px] text-[var(--ink-3)]">+{c.participants.length - 3}</span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-            <ArrowRight size={14} className="text-[var(--ink-3)] flex-shrink-0 mt-1" />
-          </div>
+        <div className="cc-text">
+          <p className="cc-title">{c.title}</p>
+          <p className="cc-sub">{subLine}</p>
         </div>
-      </div>
-    );
-  }
-
-  // ── ACTIVE — TEAM GOAL ─────────────────────────────────────────────
-  if (c.type === "team_goal") {
-    const totalValue = c.participants?.reduce((s, p) => s + (p.progress?.currentValue || 0), 0) || 0;
-    const teamPct = Math.min(100, Math.round((totalValue / (c.rules?.targetValue || 1)) * 100));
-    const ownHasNoHabit = isParticipant && myP?.role !== "organizer" && !myP?.linkedHabitIds?.length;
-
-    return (
-      <div className={cardBase} onClick={() => onViewDetail?.(c)}>
-        <div className="px-5 py-5">
-          <div className="flex items-start justify-between gap-3 mb-4">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="w-8 h-8 rounded-[9px] flex items-center justify-center flex-shrink-0" style={{ background: `${color}18` }}>
-                <Icon size={16} weight="duotone" style={{ color }} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="grp-display text-[17px] font-bold text-[var(--ink)] truncate">{c.title}</p>
-                <p className="grp-mono text-[10px] text-[var(--ink-3)] mt-0.5">
-                  <span className="inline-flex items-center gap-1">
-                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                    {remaining}d left
-                  </span>
-                  {" · "}{participantCount} members
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-              {!isParticipant && (
-                <button onClick={sp(() => onJoin?.(c))} disabled={isLoading} className="grp-btn grp-btn--sm">
-                  {isLoading ? "…" : "Join"}
-                </button>
-              )}
-              <ArrowRight size={13} className="text-[var(--ink-3)]" />
-            </div>
-          </div>
-
-          <div className="mb-3">
-            <div className="flex items-center justify-between mb-1.5">
-              <p className="grp-mono text-[10px] text-[var(--ink-3)]">
-                {totalValue.toLocaleString()} / {Number(c.rules?.targetValue || 0).toLocaleString()} {c.rules?.targetUnit || ""}
-              </p>
-              <span className="grp-mono text-[11px] font-bold" style={{ color }}>{teamPct}%</span>
-            </div>
-            <div className="grp-meter" style={{ height: "8px" }}>
-              <i style={{ width: `${teamPct}%`, transition: "width .5s ease" }} />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="flex -space-x-2">
-              {c.participants?.slice(0, 5).map((p, i) => (
-                <UserAvatar key={i} user={p.userId || {}} size="w-7 h-7" radius="rounded-full" style={{ border: "2px solid var(--surface)" }} />
-              ))}
-            </div>
-            <span className="grp-mono text-[10px] text-[var(--ink-3)]">
-              {participantCount} contributor{participantCount !== 1 ? "s" : ""}
+        <div className="cc-right">
+          {c.type === "head_to_head" ? (
+            <span className="cc-score">
+              {myP ? `${myP.progress?.currentValue || 0}` : "—"}
             </span>
-          </div>
-
-          {ownHasNoHabit && (
-            <button onClick={sp(() => setShowRelinkModal(true))} className="mt-3 w-full text-left grp-mono text-[11px] text-[var(--signal)] hover:underline">
-              Link a habit to contribute →
-            </button>
+          ) : (
+            <>
+              <div className="cc-bar-wrap">
+                <div className="cc-bar-fill" style={{ width: `${pctVal}%` }} />
+              </div>
+              <span className={`cc-chip${isSignalChip ? " signal" : ""}`}>{chipLabel}</span>
+            </>
           )}
+          <svg className="cc-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6"/></svg>
         </div>
-
-        {showRelinkModal && (
-          <ChallengeJoinModal
-            isOpen={showRelinkModal} challenge={c} mode="relink"
-            initialHabitIds={myP?.linkedHabitIds || []}
-            onClose={() => setShowRelinkModal(false)}
-            onSuccess={() => setShowRelinkModal(false)}
-          />
-        )}
       </div>
     );
-  }
+  };
 
-  // ── ACTIVE — STREAK / CONSISTENCY / CUMULATIVE ─────────────────────
-  const sorted = [...(c.participants || [])].sort((a, b) => sortKey(b, c.type) - sortKey(a, c.type));
-  const myRank = sorted.findIndex((p) => (p.userId?._id || p.userId)?.toString() === currentUserId?.toString());
-  const preview = sorted.slice(0, 3);
-  const hiddenCount = Math.max(0, sorted.length - 3);
+  const renderStanding = () => {
+    const { Icon, color } = TYPE_META[c.type] || { Icon: Fire, color: "var(--signal)" };
+    const isActive = c.status === "active";
+    const isUpcoming = c.status === "upcoming";
+    const isCompleted = c.status === "completed" || c.status === "cancelled";
+    const isJoined = !!myParticipant && myParticipant.status !== "dropped";
 
-  return (
-    <div className={cardBase} onClick={() => onViewDetail?.(c)}>
-      <div className="px-5 py-5">
-        <div className="flex items-start justify-between gap-3 mb-4">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="w-8 h-8 rounded-[9px] flex items-center justify-center flex-shrink-0" style={{ background: `${color}18` }}>
-              <Icon size={16} weight="duotone" style={{ color }} />
+    const sorted = [...(c.participants || [])].sort((a, b) => sortKey(b, c.type) - sortKey(a, c.type));
+    const typeLabel = TYPE_META[c.type]?.label?.toUpperCase() || c.type?.toUpperCase() || "CHALLENGE";
+
+    // Hero value (head-right)
+    const getHero = () => {
+      if (isCompleted) return { val: "✓", label: "COMPLETED", signal: false };
+      if (isJoined && isActive) {
+        const h = heroStat(c, myParticipant);
+        return { val: h.num, label: h.caption.toUpperCase(), signal: true };
+      }
+      if (isActive) return { val: `${daysLeft(c.endDate) ?? "?"}`, label: "DAYS LEFT", signal: false };
+      if (isUpcoming) return { val: `${daysUntil(c.startDate) ?? "?"}`, label: "TO START", signal: false };
+      return { val: "—", label: "", signal: false };
+    };
+    const hero = getHero();
+
+    // Rows: up to 5 participants
+    const rows = sorted.slice(0, 5);
+
+    // Footer content by state
+    const renderFooter = () => {
+      if (isCompleted) return null;
+      const overflow = sorted.length > 5 ? sorted.length - 5 : 0;
+      let leftText = "";
+      if (isActive) leftText = `${participantCount} MEMBER${participantCount !== 1 ? "S" : ""}`;
+      if (isUpcoming) leftText = `STARTS IN ${daysUntil(c.startDate) ?? "?"}D`;
+      if (!leftText && overflow === 0) return null;
+      return (
+        <div className="st-foot">
+          <span className="flex items-center gap-1.5">
+            {isActive && <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />}
+            {leftText}
+          </span>
+          {overflow > 0 && <span>+{overflow} MORE</span>}
+        </div>
+      );
+    };
+
+    return (
+      <div className="st-card" onClick={() => onViewDetail?.(c)}>
+        {/* Head */}
+        <div className="st-head">
+          <div className="st-head-left">
+            <div className="st-type">
+              <Icon size={11} weight="duotone" />
+              {typeLabel}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="grp-display text-[17px] font-bold text-[var(--ink)] truncate">{c.title}</p>
-              <p className="grp-mono text-[10px] text-[var(--ink-3)] mt-0.5">
-                <span className="inline-flex items-center gap-1">
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                  {remaining}d left
-                </span>
-                {" · "}{participantCount} participants
-              </p>
-            </div>
+            <div className="st-title">{c.title}</div>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-            {!isParticipant && c.type !== "head_to_head" && (
-              <button onClick={sp(() => onJoin?.(c))} disabled={isLoading} className="grp-btn grp-btn--sm">
-                {isLoading ? "…" : "Join"}
-              </button>
-            )}
-            {isParticipant && myRank >= 0 && (
-              <span className="grp-mono text-[11px] font-bold text-[var(--ink-3)]">
-                {myRank < 3 ? MEDALS[myRank] : `#${myRank + 1}`}
-              </span>
-            )}
-            <ArrowRight size={13} className="text-[var(--ink-3)]" />
+          <div className="st-head-right">
+            <div className={`st-hero-val${hero.signal ? " signal" : ""}`}>{hero.val}</div>
+            <div className="st-hero-label">{hero.label}</div>
           </div>
         </div>
 
-        {preview.length > 0 && (
-          <div className="space-y-2">
-            {preview.map((p, i) => {
-              const info = p.userId || {};
-              const name = info.name || info.email || "Member";
-              const isOwn = (info._id || info)?.toString() === currentUserId?.toString();
-              const habitName = typeof p.linkedHabitIds?.[0] === "object" ? p.linkedHabitIds[0]?.name : null;
-              const rowPct = pct(p, c);
-              const metricVal = metricLabel(p, c.type, c.rules?.targetUnit);
+        {/* Rows */}
+        {rows.map((p, idx) => {
+          const uid = (p.userId?._id || p.userId)?.toString();
+          const isYou = uid === currentUserId?.toString();
+          const name = p.userId?.name || p.userId?.username || "—";
+          const avatar = p.userId?.avatar;
+          const pctVal = pct(p, c);
+          const val = metricLabel(p, c.type, c.rules?.targetUnit);
+          return (
+            <div key={uid || idx} className={`st-row${isYou ? " you" : ""}`}>
+              <span className={`st-pos${isYou ? " you" : ""}`}>{idx + 1}</span>
+              <span className={`st-dot${isYou ? " you" : ""}`} />
+              <div className={`st-name${isYou ? " you" : ""}`}>
+                {avatar && <img src={avatar} alt={name} style={{ width: 16, height: 16, borderRadius: "50%", objectFit: "cover", marginRight: 5, verticalAlign: "middle" }} />}
+                {isYou ? "You" : name}
+              </div>
+              <div className="st-track">
+                <i className={isYou ? "you" : ""} style={{ width: `${pctVal}%` }} />
+              </div>
+              <span className={`st-metric${isYou ? " you" : ""}`}>{val}</span>
+            </div>
+          );
+        })}
 
-              return (
-                <div key={(info._id || info)?.toString() || i} className="flex items-center gap-2.5">
-                  <span className="w-5 text-center text-[13px] leading-none flex-shrink-0">
-                    {MEDALS[i]}
-                  </span>
-                  <UserAvatar user={info} size="w-7 h-7" radius="rounded-[7px]" rankColor={MEDAL_COLORS[i]} isOwn={isOwn} />
-                  <div className="w-16 flex-shrink-0 min-w-0">
-                    <p className={`text-xs truncate font-medium ${isOwn ? "text-[var(--signal)]" : "text-[var(--ink)]"}`}>
-                      {name.split(" ")[0]}
-                    </p>
-                    {habitName && (
-                      <p className="grp-mono text-[8px] text-[var(--ink-3)] truncate leading-tight">&ldquo;{habitName}&rdquo;</p>
-                    )}
-                  </div>
-                  <div className="grp-meter flex-1">
-                    <i style={{ width: `${rowPct}%` }} />
-                  </div>
-                  <span className="grp-mono text-[10px] font-bold text-[var(--ink)] w-10 text-right flex-shrink-0">
-                    {metricVal}
-                  </span>
-                  <div className="w-5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                    {isOwn && (
-                      <button onClick={sp(() => setShowRelinkModal(true))} className="text-[var(--ink-3)] hover:text-[var(--signal)] transition-colors" title="Change habit">
-                        <Pencil size={11} weight="bold" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-            {hiddenCount > 0 && (
-              <p className="grp-mono text-[10px] text-[var(--ink-3)] pl-8">+{hiddenCount} more</p>
-            )}
-          </div>
-        )}
+        {/* Footer */}
+        {renderFooter()}
       </div>
+    );
+  };
 
-      {showRelinkModal && (
-        <ChallengeJoinModal
-          isOpen={showRelinkModal} challenge={c} mode="relink"
-          initialHabitIds={myP?.linkedHabitIds || []}
-          onClose={() => setShowRelinkModal(false)}
-          onSuccess={() => setShowRelinkModal(false)}
-        />
-      )}
-    </div>
-  );
+  const renderCozy = () => {
+    const { Icon, color } = TYPE_META[c.type] || { Icon: Fire, color: "var(--signal)" };
+    const isActive = c.status === "active";
+    const isUpcoming = c.status === "upcoming";
+    const isCompleted = c.status === "completed" || c.status === "cancelled";
+    const isJoined = !!myParticipant && myParticipant.status !== "dropped";
+
+    const sorted = [...(c.participants || [])].sort((a, b) => sortKey(b, c.type) - sortKey(a, c.type));
+    const typeLabel = TYPE_META[c.type]?.label?.toUpperCase() || c.type?.toUpperCase() || "CHALLENGE";
+    const subLine = `${typeLabel} · ${participantCount} MEMBER${participantCount !== 1 ? "S" : ""}`;
+
+    // Badge
+    const badgeColor = isActive ? "var(--signal)" : "var(--ink-3)";
+    const badgeBg = isActive
+      ? "color-mix(in srgb, var(--signal) 12%, transparent)"
+      : "color-mix(in srgb, var(--ink-3) 10%, transparent)";
+    const badgeLabel = isActive ? "Active" : isUpcoming ? "Upcoming" : "Done";
+
+    // Footer
+    const renderFooter = () => {
+      if (isCompleted) return null;
+      const timeText = isActive
+        ? `${daysLeft(c.endDate) ?? "?"}D LEFT`
+        : isUpcoming
+        ? `STARTS IN ${daysUntil(c.startDate) ?? "?"}D`
+        : null;
+      if (!timeText && !cancelError) return null;
+      return (
+        <div className="cz-foot">
+          {isActive && <span className="cz-live-dot" />}
+          {timeText && <span>{timeText}</span>}
+          {cancelError && <span style={{ color: "var(--rose)", marginLeft: "auto" }}>{cancelError}</span>}
+        </div>
+      );
+    };
+
+    // Body: ranked scoreboard (streak / consistency / cumulative)
+    const renderRankedBody = () => {
+      const rows = isCompleted ? sorted.slice(0, 3) : sorted.slice(0, 5);
+      return (
+        <div className="cz-board">
+          {rows.map((p, idx) => {
+            const uid = (p.userId?._id || p.userId)?.toString();
+            const isYou = uid === currentUserId?.toString();
+            const name = p.userId?.name || p.userId?.username || "—";
+            const avatar = p.userId?.avatar;
+            const val = metricLabel(p, c.type, c.rules?.targetUnit);
+            const unit = c.type === "streak" ? "STREAK" : c.type === "consistency" ? "RATE" : (c.rules?.targetUnit || "").toUpperCase();
+            return (
+              <div key={uid || idx} className={`cz-tr${isYou ? " you" : ""}${isCompleted ? " opacity-40" : ""}`}>
+                <span className={`cz-rank${isYou ? " you" : ""}`}>{String(idx + 1).padStart(2, "0")}</span>
+                <div className="cz-player">
+                  <div className={`cz-av${isYou ? " you" : ""}`}>
+                    {avatar ? <img src={avatar} alt={name} /> : name[0]?.toUpperCase()}
+                  </div>
+                  <span className={`cz-pname${isYou ? " you" : ""}`}>{isYou ? "You" : name}</span>
+                </div>
+                <div className="cz-score">
+                  <div className={`cz-score-val${isYou ? " you" : ""}`}>{val}</div>
+                  {unit && <div className="cz-score-unit">{unit}</div>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    };
+
+    // Body: team goal (donut)
+    const renderCoopBody = () => {
+      const total = c.participants?.reduce((s, p) => s + (p.progress?.currentValue || 0), 0) || 0;
+      const target = c.rules?.targetValue || 1;
+      const pctVal = Math.min(100, Math.round((total / target) * 100));
+      const myVal = myParticipant?.progress?.currentValue || 0;
+      const radius = 22, circ = 2 * Math.PI * radius;
+      return (
+        <div className="cz-coop">
+          <svg width={56} height={56} viewBox="0 0 56 56">
+            <circle cx={28} cy={28} r={radius} fill="none" stroke="var(--line-2)" strokeWidth={5} />
+            <circle
+              cx={28} cy={28} r={radius} fill="none"
+              stroke="var(--signal)" strokeWidth={5}
+              strokeDasharray={circ}
+              strokeDashoffset={circ - (circ * pctVal) / 100}
+              strokeLinecap="round"
+              transform="rotate(-90 28 28)"
+            />
+            <text x={28} y={32} textAnchor="middle" style={{ fontFamily: "var(--f-mono)", fontSize: 11, fill: "var(--ink)", fontWeight: 700 }}>
+              {pctVal}%
+            </text>
+          </svg>
+          <div className="cz-coop-r">
+            <div className="cz-coop-total">{total.toLocaleString()} / {target.toLocaleString()} {c.rules?.targetUnit || ""}</div>
+            {isJoined && <div className="cz-coop-you">You: {myVal.toLocaleString()}</div>}
+          </div>
+        </div>
+      );
+    };
+
+    // Body: head_to_head duel
+    const renderDuelBody = () => {
+      if (sorted.length < 2) return null;
+      const a = sorted[0], b = sorted[1];
+      const nameOf = (p) => p.userId?.name || p.userId?.username || "—";
+      const avatarOf = (p) => p.userId?.avatar;
+      const valOf = (p) => metricLabel(p, c.type, c.rules?.targetUnit);
+      const isLeadA = sortKey(a, c.type) >= sortKey(b, c.type);
+      return (
+        <div className="cz-duel">
+          <div className={`cz-duel-side${isLeadA ? " lead" : ""}`}>
+            <div className="cz-duel-av">{avatarOf(a) ? <img src={avatarOf(a)} alt={nameOf(a)} /> : nameOf(a)[0]?.toUpperCase()}</div>
+            <div className="cz-duel-score">{valOf(a)}</div>
+            <div className="cz-duel-name">{nameOf(a)}</div>
+          </div>
+          <div className="cz-duel-vs">vs</div>
+          <div className={`cz-duel-side${!isLeadA ? " lead" : ""}`}>
+            <div className="cz-duel-av">{avatarOf(b) ? <img src={avatarOf(b)} alt={nameOf(b)} /> : nameOf(b)[0]?.toUpperCase()}</div>
+            <div className="cz-duel-score">{valOf(b)}</div>
+            <div className="cz-duel-name">{nameOf(b)}</div>
+          </div>
+        </div>
+      );
+    };
+
+    const renderBody = () => {
+      if (isUpcoming) return null;
+      if (c.type === "team_goal") return renderCoopBody();
+      if (c.type === "head_to_head") return renderDuelBody();
+      return renderRankedBody();
+    };
+
+    return (
+      <div className="cz-card" onClick={() => onViewDetail?.(c)}>
+        {/* Head */}
+        <div className="cz-head">
+          <div className="cz-icon" style={{ background: `color-mix(in srgb, ${color} 14%, transparent)` }}>
+            <Icon size={16} weight="duotone" style={{ color }} />
+          </div>
+          <div className="cz-meta">
+            <div className="cz-title">{c.title}</div>
+            <div className="cz-sub">{subLine}</div>
+          </div>
+          <span className="cz-badge" style={{ color: badgeColor, background: badgeBg }}>{badgeLabel}</span>
+        </div>
+
+        {/* Body */}
+        {renderBody()}
+
+        {/* Footer */}
+        {renderFooter()}
+      </div>
+    );
+  };
+
+  if (cardStyle === "compact") return renderCompact();
+  if (cardStyle === "standing") return renderStanding();
+  return renderCozy();
 };
 
 export default ChallengeCard;

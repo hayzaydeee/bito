@@ -4,21 +4,15 @@ import {
   ThumbsUp,
   Fire,
   Lightning,
-  Star,
-  Smiley,
+  HandsClapping,
   Plus,
 } from "@phosphor-icons/react";
 
-/**
- * Maps Phosphor reaction icon names to reaction type strings
- * used by the backend (groupsAPI.addReaction / removeReaction).
- */
 const REACTIONS = [
-  { Icon: ThumbsUp,  type: "like",      label: "Like" },
-  { Icon: Fire,      type: "fire",      label: "Fire" },
-  { Icon: Lightning, type: "celebrate", label: "Celebrate" },
-  { Icon: Star,      type: "star",      label: "Star" },
-  { Icon: Smiley,    type: "smiley",    label: "Smiley" },
+  { Icon: ThumbsUp,      type: "like",      label: "Like" },
+  { Icon: Fire,          type: "fire",      label: "Fire" },
+  { Icon: Lightning,     type: "celebrate", label: "Celebrate" },
+  { Icon: HandsClapping, type: "clap",      label: "Clap" },
 ];
 
 /**
@@ -53,20 +47,7 @@ const ReactionPicker = ({ reactions = {}, myReaction = null, onReact }) => {
 
   return (
     <div ref={ref} className="flex items-center gap-1.5 relative">
-      {/* Heart — always visible */}
-      <button
-        onClick={() => onReact("heart")}
-        className={`${pill} ${
-          hasHeart
-            ? "bg-[var(--rose)]/15 text-[var(--rose)] border-[var(--rose)]/45"
-            : "bg-[var(--surface)] text-[var(--ink-3)] border-[var(--line-2)] hover:border-[var(--rose)]/50 hover:text-[var(--rose)]"
-        }`}
-      >
-        <Heart size={12} weight={hasHeart ? "fill" : "regular"} />
-        {heartCount > 0 && <span>{heartCount}</span>}
-      </button>
-
-      {/* Show existing non-heart reactions */}
+      {/* Show existing non-heart reactions — always before heart */}
       {REACTIONS.filter(({ type }) => (reactions[type] || 0) > 0).map((rxn) => {
         const RIcon = rxn.Icon;
         const count = reactions[rxn.type];
@@ -79,7 +60,7 @@ const ReactionPicker = ({ reactions = {}, myReaction = null, onReact }) => {
             className={`${pill} ${
               mine
                 ? "bg-[var(--signal)]/15 text-[var(--signal)] border-[var(--signal)]/45"
-                : "bg-[var(--surface)] text-[var(--ink-3)] border-[var(--line-2)] hover:text-[var(--ink)]"
+                : "bg-[var(--signal)]/5 text-[var(--ink-2)] border-[var(--signal)]/20 shadow-sm hover:text-[var(--ink)] hover:border-[var(--signal)]/40"
             }`}
           >
             <RIcon size={12} weight={mine ? "fill" : "regular"} />
@@ -87,6 +68,21 @@ const ReactionPicker = ({ reactions = {}, myReaction = null, onReact }) => {
           </button>
         );
       })}
+
+      {/* Heart — always visible, after custom reactions */}
+      <button
+        onClick={() => onReact("heart")}
+        className={`${pill} ${
+          hasHeart
+            ? "bg-[var(--rose)]/15 text-[var(--rose)] border-[var(--rose)]/45"
+            : heartCount > 0
+            ? "bg-[var(--rose)]/5 text-[var(--ink-2)] border-[var(--rose)]/20 shadow-sm hover:border-[var(--rose)]/50 hover:text-[var(--rose)]"
+            : "bg-[var(--surface)] text-[var(--ink-3)] border-[var(--line-2)] hover:border-[var(--rose)]/50 hover:text-[var(--rose)]"
+        }`}
+      >
+        <Heart size={12} weight={hasHeart ? "fill" : "regular"} />
+        {heartCount > 0 && <span>{heartCount}</span>}
+      </button>
 
       {/* + picker trigger */}
       <div className="relative">

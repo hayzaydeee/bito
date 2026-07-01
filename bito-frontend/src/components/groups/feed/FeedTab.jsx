@@ -1,8 +1,23 @@
 import { useState, useEffect, useCallback } from "react";
+
+function deriveReactionState(activities, currentUserId) {
+  const counts = {};
+  const mine = {};
+  activities.forEach((a) => {
+    if (!Array.isArray(a.reactions)) return;
+    const map = {};
+    a.reactions.forEach((r) => {
+      map[r.type] = (map[r.type] || 0) + 1;
+      const uid = r.userId?._id?.toString() || r.userId?.toString();
+      if (uid === currentUserId?.toString()) mine[a._id] = r.type;
+    });
+    if (Object.keys(map).length) counts[a._id] = map;
+  });
+  return { counts, mine };
+}
 import { Envelope, Trophy } from "@phosphor-icons/react";
 import FeedCard from "./FeedCard";
 import FeedFilters, { filterToTypes } from "./FeedFilters";
-import FeedDensityToggle, { useFeedDensity } from "./FeedDensityToggle";
 import { groupsAPI } from "../../../services/api";
 
 /**
@@ -26,7 +41,7 @@ const FeedTab = ({
   teamGoalChallenge,
   activeChallenge,
 }) => {
-  const [density, setDensity] = useFeedDensity();
+  const density = "compact";
   const [filter, setFilter] = useState(() => {
     try { const v = localStorage.getItem(`bito:feedfilter:${groupId}`); if (['all','streaks','kudos'].includes(v)) return v; } catch {}
     return 'all';
@@ -36,16 +51,11 @@ const FeedTab = ({
   const [myReactions, setMyReactions] = useState({}); // { activityId: type }
   const [loading, setLoading] = useState(false);
 
-  /* Seed reactions from activity data (backend may include reaction counts) */
+  /* Fetch fresh on mount so SPA navigation picks up persisted reactions */
   useEffect(() => {
-    const seed = {};
-    initialActivities.forEach((a) => {
-      if (a.reactions && Object.keys(a.reactions).length) {
-        seed[a._id] = a.reactions;
-      }
-    });
-    setReactions(seed);
-  }, [initialActivities]);
+    fetchFiltered(filter);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupId]);
 
   /* Re-fetch when filter changes */
   const fetchFiltered = useCallback(async (filterId) => {
@@ -54,13 +64,17 @@ const FeedTab = ({
       const types = filterToTypes(filterId);
       const params = { limit: 30, ...(types ? { types } : {}) };
       const res = await groupsAPI.getGroupActivity(groupId, params);
-      setActivities(res.activities || []);
+      const fetched = res.activities || [];
+      setActivities(fetched);
+      const { counts, mine } = deriveReactionState(fetched, currentUserId);
+      setReactions(counts);
+      setMyReactions(mine);
     } catch {
       /* keep previous */
     } finally {
       setLoading(false);
     }
-  }, [groupId]);
+  }, [groupId, currentUserId]);
 
   const handleFilterChange = (id) => {
     setFilter(id);
@@ -131,7 +145,6 @@ const FeedTab = ({
         {/* toolbar */}
         <div className="flex items-center justify-between gap-3 mb-5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-1">
           <FeedFilters active={filter} onChange={handleFilterChange} />
-          <FeedDensityToggle density={density} onChange={setDensity} />
         </div>
 
         {loading ? (

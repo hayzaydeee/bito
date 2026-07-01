@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
-import { Trophy, CaretDown, CaretRight } from "@phosphor-icons/react";
+import { Trophy, CaretDown, CaretRight, Rows, List, SquaresFour } from "@phosphor-icons/react";
 import ChallengeCard from "./ChallengeCard";
 import ChallengeDetailModal from "./ChallengeDetailModal";
 import StandingSidebar from "./StandingSidebar";
 import { groupsAPI } from "../../../services/api";
 import ChallengeCreateModal from "../../ui/ChallengeCreateModal";
 import ChallengeJoinModal from "../../ui/ChallengeJoinModal";
+import "./challenges-cards.css";
 
 const DRAFT_STEP_LABEL = ["Type", "Basics", "Targets", "Settings"];
 const LS_DRAFT_KEY = (gId) => `bito_challenge_draft_${gId}`;
+const LS_STYLE_KEY = "bito_challenge_card_style";
 
 const ChallengesTab = ({
   groupId,
@@ -27,6 +29,14 @@ const ChallengesTab = ({
   const [detailTarget, setDetailTarget] = useState(null);
   const [localDraft, setLocalDraft] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [cardStyle, setCardStyle] = useState(() => {
+    try { return localStorage.getItem(LS_STYLE_KEY) || "cozy"; } catch { return "cozy"; }
+  });
+
+  const changeStyle = (style) => {
+    setCardStyle(style);
+    try { localStorage.setItem(LS_STYLE_KEY, style); } catch {}
+  };
 
   // Re-read local draft whenever modal closes or groupId changes
   useEffect(() => {
@@ -123,6 +133,7 @@ const ChallengesTab = ({
     onLeave: handleLeave,
     onViewDetail: handleViewDetail,
     actionLoading,
+    cardStyle,
     ...extra,
   });
 
@@ -203,10 +214,45 @@ const ChallengesTab = ({
         {/* Active */}
         {active.length > 0 && (
           <section>
-            <p className="grp-kicker mb-3">Active — {String(active.length).padStart(2, "0")}</p>
-            <div className="space-y-3">
-              {active.map((c) => <ChallengeCard key={c._id} {...cardProps(c)} />)}
+            <div className="flex items-center justify-between gap-3 mb-5">
+              <p className="grp-kicker">Active — {String(active.length).padStart(2, "0")}</p>
+              <div className="bg-[var(--bg-2)] rounded-[10px] p-1 border border-[var(--line-2)] flex items-center gap-0.5 flex-shrink-0">
+                {[
+                  { id: "cozy", Icon: Rows, label: "Cozy" },
+                  { id: "compact", Icon: List, label: "Compact" },
+                  { id: "standing", Icon: SquaresFour, label: "Standing" },
+                ].map(({ id, Icon: BtnIcon, label }) => {
+                  const isOn = cardStyle === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => changeStyle(id)}
+                      className={[
+                        "flex items-center gap-1.5 h-7 px-2.5 rounded-[7px]",
+                        "grp-mono text-[11px] font-bold uppercase tracking-wider",
+                        "transition-colors whitespace-nowrap",
+                        isOn
+                          ? "bg-[var(--surface-2)] text-[var(--ink)]"
+                          : "text-[var(--ink-3)] hover:text-[var(--ink-2)]",
+                      ].join(" ")}
+                    >
+                      <BtnIcon size={12} weight={isOn ? "fill" : "regular"} className={isOn ? "text-[var(--signal)]" : ""} />
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+            {cardStyle === "compact" ? (
+              <div className="cc-ledger">
+                {active.map((c) => <ChallengeCard key={c._id} {...cardProps(c)} />)}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {active.map((c) => <ChallengeCard key={c._id} {...cardProps(c)} />)}
+              </div>
+            )}
           </section>
         )}
 
@@ -214,17 +260,31 @@ const ChallengesTab = ({
         {upcoming.length > 0 && (
           <section>
             <p className="grp-kicker mb-3">Upcoming — {String(upcoming.length).padStart(2, "0")}</p>
-            <div className="space-y-3">
-              {upcoming.map((c) => (
-                <ChallengeCard
-                  key={c._id}
-                  {...cardProps(c, {
-                    onCancel: handleCancel,
-                    canCancel: canManage || (c.createdBy?._id || c.createdBy)?.toString() === currentUserId?.toString(),
-                  })}
-                />
-              ))}
-            </div>
+            {cardStyle === "compact" ? (
+              <div className="cc-ledger">
+                {upcoming.map((c) => (
+                  <ChallengeCard
+                    key={c._id}
+                    {...cardProps(c, {
+                      onCancel: handleCancel,
+                      canCancel: canManage || (c.createdBy?._id || c.createdBy)?.toString() === currentUserId?.toString(),
+                    })}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {upcoming.map((c) => (
+                  <ChallengeCard
+                    key={c._id}
+                    {...cardProps(c, {
+                      onCancel: handleCancel,
+                      canCancel: canManage || (c.createdBy?._id || c.createdBy)?.toString() === currentUserId?.toString(),
+                    })}
+                  />
+                ))}
+              </div>
+            )}
           </section>
         )}
 
@@ -239,41 +299,64 @@ const ChallengesTab = ({
               Completed — {String(completed.length).padStart(2, "0")}
             </button>
             {completedOpen && (
-              <div className="space-y-3">
-                {completed.map((c) => (
-                  <div key={c._id} className="space-y-1">
-                    <ChallengeCard {...cardProps(c)} />
-                    {canManage && (
-                      <div className="flex justify-end px-1">
-                        {deleteConfirm === c._id ? (
-                          <div className="flex items-center gap-2">
-                            <span className="grp-mono text-[10px] text-[var(--ink-3)]">Delete permanently?</span>
-                            <button
-                              onClick={() => handleDelete(c._id)}
-                              className="grp-mono text-[10px] font-bold text-[var(--rose)] hover:underline"
-                            >
-                              Yes
-                            </button>
-                            <button
-                              onClick={() => setDeleteConfirm(null)}
-                              className="grp-mono text-[10px] text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors"
-                            >
-                              No
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => setDeleteConfirm(c._id)}
-                            className="grp-mono text-[10px] text-[var(--ink-3)] hover:text-[var(--rose)] transition-colors"
-                          >
-                            Delete
-                          </button>
-                        )}
-                      </div>
-                    )}
+              cardStyle === "compact" ? (
+                <div className="space-y-3">
+                  <div className="cc-ledger">
+                    {completed.map((c) => (
+                      <ChallengeCard key={c._id} {...cardProps(c)} />
+                    ))}
                   </div>
-                ))}
-              </div>
+                  {canManage && completed.map((c) => (
+                    <div key={c._id} className="flex justify-end px-1">
+                      {deleteConfirm === c._id ? (
+                        <div className="flex items-center gap-2">
+                          <span className="grp-mono text-[10px] text-[var(--ink-3)]">Delete permanently?</span>
+                          <button onClick={() => handleDelete(c._id)} className="grp-mono text-[10px] font-bold text-[var(--rose)] hover:underline">Yes</button>
+                          <button onClick={() => setDeleteConfirm(null)} className="grp-mono text-[10px] text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors">No</button>
+                        </div>
+                      ) : (
+                        <button onClick={() => setDeleteConfirm(c._id)} className="grp-mono text-[10px] text-[var(--ink-3)] hover:text-[var(--rose)] transition-colors">Delete</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {completed.map((c) => (
+                    <div key={c._id} className="space-y-1">
+                      <ChallengeCard {...cardProps(c)} />
+                      {canManage && (
+                        <div className="flex justify-end px-1">
+                          {deleteConfirm === c._id ? (
+                            <div className="flex items-center gap-2">
+                              <span className="grp-mono text-[10px] text-[var(--ink-3)]">Delete permanently?</span>
+                              <button
+                                onClick={() => handleDelete(c._id)}
+                                className="grp-mono text-[10px] font-bold text-[var(--rose)] hover:underline"
+                              >
+                                Yes
+                              </button>
+                              <button
+                                onClick={() => setDeleteConfirm(null)}
+                                className="grp-mono text-[10px] text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors"
+                              >
+                                No
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setDeleteConfirm(c._id)}
+                              className="grp-mono text-[10px] text-[var(--ink-3)] hover:text-[var(--rose)] transition-colors"
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )
             )}
           </section>
         )}
@@ -285,7 +368,14 @@ const ChallengesTab = ({
             <Trophy size={40} weight="duotone" className="mx-auto mb-4 text-[var(--ember)] relative" />
             <h3 className="grp-display text-2xl font-bold text-[var(--ink)] mb-2 relative">No challenges yet</h3>
             <p className="text-sm text-[var(--ink-2)] max-w-sm mx-auto mb-7 relative">
-              Create a streak, team goal, or consistency challenge to motivate your group.
+              Create a streak,{" "}
+              <button
+                onClick={() => openCreateWithPreset("team_goal")}
+                className="text-[var(--signal)] hover:underline font-medium transition-colors"
+              >
+                team goal
+              </button>
+              , or consistency challenge to motivate your group.
             </p>
             <button onClick={() => openCreateWithPreset(null)} className="grp-btn grp-btn--ember mx-auto relative">
               <Trophy size={14} weight="fill" />
@@ -302,6 +392,7 @@ const ChallengesTab = ({
           allChallenges={challenges}
           currentUserId={currentUserId}
           onCreateChallenge={() => openCreateWithPreset(null)}
+          isEmpty={isEmpty}
         />
       </aside>
 
@@ -311,9 +402,11 @@ const ChallengesTab = ({
           isOpen={!!detailTarget}
           challenge={detailTarget}
           currentUserId={currentUserId}
+          canManage={canManage}
           onClose={() => setDetailTarget(null)}
           onJoin={setJoinTarget}
           onLeave={handleLeave}
+          onDelete={(id) => { setDetailTarget(null); handleDelete(id); }}
           actionLoading={actionLoading}
         />
       )}
