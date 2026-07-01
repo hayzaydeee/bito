@@ -449,11 +449,16 @@
   background: var(--surface);
 }
 .grp-btn--danger {
-  background: var(--rose);
-  border-color: var(--rose);
-  color: #1a0509;
+  background: transparent;
+  border-color: color-mix(in srgb, #ef4444 45%, transparent);
+  color: #ef4444;
 }
-.grp-btn--danger:hover { filter: brightness(1.1); }
+.grp-btn--danger:hover {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #fff;
+  filter: none;
+}
 
 .cdm-delete-confirm {
   display: flex;
