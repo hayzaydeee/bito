@@ -368,7 +368,14 @@ const ChallengesTab = ({
             <Trophy size={40} weight="duotone" className="mx-auto mb-4 text-[var(--ember)] relative" />
             <h3 className="grp-display text-2xl font-bold text-[var(--ink)] mb-2 relative">No challenges yet</h3>
             <p className="text-sm text-[var(--ink-2)] max-w-sm mx-auto mb-7 relative">
-              Create a streak, team goal, or consistency challenge to motivate your group.
+              Create a streak,{" "}
+              <button
+                onClick={() => openCreateWithPreset("team_goal")}
+                className="text-[var(--signal)] hover:underline font-medium transition-colors"
+              >
+                team goal
+              </button>
+              , or consistency challenge to motivate your group.
             </p>
             <button onClick={() => openCreateWithPreset(null)} className="grp-btn grp-btn--ember mx-auto relative">
               <Trophy size={14} weight="fill" />
@@ -394,9 +401,11 @@ const ChallengesTab = ({
           isOpen={!!detailTarget}
           challenge={detailTarget}
           currentUserId={currentUserId}
+          canManage={canManage}
           onClose={() => setDetailTarget(null)}
           onJoin={setJoinTarget}
           onLeave={handleLeave}
+          onDelete={(id) => { setDetailTarget(null); handleDelete(id); }}
           actionLoading={actionLoading}
         />
       )}
