@@ -73,7 +73,7 @@ const ChallengeDetailModal = ({
   const isActive = c.status === "active";
   const isCompleted = c.status === "completed";
   const isCreator = (c.createdBy?._id || c.createdBy)?.toString() === currentUserId?.toString();
-  const canDelete = (canManage || isCreator) && c.status !== "active";
+  const canDelete = canManage || isCreator;
 
   const usesFrozen = isCompleted && c.stats?.finalLeaderboard?.length > 0;
   const sorted = usesFrozen
@@ -404,7 +404,10 @@ const ChallengeDetailModal = ({
             </button>
           )}
           {canDelete && !showDeleteConfirm && (
-            <button onClick={() => setShowDeleteConfirm(true)} className="cdm-delete-btn">
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="grp-btn grp-btn--sm bg-[var(--rose)] border-[var(--rose)] text-[#1a0509] hover:brightness-110"
+            >
               Delete
             </button>
           )}

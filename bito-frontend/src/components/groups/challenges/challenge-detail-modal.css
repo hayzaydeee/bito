@@ -101,12 +101,12 @@
 }
 .cdm-title-date {
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .07em;
   white-space: nowrap;
-  padding-bottom: 3px;
+  padding-bottom: 2px;
 }
 .cdm-title {
   font-family: var(--f-display);
@@ -386,7 +386,6 @@
   font-family: var(--f-mono);
   font-size: 9px;
   color: var(--ink-3);
-  text-transform: uppercase;
   letter-spacing: .04em;
   margin-top: 2px;
   white-space: nowrap;
@@ -468,17 +467,6 @@
   background: color-mix(in srgb, var(--rose) 6%, transparent);
 }
 .cdm-leave-btn:disabled { opacity: .45; cursor: not-allowed; }
-
-.cdm-delete-btn {
-  font-family: var(--f-mono);
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .09em;
-  color: var(--ink-3);
-  transition: color .15s;
-}
-.cdm-delete-btn:hover { color: var(--rose); }
 
 .cdm-delete-confirm {
   display: flex;
