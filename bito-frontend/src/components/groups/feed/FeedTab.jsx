@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { Envelope, Trophy } from "@phosphor-icons/react";
 import FeedCard from "./FeedCard";
 import FeedFilters, { filterToTypes } from "./FeedFilters";
-import FeedDensityToggle, { useFeedDensity } from "./FeedDensityToggle";
 import { groupsAPI } from "../../../services/api";
 
 /**
@@ -26,7 +25,7 @@ const FeedTab = ({
   teamGoalChallenge,
   activeChallenge,
 }) => {
-  const [density, setDensity] = useFeedDensity();
+  const density = "compact";
   const [filter, setFilter] = useState(() => {
     try { const v = localStorage.getItem(`bito:feedfilter:${groupId}`); if (['all','streaks','kudos'].includes(v)) return v; } catch {}
     return 'all';
@@ -131,7 +130,6 @@ const FeedTab = ({
         {/* toolbar */}
         <div className="flex items-center justify-between gap-3 mb-5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-1">
           <FeedFilters active={filter} onChange={handleFilterChange} />
-          <FeedDensityToggle density={density} onChange={setDensity} />
         </div>
 
         {loading ? (
