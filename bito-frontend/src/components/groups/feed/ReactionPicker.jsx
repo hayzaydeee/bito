@@ -4,21 +4,15 @@ import {
   ThumbsUp,
   Fire,
   Lightning,
-  Star,
-  Smiley,
+  HandsClapping,
   Plus,
 } from "@phosphor-icons/react";
 
-/**
- * Maps Phosphor reaction icon names to reaction type strings
- * used by the backend (groupsAPI.addReaction / removeReaction).
- */
 const REACTIONS = [
-  { Icon: ThumbsUp,  type: "like",      label: "Like" },
-  { Icon: Fire,      type: "fire",      label: "Fire" },
-  { Icon: Lightning, type: "celebrate", label: "Celebrate" },
-  { Icon: Star,      type: "star",      label: "Star" },
-  { Icon: Smiley,    type: "smiley",    label: "Smiley" },
+  { Icon: ThumbsUp,      type: "like",      label: "Like" },
+  { Icon: Fire,          type: "fire",      label: "Fire" },
+  { Icon: Lightning,     type: "celebrate", label: "Celebrate" },
+  { Icon: HandsClapping, type: "clap",      label: "Clap" },
 ];
 
 /**
