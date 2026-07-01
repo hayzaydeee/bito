@@ -417,7 +417,7 @@
   justify-content: flex-end;
   gap: 2px;
   flex-shrink: 0;
-  min-width: 48px;
+  min-width: 64px;
 }
 .cdm-row-val {
   font-family: var(--f-display);
@@ -448,27 +448,12 @@
   border-top: 1px solid var(--line-2);
   background: var(--surface);
 }
-.cdm-leave-btn {
-  font-family: var(--f-mono);
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .09em;
-  color: var(--ink-2);
-  border: 1px solid var(--line-2);
-  border-radius: var(--r-btn);
-  padding: 0 12px;
-  height: 32px;
-  display: inline-flex;
-  align-items: center;
-  transition: color .15s, border-color .15s, background .15s;
+.grp-btn--danger {
+  background: var(--rose);
+  border-color: var(--rose);
+  color: #1a0509;
 }
-.cdm-leave-btn:hover {
-  color: var(--rose);
-  border-color: color-mix(in srgb, var(--rose) 40%, transparent);
-  background: color-mix(in srgb, var(--rose) 6%, transparent);
-}
-.cdm-leave-btn:disabled { opacity: .45; cursor: not-allowed; }
+.grp-btn--danger:hover { filter: brightness(1.1); }
 
 .cdm-delete-confirm {
   display: flex;

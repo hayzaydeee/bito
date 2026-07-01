@@ -40,7 +40,7 @@ function metric(p, challenge, isFrozen) {
 
 function metricUnit(challenge, isFrozen) {
   if (isFrozen && challenge.type === "consistency") return null;
-  if (challenge.type === "streak") return "d";
+  if (challenge.type === "streak") return "days";
   if (challenge.type === "consistency") return "%";
   return challenge.rules?.targetUnit || null;
 }
@@ -195,14 +195,14 @@ const ChallengeDetailModal = ({
                       <div className="cdm-stat">
                         <div className="cdm-stat-num">
                           <span className="cdm-stat-val">{myP.progress?.currentStreak || 0}</span>
-                          <span className="cdm-stat-unit">d</span>
+                          <span className="cdm-stat-unit">days</span>
                         </div>
                         <p className="cdm-stat-label">Current</p>
                       </div>
                       <div className="cdm-stat">
                         <div className="cdm-stat-num">
                           <span className="cdm-stat-val">{myP.progress?.longestStreak || 0}</span>
-                          <span className="cdm-stat-unit">d</span>
+                          <span className="cdm-stat-unit">days</span>
                         </div>
                         <p className="cdm-stat-label">Best</p>
                       </div>
@@ -399,7 +399,7 @@ const ChallengeDetailModal = ({
             <button
               onClick={() => onLeave?.(c._id)}
               disabled={isLoading}
-              className="cdm-leave-btn"
+              className="grp-btn grp-btn--sm grp-btn--signal"
             >
               {isLoading ? "…" : "Leave"}
             </button>
@@ -407,7 +407,7 @@ const ChallengeDetailModal = ({
           {canDelete && !showDeleteConfirm && (
             <button
               onClick={() => setShowDeleteConfirm(true)}
-              className="grp-btn grp-btn--sm bg-[var(--rose)] border-[var(--rose)] text-[#1a0509] hover:brightness-110"
+              className="grp-btn grp-btn--sm grp-btn--danger"
             >
               Delete
             </button>
@@ -438,7 +438,7 @@ const ChallengeDetailModal = ({
               Join Challenge
             </button>
           )}
-          <button onClick={onClose} className="grp-btn">Close</button>
+          <button onClick={onClose} className="grp-btn grp-btn--sm">Close</button>
         </div>
       </div>
 
