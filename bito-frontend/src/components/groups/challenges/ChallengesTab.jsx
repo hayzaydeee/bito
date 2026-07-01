@@ -226,6 +226,7 @@ const ChallengesTab = ({
                   return (
                     <button
                       key={id}
+                      type="button"
                       onClick={() => changeStyle(id)}
                       className={[
                         "flex items-center gap-1.5 h-7 px-2.5 rounded-[7px]",
