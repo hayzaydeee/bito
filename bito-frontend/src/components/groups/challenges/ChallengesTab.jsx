@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Trophy, CaretDown, CaretRight } from "@phosphor-icons/react";
+import { Trophy, CaretDown, CaretRight, Rows, List, SquaresFour } from "@phosphor-icons/react";
 import ChallengeCard from "./ChallengeCard";
 import ChallengeDetailModal from "./ChallengeDetailModal";
 import StandingSidebar from "./StandingSidebar";
@@ -144,33 +144,6 @@ const ChallengesTab = ({
     <div className="flex gap-8">
       {/* ── Main list ── */}
       <div className="flex-1 min-w-0 space-y-7">
-        {/* Card style toggle */}
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
-          {["cozy", "compact", "standing"].map((s) => (
-            <button
-              key={s}
-              onClick={() => changeStyle(s)}
-              style={{
-                fontFamily: "var(--f-mono)",
-                fontSize: "10px",
-                fontWeight: 700,
-                letterSpacing: ".06em",
-                textTransform: "uppercase",
-                padding: "4px 10px",
-                borderRadius: "var(--r-tag)",
-                border: "1px solid",
-                borderColor: cardStyle === s ? "var(--signal)" : "var(--line-2)",
-                background: cardStyle === s ? "color-mix(in srgb, var(--signal) 14%, transparent)" : "transparent",
-                color: cardStyle === s ? "var(--signal)" : "var(--ink-3)",
-                cursor: "pointer",
-                transition: "all .15s",
-              }}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-
         {actionError && (
           <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-[var(--ember)]/10 border border-[var(--ember)]/20">
             <p className="grp-mono text-xs text-[var(--ember)]">{actionError}</p>
@@ -241,7 +214,35 @@ const ChallengesTab = ({
         {/* Active */}
         {active.length > 0 && (
           <section>
-            <p className="grp-kicker mb-3">Active — {String(active.length).padStart(2, "0")}</p>
+            <div className="flex items-center justify-between gap-3 mb-5">
+              <p className="grp-kicker">Active — {String(active.length).padStart(2, "0")}</p>
+              <div className="bg-[var(--bg-2)] rounded-[10px] p-1 border border-[var(--line-2)] flex items-center gap-0.5 flex-shrink-0">
+                {[
+                  { id: "cozy", Icon: Rows, label: "Cozy" },
+                  { id: "compact", Icon: List, label: "Compact" },
+                  { id: "standing", Icon: SquaresFour, label: "Standing" },
+                ].map(({ id, Icon: BtnIcon, label }) => {
+                  const isOn = cardStyle === id;
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => changeStyle(id)}
+                      className={[
+                        "flex items-center gap-1.5 h-7 px-2.5 rounded-[7px]",
+                        "grp-mono text-[11px] font-bold uppercase tracking-wider",
+                        "transition-colors whitespace-nowrap",
+                        isOn
+                          ? "bg-[var(--surface-2)] text-[var(--ink)]"
+                          : "text-[var(--ink-3)] hover:text-[var(--ink-2)]",
+                      ].join(" ")}
+                    >
+                      <BtnIcon size={12} weight={isOn ? "fill" : "regular"} className={isOn ? "text-[var(--signal)]" : ""} />
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             {cardStyle === "compact" ? (
               <div className="cc-ledger">
                 {active.map((c) => <ChallengeCard key={c._id} {...cardProps(c)} />)}
